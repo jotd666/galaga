@@ -23,6 +23,7 @@
 *
 
 	.include "galaga.inc"
+	.include "structs.inc"
 
 * exports
 
@@ -37,5 +38,2228 @@
 	.align	2
 	.endif
 	
+m_tile_ram = 0x8000
+m_color_ram = 0x8400
+
+
+* < A0: source (HL)
+* < A1: destination (DE)
+* < D1: decremented (16 bit)
+ldi:
+
+    move.b    (a0)+,(a1)+
+    subq.w    #1,d1
+    rts
+
+* < A0: source (HL)
+* < A1: destination (DE)
+* < D1: length (16 bit)
+ldir:
+    subq.w    #1,d1
+0:
+    move.b    (a0)+,(a1)+
+    dbf        d1,0b
+    clr.w    d1
+    rts
+
+*=============================================================================
+* RST_08()
+*  Description:
+*
+* IN:
+*  A, HL
+* OUT:
+*  HL += 2A
+*-----------------------------------------------------------------------------
+rst_08_half:
+	add.w	d0,d0                            	| [add  a,a]	
+	bra.b	rst_10
+*=============================================================================
+* RST_08()
+*  Description:
+*
+* IN:
+*  A, HL
+* OUT:
+*  HL += 4A
+*-----------------------------------------------------------------------------
+rst_08:
+	add.w	d0,d0                            	| [add  a,a]	
+	add.w	d0,d0                            	| [add  a,a]	
+*=============================================================================
+* RST_10()
+*  Description:
+*   HL += A
+* IN:
+*
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+rst_10:
+	and.w	#0xFF,d0
+	add.w	d0,a0
+	rts                                    	| [ret]
+
+*=============================================================================
+* RST_18()
+*  Description:
+*   Is not referenced by rst (when does this get used? - same as sub2 ROM)
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+
+rst_18:
+* memset((HL), A=fill, B=ct)
+	subq	#1,d1
+0:
+	move.b	d0,(a0)+
+	dbf		d1,0b
+	rts
+
+rst_18_video:
+* memset((HL), A=fill, B=ct)
+	subq	#1,d1
+	move.w	a0,d6
+0:
+	jbsr	osd_w_videoram
+	addq.w	#1,d6
+	dbf		d1,0b
+	rts
+
+rst_18_color:
+* memset((HL), A=fill, B=ct)
+	subq	#1,d1
+	move.w	a0,d6
+0:
+	jbsr	osd_w_colorram
+	addq.w	#1,d6
+	dbf		d1,0b
+	rts
+
+
+*=============================================================================
+* RST_28()
+*  Description:
+*   memset(tbl, 0, $F0)
+* IN:
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+rst_28:
+	lea	ds_bug_motion_que(pc),a0           	| [ld   hl,#ds_bug_motion_que] memset(..., 0, $F0)
+	move.b	#0xF0,d1                        	| [ld   b,#0xF0]
+	clr.b	d0                               	| [xor  a] A==00
+	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	rts                                    	| [ret]
+*=============================================================================
+* RST_30()
+*  Description:
+*   Entry point to display string function at _139A
+* IN:
+*   If set Cy flag, indicates to _139A to expect a position encoded string
+* OUT:
+*  HL == final offset in video ram (some code actually uses this!)
+*-----------------------------------------------------------------------------
+rst_30:
+	st.b	d7                            	| [scf]
+	jra	j_string_out_pe                    	| [jp   j_string_out_pe]
+
+
+*
+rst_38:
+*=============================================================================
+*  Description:
+*   RST $38 handler.
+*   jp to the task manager
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+	jra	jp_Task_man                        	| [jp   jp_Task_man]
+
+
 galaga_irq:
+	rts
+	
 galaga_reset:
+	* install traps to avoid handling SR/CCR
+	* differently depending on the CPU when carry
+	* flag needs to be preserved
+	pea		trap_0(pc)
+	move.l	(a7)+,0x80
+	
+*=============================================================================
+* por_inits()
+*  Description:
+*   Once per poweron/reset (following hardware inits) do inits for screen and
+*   etc. prior to invoking "main".
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+j_Game_init:
+	lea	ds_stk_cpu0_init,a7  | [ld   sp,#ds_stk_cpu0_init]
+
+*  memset(ds4_game_tmrs,0,4)
+	clr.b	d0                               	| [xor  a]
+	lea	ds4_game_tmrs+0(pc),a0             	| [ld   hl,#ds4_game_tmrs + 0] memset(...,0,4)
+	move.b	#4,d1                           	| [ld   b,#4]
+    jbsr   rst_18                                  | memset((HL), A=fill, B=ct)
+
+*  memset($9aa0,0,$20)
+	lea	ds_9AA0(pc),a0                     	| [ld   hl,#ds_9AA0] memset(...,0,$20) ... count/enable registers for sound effects
+	move.b	#0x20,d1                        	| [ld   b,#0x20]
+    jbsr   rst_18                                  | memset((HL), A=fill, B=ct)
+
+	*move.b	d0,0xA007                       	| [ld   (0xA007),a] 0 (not_flipped)
+	move.b	d0,b_9215_flip_screen           	| [ld   (b_9215_flip_screen),a] 0 (not_flipped)
+	move.b	d0,ds_99B9_star_ctrl+0          	| [ld   (ds_99B9_star_ctrl + 0),a] 0 ...1 when ship on screen
+
+* memset($92ca,$ff,$10) ... bmbr_boss_slots[] is only 12 bytes, so this initialization would
+* include b_CPU1_in_progress + b_CPU2_in_progress + 2 unused bytes
+	subq.b	#1,d0                           	| [dec  a] = $FF
+	lea	bmbr_boss_pool(pc),a0              	| [ld   hl,#bmbr_boss_pool] memset( ... , $FF, $10 )
+	move.b	#0x10,d1                        	| [ld   b,#0x10]
+    jbsr   rst_18                                  | memset((HL), A=fill, B=ct)
+
+* galaga_interrupt_enable_1_w  seems to already be set, but we make sure anyway.
+	*move.b	#1,d0                           	| [ld   a,#1]
+	*move.b	d0,_sfr_6820                    	| [ld   (_sfr_6820),a] 1 ,,,enable IRQ1
+	jbsr	osd_enable_vblank_interrupt
+	
+* The test grid is now cleared from screen. Due to odd organization of tile ram
+* it is done in 3 steps. 1 grid row is cleared from top and bottom (each grid
+* row is 2 tile rows). Then, there is a utility function to clear the actual
+* playfield area.
+
+*  memset($83c0,$24,$40)
+	lea	m_tile_ram+0x03C0,a0           	| [ld   hl,#m_tile_ram + 0x03C0] clear top 2 tile rows ($40 bytes)
+	move.b	#0x40,d1                        	| [ld   b,#0x40]
+	move.b	#0x24,d0                        	| [ld   a,#0x24] "space" character
+    jbsr   rst_18_video                                  | memset((HL), A=fill, B=ct)
+
+*  memset($8000,$24,$40)
+	lea	m_tile_ram,a0                 	| [ld   h,#>m_tile_ram] clear bottom 2 tile rows ($40 bytes)
+	move.b	#0x40,d1                        	| [ld   b,#0x40]
+    jbsr   rst_18_video                                  | memset((HL), A=fill, B=ct)
+
+*  memset($8400,$03,$40)
+	lea	m_color_ram,a0                 	| [ld   hl,#m_color_ram] $40 bytes (code 03)
+	move.b	#0x40,d1                        	| [ld   b,#0x40]
+	move.b	#0x03,d0                        	| [ld   a,#0x03]
+    jbsr   rst_18_color                                  | memset((HL), A=fill, B=ct)
+
+	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr] clear remainder of grid pattern from the playfield tiles (14x16)
+* all tile ram is now wiped
+
+* Sets up "Heroes" screen
+	lea	b_best5_score(pc),a1               	| [ld   de,#b_best5_score] 1st score (100000's)
+	move.b	#5,d0                           	| [ld   a,#5]
+	clr.b	d1                               	| [ld   b,#0]
+l_0317:
+	lea	d_str20000(pc),a0                  	| [ld   hl,#d_str20000] "00002 " (20000 reversed)
+	move.b	#0x06,d2                        	| [ld   c,#0x06]
+	jbsr	ldir                              	| [ldir]
+	subq.b	#1,d0                           	| [dec  a]
+	jne	l_0317                             	| [jr   nz,l_0317]
+
+	lea	d_strScore(pc),a0                  	| [ld   hl,#d_strScore] "SCORE" (reversed)
+	move.b	#0x2A,d0                        	| [ld   a,#0x2A] period character '.'
+	move.b	#0x05,d1                        	| [ld   b,#0x05]
+	st.b	d2                                	| [ld   c,#0xFF]
+* de==8a3e
+l_032A:
+	jbsr	ldi                               	| [ldi]
+	subq.b	#1,a0                           	| [dec  hl]
+	move.b	d0,(a1)                         	| [ld   (de),a]
+	addq.b	#1,d4                           	| [inc  e]
+	jbsr	ldi                               	| [ldi]
+	subq.b	#1,d1                           	| [...]
+	jne	l_032A                             	| [djnz l_032A]
+
+* initialize game state
+	move.b	#0x01,d0                        	| [ld   a,#0x01]
+	move.b	d0,b8_9201_game_state           	| [ld   (b8_9201_game_state),a] 1 == ATTRACT_MODE
+
+	*jbsr	osd_init_stars
+	*lea	l_A005(pc),a0                      	| [ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
+	*move.b	#0,(a0)                          	| [ld   (hl),#0]
+	*move.b	d0,(a0)                         	| [ld   (hl),a]
+
+	jbsr	c_sctrl_sprite_ram_clr            	| [call c_sctrl_sprite_ram_clr]
+
+* display 1UP HIGH SCORE 20000 (1 time only after boot)
+	jbsr	c_textout_1uphighscore_onetime    	| [call c_textout_1uphighscore_onetime]
+
+	jbsr	c_1230_init_taskman_structs       	| [call c_1230_init_taskman_structs]
+
+* data structures for 12 objects
+    jbsr   rst_28                                  | memset(mctl_mpool,0,$$14 * 12)
+
+* Not sure here...
+* this would have the effect of disabling/skipping the task at 0x1F (f_0977)
+* which happens to relate to updating the credit count (although, there is no
+* RST 38 to actually trigger the task from now until setting this to 0 below.)
+
+* cpu0_task_activ[0x1E] = 0x20
+	move.b	#0x20,d0                        	| [ld   a,#0x20]
+	move.b	d0,ds_cpu0_task_actv+0x1E       	| [ld   (ds_cpu0_task_actv + 0x1E),a] $20
+
+* credit_cnt = io_input[0]
+	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] credit_count
+	move.b	d0,b8_99B8_credit_cnt           	| [ld   (b8_99B8_credit_cnt),a] credit_cnt = io_input[credit_count]
+
+* cpu0_task_activ[0x1E] = 0
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds_cpu0_task_actv+0x1E       	| [ld   (ds_cpu0_task_actv + 0x1E),a] 0 ... just wrote $20 here see above
+	move.b	d0,ds_cpu1_task_actv+0x00       	| [ld   (ds_cpu1_task_actv + 0x00),a] 0 ... CPU1:f_05BE (empty task)
+
+
+*=============================================================================
+* g_main()
+*  Description:
+*    Performs initialization, and does a one-time check for credits
+*    (monitoring credit count and updating "GameState" is otherwise handled
+*    by a 16mS task). If credits available at startup, it updates "GameState"
+*    and skips directly to "Ready" state, otherwise it
+*    stays in Attract mode state.
+*
+*    Resumes here following completion of a game.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+g_main:
+	clr.b	d0                               	| [xor  a]
+	*move.b	d0,0xA007                       	| [ld   (0xA007),a] 0 (not_flipped)
+	*move.b	d0,b_9215_flip_screen           	| [ld   (b_9215_flip_screen),a] 0 (not_flipped)
+
+* disable f_1D76 - star control ... why? ... should be taken care of by init_taskman_structs ...below
+* task_activ_tbl[0x12] = 0
+	move.b	d0,ds_cpu0_task_actv+0x12       	| [ld   (ds_cpu0_task_actv + 0x12),a] 0 ... f_1D76
+
+* The object-collision notification structures are cleared
+* at every beginning of round (and demo), so I am guessing the intent here is to
+* clear the globals that share the $80 byte block
+
+* memset($9200,0,$80) ... object-collision notification  and other
+	move.b	#0x80,d1                        	| [ld   b,#0x80]
+	lea	ds_9200(pc),a0                     	| [ld   hl,#ds_9200] memset(...,0,$80)
+	jbsr	rst_18								| memset((HL), A=fill, B=ct)
+
+* star_ctrl_param=6
+	move.b	#6,d0                           	| [ld   a,#6]
+	move.b	d0,ds_99B9_star_ctrl+0x05       	| [ld   (ds_99B9_star_ctrl + 0x05),a] 6
+
+* array of object movement structures etc.
+	jbsr	rst_28                            	| [rst  0x28] memset(mctl_mpool,0,$$14 * 12)
+	jbsr	c_sctrl_sprite_ram_clr            	| [call c_sctrl_sprite_ram_clr] clear sprite mem etc.
+	jbsr	c_1230_init_taskman_structs       	| [call c_1230_init_taskman_structs]
+
+* allow attract-mode festivities to be skipped if credit available
+* if ( credit_cnt == 0 )  game_state = ATTRACT_MODE
+	move.b	#1,d0                           	| [ld   a,#1] 1 == ATTRACT_MODE
+	tst.b	b8_99B8_credit_cnt           	| [ld   a,(b8_99B8_credit_cnt)]
+	jeq	l_0380                             	| [jr   z,l_0380]
+* else  game_state = READY_TO_PLAY_MODE
+	move.b	#2,d0                           	| [ld   a,#2] 2 == READY_TO_PLAY_MODE
+l_0380:
+	move.b	d0,b8_9201_game_state           	| [ld   (b8_9201_game_state),a] = (credit_cnt==0 ? ATTRACT : READY) ... (m/c start, game_state init)
+
+* if ( credit_cnt == 0 ) ...
+	jne	l_game_state_ready                 	| [jr   nz,l_game_state_ready]
+
+* ... do attract mode stuff
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds_9200_glbls+0x03           	| [ld   (ds_9200_glbls + 0x03),a] demo_idx = 0
+
+* task_activ_tbl[F_ATTRMODECTRL] = 1
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,ds_cpu0_task_actv+0x02       	| [ld   (ds_cpu0_task_actv + 0x02),a] 1 ... f_17B2 (attract-mode control)
+
+* while (game_state == ATTRACT_MODE) { | }
+l_038D_while:
+	move.b	b8_9201_game_state,d0           	| [ld   a,(b8_9201_game_state)] while (ATTRACT_MODE)
+	subq.b	#1,d0                           	| [dec  a]
+	jeq	l_038D_while                       	| [jr   z,l_038D_while]
+
+* GameState == Ready ... reinitialize everthing
+	jbsr	c_1230_init_taskman_structs       	| [call c_1230_init_taskman_structs]
+	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr]
+	jbsr	rst_28                            	| [rst  0x28] memset(mctl_mpool,0,$$14 * 12)
+	jbsr	c_sctrl_sprite_ram_clr            	| [call c_sctrl_sprite_ram_clr]
+
+* game_state == READY
+
+l_game_state_ready:
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 0 ... glbl_enemy_enbl: cleared in case demo was running
+	move.b	#0x13,d2                        	| [ld   c,#0x13] C = string_out_pe_index
+	jbsr    rst_30                              | string_out_pe "(c) 1981 NAMCO LTD"
+	move.b	#1,d2                           	| [ld   c,#1] C = string_out_pe_index
+	jbsr    rst_30                              | string_out_pe "PUSH START BUTTON"
+
+	move.l	#d_attrmode_sptiles_ships,p_attrmode_sptiles    	| [ld   hl,#d_attrmode_sptiles_ships]
+											| [ld   (p_attrmode_sptiles),hl] &_attrmode_sptiles[0] ... parameter to _sprite_tiles_displ()
+
+* if ( 0xFF == mchn_cfg_bonus[0] ) goto l_While_Ready
+	move.b	w_mchn_cfg_bonus+0,d0           	| [ld   a,(w_mchn_cfg_bonus + 0)]
+	cmp.b	#0xFF,d0                         	| [cp   #0xFF]
+	jeq	j_0003D8_wrdy                      	| [jr   z,j_0003D8_wrdy]
+
+	move.b	d0,d4                           	| [ld   e,a] E=bonus score digit
+	move.b	#0x1B,d2                        	| [ld   c,#0x1B] C=string_out_pe_index
+	jbsr	c_game_bonus_info_show_line       	| [call c_game_bonus_info_show_line]
+
+* if ( 0xFF == mchn_cfg_bonus[1] ) goto l_While_Ready
+	move.b	w_mchn_cfg_bonus+1,d0           	| [ld   a,(w_mchn_cfg_bonus + 1)]
+	cmp.b	#0xFF,d0                         	| [cp   #0xFF]
+	jeq	j_0003D8_wrdy                      	| [jr   z,j_0003D8_wrdy]
+
+	and.b	#0x7F,d0                         	| [and  #0x7F]
+	move.b	d0,d4                           	| [ld   e,a] E=bonus score digit
+	move.b	#0x1C,d2                        	| [ld   c,#0x1C] C=string_out_pe_index
+	jbsr	c_game_bonus_info_show_line       	| [call c_game_bonus_info_show_line] bugs from demo mode have disappeared!
+
+* if bit 7 is set, the third bonus award does not apply
+	move.b	w_mchn_cfg_bonus+1,d0           	| [ld   a,(w_mchn_cfg_bonus + 1)]
+	btst.b	#7,d0                           	| [bit  7,a]
+	jne	j_0003D8_wrdy                      	| [jr   nz,j_0003D8_wrdy]
+	and.b	#0x7F,d0                         	| [and  #0x7F]
+	move.b	d0,d4                           	| [ld   e,a] E=bonus score digit
+	move.b	#0x1D,d2                        	| [ld   c,#0x1D] C=string_out_pe_index
+	jbsr	c_game_bonus_info_show_line       	| [call c_game_bonus_info_show_line]
+
+* while (game_state == READY_TO_PLAY_MODE)
+j_0003D8_wrdy:
+l_0003D8:
+	move.b	b8_9201_game_state,d0           	| [ld   a,(b8_9201_game_state)] while (READY)
+	cmp.b	#2,d0                            	| [cp   #2] READY_TO_PLAY_MODE
+	jeq	l_0003D8               
+	
+	bsr		osd_break
+	illegal
+	
+*=============================================================================
+* c_game_bonus_info_show_line()
+*  Description:
+*   coinup... displays each line of "1st BONUS, 2ND BONUS, AND FOR EVERY".
+*   Successive calls to this are made depending upon machine config, e.g.
+*  'XXX BONUS FOR XXXXXX PTS'
+*  'AND FOR EVERY XXXXXX PTS'
+* IN:
+*  C = string_out_pe_index
+*  E = first digit of score i.e. X of Xxxxx.
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_game_bonus_info_show_line:
+
+	jbsr	rst_30                            	| [rst  0x30] string_out_pe ('XXX BONUS FOR   ', 'AND FOR EVERY   ' )
+
+* set next position to append 'X0000 PTS'
+	exg	a1,a0                              	| [ex   de,hl] get position of final character from string_out (digit now in L)
+	move.b	d4,d0                           	| [ld   a,e]
+	add.b	#0x40,d0                         	| [add  a,#0x40] Offset position by 2 characters to the left.
+	move.b	d0,d4                           	| [ld   e,a]
+
+	clr.b	d5                               	| [ld   h,#0]
+	jbsr	c_text_out_i_to_d                 	| [call c_text_out_i_to_d] HL contains number to display, returns updated destination in DE
+
+	exg	a1,a0                              	| [ex   de,hl]
+	move.b	#0x1E,d2                        	| [ld   c,#0x1E]
+	jbsr	c_string_out                      	| [call c_string_out] DE=dest, C=string_out_pe_index
+
+	jbsr	c_sprite_tiles_displ              	| [call c_sprite_tiles_displ]
+
+	rts                                    	| [ret]
+
+*=============================================================================
+*  attributes for ship-sprites in bonus info screen ... 4-bytes each:
+*  0: offset/index of object to use
+*  1: color/code
+*      ccode<3:6>==code
+*      ccode<0:2,7>==color
+*  2: X coordinate
+*  3: Y coordinate
+*
+d_attrmode_sptiles_ships:
+	.byte 0x00, 0x81, 0x19, 0x56
+	.byte 0x02, 0x81, 0x19, 0x62
+	.byte 0x04, 0x81, 0x19, 0x6E
+	
+*=============================================================================
+* c_1230_init_taskman_structs()
+*  Description:
+*   Initialize active player and reserve player kernel tables from defaults:
+*   - At reset
+*   - Immediately following end of "demo game (just prior to "heroes" shown)
+*   - After "results" or "HIGH SCORE INITIAL"
+*   - New game (credit==0 -> credit==1)
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+
+c_1230_init_taskman_structs:
+* memcpy(_task_activ, task_enable_tbl_def, 0x20)
+	lea	task_enable_tbl_def(pc),a0         	| [ld   hl,#task_enable_tbl_def]
+	lea	ds_cpu0_task_actv(pc),a1           	| [ld   de,#ds_cpu0_task_actv] $20 bytes copied from task_enable_tbl_def
+	move.w	#0x0020,d1                      	| [ld   bc,#0x0020] 32
+	movem.w	d1/d2,-(sp)                    	| [push bc]
+	move.l	a4,-(sp)                        	| [push bc]
+
+	move.l	a0,-(sp)                        	| [push hl]
+	jbsr	ldir                              	| [ldir]
+
+* memcpy(_task_resrv, task_enable_tbl_def, 0x20)|
+*  for ( de = 98e0, hl = 1249| bc++ | bc < 0$20 ) de[bc] = hl[bc]|
+	move.l	(sp)+,a0                        	| [pop  hl]
+	move.l	(sp)+,a4                        	| [pop  bc]
+	movem.w	(sp)+,d1/d2                    	| [pop  bc]
+	lea	ds_cpu0_task_resrv(pc),a1          	| [ld   de,#ds_cpu0_task_resrv] $20 bytes copied from task_enable_tbl_def
+	jbsr	ldir                              	| [ldir]
+
+* kill the idle task at [0]
+*  task_tbl_9000[0] = 0
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds_cpu0_task_actv            	| [ld   (ds_cpu0_task_actv),a] 0
+
+	rts                                    	| [ret]
+
+
+*=============================================================================
+* kernel task-enable table defaults
+
+task_enable_tbl_def:
+
+    dc.b  0x1F | f_0827
+    dc.b  0x01 | f_0828  | Copies from sprite "buffer" to sprite RAM
+    dc.b  0x00 | f_17B2
+    dc.b  0x00 | f_1700  | Ship-update in training/demo mode.
+    dc.b  0x00 | f_1A80
+    dc.b  0x01 | f_0857  | triggers various parts of gameplay based on parameters
+    dc.b  0x00 | f_0827
+    dc.b  0x00 | f_0827
+    dc.b
+    dc.b  0x00 | f_2916
+    dc.b  0x00 | f_1DE6
+    dc.b  0x00 | f_2A90
+    dc.b  0x00 | f_1DB3
+    dc.b  0x01 | f_23DD  | Updates each object in the table at 8800
+    dc.b  0x01 | f_1EA4  | Bomb position updater
+    dc.b  0x00 | f_1D32
+    dc.b  0x01 | f_0935  | handle "blink" of Player1/Player2 texts
+    dc.b
+    dc.b  0x00 | f_1B65
+    dc.b  0x00 | f_19B2
+    dc.b  0x00 | f_1D76  | star control
+    dc.b  0x00 | f_0827
+    dc.b  0x00 | f_1F85
+    dc.b  0x00 | f_1F04
+    dc.b  0x00 | f_0827
+    dc.b  0x01 | f_1DD2  | Updates array of 4 timers
+    dc.b
+    dc.b  0x00 | f_2222
+    dc.b  0x00 | f_21CB
+    dc.b  0x00 | f_0827
+    dc.b  0x00 | f_0827
+    dc.b  0x00 | f_20F2
+    dc.b  0x00 | f_2000
+    dc.b  0x00 | f_0827
+    dc.b  0x0A | f_0977  | Handles coinage and changes in game-state
+
+	.align	2
+
+*=============================================================================
+* c_string_out()
+*  Description:
+*    Copy a series of characters to tile-ram (see d_cstring_tbl).
+*    Converts characters strings from ASCII to corresponding character tiles.
+*    Machine character set:
+*     $00 - $09 : decimal digit characters.
+*     $0A - $23 : A-Z
+*     $24       : <space>
+*    String length is variant - the termination token is $2F (ascii "/").
+*    Can be called two ways:
+*    CALL:
+*      Destination position address is passed in HL and swapped into DE.
+*    RST $30:
+*      RST $30 sets the CY flag and JPs to string_out_pe.
+*      The string pointer is then offset (-2) i.e. sizeof(ptr) to get
+*      the destination position address, which winds up in DE.
+*      With the position address in DE, the rest of the routine is the same.
+*  IN:
+*    HL: position in tile RAM.
+*    C: index into table of string pointers (d_cstring_tbl)
+*    CY: "set" if jumped to j_string_out_pe
+*  OUT:
+*    HL contains final string character display position.
+*
+*    PRESERVES :   DE
+*-----------------------------------------------------------------------------
+c_string_out:
+	clr.b	d7                               	| [and  a] clear CY flag.
+
+j_string_out_pe:
+	move.w	d6,-(sp)                    	| [push de] preserves DE
+	move.l	a1,-(sp)                        	| [push de] preserves DE
+	exg	a1,a0                              	| [ex   de,hl] DE := position in tile RAM
+
+* Get address of string pointer using index in C ...
+* p_sptr = ( ptr_tbl - sizeof(ptr) ) + sizeof(ptr) * index
+	move.b	d2,d0                           	| [ld   a,c] C = index into table string pointers (d_cstring_tbl)
+	lea	d_cstring_tbl-4(pc),a0             	| [ld   hl,#d_cstring_tbl - 2] index is ordered from 1 !!
+	jbsr	rst_08                            	| [rst  0x08] HL += 4A
+
+* De-reference the string pointer
+* sptr = *(p_sptr)
+	move.l	(a0),a0                         	| [ld   a,(hl)] lsb
+												| [inc  hl]
+												| [ld   h,(hl)] msb
+												| [ld   l,a] lsb
+
+* Restore flags and check CY
+	tst.b	d7                             	| [ex   af,af']
+
+* if ( CY ) ...
+	jne	l_13AE                             	| [jr   nc,l_13AE]
+* ... do PE stuff: get position into DE ... HL-=2, DE:=*(HL)
+	subq.b	#2,a0                           	| [dec  hl] * 2
+	move.w	(a0)+,d6                         	| [ld   e,(hl)] LSB
+												| [inc  hl]
+												| [ld   d,(hl)] MSB
+												| [inc  hl] HL now pointing to "color".
+
+* now DE == position, so the rest is the same...
+l_13AE:
+	move.b	(a0)+,d2                         	| [ld   c,(hl)] C := color byte ($00 == "cyan")
+											| [inc  hl] ptr++ (first byte of "text")
+	exg	a1,a0                              	| [ex   de,hl] position address in HL, src address in DE
+l_13B1:
+* if ( TERMINATION ) then exit
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	cmp.b	#0x2F,d0                         	| [cp   #0x2F] string terminator
+	jeq	l_13D4_out                         	| [jr   z,l_13D4_out]
+       
+* only a <space> character ($20) should be < $30
+	sub.b	#0x30,d0                         	| [sub  #0x30] e.g. ASCII "0" ... ($30 - $30 ) = 0, "1" ... ($31 - $30 ) = 1 ... etc.
+	jcc	l_13BE                             	| [jr   nc,l_13BE]
+	move.b	#0x24,d0                        	| [ld   a,#0x24] generate a <space> character.
+	jra	l_13C4_putc                        	| [jr   l_13C4_putc]
+l_13BE:
+* if ( A >= $11 )
+	cmp.b	#0x11,d0                         	| [cp   #0x11] e.g. ASCII "A" ... ($41 - $30) = $11
+	jcs	l_13C4_putc                        	| [jr   c,l_13C4_putc]
+* then A-=7
+	sub.b	7,d0                             	| [sub  #7] e.g. ASCII "A" ... ($41 - $30 - $07) = $0A
+       
+l_13C4_putc:
+	jbsr	osd_w_videoram                         	| [ld   (hl),a] display the character
+
+	add.w	#0x400,d6                           	| [set  2,h] H|= $04  (HL:+=$0400)  offset HL into color RAM $8400-$87FF
+	move.b	d2,d0
+	jbsr	osd_w_colorram                         	| [ld   (hl),c] color code in C
+	sub.w	#0x400,d6                           	| [res  2,h] HL:-=$0400
+
+	addq.w	#1,a1                           	| [inc  de] psrc++
+
+* HL-=$20 (advance destination position one tile to the "right")
+										| [ld   a,l]
+	sub.w	#0x20,d6                         	| [sub  #0x20]
+										| [ld   l,a]
+										| [jr   nc,l_13B1]
+											| [dec  h]
+       
+	jra	l_13B1                             	| [jr   l_13B1]
+l_13D4_out:
+	move.l	(sp)+,a1                        	| [pop  de]
+	move.w	(sp)+,d6                    	| [pop  de]
+	rts                                    	| [ret]
+
+*=============================================================================
+* strings for c_string_out
+d_cstring_tbl:
+  * 0x00
+	.long	s_1414,s_1429,s_1436,s_1441,s_144B,s_1457,s_1461,s_1476,s_1488,s_1493
+  * 0x0A
+	.long	s_14A7,s_14C6,s_14D3,s_14EE,s_14F8,s_1507,s_1514,s_1521,s_1525,s_153A
+  * 0x14
+	.long	s_1545,s_1552,s_1569,s_1577,s_1590,s_15A7,s_15AD,s_15C1,s_15D5,s_15E7
+
+* "Declare Effective Address" macro (idfk)
+* Generates offsets in Playfield Tile RAM from given row/column ordinates. _R
+* and _C are 0 based, and this is reflected in the additional "-1" term. The
+* coordinate system applies only to the "Playfield" area and is independent of
+* the top two rows and bottom two rows of tiles.
+* (See tile RAM & color RAM layout ascii art diagram in mrw.s).
+	.macro   _dea  _R,_C
+		.word	m_tile_ram+0x40+(0x1C-\_C-1)*0x20+\_R
+	.endm
+
+* $01
+    _dea 11,6                             | 02EB
+s_1414:
+    .byte 0x00
+	.ascii "PUSH START BUTTON/"
+
+* $02
+    _dea 16,10                                | 0270
+s_1429:
+    .byte 0x00
+	.ascii "GAME OVER/"
+
+    _dea 16,10                                | 0270
+s_1436:
+    .byte 0x00
+	.ascii "READY !/"                         | '!' displays as <space>
+
+* $04
+    _dea 16,11                                | 0250
+s_1441:
+    .byte 0x00
+	.ascii "PLAYER 1/"
+
+* $05
+s_144B:
+    .byte 0x00
+	.ascii "PLAYER 2/"
+
+* %06
+    _dea 16,10                                | 0270
+s_1457:
+    .byte 0x00
+	.ascii "STAGE /"
+
+* $07
+    _dea 16,5                                 | 0310
+s_1461:
+    .byte 0x00
+	.ascii "CHALLENGING STAGE/"
+
+* $08
+    _dea 16,5                                 | 0310
+s_1476:
+    .byte 0x00
+	.ascii "NUMBER OF HITS/"
+
+* $09
+    _dea 19,8                                 | 02B3
+s_1488:
+    .byte 0x00
+	.ascii "BONUS  /"
+
+* $0A
+    _dea 17,6                                 | 02F1
+s_1493:
+    .byte 0x04
+	.ascii "FIGHTER CAPTURED/"
+
+* $0B
+    _dea 13,0                                 | 03AD
+s_14A7:
+    .byte 0x00
+.ascii "                           /"     | 27 spaces
+
+* $0C
+    _dea 13,10                                | 026D
+s_14C6:
+    .byte 0x04
+	.ascii "PERFECT c/"
+
+* $0D
+    _dea 19,2                                 | 0373
+s_14D3:
+    .byte 0x05
+	.ascii "SPECIAL BONUS 10000 PTS/"
+
+* $0E
+    _dea 2,11                                 | 0242
+s_14EE:
+    .byte 0x00
+	.ascii "GALAGA/"
+
+* $0F
+    _dea 5,8                                  | 02A5
+s_14F8:
+    .byte 0x00
+	.ascii "]] SCORE ]]/"
+
+* $10
+    _dea 8,12                                 | 0228
+s_1507:
+    .byte 0x00
+	.ascii "50    100/"
+
+* $11
+    _dea 10,12                                | 022A
+s_1514:
+    .byte 0x00
+	.ascii "80    160/"
+
+* $12
+    _dea 11,12                                | 022B
+s_1521:
+    .byte 0x00
+	.ascii "/"
+
+* $13
+    _dea 27,6                                 | 02FB
+s_1525:
+    .byte 0x03                                | "(C) 1981 NAMCO LTD."
+	.ascii "e 1981 NAMCO LTDa/"
+
+* $14
+    _dea 30,11                                | 025E
+s_153A:
+    .byte 0x04                                  | "NAMCO" (in styled font)
+    .byte 0x66,0x67,0x68,0x69,0x6A,0x6B,0x6C,0x2F
+
+* $15
+    _dea 15,9                                 | 028F
+s_1545:
+    .byte 0x04
+	.ascii "]RESULTS]/"
+
+* $16
+    _dea 18,4                                 | 0332
+s_1552:
+    .byte 0x05
+	.ascii "SHOTS FIRED          /"
+
+* $17
+s_1569:
+    .byte 0x05
+	.ascii "  MISSILES/"
+
+* $18
+    _dea 21,4                                 | 0335
+s_1577:
+    .byte 0x05
+	.ascii "NUMBER OF HITS       /"
+
+* $19
+    _dea 24,4                                 | 0338
+s_1590:
+    .byte 0x03
+	.ascii "HIT]MISS RATIO       /"
+
+* $1A
+s_15A7:
+    .byte 0x03
+	.ascii "$`/"                              | '`' displays as "%" ("$" displays as <space>)
+
+* $1B
+    _dea 15,4                                 | 032F
+s_15AD:
+    .byte 0x05
+	.ascii "1ST BONUS FOR   /"
+
+* $1C
+    _dea 18,4                                 | 0332
+s_15C1:
+    .byte 0x05
+	.ascii "2ND BONUS FOR   /"
+
+* $1D
+    _dea 21,4                                 | 0335
+s_15D5:
+    .byte 0x05
+	.ascii "AND FOR EVERY   /"
+
+* $1E
+s_15E7:
+    .byte 0x05
+	.ascii "0000 PTS/"
+	.align	2
+	
+*=============================================================================
+* jp_Task_man()
+*  Description:
+*   handler for rst $38
+*   Updates star control registers.
+*   Executes the Scheduler.
+*   Sets IO chip for control input.
+*   The task enable table is composed of 1-byte entries corresponding to each
+*   of $20 tasks. Each cycle starts at task[0] and advances an index for each
+*   entry in the table. The increment value is actually obtained from the
+*   task_enable table entry itself, which is normally 1, but other values are
+*   also used, such as $20. The "while" logic exits at >$20, so this is used
+*   to exit the task loop without iterating through all $20 entries. Tthe
+*   possible enable values are:
+*     $00 - disables task
+*     $01 - enables task_man
+*     $0A -
+*     $1F -   1F + 0A = $29     (where else could $0A be used?)
+*     $20 - exit current task man step after the currently executed task.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+jp_Task_man:
+	*move.w	d0,-(sp)                        	| [push af]
+	*exg	af,af'                             	| [ex   af,af']
+	move.w	d0,-(sp)                        	| [push af]
+	movem.w	d1/d2,-(sp)                    	| [push bc]
+	move.l	a4,-(sp)                        	| [push bc]
+	movem.w	d3/d4,-(sp)                    	| [push de]
+	move.l	a1,-(sp)                        	| [push de]
+
+	move.l	a0,-(sp)                        	| [push hl]
+
+	move.l	a2,-(sp)                        	| [push ix]
+
+	move.l	a3,-(sp)                        	| [push iy]
+
+* determine star_ctrl param bits based on some modulus of frame timer?
+* $A000-$A005 starfield scroll speed (only bit 0 is significant)
+	move.b	_sfr_dsw5,d0                    	| [ld   a,(_sfr_dsw5)] DSWA: freeze video
+	move.b	d0,d3                           	| [ld   d,a]
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	and.b	#0x1C,d0                         	| [and  #0x1C] 0000XXX0
+	move.b	d0,d2                           	| [ld   c,a]
+	ror.b	#1,d0                            	| [rrca] 00000XXX
+	eor.b	d2,d0                            	| [xor  c] A ^ C
+	and.b	#0x18,d0                         	| [and  #0x18] 000XX000
+	move.b	d0,d2                           	| [ld   c,a]
+
+*  if ( ! freezed_dsw set )
+	move.b	ds_99B9_star_ctrl+0x05,d0       	| [ld   a,(ds_99B9_star_ctrl + 0x05)]
+	btst.b	#1,d3                           	| [bit  1,d] freeze_ctrl_dsw
+	jne	l_0259                             	| [jr   nz,l_0259]
+*  else
+	move.b	#7,d0                           	| [ld   a,#7] 7==star_ctrl_bits=freezed
+
+l_0259:
+	and.b	#0x07,d0                         	| [and  #0x07]
+	or.b	d2,d0                             	| [or   c]
+
+	move.b	#5,d1                           	| [ld   b,#5]
+	lea	l_A000(pc),a0                      	| [ld   hl,#0xA000] star_ctrl_port
+
+l_0261:
+	move.b	d0,(a0)                         	| [ld   (hl),a] A==star_ctrl_bits
+	addq.b	#1,d6                           	| [inc  l]
+	ror.b	#1,d0                            	| [rrca] star_ctrl_bits >>= 1
+	subq.b	#1,d1                           	| [...]
+	jne	l_0261                             	| [djnz l_0261]
+
+	*move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+
+	                     	| [xor  a]
+	jbsr	osd_disable_vblank_interrupt                    	| [ld   (_sfr_6820),a] 0 ... disable IRQ1
+
+*  if ( freezed )  exit
+	btst.b	#1,d3                           	| [bit  1,d]
+	jeq	l_02A8_pop_regs_and_exit           	| [jp   z,l_02A8_pop_regs_and_exit]
+
+*
+* Execute the Scheduler
+*
+	move.b	d0,d2                           	| [ld   c,a] A == 0 ... initialize index into Task Enable Table
+
+l_while_index:
+l_while_zero:
+* while ( 0 == A = *(task_activ_tbl + C) )  C++   ... loop until non-zero: assumes we will find a valid entry in the table!
+	lea	ds_cpu0_task_actv(pc),a0           	| [ld   hl,#ds_cpu0_task_actv]
+	move.b	d2,d0                           	| [ld   a,c]
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	move.b	(a0),d0                         	| [ld   a,(hl)] task_activ_tbl[index]
+	tst.b	d0                               	| [and  a]
+	jne	l_0280_nonzero_tbl_entry           	| [jr   nz,l_0280_nonzero_tbl_entry]
+	addq.b	#1,d2                           	| [inc  c]
+	jra	l_while_zero                       	| [jr   l_while_zero]
+
+l_0280_nonzero_tbl_entry:
+* save the table entry for later...
+	move.b	d0,d1                           	| [ld   b,a] *(task_activ_tbl + C)
+* multiply index 'C' by 2 to form a 16-bit function pointer
+* p_taskfn = d_cpu0_task_table[C]
+	lea	d_cpu0_task_table(pc),a0           	| [ld   hl,#d_cpu0_task_table]
+	moveq	#0,d0
+	move.b	d2,d0                           	| [ld   a,c] index
+	asl.b	#2,d0                            	| [sla  a] <<=2 ... sizeof 32-bit function pointer
+	                            	| [add  a,l]
+	                           	| [ld   l,a]
+	move.l	(a0),a1                         	| [ld   e,(hl)] lo-byte of pointer
+											| [inc  hl]
+											| [ld   d,(hl)] hi-byte of pointer
+	exg	a1,a0                              	| [ex   de,hl] jp address in HL
+
+	movem.w	d1/d2,-(sp)                    	| [push bc]
+	move.l	a4,-(sp)                        	| [push bc]
+	jbsr	c_task_switcher                   	| [call c_task_switcher] p_taskfn()
+	move.l	(sp)+,a4                        	| [pop  bc]
+	movem.w	(sp)+,d1/d2                    	| [pop  bc]
+
+*    index+=task_activ_tbl[index]
+	move.b	d1,d0                           	| [ld   a,b] *(task_activ_tbl + C)
+	add.b	d2,d0                            	| [add  a,c] +=index
+	move.b	d0,d2                           	| [ld   c,a]
+
+* while (index < $20)
+	and.b	#0xE0,d0                         	| [and  #0xE0] control values are $00, $01, $20, $1f
+	jeq	l_while_index                      	| [jr   z,l_while_index]
+
+* setup regs for input from IO chip
+*	lea	l_7000(pc),a0                      	| [ld   hl,#0x7000] IO data xfer (read)
+*	lea	ds3_99B5_io_input(pc),a1      	| [ld   de,#ds3_99B5_io_input + 0x00] read 3 bytes
+*	move.w	#0x0003,d1                      	| [ld   bc,#0x0003] 3
+*exx
+
+* send command to IO chip
+	*move.b	#0x71,d0                        	| [ld   a,#0x71] cmd==read ctrl inputs
+	*move.b	d0,0x7100                       	| [ld   (0x7100),a] IO cmd ($71 -> enable NMI to trigger when data is available)
+
+l_02A8_pop_regs_and_exit:
+	                           	| [ld   a,#1]
+	jbsr	osd_enable_vblank_interrupt                    	| [ld   (_sfr_6820),a] 1 ... enable IRQ1
+
+	move.l	(sp)+,a3                        	| [pop  iy]
+	move.l	(sp)+,a2                        	| [pop  ix]
+	move.l	(sp)+,a0                        	| [pop  hl]
+	move.l	(sp)+,a1                        	| [pop  de]
+	movem.w	(sp)+,d3/d4                    	| [pop  de]
+	move.l	(sp)+,a4                        	| [pop  bc]
+	movem.w	(sp)+,d1/d2                    	| [pop  bc]
+	move.w	(sp)+,d0                        	| [pop  af]
+	*exg	af,af'                             	| [ex   af,af']
+	*move.w	(sp)+,d0                        	| [pop  af]
+	rts                                    	| [ret]
+* } end 'rst  $0038' handler
+
+*=============================================================================
+d_str20000:
+	.byte 0x00,0x00,0x00,0x00,0x02,0x24  || "20000" (reversed)
+d_strScore:
+	.byte 0x17,0x0A,0x16,0x0C,0x18       || "SCORE" (reversed)
+	.align	2
+	
+*=============================================================================
+* c_task_switcher()
+*  Description: returns from the jp'd task.
+* IN:
+*  ...
+* OUT:
+*  ...
+* PRESERVES:
+*  BC
+*-----------------------------------------------------------------------------
+c_task_switcher:
+	jra	(a0)                               	| [jp   (hl)]
+
+*=============================================================================
+* d_cpu0_task_table
+*  Description:
+*   Function pointers to periodic tasks (dispatch table for scheduler)
+*   void (* const d_cpu0_task_table[32])(void)
+*-----------------------------------------------------------------------------
+d_cpu0_task_table:
+	.long	f_0827
+	.long	f_0828
+	.long	f_17B2
+	.long	f_1700
+	.long	f_1A80
+	.long	f_0857
+	.long	f_0827
+	.long	f_0827
+
+	.long	f_2916
+	.long	f_1DE6
+	.long	f_2A90
+	.long	f_1DB3
+	.long	f_23DD
+	.long	f_1EA4
+	.long	f_1D32
+	.long	f_0935
+
+	.long	f_1B65
+	.long	f_19B2
+	.long	f_1D76
+	.long	f_0827
+	.long	f_1F85
+	.long	f_1F04
+	.long	f_0827
+	.long	f_1DD2
+
+	.long	f_2222
+	.long	f_21CB
+	.long	f_0827
+	.long	f_0827
+	.long	f_20F2
+	.long	f_2000
+	.long	f_0827
+	.long	f_0977
+
+*=============================================================================
+* f_0827()
+*  Description:
+*   empty task
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+f_0827:
+	rts                                    	| [ret]
+
+*=============================================================================
+* f_0828()
+*  Description:
+*   Copies from sprite "buffer" to sprite RAM...
+*   works in conjunction with CPU-sub1:_05BF to update sprite RAM
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+f_0828:
+	move.b	#1,d0                           	| [ld   a,#1]
+	move.b	d0,b_CPU1_in_progress           	| [ld   (b_CPU1_in_progress),a] 1
+	lea	mrw_sprite_code+0x40(pc),a0        	| [ld   hl,#mrw_sprite_code + 0x40]
+	lea	sfr_sprite_code+0x40(pc),a1        	| [ld   de,#sfr_sprite_code + 0x40]
+	move.w	#0x0040,d1                      	| [ld   bc,#0x0040] 64
+	jbsr	ldir                              	| [ldir]
+	lea	mrw_sprite_posn+0x40(pc),a0        	| [ld   hl,#mrw_sprite_posn + 0x40]
+	lea	sfr_sprite_posn+0x40(pc),a1        	| [ld   de,#sfr_sprite_posn + 0x40]
+	move.b	#0x40,d2                        	| [ld   c,#0x40]
+	jbsr	ldir                              	| [ldir]
+	lea	mrw_sprite_ctrl+0x40(pc),a0        	| [ld   hl,#mrw_sprite_ctrl + 0x40]
+	lea	sfr_sprite_ctrl+0x40(pc),a1        	| [ld   de,#sfr_sprite_ctrl + 0x40]
+	move.b	#0x40,d2                        	| [ld   c,#0x40]
+	jbsr	ldir                              	| [ldir]
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_CPU1_in_progress           	| [ld   (b_CPU1_in_progress),a] 0
+l_0850:
+	move.b	b_CPU2_in_progress,d0           	| [ld   a,(b_CPU2_in_progress)] check status of other CPU... while (b_CPU2_in_progress) == $01 ...
+	subq.b	#1,d0                           	| [dec  a]
+	jeq	l_0850                             	| [jr   z,l_0850] wait
+	rts                                    	| [ret]
+* end task $0828
+
+*=============================================================================
+* c_1061()
+*  Description:
+*   Integer division and modulus operation. NOTE input value is NOT preserved.
+*   HL = HL / A
+*    A = HL % A
+*   Uses ADC to sort of left-rotate the Dividend bitwise, linking through Cy
+*   Flag into A and from A through Cy back into HL.
+* IN:
+*  A = Divisor
+*  HL (D5,D6) = Dividend
+* OUT:
+*  HL (D5,D6) = Quotient
+*  A =  Modulus
+* PRESERVES: BC, DE
+*-----------------------------------------------------------------------------
+c_divmod:
+	movem.w	d1/d2,-(sp)                    	| [push bc]
+	* HL is now D5.W
+	lsl.w	#8,d5
+	move.b	d6,d5
+	
+	move.b	d0,d2                           	| [ld   c,a] keep the divisor in C
+	clr.b	d0                               	| [xor  a]
+	move.b	#16+1,d1                        	| [ld   b,#16 + 1] bit shift counter (pre-increment for djnz)
+l_1066:
+	moveq	#0,d7
+	* no carry here to start with
+	add.w	d5,d5						| [adc  a,a]                                  | "left shift" the modulus portion and pick up any overflow from HL.
+	jcs	l_1074                             	| [jr   c,l_1074]
+	move.w	#0,d7	| set "carry" first (and invert)
+	cmp.b	d2,d0                            	| [cp   c] hint: this does a-c
+	jcs	l_106D                             	| [jr   c,l_106D] if (a<c )then goto ccf ... (Cy is set and the ccf will clear it)
+	moveq	#1,d7   | clear "carry" and invert
+	sub.b	d2,d0                            	| [sub  c] else subtract_divisor ... (Cy is not set, the ccf will set it)
+l_106D:
+	* inversion already done		| [ccf] Compliment Cy Flag ... if set then the modulus result has overflowed...
+l_106E:
+	add.w	d5,d5
+	add.w	d7,d5     | [adc  hl,hl]                                ; ... and overflow out of modulus result is added to quotient.
+	subq.b	#1,d1                           	| [...]
+	jne	l_1066                             	| [djnz l_1066]
+
+	* now dispatch D5.W into D5 and D6
+	move.b	d5,d6
+	lsr.w	#8,d5
+	movem.w	(sp)+,d1/d2                    	| [pop  bc]
+	rts                                    	| [ret]
+
+l_1074:                                           | handle overflow out of A
+	sub.b	d2,d0                            	| [sub  c]
+	move.w	#1,d7                            	| [scf] need to explicitly set Cy so overflow of A will be summed with result in HL
+	jra	l_106E                             	| [jp   l_106E]
+
+
+*=============================================================================
+* c_1079()
+*  Description:
+*   Called once for each of boss + 1 or 2 wingmen.
+* IN:
+*   HL == &b_8800[n] ... bits 0:6 ... loaded at l_1B8B from boss_wing_slots[n + 0]
+*         if bit-7 set then negate rotation angle to (ix)0x0C
+*         (creature originating on right side)
+*   DE == pointer to object data (in cpu-sub1 code space)
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_1079:
+	move.b	d6,d0                           	| [ld   a,l]
+
+	and.b	#0x80,d0                         	| [and  #0x80] if set then negate rotation angle to (ix)0x0C
+	addq.b	#1,d0                           	| [inc  a] set bit-0, .b13<0> makes object slot active
+	exg	d0,d7                             	| [ex   af,af']
+
+	bclr.b	#7,d6                           	| [res  7,l]
+	jra	j_108A                             	| [jp   j_108A]
+
+*=============================================================================
+* c_1083()
+*  Description:
+*   Diving movement of red alien, yellow alien, clone-attacker, and rogue fighter.
+* IN:
+*   HL == &b_8800[n]
+*   DE == pointer to object data (in cpu-sub1 code space)
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_1083:
+* set A:bit-7 if L:bit-1 != 0 ... creature originating on right side
+	move.b	d6,d0                           	| [ld   a,l]
+
+	ror.b	#2,d0                            	| [rrca] * 2
+
+	and.b	#0x80,d0                         	| [and  #0x80] if set then negate rotation angle to (ix)0x0C
+	addq.b	#1,d0                           	| [inc  a] set bit-0, .b13<0> makes object slot active
+	exg	d0,d7                             	| [ex   af,af']
+
+*=============================================================================
+* j_108A()
+*  Description:
+*   Setup motion for diving attackers.
+* IN:
+*   HL == &b_8800[n]
+*   DE == pointer to table in cpu-sub1 code space
+*   A' ==
+*        bit-0: set by c_1083 and c_1079
+*        bit-7: flag set for negative rotation angle
+* OUT:
+*
+*-----------------------------------------------------------------------------
+j_108A:
+	movem.w	d3/d4,-(sp)                    	| [push de]
+	move.l	a1,-(sp)                        	| [push de]
+
+* find an available data structure or quit
+	move.w	#0x0014,d3                      	| [ld   de,#0x0014] size of 1 data structure 20
+	move.b	#0x0C,d1                        	| [ld   b,#0x0C] number of structures in array
+	lea	ds_bug_motion_que,a2           	| [ld   ix,#ds_bug_motion_que]
+l_1094:
+	btst.b	#0,(0x13,a2)                    	| [bit  0,0x13(ix)] check for activated state
+	jeq	l_10A0_got_one                     	| [jr   z,l_10A0_got_one]
+	add.w	d3,a2                            	| [add  ix,de]
+	subq.b	#1,d1                           	| [...]
+	jne	l_1094                             	| [djnz l_1094]
+
+	move.l	(sp)+,a1                        	| [pop  de]
+	movem.w	(sp)+,d3/d4                    	| [pop  de]
+	rts                                    	| [ret]
+
+l_10A0_got_one:
+	move.l	(sp)+,a1                        	| [pop  de] pointer to table
+	movem.w	(sp)+,d3/d4                    	| [pop  de] pointer to table
+	* TODO: check that nothing is in 0A & 0B offsets!!
+	move.l	a1,(0x08,a2)                    	| [ld   0x08(ix),e] data pointer lsb
+											| [ld   0x09(ix),d] data pointer msb
+	move.b	#1,(0x0D,a2)                    	| [ld   0x0D(ix),#1] expiration counter
+	move.w	#0x0100,(0x04,a2)               	| [ld   0x04(ix),#<0x0100] msb, 0x0100 (90 degrees)
+												| [ld   0x05(ix),#>0x0100] lsb
+	move.b	d6,d2                           	| [ld   c,l] stash index to obj_status[], sprite etc.
+	move.b	d2,(0x10,a2)                    	| [ld   0x10(ix),c] index of object, sprite etc.
+
+	exg	d0,d7                             	| [ex   af,af']
+	move.b	d0,d3                           	| [ld   d,a] function parameter from A' to 0x13(ix)
+
+	move.b	#9,(a0)+                         	| [ld   (hl),#9] obj_status[l].state ... disposition = diving attack
+	move.l	a2,d0                         	| [ld   a,ixl]
+	sub.l	#ds_bug_motion_que,d0
+	addq.b	#1,d6                           	| [inc  l]
+	move.b	d0,(a0)                         	| [ld   (hl),a] obj_status[L].idx ... index into flying que
+
+
+* insert sprite Y coord into pool structure
+	move.b	d2,d6                           	| [ld   l,c] restore index to obj_status[], sprite etc. (dec l just as good, no?)
+	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
+	and.w	#0xFF,d6
+	add.w	d6,a0
+	move.b	(a0)+,d2                         	| [ld   c,(hl)] sprite_x
+	addq.b	#1,d6                           	| [inc  l]
+	move.b	(a0),d1                         	| [ld   b,(hl)] sprite_y<7:0>
+	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
+	add.w	d6,a0
+	move.b	(a0),d0                         	| [ld   a,(hl)] sprite_y<8>
+	ror.b	#1,d0                            	| [rrca] sY<8> into Cy
+
+	bcc.b	0f
+	* carry set, simulate rr
+	ror.b	#1,d1
+	bset	#7,d1		| [rr   b] sY<8> from Cy to b<7> and sY<0> to Cy
+	bra.b	1f
+0:
+	* carry clear: simple ROR
+	ror.b	#1,d1		| [rr   b] sY<8> from Cy to b<7> and sY<0> to Cy
+1:
+	                           	| [rr   b] sY<8> from Cy to b<7> and sY<0> to Cy
+
+* not flipped screen
+* 160 - sprite_y + 1 ... backwards math since sY<8:1> already loaded in B, and this is only for flipped screen
+	trap	#0
+	
+	bcs.b	0f
+	clr.b	d7
+	bra.b	1f
+0:
+	st.b	d7
+1:
+	cmp.b	#1,d7                            	| [ccf] sY<:0> = Cy ^ 1
+
+* insert sprite X coord into pool structure
+l_10DC:
+* resacale sY<8:0> to fixed-point 9.7
+	move.b	d1,(0x01,a2)                    	| [ld   0x01(ix),b] sY<8:1> ... fixed point 9.7
+* sY<:0> from Cy into A<7> ... fixed point 9.7 (LSB)
+	bcc.b	0f
+	* carry set: set bit 7
+	move.b	#0x80,d0
+	bra.b	1f
+0:
+	* carry clear: clear bit 7
+	moveq	#0,d0
+1:
+	* keep only bit 7 (which explains why we can
+	* directly set values of D0 above)
+										| [and  #0x80]
+	move.b	d0,(a2)                    	| [ld   0x00(ix),a] sY<0> ... fixed point 9.7
+
+	move.b	d2,d0                           	| [ld   a,c] sprite_x
+
+l_10ED:
+	lsr.b	#1,d0                            	| [srl  a]
+	move.b	d0,(0x03,a2)                    	| [ld   0x03(ix),a] sX<8:1>
+	bcc.b	0f
+	* carry set: set bit 7
+	move.b	#0x80,d0
+	bra.b	1f
+0:
+	* carry clear: clear bit 7
+	moveq	#0,d0
+1:
+	* keep only bit 7 (which explains why we can
+	* directly set values of D0 above)
+	move.b	d0,(0x02,a2)                    	| [ld   0x02(ix),a] sX<:0> ... now scaled fixed point 9.7
+	move.b	d3,(0x13,a2)                    	| [ld   0x13(ix),d] function argument (A') sets bit-0 and bit-7
+	move.b	#0x1E,(0x0E,a2)                 	| [ld   0x0E(ix),#0x1E] bomb drop counter
+
+* if (flying_bug_attck_condtn)  bug_motion_que[n].b0F = bomb_drop_enbl_flags
+	move.b	ds_9200_glbls+0x0B,d0           	| [ld   a,(ds_9200_glbls + 0x0B)] if ( !0 ), load  b_92C0[0x08] ... bomb drop enable flags
+												| [and  a]
+	jeq	l_1108                             	| [jr   z,l_1108]
+	move.b	b_92C0+0x08,d0                  	| [ld   a,(b_92C0 + 0x08)] bomb drop enable flags
+* else bug_motion_que[n].b0F = 0
+l_1108:
+	move.b	d0,(0x0F,a2)                    	| [ld   0x0F(ix),a] 0 or b_92C0[$08] ... bomb drop enable flags
+
+	rts                                    	| [ret]
+
+trap_0:
+	                             	| [ex   af,af'] stash Cy ... sY<:0>
+	move.b	d1,d0                           	| [ld   a,b]
+	add.b	#0x50,d0                 	| [add  a,#<(-0x0160 >> 1)] adjust addend for scale factor 2
+	neg.b	d0                               	| [neg]
+	move.b	d0,d1                           	| [ld   b,a]
+	                             	| [ex   af,af'] un-stash Cy
+	rte
+	
+*=============================================================================
+* f_1700()
+*  Description:
+*   Fighter control, only called in training/demo mode.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+f_1700:
+* labels for "case" blocks in _1713
+* switch( *_demo_fghtrvctrs >> 5) & 0x07 )
+	move.l	pdb_demo_fghtrvctrs(pc),a1      	| [ld   de,(pdb_demo_fghtrvctrs)] cases for switch
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	rol.b	#3,d0                            	| [rlca] * 3
+	and.b	#0x07,d0                         	| [and  #0x07]
+	lea	d_1713(pc),a0                      	| [ld   hl,#d_1713] &table
+	jbsr	rst_08                            	| [rst  0x08] HL += 2A
+	move.l	(a0),a0                         	| [ld   a,(hl)]
+												| [inc  hl]
+												| [ld   h,(hl)]
+												| [ld   l,a]
+	jra	(a0)                               	| [jp   (hl)]
+d_1713:
+	.long case_1766
+	.long case_1766
+	.long case_171F
+	.long case_1766
+	.long case_1734
+	.long case_172D
+
+* boss+wingmen nearly to fighter
+case_171F:  | 0x02
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	and.b	#0x0F,d0                         	| [and  #0x0F]
+	beq.b	0f
+	rts                                    	| [ret  nz]
+0:
+
+	lea	ds_9200_glbls+0x07(pc),a0          	| [ld   hl,#ds_9200_glbls + 0x07] timer, training mode, far-right boss turned blue
+	subq.b	#1,(a0)                         	| [dec  (hl)]
+	beq.b	0f
+	rts                                    	| [ret  nz]
+0:
+	jra	case_1766                          	| [jp   case_1766] training mode, far-right boss exploding
+
+* appearance of first enemy formation in Demo
+case_172D:  | 0x05
+	jbsr	c_1F0F                            	| [call c_1F0F] init sprite objects for rockets
+	move.l	pdb_demo_fghtrvctrs,a1      	| [ld   de,(pdb_demo_fghtrvctrs)] trampled DE so reload it
+
+* drives the simulated inputs to the fighter in training mode
+case_1734:  | 0x04
+	move.b	(a1),d0                         	| [ld   a,(de)] *pdb_demo_fghtrvctrs
+
+	lea	ds_plyr_actv+_b_2ship(pc),a0       	| [ld   hl,#ds_plyr_actv +_b_2ship]
+	move.b	(a0),d4                         	| [ld   e,(hl)] setup E for c_1F92
+
+	btst.b	#0,d0                           	| [bit  0,a]
+	jne	l_1741                             	| [jr   nz,l_1741]
+	and.b	#0x0A,d0                         	| [and  #0x0A]
+	jra	l_1755                             	| [jr   l_1755]
+
+l_1741:
+	move.b	ds_9200_glbls+0x09,d0           	| [ld   a,(ds_9200_glbls + 0x09)] object/index of targeted alien
+	move.b	d0,d6                           	| [ld   l,a]
+	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
+	and.w	#0xFF,d6
+	add.w	d6,a0
+
+	move.b	ds_sprite_posn+0x62,d0          	| [ld   a,(ds_sprite_posn + 0x62)] ship (1) position
+	sub.b	(a0),d0                          	| [sub  (hl)]
+	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
+	jeq	l_1755                             	| [jr   z,l_1755]
+	move.b	#0x08,d0                        	| [ld   a,#0x08] right
+	jcs	l_1755                             	| [jr   c,l_1755]
+	move.b	#2,d0                           	| [ld   a,#2] left
+l_1755:
+	jbsr	c_1F92                            	| [call c_1F92]
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	and.b	#0x03,d0                         	| [and  #0x03]
+	beq.b	0f
+	rts                                    	| [ret  nz]
+0:
+	lea	ds_9200_glbls+0x07(pc),a0          	| [ld   hl,#ds_9200_glbls + 0x07] timer, training mode, far-right boss exploding
+	subq.b	#1,(a0)                         	| [dec  (hl)]
+	beq.b	0f
+	rts                                    	| [ret  nz]
+0:
+	jbsr	c_1F0F                            	| [call c_1F0F] init sprite objects for rockets ...training mode, ship about to shoot?
+
+case_1766:  | 0x00, 0x01, 0x03
+	move.l	pdb_demo_fghtrvctrs,a1      	| [ld   de,(pdb_demo_fghtrvctrs)]
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	and.b	#0xC0,d0                         	| [and  #0xC0] 0x80 fires shot ... 0xC0 is end of sequence
+	cmp.b	#0x80,d0                         	| [cp   #0x80]
+	jne	l_1772                             	| [jr   nz,l_1772]
+	addq.w	#1,a1                           	| [inc  de] firing shot ... advance to next token
+l_1772:
+	addq.w	#1,a1                           	| [inc  de]
+
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	move.l	a1,pdb_demo_fghtrvctrs          	| [ld   (pdb_demo_fghtrvctrs),de] += 1
+* A = (*_demo_fghtrvctrs >> 5) & 0x07|
+	rol.b	#3,d0                            	| [rlca] * 3
+	and.b	#0x07,d0                         	| [and  #0x07]
+* switch(...)
+	lea	d_1786(pc),a0                      	| [ld   hl,#d_1786]
+	jbsr	rst_08                            	| [rst  0x08] HL += 2A (pointer from index)
+	move.l	(a0),a0                         	| [ld   a,(hl)]
+												| [inc  hl]
+												| [ld   h,(hl)]
+												| [ld   l,a]
+	jra	(a0)                               	| [jp   (hl)] 1784
+
+d_1786:
+	.long case_1794  | 0
+	.long case_1794  | 1 -> $2x
+	.long case_17A1  | 2 -> $4x
+	.long case_17A8  | 3
+	.long case_17AE  | 4 -> $8x
+	.long case_17AE  | 5
+	.long case_179C  | 6 -> $Cx
+
+* load index/position of target alien
+case_1794:
+* ds_9200_glbls[0x09] = *_demo_fghtrvctrs << 1 & 0x7E
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	rol.b	#1,d0                            	| [rlca] rotate bits<6:1> into place
+	and.b	#0x7E,d0                         	| [and  #0x7E] mask out Cy rlca'd into <:0>
+	move.b	d0,ds_9200_glbls+0x09           	| [ld   (ds_9200_glbls + 0x09),a] index/position of of target alien
+	rts                                    	| [ret]
+
+* $C0: last token, shot-and-hit far-left boss in training mode (second hit)
+case_179C:
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds_cpu0_task_actv+0x03       	| [ld   (ds_cpu0_task_actv + 0x03),a] 0 ... f_1700() end of fighter control sequence
+	rts                                    	| [ret]
+
+* $4x: shoot-and-hit far-right or far-left boss (once) in training mode
+case_17A1:
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	and.b	#0x1F,d0                         	| [and  #0x1F]
+l_17A4:
+	move.b	d0,ds_9200_glbls+0x07           	| [ld   (ds_9200_glbls + 0x07),a] demo timer
+	rts                                    	| [ret]
+
+* when?
+case_17A8:
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	and.b	#0x1F,d0                         	| [and  #0x1F]
+	move.b	d0,d2                           	| [ld   c,a]
+	jbsr	rst_30                            	| [rst  0x30] string_out_pe
+	rts                                    	| [ret]
+
+* $8x: prior to each fighter shot in training mode?
+case_17AE:
+	addq.w	#1,a1                           	| [inc  de]
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	jra	l_17A4                             	| [jr   l_17A4]
+
+*=============================================================================
+* f_17B2()
+*  Description:
+*   Manage attract mode, control sequence for training and demo screens.
+*   The state progression is always the same, ordered by the state-index
+*   (switch variable).
+*
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+f_17B2:
+* if ( game_state != ATTRACT_MODE ) return
+	move.b	b8_9201_game_state,d0           	| [ld   a,(b8_9201_game_state)]
+	subq.b	#1,d0                           	| [dec  a]
+	beq.b	0f
+	rts                                    	| [ret  nz]
+0:
+
+* switch( demo_idx )
+	move.b	ds_9200_glbls+0x03,d0           	| [ld   a,(ds_9200_glbls + 0x03)] demo state variable (jp to "switch-case")
+	lea	d_17C3_jptbl(pc),a0                	| [ld   hl,#d_17C3_jptbl] table_base
+	jbsr	rst_08                            	| [rst  0x08] HL += 2A
+	move.l	(a0),a1                         	| [ld   e,(hl)]
+											| [inc  hl]
+											| [ld   d,(hl)]
+	exg	a1,a0                              	| [ex   de,hl]
+	jra	(a0)                               	| [jp   (hl)]
+
+d_17C3_jptbl:
+	.long case_1940   | 0x00 . clear tile and sprite ram
+	.long case_1948   | 0x01   setup info-screen: sprite tbl index, text index, preload tmr[2]==2
+	.long case_1984   | 0x02   tmr[2]=2,  sequence info-text and sprite tiles indices 1 sec intervals
+	.long case_18D9   | 0x03   task[F_demo_fghter_ctrl]==1  init 7 aliens for training mode
+	.long case_18D1   | 0x04 ~ wait for task[F_demo_fghter_ctrl]==0 training-mode runs before advance state
+	.long case_18AC   | 0x05   synchronize copyright text with completion of explosion of last boss
+	.long case_1940   | 0x06 . clear tile and sprite ram
+	.long case_17F5   | 0x07   delay ~1 sec before puts("GAME OVER")
+	.long case_1852   | 0x08   init demo   task[F_demo_fghter_ctrl]==1
+	.long case_18D1   | 0x09 ~ wait for task[F_demo_fghter_ctrl]==0 demo-mode runs before advance state
+	.long case_1808   | 0x0A   task[F_demo_fghter_ctrl]==1
+	.long case_18D1   | 0x0B ~ wait for task[F_demo_fghter_ctrl]==0 boss-capture before advance state
+	.long case_1840   | 0x0C   end of Demo - init taskman, disable flying_bug_ctrl(), global enemy ct 0,
+	.long case_1940   | 0x0D . clear tile and sprite ram
+	.long case_17E1   | 0x0E   end of Demo ... delay, then show GALACTIC HERO screen
+
+
+* 0E: end of Demo ...  delay, then show GALACTIC HERO screen
+case_17E1:
+* if ( game_timers[3] == 0 ) then l_17EC
+	move.b	ds4_game_tmrs+3,d0              	| [ld   a,(ds4_game_tmrs + 3)] if 0, display hi-score tbl
+	tst.b	d0                               	| [and  a]
+	jeq	l_17EC                             	| [jr   z,l_17EC]
+* else if ( game_timers[3] == 1 )  advance state
+	subq.b	#1,d0                           	| [dec  a]
+	jeq	l_attmode_state_step               	| [jp   z,l_attmode_state_step]
+* else break
+	rts                                    	| [ret]
+l_17EC:
+	jbsr	c_mach_hiscore_show               	| [call c_mach_hiscore_show]
+	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
+	move.b	d0,ds4_game_tmrs+3              	| [ld   (ds4_game_tmrs + 3),a] $0A ... after displ hi-score tbl
+	rts                                    	| [ret]
+
+* 07: just cleared screen from training mode, delay ~1 sec before puts("game over")
+case_17F5:
+* if ( ( ds3_92A0_frame_cts[0] & 0x1F ) == 0x1F )
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	and.b	#0x1F,d0                         	| [and  #0x1F]
+	cmp.b	#0x1F,d0                         	| [cp   #0x1F]
+	beq.b	0f
+	rts                                    	| [ret  nz]
+0:
+* then ...
+	move.b	#1,d0                           	| [ld   a,#1]
+	move.b	d0,ds_cpu0_task_actv+0x05       	| [ld   (ds_cpu0_task_actv + 0x05),a] 1 ... f_0857
+	move.b	#2,d2                           	| [ld   c,#2] index of string
+	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("GAME OVER")
+	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
+
+* 10: enable fighter control demo
+case_1808:
+	jbsr	c_133A                            	| [call c_133A]
+
+	lea	d_181F(pc),a0                      	| [ld   hl,#d_181F]
+	move.l	a0,pdb_demo_fghtrvctrs          	| [ld   (pdb_demo_fghtrvctrs),hl] &d_181F[0]
+
+	move.b	#1,d0                           	| [ld   a,#1]
+	move.b	d0,ds_cpu0_task_actv+0x03       	| [ld   (ds_cpu0_task_actv + 0x03),a] 1  (f_1700 ... fighter control in training/demo mode)
+	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 1  (f_1F04 ... fire button input))
+	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 1  (cpu1:f_05EE ... fighter collision detection)
+	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
+
+* demo fighter vectors demo level after capture
+d_181F:
+	.byte 0x08,0x18,0x8A,0x08,0x88,0x06,0x81,0x28,0x81,0x05,0x54,0x1A,0x88,0x12,0x81,0x0F
+	.byte 0xA2,0x16,0xAA,0x14,0x88,0x18,0x88,0x10,0x43,0x82,0x10,0x88,0x06,0xA2,0x20,0x56,0xC0
+	.align	2
+	
+* 12: end of Demo, fighter has been erased but remaining enemies may not have been erased yet
+case_1840:
+	jbsr	rst_28                            	| [rst  0x28] memset(mctl_mpool,0,$$14 * 12)
+	jbsr	c_1230_init_taskman_structs       	| [call c_1230_init_taskman_structs]
+
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds_cpu0_task_actv+0x10       	| [ld   (ds_cpu0_task_actv + 0x10),a] 0 (f_1B65 ... manage bomber attack )
+	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 0 ... glbl_enemy_enbl, end of demo
+
+* have to re-set enable bit for this flag after init_structs
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,ds_cpu0_task_actv+0x02       	| [ld   (ds_cpu0_task_actv + 0x02),a] 1 ... f_17B2 (attract-mode control)
+
+	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
+
+* 08: init demo (following training mode) ... "GAME OVER" showing
+case_1852:
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] 1 ... sound_mgr_reset: non-zero causes re-initialization of sound mgr
+	move.b	d0,ds_plyr_actv+_b_stgctr       	| [ld   (ds_plyr_actv +_b_stgctr),a] 1
+	move.b	d0,ds_cpu0_task_actv+0x03       	| [ld   (ds_cpu0_task_actv + 0x03),a] 1  (f_1700 ... fighter control in training/demo mode)
+	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 1  (f_1F04 ... fire button input)
+	move.b	d0,ds_plyr_actv+_b_not_chllg_stg	| [ld   (ds_plyr_actv +_b_not_chllg_stg),a] 1  (0 if challenge stage ...see new_stg_game_only)
+
+	lea	d_1887(pc),a0                      	| [ld   hl,#d_1887]
+	move.l	a0,pdb_demo_fghtrvctrs          	| [ld   (pdb_demo_fghtrvctrs),hl] &d_1887[0]
+	jbsr	stg_init_env                      	| [call stg_init_env]
+	jbsr	c_133A                            	| [call c_133A] apparently erases some stuff from screen?
+
+	move.b	#1,d0                           	| [ld   a,#1]
+	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 1 ... glbl_enemy_enbl, one time init for demo
+	move.b	d0,ds_plyr_actv+_b_atk_wv_enbl  	| [ld   (ds_plyr_actv +_b_atk_wv_enbl),a] 1 ... 0 when respawning player ship
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_wingm	| [ld   (ds_plyr_actv +_b_bmbr_boss_wingm),a] 1 ... for demo, force the bomber-boss into wingman-mode
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,ds_new_stage_parms+0x04      	| [ld   (ds_new_stage_parms + 0x04),a] 2 ... max_bombers (demo)
+	move.b	d0,ds_new_stage_parms+0x05      	| [ld   (ds_new_stage_parms + 0x05),a] 2 ... increases max bombers in certain conditions (demo)
+	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
+
+* demo fighter vectors demo level before capture
+d_1887:
+	.byte 0x02,0x8A,0x04,0x82,0x07,0xAA,0x28,0x88,0x10,0xAA,0x38,0x82,0x12,0xAA,0x20,0x88
+	.byte 0x14,0xAA,0x20,0x82,0x06,0xA8,0x0E,0xA2,0x17,0x88,0x12,0xA2,0x14,0x18,0x88,0x1B
+	.byte 0x81,0x2A,0x5F,0x4C,0xC0
+	.align	2
+* 05: synchronize copyright text with completion of explosion of last boss
+case_18AC:
+* tmr[2] always 0 at transition to this case (was reloaded at last of 5 texts in case_1984)
+* if (0 == tmr[2])  collsn_notif && tmr[2]=9 && break
+	move.b	ds4_game_tmrs+2,d0              	| [ld   a,(ds4_game_tmrs + 2)] always 0 here at entry to case_18AC
+	tst.b	d0                               	| [and  a]
+	jeq	l_18BB                             	| [jr   z,l_18BB]
+* else  if (1 == tmr[2])  state++ | break
+	subq.b	#1,d0                           	| [dec  a]
+	jeq	l_attmode_state_step               	| [jp   z,l_attmode_state_step]
+* else  if (6 == tmr)  copyright_info | break
+	cmp.b	#5,d0                            	| [cp   #5]
+	jeq	l_18C6                             	| [jr   z,l_18C6]
+* else  break
+	rts                                    	| [ret]
+
+l_18BB:
+* tmr == 0 ... put 4.5 seconds on the clock (but transitions to next case at tmr==1, so delay actually 4 secs)
+	move.b	#0x34,d0                        	| [ld   a,#0x34]
+	move.b	d0,b_9200_obj_collsn_notif+0x34 	| [ld   (b_9200_obj_collsn_notif + 0x34),a] $34
+	move.b	#9,d0                           	| [ld   a,#9]
+	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] 9
+	rts                                    	| [ret]
+l_18C6:
+* tmr == 5, explosion complete ... '150' score on display
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds_sprite_posn+0x62          	| [ld   (ds_sprite_posn + 0x62),a] 0 ... fighter (1) is removed from screen
+	move.b	#0x13,d2                        	| [ld   c,#0x13]
+	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("(C) 1981 NAMCO LTD.")
+	move.b	#0x14,d2                        	| [ld   c,#0x14]
+	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("NAMCO" - 6 tiles)
+	rts                                    	| [ret]
+
+* 04, 09, 11: wait for fighter control task to disable itself
+case_18D1:
+* if (0 == task_actv_tbl_0[0x03])  attmode_state_step()
+	move.b	ds_cpu0_task_actv+0x03,d0       	| [ld   a,(ds_cpu0_task_actv + 0x03)] wait for task[f_1700 fighter ctrl ]==0 before advance state
+	tst.b	d0                               	| [and  a]
+	jeq	l_attmode_state_step               	| [jp   z,l_attmode_state_step]
+	rts                                    	| [ret]
+
+* 03: one time init for 7 enemies in training mode
+case_18D9:
+	move.b	#7,d1                           	| [ld   b,#7] 4 bosses + 3 moths
+l_18DB_while:
+	jbsr	c_sprite_tiles_displ              	| [call c_sprite_tiles_displ] updates offset of pointer to _attrmode_sptiles[0]
+	subq.b	#1,d1                           	| [...]
+	jne	l_18DB_while                       	| [djnz l_18DB_while]
+
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds_plyr_actv+_b_nships       	| [ld   (ds_plyr_actv +_b_nships),a] 0
+	move.b	d0,ds_cpu0_task_actv+0x05       	| [ld   (ds_cpu0_task_actv + 0x05),a] 0 ... f_0857 uses tmr[2]
+	jbsr	c_133A                            	| [call c_133A] fghtr_onscreen()
+
+* set inits and override defaults of bomber timers (note f_0857 disabled above)
+	move.b	#0xFF,d5                      	| [ld   hl,#0xFF0D]
+	move.b	#0x0D,d6                      	| [ld   hl,#0xFF0D]
+       * tmrs_init[0x06] = 0xFF
+	*move.b	d6,b_92C0+0x05                  	| [ld   (b_92C0 + 0x05),hl] demo ... timrs[0x06] = $FF
+	move.b	d5,b_92C0+0x06                  	| [ld   (b_92C0 + 0x05),hl] demo ... timrs[0x06] = $FF
+	move.b	d6,b_92C0+0x04                  	| [ld   (b_92C0 + 0x04),hl] demo ... timrs
+	move.b	d5,b_92C0+0x05                  	| [ld   (b_92C0 + 0x04),hl] demo ... timrs
+       * tmrs[0x02] = 0xFF
+	*move.b	d6,b_92C0+0x01                  	| [ld   (b_92C0 + 0x01),hl] demo ... timrs_ini[0x06] = $FF
+	move.b	d5,b_92C0+0x02                  	| [ld   (b_92C0 + 0x01),hl] demo ... timrs_ini[0x06] = $FF
+	move.b	d6,b_92C0+0x00                  	| [ld   (b_92C0 + 0x00),hl] demo ... timrs_ini
+	move.b	d5,b_92C0+0x01                  	| [ld   (b_92C0 + 0x00),hl] demo ... timrs_ini
+
+	lea	d_1928(pc),a0                      	| [ld   hl,#d_1928] demo fighter vectors
+	move.l	a0,pdb_demo_fghtrvctrs          	| [ld   (pdb_demo_fghtrvctrs),hl] &d_1928[0] ... demo fighter vectors
+
+* memset($92ca,$00,$10)
+	clr.b	d0                               	| [xor  a]
+	move.b	#0x10,d1                        	| [ld   b,#0x10]
+	lea	bmbr_boss_pool(pc),a0              	| [ld   hl,#bmbr_boss_pool] memset( ... , 0, $10 )
+	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+
+	move.b	d0,ds_plyr_actv+_b_2ship        	| [ld   (ds_plyr_actv +_b_2ship),a] 0: not double fighter
+	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 0: glbl_enemy_enbl (demo)
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 1 ... force bomber-boss wingman for training mode
+	move.b	d0,ds_cpu0_task_actv+0x10       	| [ld   (ds_cpu0_task_actv + 0x10),a] 1: f_1B65 ... manage bomber attack
+	move.b	d0,ds_cpu0_task_actv+0x0B       	| [ld   (ds_cpu0_task_actv + 0x0B),a] 1: f_1DB3 ... check enemy status at 9200
+	move.b	d0,ds_cpu0_task_actv+0x03       	| [ld   (ds_cpu0_task_actv + 0x03),a] 1: f_1700 ... fighter control in training/demo mode
+
+	move.b	_sfr_dsw4,d0                    	| [ld   a,(_sfr_dsw4)] DSWA ... SOUND IN ATTRACT MODE: _fx[0x17]
+	ror.b	#1,d0                            	| [rrca]
+	and.b	#0x01,d0                         	| [and  #0x01]
+	move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] from DSWA "sound in attract mode" ... 0 == enable CPU-sub2 process
+
+	jbsr	c_game_or_demo_init               	| [call c_game_or_demo_init]
+
+	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
+
+* demo fighter vectors training mode
+d_1928:
+	.byte 0x08,0x1B,0x81,0x3D,0x81,0x0A,0x42,0x19,0x81,0x28,0x81,0x08
+	.byte 0x18,0x81,0x2E,0x81,0x03,0x1A,0x81,0x11,0x81,0x05,0x42,0xC0
+
+* 00, 06, 13: clear tile and sprite ram
+case_1940:
+	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr]
+	jbsr	c_sctrl_sprite_ram_clr            	| [call c_sctrl_sprite_ram_clr]
+	jra	l_attmode_state_step               	| [jr   l_attmode_state_step]
+
+* 01: setup info-screen: sprite tbl index, text index, timer[2]
+case_1948:
+	move.l	#d_attrmode_sptiles,p_attrmode_sptiles          	| [ld   hl,#d_attrmode_sptiles] setup index into sprite data table
+											| [ld   (p_attrmode_sptiles),hl] parameter to _sprite_tiles_displ
+
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds_9200_glbls+0x05           	| [ld   (ds_9200_glbls + 0x05),a] 0 ... demo_scrn_txt_indx
+	move.b	d0,w_bug_flying_hit_cnt         	| [ld   (w_bug_flying_hit_cnt),a] 0
+
+	move.b	#2,d0                           	| [ld   a,#2]
+	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] 2 (1 sec)
+	jra	l_attmode_state_step               	| [jr   l_attmode_state_step]
+
+* parameters for sprite tiles used in attract mode, 4-bytes each:
+*  0: offset/index of object to use
+*  1: color/code
+*      ccode<3:6>==code
+*      ccode<0:2,7>==color
+*  2: X coordinate
+*  3: Y coordinate
+*
+d_attrmode_sptiles:
+	.byte 0x08,0x1B,0x44,0x3A  | code $18 (bee)
+	.byte 0x0A,0x12,0x44,0x42  | code $10 (moth)
+	.byte 0x0C,0x08,0x7C,0x50  | code $08 (boss)
+*d_attrmode_sptiles_7 | label not needed, residual value of the pointer is used
+	.byte 0x34,0x08,0x34,0x5C  | code $08
+	.byte 0x30,0x08,0x64,0x5C  | code $08
+	.byte 0x32,0x08,0x94,0x5C  | code $08
+	.byte 0x4A,0x12,0xA4,0x64  | code $10
+	.byte 0x36,0x08,0xC4,0x5C  | code $08
+	.byte 0x58,0x12,0xB4,0x64  | code $10
+	.byte 0x52,0x12,0xD4,0x64  | code $10
+
+* 02: info-screen sequencer, advance text and sprite tiles indices
+case_1984:
+*  if ( 0 == game_tmrs[2] ) ... (2 on the clock from case_1948)
+	move.b	ds4_game_tmrs+2,d0              	| [ld   a,(ds4_game_tmrs + 2)]
+	tst.b	d0                               	| [and  a]
+	beq.b	0f
+	rts                                    	| [ret  nz]
+0:
+* then ...
+* . game_tmrs[2] = 2| // 1 second
+	move.b	#2,d0                           	| [ld   a,#2]
+	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] info-screen: 2counts (1 second) between text
+
+* . if (index == 5) then  state++ | break
+	move.b	ds_9200_glbls+0x05,d0           	| [ld   a,(ds_9200_glbls + 0x05)] if 5 ... demo_scrn_txt_indx
+	cmp.b	#5,d0                            	| [cp   #5]
+	jeq	l_attmode_state_step               	| [jr   z,l_attmode_state_step]
+* . else
+* .. txt_index++ | show text
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,ds_9200_glbls+0x05           	| [ld   (ds_9200_glbls + 0x05),a] demo_scrn_txt_indx++
+	add.b	#0x0D,d0                         	| [add  a,#0x0D] s_14EE - d_cstring_tbl - 1
+	move.b	d0,d2                           	| [ld   c,a] C = 0x0D + A ... string index
+	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("GALAGA", "--SCORE--", etc)
+
+* .. [index >= 3] && sprite_tiles_displ() && break
+	move.b	ds_9200_glbls+0x05,d0           	| [ld   a,(ds_9200_glbls + 0x05)] [demo_scrn_txt_indx >= 3] ... sprite tile display
+	cmp.b	#3,d0                            	| [cp   #3]
+	bcc.b	0f
+	rts                                    	| [ret  c]
+0:
+	jbsr	c_sprite_tiles_displ              	| [call c_sprite_tiles_displ] advances pointer to sptiles_3[]
+
+	rts                                    	| [ret]
+
+l_attmode_state_step:
+* .demo_idx++
+	lea	ds_9200_glbls+3,a0          	| [ld   hl,#ds_9200_glbls + 0x03] advance state variable
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+* if ( .demo_idx == 0x0F )  then demo_idx = 0
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	cmp.b	#0x0F,d0                         	| [cp   #0x0F]
+	beq.b	0f
+	rts                                    	| [ret  nz]
+0:
+	clr.b	(a0)                             	| [ld   (hl),#0]
+
+	rts                                    	| [ret]
+
+*=============================================================================
+* f_19B2()
+*  Description:
+*   Manage ship movement during capturing phase. There are two segments - in
+*   the first, the  ship movement simply tracks that of the capturing boss.
+*   Second, once the boss reaches position in the collective, the ship is
+*   moved vertically an additional 24 steps toward the top of the screen so
+*   that the final position is above the boss.
+*   Enabled by f_2222 tractor beam task when it terminates with the ship captured.
+*   When first called 928E==1 (show text flag), which will show the text and
+*   clear the flag.
+*   Noticed that once the ship is positioned in the collective, it may
+*   experience an additional small horizontal offset once its position begins
+*   to be managed by the collective positioning manager.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+f_19B2:
+*  if ( flag  != 0 )  goto show_text
+	move.b	ds5_928A_captr_status+0x04,d0   	| [ld   a,(ds5_928A_captr_status + 0x04)] == 1 when boss connects with ship (2318)
+												| [and  a]
+	jne	l_19D2_fighter_captured            	| [jr   nz,l_19D2_fighter_captured]
+
+*  else if ( game_tmrs[1]               	| 0 == 0 )  goto erase_text
+*   ... with A already 0, we use OR to check Z flag for zero count... which efficently loads our count to A at the same time!
+	lea	ds4_game_tmrs+1(pc),a0             	| [ld   hl,#ds4_game_tmrs + 1]
+	or.b	(a0),d0                           	| [or   (hl)]
+	jeq	l_1A01_erase_text                  	| [jr   z,l_1A01_erase_text]
+
+*  else if ( game_tmrs[1] != 4 ) goto 19c7
+	cmp.b	#4,d0                            	| [cp   #4]
+	jne	l_19C7                             	| [jr   nz,l_19C7]
+
+*  timer--   .....decrement timer at 4. ... why? the count is set to 6 (19D7)
+	subq.b	#1,d0                           	| [dec  a]
+	move.b	d0,(a0)                         	| [ld   (hl),a]
+	move.b	d0,b_9AA0+0x09                  	| [ld   (b_9AA0 + 0x09),a] game_tmrs[1] ... sound-fx count/enable registers
+l_19C7:
+	moveq	#0,d0
+	move.b	ds_plyr_actv+_b_cboss_slot,d0   	| [ld   a,(ds_plyr_actv +_b_cboss_slot)] bug_flite_que[ plyr.cboss_slot ].b0D = 4
+	add.b	#0x0D,d0                         	| [add  a,#0x0D]
+	lea		ds_bug_motion_que,a0          	| [ld   h,#>ds_bug_motion_que] bug_flite_que[ plyr.cboss_slot ].b0D = 4
+	add.w	d0,a0                           	| [ld   l,a]
+	move.b	#4,(a0)                         	| [ld   (hl),#4]
+	rts                                    	| [ret]
+
+l_19D2_fighter_captured:
+* sets up a captured-fighter as an enemy object
+	move.b	#0x0A,d2                        	| [ld   c,#0x0A] index of string
+	jbsr	rst_30                            	| [rst  0x30] string_out_pe "FIGHTER CAPTURED"
+	move.b	#6,d0                           	| [ld   a,#6] set time of countdown
+	move.b	d0,ds4_game_tmrs+1              	| [ld   (ds4_game_tmrs + 1),a] 6 ...time to show fighter-captured-text
+	lea	ds_sprite_posn+0x62,a0         	| [ld   hl,#ds_sprite_posn + 0x62] ship (1) position
+	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d0	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)]
+	and.w	#7,d0                             	| [and  #7] captured ships are in same order as bosses, from 8800-8807
+											| [ld   e,a]
+	lea	ds_sprite_posn,a1                           	| [ld   d,h]
+	add.w	d0,a1
+	move.b	(a0),d0                         	| [ld   a,(hl)] get column of ship object e.g. ... A := *(9362)
+	move.b	d0,(a1)+                         	| [ld   (de),a] get column of captured ship object e.g. (DE == 9302)
+	clr.b	(a0)+                             	| [ld   (hl),#0]
+* set row offset of captured ship object
+										| [inc  l]
+										| [inc  e]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	move.b	d0,(a1)                         	| [ld   (de),a]
+* odd byte of sprite ctrl...
+	lea		ds_sprite_ctrl,a0             	| [ld   h,#>ds_sprite_ctrl]
+	and.w	#0xFF,d6
+	add.w	d6,a0
+	lea		ds_sprite_ctrl,a1                     	| [ld   d,h]
+	add.w	d6,a1
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	move.b	d0,(a1)                         	| [ld   (de),a]
+
+	lea		ds_sprite_code,a0             	| [ld   h,#>ds_sprite_code]
+	and.w	#0xFF,d4
+	add.w	d4,a0                           	| [ld   l,e]
+	move.b	#7,(a0)                         	| [ld   (hl),#7] sprite code 7 is the vertical ship "wing closed" used for captured ship
+	subq.w	#1,a0                           	| [dec  l]
+	move.b	#7,(a0)                         	| [ld   (hl),#7] sprite color ... red
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 0
+	move.b	d0,ds5_928A_captr_status+0x04   	| [ld   (ds5_928A_captr_status + 0x04),a] 0 .... erase fighter-captured text
+	rts                                    	| [ret]
+
+l_1A01_erase_text:
+* check if text has been cleared yet?
+*  if ( *82d1 == $24 ) goto $1a10
+	move.b	m_tile_ram+0x02C0+0x11,d0       	| [ld   a,(m_tile_ram + 0x02C0 + 0x11)] 'I' of fighter captured
+	cmp.b	#0x24,d0                         	| [cp   #0x24]
+	jeq	l_1A10                             	| [jr   z,l_1A10]
+*  clear "fighter captured" text
+	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
+	lea	m_tile_ram+0x03A0+0x11,a0      	| [ld   hl,#m_tile_ram + 0x03A0 + 0x11] "leftmost" column of row where "fighter captured" is displayed
+	jbsr	c_string_out                      	| [call c_string_out] erase fighter capture text
+l_1A10:
+	moveq	#0,d0
+	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d0	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)]
+	move.w	d0,d6                           	| [ld   l,a]
+	and.b	#0x07,d0                         	| [and  #0x07] ships are in same order as bosses, from 8800-8807
+	move.w	d0,d4                           	| [ld   e,a]
+	lea		b_8800,a0                     	| [ld   h,#>b_8800]
+	add.w	d6,a0
+	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
+	move.b	d0,d2                           	| [ld   c,a]
+	move.b	(a0),d0                         	| [ld   a,(hl)] e.g. HL==8832
+	cmp.b	#0x09,d0                         	| [cp   #0x09] check if object status "flying"
+	jne	l_1A3F_join_ship_to_group          	| [jr   nz,l_1A3F_join_ship_to_group] status changes to 2 (rotating) when boss reaches home positn
+	lea		ds_sprite_posn,a0             	| [ld   h,#>ds_sprite_posn]
+	move.l	a0,a1                           	| [ld   d,h] DE == captd ship sprite posn
+	add.w	d6,a0
+	add.w	d4,a1
+	move.b	(a0)+,d0                         	| [ld   a,(hl)] HL == boss posn, horizontal
+	move.b	d0,(a1)+                         	| [ld   (de),a]
+	addq.w	#1,d6								| [inc  l]
+	addq.w	#1,d4								| [inc  e]
+	move.b	#0x10,d0                        	| [ld   a,#0x10] offset captured-ship vertically from flying boss
+*  if ( !flip_screen ) goto 1a31
+	btst.b	#0,d2                           	| [bit  0,c] C == _flip_screen
+	jeq	l_1A31                             	| [jr   z,l_1A31]
+	neg.b	d0                               	| [neg] offset negated for inverted screen.
+l_1A31:
+	move.b	d0,d1                           	| [ld   b,a] A == vertical offset of ship from boss
+	add.b	(a0),d0                          	| [add  a,(hl)] HL == boss in sprite posn regs (odds...vertical posn)
+	move.b	d0,(a1)                         	| [ld   (de),a] ... DE == boss_posn + $10
+	roxr.b	#1,d0                           	| [rra]
+	eor.b	d1,d0                            	| [xor  b]
+	rol.b	#1,d0                            	| [rlca]
+	and.b	#0x01,d0                         	| [and  #0x01]
+	lea		ds_sprite_ctrl,a0             	| [ld   h,#>ds_sprite_ctrl] .b1
+	move.l	a0,a1                           	| [ld   d,h]
+	add.w	d6,a0
+	add.w	d4,a1
+	move.b	(a0),d7
+	eor.b	d7,d0                            	| [xor  (hl)]
+	move.b	d0,(a1)                         	| [ld   (de),a] update ship sprite ctrl (e.g. 9B03)
+	rts                                    	| [ret]
+
+* ...boss status e.g. 8830[n] == $02  (rotating into position)
+l_1A3F_join_ship_to_group:
+* if ( couonter > 0 ) goto 1A4B
+	lea	ds5_928A_captr_status+1,a0  	| [ld   hl,#ds5_928A_captr_status + 0x01] counter while captured ship is joined with the collective
+	move.b	(a0),d0                         	| [ld   a,(hl)] a=0
+												| [and  a]
+	jne	l_1A4B_test_positioning_timer      	| [jr   nz,l_1A4B_test_positioning_timer]
+* else initialize_ship_sprite
+	lea		ds_sprite_code,a1             	| [ld   d,#>ds_sprite_code]
+	add.w	d4,a1
+	move.b	#6,d0                           	| [ld   a,#6] ship sprite code
+	move.b	d0,(a1)                         	| [ld   (de),a]
+l_1A4B_test_positioning_timer:
+	addq.b	#1,(a0)                         	| [inc  (hl)] *( ds5_928A_captr_status + 1 )++
+	cmp.b	#0x24,d0                         	| [cp   #0x24]
+	jeq	l_1A6A_ship_in_position            	| [jr   z,l_1A6A_ship_in_position]
+
+* set position increment +1 for inverted screen, otherwise -1
+	move.b	#1,d1                           	| [ld   b,#1]
+	btst.b	#0,d2                           	| [bit  0,c] C == flip_screen
+	jne	l_1A58                             	| [jr   nz,l_1A58]
+	subq.b	#2,d1                           	| [dec  b] * 2
+l_1A58:
+	move.w	d4,d6                           	| [ld   l,e]
+	addq.w	#1,d6                           	| [inc  l] set vertical position (odd-byte)
+	lea		ds_sprite_posn,a0             	| [ld   h,#>ds_sprite_posn]
+	add.w	d6,a0
+	move.b	d1,d0                           	| [ld   a,b]
+	add.b	(a0),d0                          	| [add  a,(hl)]
+	move.b	d0,(a0)                         	| [ld   (hl),a]
+	roxr.b	#1,d0                           	| [rra]
+	eor.b	d1,d0                            	| [xor  b]
+	rol.b	#1,d0                            	| [rlca]
+	bcs.b	0f
+	rts                                    	| [ret  nc]
+0:
+	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	add.w	d6,a0
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	eor.b	#0x01,d0                         	| [xor  #0x01]
+	move.b	d0,(a0)                         	| [ld   (hl),a]
+	rts    
+
+
+l_1A6A_ship_in_position:
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds_cpu0_task_actv+0x11       	| [ld   (ds_cpu0_task_actv + 0x11),a] 0: this task
+	move.b	d0,b_9AA0+0x09                  	| [ld   (b_9AA0 + 0x09),a] 0: sound-fx count/enable registers
+	lea	b_8800(pc),a1                      	| [ld   d,#>b_8800]
+	and.w	#0xFF,d4
+	add.w	d4,a1
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,(a1)                         	| [ld   (de),a] 1: b_8800[n] (stand-by position)
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] 1: invalidate the capture boss object (e.g. was $32)
+	move.b	d0,ds_99B9_star_ctrl+0x00       	| [ld   (ds_99B9_star_ctrl + 0x00),a] 1: when fighter on screen
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,ds_9200_glbls+0x13           	| [ld   (ds_9200_glbls + 0x13),a] 2: restart-stage flag (fighter captured)
+	rts                                    	| [ret]
+
+*=============================================================================
+* f_1A80()
+*  Description:
+*   "clone-attack" manager.
+*   Not active until stage-4 or higher because the parameter is 0.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+f_1A80:
+* check parameter for condition to enable the bonus-bee feature.
+* if ( num_bugs > num_bugs_for_bonus_bee ) then return
+	move.b	ds_new_stage_parms+0x0A,d0      	| [ld   a,(ds_new_stage_parms + 0x0A)] bonus-bee when bug count reaches this
+	move.b	d0,d2                           	| [ld   c,a]
+	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
+	cmp.b	d2,d0                            	| [cp   c]
+	bcs.b	0f
+	rts                                    	| [ret  nc]
+0:
+
+* if ( activated_one_already ) goto 1AD5
+	move.b	ds_plyr_actv+_b_bbee_tmr,d0     	| [ld   a,(ds_plyr_actv +_b_bbee_tmr)]
+	tst.b	d0                               	| [and  a]
+	jne	l_1AD5_in_one_already              	| [jr   nz,l_1AD5_in_one_already]
+* else ... find_available
+	lea	b_8800+0x07,a0                 	| [ld   hl,#b_8800 + 0x07] first object of bee group (minus 1)
+	move.w	#20*256+0xFF,d1                 	| [ld   bc,#20 * 256 + 0xFF] 20 of these pests (we don't care about C)
+	move.b	#1,d0                           	| [ld   a,#1] 1 == resting
+l_1A97:
+	addq.w	#1,a0                           	| [inc  l] increment to next even offset
+	jbsr	cpi                               	| [cpi] A-(HL), HL <- HL+1, BC <- BC-1
+	jeq	l_1AAB_found_one                   	| [jr   z,l_1AAB_found_one]
+	subq.b	#1,d1                           	| [...]
+	jne	l_1A97                             	| [djnz l_1A97]
+
+* iterate through moth group and find one that is resting
+	lea	b_8800+0x40-1,a0               	| [ld   hl,#b_8800 + 0x40 - 1] offset into moth group
+	move.b	#0x10,d1                        	| [ld   b,#0x10] 16 of the vermin
+l_1AA3:
+	addq.w	#1,a0                           	| [inc  l] increment to next even offset
+	jbsr	cpi                               	| [cpi]
+	jeq	l_1AAB_found_one                   	| [jr   z,l_1AAB_found_one]
+	subq.b	#1,d1                           	| [...]
+	jne	l_1AA3                             	| [djnz l_1AA3]
+
+	rts                                    	| [ret]
+
+l_1AAB_found_one:
+	move.b	#0xC0,d0                        	| [ld   a,#0xC0]
+	move.b	d0,ds_plyr_actv+_b_bbee_tmr     	| [ld   (ds_plyr_actv +_b_bbee_tmr),a] $C0 ... delay count until bonus-bee launch
+											| [dec  l]
+	sub.l	#b_8800+0x40-2,a0				| subtract base to get lsb
+	move.w	a0,d4                           	| [ld   e,l]
+	lea	ds_sprite_code(pc),a1              	| [ld   d,#>ds_sprite_code]
+	and.w	#0xFF,d4
+	add.w	d4,a1
+	                           	| [inc  e]
+	move.b	(1,a1),d0                         	| [ld   a,(de)]
+	                           	| [dec  e]
+	move.b	d0,d2                           	| [ld   c,a]
+	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] "Bonus-bee" manager
+	lsr.b	#2,d0                            	| [srl  a] * 2
+	move.b	d0,d6                           	| [ld   l,a]
+	clr.b	d5                               	| [ld   h,#0]
+	move.b	#3,d0                           	| [ld   a,#3]
+	jbsr	c_divmod                          	| [call c_divmod] HL=HL/3
+	* we don't care about HL, only about modulus
+	addq.b	#4,d0                           	| [add  a,#4]
+	lea	ds_plyr_actv+_b_bbee_obj(pc),a0    	| [ld   hl,#ds_plyr_actv +_b_bbee_obj]
+	move.b	d4,(a0)+                         	| [ld   (hl),e]
+												| [inc  l]
+	move.b	d2,(a0)+                         	| [ld   (hl),c]
+												| [inc  l]
+	move.b	d0,(a0)                         	| [ld   (hl),a]
+	move.b	d0,b_9AA0+0x12                  	| [ld   (b_9AA0 + 0x12),a] sound-fx count/enable registers, bonus-bee sound
+	rts                                    	| [ret]
+
+l_1AD5_in_one_already:
+	addq.b	#1,d0                           	| [inc  a] A == delay count until bonus-bee launch
+	jeq	l_1AF4_ready_go                    	| [jr   z,l_1AF4_ready_go]
+	move.b	d0,ds_plyr_actv+_b_bbee_tmr     	| [ld   (ds_plyr_actv +_b_bbee_tmr),a] A<0 (delay count until bonus-bee launch)
+	exg	d0,d7                             	| [ex   af,af'] stash the counter
+	lea	ds_plyr_actv+_b_bbee_obj(pc),a0    	| [ld   hl,#ds_plyr_actv +_b_bbee_obj]
+	move.b	(a0),d4                         	| [ld   e,(hl)]
+	lea	b_8800(pc),a1                      	| [ld   d,#>b_8800]
+	and.w	#0xFF,d4
+	add.w	d4,a1
+	move.b	(a1),d0                         	| [ld   a,(de)]
+* if ( object_status != 1 ) exit  ... (killed the little fucker before he could launch)
+	subq.b	#1,d0                           	| [dec  a]
+	jne	l_1B54_getout                      	| [jp   nz,l_1B54_getout]
+* else
+	lea	ds_sprite_code(pc),a1              	| [ld   d,#>ds_sprite_code]
+	add.w	d4,a1
+	addq.w	#1,a0                           	| [inc  l] HL:=982E   ... color 'A'
+	exg	d0,d7                             	| [ex   af,af'] recover the counter
+	btst.b	#4,d0                           	| [bit  4,a] check for %$10 (alternate color every 1/4 second)
+	jeq	l_1AF0_alternating_colors          	| [jr   z,l_1AF0_alternating_colors]
+	addq.w	#1,a0                           	| [inc  l] HL:=982F   ... color 'B'
+l_1AF0_alternating_colors:
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	addq.b	#1,d4                           	| [inc  e] point to color register (odd-byte offset)
+	move.b	d0,(a1)                         	| [ld   (de),a]
+	rts                                    	| [ret]
+
+l_1AF4_ready_go:
+	move.b	ds_cpu0_task_actv+0x15,d0       	| [ld   a,(ds_cpu0_task_actv + 0x15)] f_1F04: fire button input ...  a "bonus-bee" has started
+	                              	| [and  a]
+	jne	l_1B00                             	| [jr   nz,l_1B00]
+	move.b	#0xE0,d0                        	| [ld   a,#0xE0]
+	move.b	d0,ds_plyr_actv+_b_bbee_tmr     	| [ld   (ds_plyr_actv +_b_bbee_tmr),a] $E0
+	rts                                    	| [ret]
+
+l_1B00:
+	move.b	ds_plyr_actv+_b_bbee_obj,d0     	| [ld   a,(ds_plyr_actv +_b_bbee_obj)]
+	move.b	d0,d6                           	| [ld   l,a]
+	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
+	and.w	#0xFF,d6
+	add.w	d6,a0
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	subq.b	#1,d0                           	| [dec  a]
+	jne	l_1B54_getout                      	| [jr   nz,l_1B54_getout] make sure he's not dead
+	lea	b_9200_obj_collsn_notif(pc),a0     	| [ld   h,#>b_9200_obj_collsn_notif]
+	and.w	#0xFF,d6
+	add.w	d6,a0
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	btst.b	#7,d0                           	| [bit  7,a]
+	jne	l_1B54_getout                      	| [jr   nz,l_1B54_getout] make sure he's not dead
+	move.b	ds_plyr_actv+_b_bbee_clr_b,d0   	| [ld   a,(ds_plyr_actv +_b_bbee_clr_b)]
+	subq.b	#4,d0                           	| [sub  #4] convert color 4,5,or 6 to index from 0
+	lea	d_1B59(pc),a0                      	| [ld   hl,#d_1B59]
+	jbsr	rst_08_half                            	| [rst  0x08] HL += 2A
+	lea	ds3_99B0_X3attackcfg(pc),a1        	| [ld   de,#ds3_99B0_X3attackcfg] setup X3 attacker, write 3 bytes...
+                                                  * [0]:=3
+                                                  * [1] [2] word loaded from 1B59[ 2 * ( actv_plyr_state + 0x0F ) ]
+	move.b	#3,d0                           	| [ld   a,#3]
+	move.b	d0,(a1)                         	| [ld   (de),a] (99B0):=3
+	addq.b	#1,d4                           	| [inc  e]
+	jbsr	ldi                               	| [ldi]
+	jbsr	ldi                               	| [ldi]
+* setup vector argument to c_1083
+	move.b	ds_plyr_actv+_b_bbee_clr_b,d0   	| [ld   a,(ds_plyr_actv +_b_bbee_clr_b)]
+	subq.b	#4,d0                           	| [sub  #4] convert color 4,5,or 6 to index from 0
+	and.b	#0x0F,d0                         	| [and  #0x0F] hmmmm.... we didn't do this before.. oh well
+	move.b	d0,d2                           	| [ld   c,a]
+	lea	d_1B5F(pc),a0                      	| [ld   hl,#d_1B5F] setup to load pointers into DE
+	jbsr	rst_08                            	| [rst  0x08] HL += 2A
+	move.l	(a0),a1                         	| [ld   e,(hl)]
+												| [inc  hl]
+												| [ld   d,(hl)]
+* setup HL pointer to object in sprite code registers
+	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
+	move.b	ds_plyr_actv+_b_bbee_obj,d0     	| [ld   a,(ds_plyr_actv +_b_bbee_obj)]
+	move.b	d0,d6                           	| [ld   l,a]
+	and.w	#0xFF,d6
+	add.w	d6,a0
+
+	move.b	d2,d0                           	| [ld   a,c] grab "color B" again
+	rol.b	#3,d0                            	| [rlca] * 3
+	add.b	#0x56,d0                         	| [add  a,#0x56]
+	move.b	(a0),d2                         	| [ld   c,(hl)]
+	move.b	d0,(a0)                         	| [ld   (hl),a]
+	move.b	d2,d0                           	| [ld   a,c] grab "color B" again
+	and.b	#0xF8,d0                         	| [and  #0xF8] ?
+	move.b	d0,d2                           	| [ld   c,a]
+	move.b	ds_plyr_actv+_b_bbee_clr_a,d0   	| [ld   a,(ds_plyr_actv +_b_bbee_clr_a)]
+	and.b	#0x07,d0                         	| [and  #0x07]
+	or.b	d2,d0                             	| [or   c]
+	move.b	d0,ds_plyr_actv+_b_bbee_clr_a   	| [ld   (ds_plyr_actv +_b_bbee_clr_a),a]
+	lea	b_8800,a0                      	| [ld   h,#>b_8800]
+	and.w	#0xFF,d6
+	add.w	d6,a0
+	jbsr	c_1083                            	| [call c_1083] bomber setup, clone-attack mgr
+l_1B54_getout:
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds_cpu0_task_actv+0x04       	| [ld   (ds_cpu0_task_actv + 0x04),a] 0: f_1A80 ... this task
+
+	rts                                    	| [ret]

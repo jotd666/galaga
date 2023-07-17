@@ -252,8 +252,8 @@ b_8A00:
        ds.b     0x02       | ptr to plyr1 score or plyr2 score on screen.
        ds.b     0x01       | L==2, R==8 X=A   previous controller state
        ds.b     0x01       | character selection counter/timer
-       ds.b     0x02       | pointer to new name in table
-       ds.b     0x0A       | unused
+       ds.b     0x04       | pointer to new name in table
+       ds.b     0x08       | unused
 *b_8A10:
        ds.b     0x01       | lower byte of current input character's address in v-ram
        ds.b     0x01       | 1==1ST place etc.
@@ -320,9 +320,10 @@ ds_cpu1_task_actv:
 
        ds.b     0x08       | unused
 
-       ds.b     0x70       | stack_cpu_0 (about $30 bytes max)
+	.align	2
+       ds.b     0x70*4       | stack_cpu_0 (about $30 bytes max)
 ds_stk_cpu0_init:
-       ds.b     0x60       | stack_cpu_1 (about %18 bytes max)
+       ds.b     0x60*4       | stack_cpu_1 (about %18 bytes max)
 ds_stk_cpu1_init:
 
 
@@ -350,7 +351,7 @@ ds_atk_wav_tmp_buf:
 *  11
 *  13
 ds_bug_motion_que:
-       ds.b     0x14 * 12  | 12 object data structures (total size $F0)
+       ds.b     0x14*12  | 12 object data structures (total size $F0)
 
        ds.b     0x10       | 91F0 unused
 
@@ -451,9 +452,9 @@ ds3_9288_tmp_IO_data:
 
 *-----------------------------------------------------------------------------
 p_attrmode_sptiles:
-       ds.b     0x02       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
+       ds.l     0x01       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
 pdb_demo_fghtrvctrs:
-       ds.b     0x02       | f_1700, tracks state of demo mode by setting an offset to the data table
+       ds.l     0x01       | f_1700, tracks state of demo mode by setting an offset to the data table
 ds2_stg_chllg_rnd_attrib:   | attributes selected for hit all 8 bonus on challenge round convoy i.e. score, sprite tile
        ds.b     0x01       | hit-count, add to collsn_hit_mult[0x0F]
        ds.b     0x01       | sprite code and collision flag, ld to obj_collsn_notif[L]
