@@ -11,7 +11,7 @@ var_re = "\w+_[0-9A-F]{4}"
 missing = 0
 anon = set()
 
-with open(os.path.join(this_dir,"pengo_z80.asm"),"rb") as f:
+with open(os.path.join(this_dir,"galaga_z80.asm"),"rb") as f:
     for line in f:
         line = line.decode(errors="ignore")
         line = re.sub(comment_re,"",line)
@@ -31,7 +31,7 @@ with open(os.path.join(this_dir,"pengo_z80.asm"),"rb") as f:
 
 
 
-with open(os.path.join(this_dir,"pengo_game_ram.68k"),"w") as f:
+with open(os.path.join(this_dir,"galaga_game_ram.68k"),"w") as f:
     prev_address = None
 
     for address,name in sorted(var_dict.items()):

@@ -44,7 +44,7 @@ $(AMIGASRC)/sounds.68k: $(ASSETS)/convert_sounds.py $(ASSETS)/../sounds/$(PROGNA
 $(MAIN): $(OBJS)
 	$(GCC_BIN)/m68k-amigaos-ld -o $(MAIN) $(OBJS)
 
-$(PROGNAME).o: $(PROGNAME).68k $(PROGNAME).inc $(PROGNAME)_ram.68k
+$(PROGNAME).o: $(PROGNAME).68k $(PROGNAME).inc $(PROGNAME)_ram.68k $(PROGNAME)_game_ram.68k
 	$(ASM) $(PROGNAME).68k -o $(PROGNAME).o
 amiga.o: $(AMIGASRC)/amiga.68k $(AMIGASRC)/sound_entries.68k $(PROGNAME).inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k
 	$(ASM) -Iamiga $(AMIGASRC)/amiga.68k -o amiga.o

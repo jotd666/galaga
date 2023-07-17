@@ -37,3 +37,5 @@
 	.align	2
 	.endif
 	
+galaga_irq:
+galaga_reset:

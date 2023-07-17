@@ -5,7 +5,7 @@ addr_re = "call.*\$([0-9A-F]{4})"
 comment_re = ";.*"
 calls = collections.Counter()
 
-with open(os.path.join(this_dir,"pengo_z80.asm")) as f:
+with open(os.path.join(this_dir,"galaga_z80.asm")) as f:
     for line in f:
         line = re.sub(comment_re,"",line)
         occs = re.findall(addr_re,line)

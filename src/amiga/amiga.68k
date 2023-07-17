@@ -1,10 +1,10 @@
 *
-*	Amiga-specific portions of Pengo
+*	Amiga-specific portions of Galaga
 *
 * (c) JOTD 2023
 *
 
-.include "../src/pengo.inc"
+.include "../src/galaga.inc"
 .include "custom.i"
 .include "exec_lvos.i"
 .include "dos_lvos.i"
@@ -65,11 +65,7 @@ OPT_ENABLE_LOGGING = 0
 OPT_ENABLE_PROFILING = 0
 * set to higher values than 1 to speed game up
 ONE_TICK = 1
-* pengo still has some strange sprite/clut combinations
-* we choose to ignore them as they're completely bogus
-* (ex: 95,12: yellow part of andor genesis, makes no sense,
-* Mark says that it happens when starting at level > 1 as
-* game isn't designed to do this)
+
 
 	.endif
 	
@@ -387,13 +383,6 @@ _user:
 0:
 	not.b	d0		| active low
 	move.b	d0,dip_switches+1
-
-	btst	#1,d1
-	sne.b	quick_maze_draw_flag
-	btst	#2,d1
-	sne.b	no_intermissions_flag
-	btst	#3,d1
-	sne.b	alternate_music_flag
 	
 	move.l	start_level_option(pc),d0
 	and.b	#0x0F,d0
@@ -612,9 +601,9 @@ save_highscores:
     rts
     
 	
-* To get the core to run, you just need to jump to pengo_reset after
+* To get the core to run, you just need to jump to galaga_reset after
 * you've initialised the platform (Amiga) stuff. That essentially does a
-* Z80 reset. You also need to call pengo_im1_irq from the Amiga vblank
+* Z80 reset. You also need to call galaga_im1_irq from the Amiga vblank
 * routine. They are the only 2 entry points required for the core to run,
 * even if there's no other I/O.
 
@@ -630,7 +619,7 @@ demo_game:
 		sne		infinite_lives_flag
 		
 0:	
-		jmp			pengo_reset					| pass control to the pengo core
+		jmp			galaga_reset					| pass control to the galaga core
 		
 	
 				
@@ -688,7 +677,7 @@ _vblank:
 	tst.b	pause_flag
 	bne.b	23f
 
-	jbsr		pengo_irq
+	jbsr		galaga_irq
 	.ifne  OPT_ENABLE_DOUBLE_BUFFERING_BG
 	bsr		switch_screen_buffers
 	.endif
@@ -865,7 +854,7 @@ osd_update_sprites:
 	bne.b	24f
 	tst.l	d3
 	bne.b	24f
-	* all black: snobees would hide pengo sprites & tiles
+	* all black: snobees would hide galaga sprites & tiles
 	* we want to hide them instead (no need to change palette)
 	move.l	#blank_sprite,d4
 	bra.b	25f
@@ -916,13 +905,13 @@ osd_update_sprites:
 
 test_sprites_xy:
 	**dc.b	0xEA,0xD8,0xEB,0xB0,0xEB,0x90,0xFF,0xF8,0xFF,0xE8,0xFF,0xC8,0x00,0x00
-	*       snobee                      pengo   ice block 
+	*       snobee                      galaga   ice block 
 	**.word	0xC792,0xFF00,0xFF00,0xFF00,0x2730,0x2768,0x0000
 	.word	0xFF00,0xFF00,0xFF00,0xFF00,0x4410,0xFF00,0x0000,0x0000
 test_sprites_code:
 	**dc.b	0x5E,0x0A,0x16,0x0B,0x5E,0x01,0x08,0x0B,0x08,0x0D,0x08,0x0C,0x00,0x00
 	**.word	0x5401,0x0000,0x0000,0x0000,0x000B,0x7009,0x0000
-	* pengo alone in the end
+	* galaga alone in the end
 	.word	0x8401,0x8001,0x8001,0x0000,0x160B,0x7009,0x0000
 
 
@@ -1011,7 +1000,7 @@ alloc_sprite:
 	* (only happens in demo screens)
 	*
 	* the strategy globally works because during game, all 4 enemies
-	* share the same palette. Pengo uses another one, and ice block
+	* share the same palette. galaga uses another one, and ice block
 	* another one too. Blinking stunned enemies can be a problem
 	* because of the extra blue color
 	*
@@ -1096,11 +1085,11 @@ osd_sound_start:
 	* music
 4:
 	* don't play if game not in play
-	* could have been handled at generic pengo.68k level
+	* could have been handled at generic galaga.68k level
 	* but it's way simpler here. I suppose than the real game
 	* just turns music volume off to get away with it
-	tst.b	game_playing_8817
-	beq.b	1b
+	*tst.b	game_playing_8817
+	*beq.b	1b
 	
 	* don't play if already playing
 	* (music_tick value is not important for looped tunes
@@ -1118,7 +1107,7 @@ osd_sound_start:
 	bsr		osd_sound_stop
     lea _custom,a6
  	movem.l	d0/a0,-(a7)
-    lea	pengo_tunes,a0
+    lea	galaga_tunes,a0
 	move.b	d1,music_track_start_number
 	move.w	d1,d0
     sub.l   a1,a1		| samples are in the module
@@ -1306,7 +1295,7 @@ platform_init:
     move.w #0,fmode(a5)			
 	
 
-	* screen with pengo bg/fg tiles
+	* screen with galaga bg/fg tiles
     **move.w #2<<4,bplcon1(a5)    | foreground tiles shifted by 2 pixels
     move.w #0,bplcon1(a5)    | foreground tiles
 	move.w	#0,d0
@@ -1550,20 +1539,7 @@ osd_w_colorram:
 	cmp.b	(a1),d0
 	beq.b	0f		| already the proper value
 	
-	tst.b	diamond_color_cycle_flag
-	beq.b	2f
 
-	* avoid a full tile refresh, just change color 4
-	* (big hack)
-	lea		normal_cluts(pc),a1
-	moveq	#0,d2
-	move.b	d0,d2
-	lsl.w	#3,d2		| times 8
-	move.w	(2,a1,d2.w),d2	| color from clut that changes ice
-	move.w	d2,copperlist_colors+DYN_COLOR_INDEX*4+2	| change 4th color with color clut
-	cmp.b	#0x09,d0		| blue ice block: force redraw
-	bne.b	0f
-2:
 	move.b	d0,(a1)	| update logical grid
 	move.b	d0,d1
 	lea		bg_videoram,a1
@@ -1655,7 +1631,7 @@ update_bg_tile:
 	beq.b	3f
 	* no-first-line hack: first row displayed isn't shifted
 	* but other lines are. We get away with it because what's there
-	* is score then pengo lives which aren't too high (2 first rows are black)
+	* is score then galaga lives which aren't too high (2 first rows are black)
 	* shifting that way allows to see most of the 'ACT' bottom status bar, still
 	* slightly truncated but good enough.
 	lea	(-NB_BYTES_PER_ROW*ROW_Y_OFFSET,a1),a1
@@ -1894,8 +1870,8 @@ osd_read_inputs:
 	beq.b	0f
 	bclr	#31,d0
 0:
-	tst.b	game_playing_8817
-	bne.b	3f
+	*tst.b	game_playing_8817
+	*bne.b	3f
 	move.l	d2,-(a7)
 	move.l	_previous_joypad_state(pc),d2
 	* save prev state as game loops within vblank
@@ -2025,23 +2001,20 @@ handle_keyboard:
 	st.b	cheat_used
 	* will be triggered as soon as a diamond is pushed,
 	* not before
-	st.b	diamonds_are_aligned_flag
+
 0:
 	cmp.b	#0x51,d0	| F2 key
 	bne.b	0f
 	* no snobees: level completed
 	st.b	cheat_used
-	* more "professional" cheat: hide remaining snobees
-	movem.l	d0-a6,-(a7)
-	jbsr	hide_snobee_sprites
-	movem.l	(a7)+,d0-a6
-	clr.b	remaining_alive_snobees_8D98
+
+	
 0:
 	cmp.b	#0x52,d0	| F3 key
 	bne.b	0f
 	* snobees play chicken
 	st.b	cheat_used
-	st.b	snobee_chicken_flag
+	
 0:
 	cmp.b	#0x53,d0	| F4 key
 	bne.b	0f
@@ -2072,8 +2045,8 @@ handle_keyboard:
 	
 toggle_pause:
 	* pause only within game
-	tst.b	game_playing_8817
-	beq.b	0f
+	*tst.b	game_playing_8817
+	*beq.b	0f
 	eor.b   #1,pause_flag
 0:
 	rts
@@ -2243,7 +2216,7 @@ graphicsname:
 	.ascii	"graphics.library"
 	.byte	0
 normal_hiscorename:
-	.asciz	"pengo.high"
+	.asciz	"galaga.high"
 floppy_file:
 	.ascii	"floppy"
 	.byte	0
@@ -2259,7 +2232,7 @@ palette:
 	.include "palette_cluts.68k"
 	
 	
-	* on amiga, this file is included in pengo.68k file
+	* on amiga, this file is included in galaga.68k file
 	* so the assembler can optimize by using PC-relative addressing
 	* whenever possible (and it does)
 	.ifndef	RELEASE

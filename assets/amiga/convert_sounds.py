@@ -1,6 +1,8 @@
 import subprocess,os,struct,glob,tempfile
 import shutil
 
+import config
+gamename = config.gamename
 sox = "sox"
 
 if not shutil.which("sox"):
@@ -179,7 +181,7 @@ with open(sndfile,"w") as fst,open(outfile,"w") as fw:
             write_asm(contents,fw)
 
     # make sure next section will be aligned
-    with open(os.path.join(sound_dir,"pengo_conv.mod"),"rb") as f:
+    with open(os.path.join(sound_dir,f"{gamename}_conv.mod"),"rb") as f:
         contents = f.read()
     fw.write("{}:".format(music_module_label))
     write_asm(contents,fw)

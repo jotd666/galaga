@@ -3,8 +3,8 @@ from PIL import Image,ImageOps
 
 
 import collections
-
-
+import config
+gamename = config.gamename
 
 this_dir = os.path.dirname(__file__)
 src_dir = os.path.join(this_dir,"../../src/amiga")
@@ -24,7 +24,7 @@ else:
     used_cluts = None
 
 
-dump_it = True
+dump_it = False
 
 def dump_asm_bytes(*args,**kwargs):
     bitplanelib.dump_asm_bytes(*args,**kwargs,mit_format=True)
@@ -36,7 +36,7 @@ block_dict = {}
 
 # hackish convert of c gfx table to dict of lists
 # (Thanks to Mark Mc Dougall for providing the ripped gfx as C tables)
-with open(os.path.join(this_dir,"..","pengo_gfx.c")) as f:
+with open(os.path.join(this_dir,"..",f"{gamename}_gfx.c")) as f:
     block = []
     block_name = ""
     start_block = False
@@ -154,16 +154,6 @@ for k,chardat in enumerate(block_dict["tile"]["data"]):
 
 with open(os.path.join(this_dir,"sprite_config.json")) as f:
     sprite_config = {int(k):v for k,v in json.load(f).items()}
-
-for j,c in enumerate(["pengo","snobee"]):
-    for i in range(0x8):
-        sprite_config[0x20*j+i+0x40] = {"name":f"{c}_zooming_front_left{i}"}
-    for i in range(0x10):
-        sprite_config[0x20*j+i+0x48] = {"name":f"{c}_zooming_back_left{i}"}
-    for i in range(0x8):
-        sprite_config[0x20*j+i+0x58] = {"name":f"{c}_zooming_left_{i}"}
-# remove the remainder of pacman sprite sheet
-del sprite_config[0x39]
 
 
 
