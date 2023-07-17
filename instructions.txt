@@ -1,0 +1,91 @@
+Amiga controls:
+
+joystick or joypad in port 1 or keyboard
+
+- 5 key or fire button to insert a coin
+- 1 key or up to start a 1P game
+- 2 key or down to start a 2P game
+- ctrl or fire/red to push block/shake wall
+- P key or 3rd button to pause the game
+- ESC key to quit & save high-scores (when run from amigaDOS)
+- joystick or direction arrows to move
+
+
+Command line arguments (no whdload, but 1.3 compatible)
+
+Usage:
+
+pengo INVINCIBLE/S,INFLIVES/S,CHEATKEYS/S,STARTLEVEL/K/N,
+BAT50000/S,QUICKMAZEDRAW/S,NOINTERMISSIONS/S,ALTMUSIC/S,
+SKILL/K/N,STARTLIVES/K/N
+
+Cheats:
+
+INVINCIBLE: invincible
+INFLIVES: infinite lives
+CHEATKEYS: function keys cheat: 
+ * F1: diamond align (needs pushing on diamond to enable)
+ * F2: complete level
+ * F3: snobee chicken
+ * F4: toggle invincible
+STARTLEVEL: from 1 to 16
+BAT50000: bonus life at 50000 instead of 30000
+
+Options/dipswitches:
+
+QUICKMAZEDRAW: fast maze path drawing
+NOINTERMISSIONS: no small acts every other level
+ALTMUSIC: for people allergic to popcorn, music of set 2 has been recreated
+SKILL: 0-3 (3: hardest)
+STARTLIVES: 2-5 (default 3)
+
+
+Hiscores save:
+
+* If any cheat key is pressed (when cheatkeys are on), highscores won't be saved
+* infinite lives & invincibility make game run forever so no hiscore save either!
+* startlevel can be used, highscores will be saved (doesn't make the game easier...)
+* whdload: quit whdload with quitkey to allow highscore save
+* floppy: quit game with "ESC" and unprotect the floppy to allow highscore save
+
+JOTD general strategy (well that's what I gathered so far):
+
+- don't wander in the open too much, always hide in ice block mazes. Snobees
+  are slowed down specially when breaking ice blocks. Plus you can crush them
+  when an opportunity comes
+- when you see that a snobee is aligning to break all the blocks to get to you,
+  wait for it, and when there's only one block remaining push it (time it properly
+  if snobee is breaking a block just next to the block you want to push: too late snobee
+  will break it, too soon it will be stopped by the unbroken block)  
+- if you can kill a snobee, don't wait, do it. When snobee is hatching, you have to wait
+  until it's almost ready to walk or the ice block will go through it (also often means
+  dying because now the snobee is just next to you without any ice block)
+- don't obsess too much on aligning the diamonds. At higher levels, even when
+  diamonds are almost aligned, it's risky to attempt it. You'll get to 30000 points
+  or 50000 points for the only extra life even without them.
+- for a big score, try to hit several snobees with one ice block. Max is 6400
+  for all 4 snobees. Stunning them using the walls makes multi-hit easier.
+- remember where the unhatched eggs are (flashing at start, and when a snobee spawns)
+  You get 500 points (only) when destroying the eggs, but in the higher levels it means
+  that it's not going to hatch untimely and break more blocks than you'd want
+- when escaping, always flee from the snobees diagonally, going to the opposite corner
+- always try to anticipate an escape route that doesn't involve block breaking
+  or block pushing. You'll waste less time escaping
+- in first levels, snobees are slower than you. Depending on the skill level, snobees
+  catch up with you in later levels. Even in the easy skill level, snobees are faster
+  than you in level 9. The only way to escape them is to turn often.
+- you can create a corridor between the wall and one or several diamond blocks
+  Ideally, with 3 aligned diamonds making a corridor next to the wall, you just
+  have to wait for the snobees to workaround the diamonds and you can get them by
+  shaking the wall without risking them to kill you at the same time, even in higher
+  levels.
+- a similar strategy is to put a diamond block almost in the corner. If snobees attack
+  one at a time, select the wall to shake and get them
+- if you lose a life and there are 4+ snobees, it's tough as you are now surrounded
+  from all corners. React fast and kill them to get breating space in a corner. Particularly
+  true on latest levels. You can breeze through a very hard level in one life, but as
+  soon as you lose a life, things are much harder than at first attempt: less ice blocks,
+  no chance to get a corner without enemies.
+
+Good luck! (my personal record is level 14 on easy mode. Couldn't get further without cheating)  
+  

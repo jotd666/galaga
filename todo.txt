@@ -1,0 +1,6 @@
+General:
+
+
+Amiga:
+
+- highscore screen letter flashing too fast (no speed regulation, sounds good on A1260...)

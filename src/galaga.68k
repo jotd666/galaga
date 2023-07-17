@@ -1,0 +1,39 @@
+
+*
+* 68k transcode by JOTD in 2023 using (https://github.com/jotd666/amiga68ktools)
+  
+* register conventions (imposed by z80268k mostly) are as follows:
+*
+* A: D0
+* B: D1
+* C: D2
+* BC: manual
+* D: D3
+* E: D4
+* DE: A1 or D3
+* H: D5
+* L: D6
+* HL: A0 or D6 (video addresses)
+* carry: manual, using D7 (push/pop af has no portable equivalent as SR is privileged on 68020+)
+*
+* depending on the context H/L/HL and D/E/DE require rework as the game
+* constructs pointers from 0x100-page aligned pointers to avoid to handle
+* lsb wrap and msb increase. Of course the 68000 can do that so easily. But
+* it cannot split address registers :) 
+*
+
+	.include "galaga.inc"
+
+* exports
+
+    * ROM
+
+    .global galaga_irq
+    .global galaga_reset
+
+
+	.ifdef	__amiga__
+	.include "galaga_ram.68k"
+	.align	2
+	.endif
+	

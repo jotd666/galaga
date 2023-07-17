@@ -1,0 +1,289 @@
+	.global	cursor_x_8800
+	.global	cursor_y_8801
+	.global	cursor_color_8802
+	.global	number_buffer_8803
+	.global	number_of_credits_8808
+	.global	unknown_8809
+	.global	unknown_880a
+	.global	unknown_880B
+	.global	high_score_880C
+	.global	player_1_score_880E
+	.global	player_2_score_8810
+	.global	level_number_player1_8812
+	.global	level_number_player2_8813
+	.global	lives_counter_p1_8814
+	.global	lives_counter_p2_8815
+	.global	player_number_8816
+	.global	game_playing_8817
+	.global	cocktail_mode_8818
+	.global	currently_playing_8819
+	.global	unknown_881C
+	.global	unknown_881E
+	.global	delay_timer_8820
+	.global	delay_timer_2_8821
+	.global	timer_16bit_8822_msb
+	.global	timer_16bit_8823_lsb
+	.global	counter_msb_8824
+	.global	counter_lsb_8825
+	.global	random_seed_8826
+	.global	unknown_8828
+	.global	unknown_8829
+	.global	weird_variable_882A
+	.global	unknown_8830
+	.global	hiscore_pos_5_8840
+	.global	high_score_names_8842
+	.global	currently_active_letter_885E
+	.global	score_insertion_position_885F
+	.global	unknown_8860
+	.global	unknown_8C00
+	.global	unknown_8C01
+	.global	unknown_8C02
+	.global	unknown_8C03
+	.global	maze_data_8C20
+	.global	ram_code_8C24
+	.global	maze_hole_wall_bit_table_8C27
+	.global	time_counter_8C5B
+	.global	elapsed_seconds_since_start_of_round_8C5C
+	.global	elapsed_minutes_since_start_of_round_8C5D
+	.global	sound_channel_0_music_playing_8C60
+	.global	sound_channel_1_struct_8C70
+	.global	sound_channel_2_struct_8C80
+	.global	sound_channel_3_struct_8C90
+	.global	sound_channel_4_struct_8CA0
+	.global	music_tempo_8CBB
+	.global	sound_related_8CBE
+	.global	sound_related_8CBF
+	.global	breaking_block_slots_8CC0
+	.global	random_seed_backup_8CF0
+	.global	demo_move_table_pointer_8CF2
+	.global	pengo_moving_direction_8CF4
+	.global	demo_mode_even_counter_8CF5
+	.global	demo_run_counter_8CF6
+	.global	snobee_1_struct_8D00
+	.global	snobee_2_struct_8D20
+	.global	snobee_3_struct_8D40
+	.global	snobee_4_struct_8D60
+	.global	pengo_struct_8D80
+	.global	unknown_8D84
+	.global	remaining_alive_snobees_8D98
+	.global	moving_block_struct_8DA0
+	.global	diamond_block_1_xy_8DB0
+	.global	diamond_block_2_xy_8DB2
+	.global	diamond_block_3_xy_8DB4
+	.global	block_moving_flag_8DBF
+	.global	total_eggs_to_hatch_8DC0
+	.global	remaining_eggs_to_hatch_8DC1
+	.global	egg_location_table_8DC2
+	.global	current_nb_eggs_to_hatch_8DDD
+	.global	timer_16_bit_8DDE
+	.global	ice_block_location_bits_8DE0
+	.global	backup_player_struct_8E00
+	.global	sound_buffer_8F00
+	.global	sound_variable_8F10
+	.global	sound_variable_8F11
+	.global	sound_related_8F20
+	.global	sound_8F24
+	.global	sound_8F25
+	.global	sound_related_8F28
+	.global	sound_8F2C
+	.global	sound_8F2D
+	.global	sound_related_8F30
+	.global	sound_8F34
+	.global	sound_8F35
+	.global	sound_related_8F38
+	.global	sound_8F3C
+	.global	sound_8F3D
+	.global	stack_pointer_8FF0
+
+cursor_x_8800:
+	ds.b	0x01
+cursor_y_8801:
+	ds.b	0x01
+cursor_color_8802:
+	ds.b	0x01
+number_buffer_8803:
+	ds.b	0x05
+number_of_credits_8808:
+	ds.b	0x01
+unknown_8809:
+	ds.b	0x01
+unknown_880a:
+	ds.b	0x01
+unknown_880B:
+	ds.b	0x01
+high_score_880C:
+	ds.b	0x02
+player_1_score_880E:
+	ds.b	0x02
+player_2_score_8810:
+	ds.b	0x02
+level_number_player1_8812:
+	ds.b	0x01
+level_number_player2_8813:
+	ds.b	0x01
+lives_counter_p1_8814:
+	ds.b	0x01
+lives_counter_p2_8815:
+	ds.b	0x01
+player_number_8816:
+	ds.b	0x01
+game_playing_8817:
+	ds.b	0x01
+cocktail_mode_8818:
+	ds.b	0x01
+currently_playing_8819:
+	ds.b	0x03
+unknown_881C:
+	ds.b	0x02
+unknown_881E:
+	ds.b	0x02
+delay_timer_8820:
+	ds.b	0x01
+delay_timer_2_8821:
+	ds.b	0x01
+timer_16bit_8822_msb:
+	ds.b	0x01
+timer_16bit_8823_lsb:
+	ds.b	0x01
+counter_msb_8824:
+	ds.b	0x01
+counter_lsb_8825:
+	ds.b	0x01
+random_seed_8826:
+	ds.b	0x02
+unknown_8828:
+	ds.b	0x01
+unknown_8829:
+	ds.b	0x01
+weird_variable_882A:
+	ds.b	0x06
+unknown_8830:
+	ds.b	0x10
+hiscore_pos_5_8840:
+	ds.b	0x02
+high_score_names_8842:
+	ds.b	0x1c
+currently_active_letter_885E:
+	ds.b	0x01
+score_insertion_position_885F:
+	ds.b	0x01
+unknown_8860:
+	ds.b	0x3a0
+unknown_8C00:
+	ds.b	0x01
+unknown_8C01:
+	ds.b	0x01
+unknown_8C02:
+	ds.b	0x01
+unknown_8C03:
+	ds.b	0x1d
+maze_data_8C20:
+	ds.b	0x04
+ram_code_8C24:
+	ds.b	0x03
+maze_hole_wall_bit_table_8C27:
+	ds.b	0x34
+time_counter_8C5B:
+	ds.b	0x01
+elapsed_seconds_since_start_of_round_8C5C:
+	ds.b	0x01
+elapsed_minutes_since_start_of_round_8C5D:
+	ds.b	0x03
+sound_channel_0_music_playing_8C60:
+	ds.b	0x10
+sound_channel_1_struct_8C70:
+	ds.b	0x10
+sound_channel_2_struct_8C80:
+	ds.b	0x10
+sound_channel_3_struct_8C90:
+	ds.b	0x10
+sound_channel_4_struct_8CA0:
+	ds.b	0x1b
+music_tempo_8CBB:
+	ds.b	0x03
+sound_related_8CBE:
+	ds.b	0x01
+sound_related_8CBF:
+	ds.b	0x01
+breaking_block_slots_8CC0:
+	ds.b	0x30
+random_seed_backup_8CF0:
+	ds.b	0x02
+demo_move_table_pointer_8CF2:
+	ds.b	0x04			| pointer => 32 bit
+pengo_moving_direction_8CF4:
+	ds.b	0x01
+demo_mode_even_counter_8CF5:
+	ds.b	0x01
+demo_run_counter_8CF6:
+	ds.b	0x0a
+snobee_1_struct_8D00:
+	ds.b	0x20
+snobee_2_struct_8D20:
+	ds.b	0x20
+snobee_3_struct_8D40:
+	ds.b	0x20
+snobee_4_struct_8D60:
+	ds.b	0x20
+pengo_struct_8D80:
+	ds.b	0x04
+unknown_8D84:
+	ds.b	0x14
+remaining_alive_snobees_8D98:
+	ds.b	0x08
+moving_block_struct_8DA0:
+	ds.b	0x10
+diamond_block_1_xy_8DB0:
+	ds.b	0x02
+diamond_block_2_xy_8DB2:
+	ds.b	0x02
+diamond_block_3_xy_8DB4:
+	ds.b	0x0b
+block_moving_flag_8DBF:
+	ds.b	0x01
+total_eggs_to_hatch_8DC0:
+	ds.b	0x01
+remaining_eggs_to_hatch_8DC1:
+	ds.b	0x01
+egg_location_table_8DC2:
+	ds.b	0x1b
+current_nb_eggs_to_hatch_8DDD:
+	ds.b	0x01
+timer_16_bit_8DDE:
+	ds.b	0x02
+ice_block_location_bits_8DE0:
+	ds.b	0x20
+backup_player_struct_8E00:
+	ds.b	0x100
+sound_buffer_8F00:
+	ds.b	0x10
+sound_variable_8F10:
+	ds.b	0x01
+sound_variable_8F11:
+	ds.b	0x0f
+sound_related_8F20:
+	ds.b	0x04
+sound_8F24:
+	ds.b	0x01
+sound_8F25:
+	ds.b	0x03
+sound_related_8F28:
+	ds.b	0x04
+sound_8F2C:
+	ds.b	0x01
+sound_8F2D:
+	ds.b	0x03
+sound_related_8F30:
+	ds.b	0x04
+sound_8F34:
+	ds.b	0x01
+sound_8F35:
+	ds.b	0x03
+sound_related_8F38:
+	ds.b	0x04
+sound_8F3C:
+	ds.b	0x01
+sound_8F3D:
+	ds.b	0xb3
+stack_pointer_8FF0:
+	ds.b	0x02
