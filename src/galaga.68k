@@ -41,7 +41,32 @@
 m_tile_ram = 0x8000
 m_color_ram = 0x8400
 
-
+* < A0 (HL)
+* < D0 (A)
+* Performs a 4-bit leftward rotation of the 12-bit number whose
+* 4 most signigifcant bits are the 4 least significant bits of A,
+* and its 8 least significant bits are in (HL).
+*; assume W,X,Y,Z are the set of all possible hex values 0-F
+*ld A,$WX
+*ld (HL),$YZ
+*RLD
+* A = $WY
+* (HL) = $ZX
+rld:
+	movem.w	d1/d2,-(a7)
+	move.b	d0,d1		| backup A
+	clr.w	d2			| make sure high bits of D2 are clear
+	move.b	(a0),d2		| read (HL)
+	and.b #0xF,d1		| keep 4 lower bits of A
+	lsl.w	#4,d2		| make room for 4 lower bits
+	or.b	d1,d2		| insert bits
+	move.b	d2,(a0)		| update (HL)
+	lsr.w	#8,d2		| get 4 shifted bits of (HL)
+	and.b	#0xF0,d0	| keep only the 4 highest bits of A
+	or.b	d2,d0		| insert high bits from (HL) into first bits of A
+	movem.w	(a7)+,d1/d2
+	rts
+	
 * < A0: source (HL)
 * < A1: destination (DE)
 * < D1: decremented (16 bit)
@@ -920,36 +945,37 @@ jp_Task_man:
 
 * determine star_ctrl param bits based on some modulus of frame timer?
 * $A000-$A005 starfield scroll speed (only bit 0 is significant)
-	move.b	_sfr_dsw5,d0                    	| [ld   a,(_sfr_dsw5)] DSWA: freeze video
-	move.b	d0,d3                           	| [ld   d,a]
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
-	and.b	#0x1C,d0                         	| [and  #0x1C] 0000XXX0
-	move.b	d0,d2                           	| [ld   c,a]
-	ror.b	#1,d0                            	| [rrca] 00000XXX
-	eor.b	d2,d0                            	| [xor  c] A ^ C
-	and.b	#0x18,d0                         	| [and  #0x18] 000XX000
-	move.b	d0,d2                           	| [ld   c,a]
+*	move.b	_sfr_dsw5,d0                    	| [ld   a,(_sfr_dsw5)] DSWA: freeze video
+*	move.b	d0,d3                           	| [ld   d,a]
+*	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+*	and.b	#0x1C,d0                         	| [and  #0x1C] 0000XXX0
+*	move.b	d0,d2                           	| [ld   c,a]
+*	ror.b	#1,d0                            	| [rrca] 00000XXX
+*	eor.b	d2,d0                            	| [xor  c] A ^ C
+*	and.b	#0x18,d0                         	| [and  #0x18] 000XX000
+*	move.b	d0,d2                           	| [ld   c,a]
+*
+**  if ( ! freezed_dsw set )
+*	move.b	ds_99B9_star_ctrl+0x05,d0       	| [ld   a,(ds_99B9_star_ctrl + 0x05)]
+*	btst.b	#1,d3                           	| [bit  1,d] freeze_ctrl_dsw
+*	jne	l_0259                             	| [jr   nz,l_0259]
+**  else
+*	move.b	#7,d0                           	| [ld   a,#7] 7==star_ctrl_bits=freezed
+*
+*l_0259:
+*	and.b	#0x07,d0                         	| [and  #0x07]
+*	or.b	d2,d0                             	| [or   c]
 
-*  if ( ! freezed_dsw set )
-	move.b	ds_99B9_star_ctrl+0x05,d0       	| [ld   a,(ds_99B9_star_ctrl + 0x05)]
-	btst.b	#1,d3                           	| [bit  1,d] freeze_ctrl_dsw
-	jne	l_0259                             	| [jr   nz,l_0259]
-*  else
-	move.b	#7,d0                           	| [ld   a,#7] 7==star_ctrl_bits=freezed
+	* TODO init stars
+	*move.b	#5,d1                           	| [ld   b,#5]
+	*lea	l_A000(pc),a0                      	| [ld   hl,#0xA000] star_ctrl_port
 
-l_0259:
-	and.b	#0x07,d0                         	| [and  #0x07]
-	or.b	d2,d0                             	| [or   c]
-
-	move.b	#5,d1                           	| [ld   b,#5]
-	lea	l_A000(pc),a0                      	| [ld   hl,#0xA000] star_ctrl_port
-
-l_0261:
-	move.b	d0,(a0)                         	| [ld   (hl),a] A==star_ctrl_bits
-	addq.b	#1,d6                           	| [inc  l]
-	ror.b	#1,d0                            	| [rrca] star_ctrl_bits >>= 1
-	subq.b	#1,d1                           	| [...]
-	jne	l_0261                             	| [djnz l_0261]
+*l_0261:
+*	move.b	d0,(a0)+                         	| [ld   (hl),a] A==star_ctrl_bits
+*										| [inc  l]
+*	ror.b	#1,d0                            	| [rrca] star_ctrl_bits >>= 1
+*	subq.b	#1,d1                           	| [...]
+*	jne	l_0261                             	| [djnz l_0261]
 
 	*move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
 
@@ -957,8 +983,8 @@ l_0261:
 	jbsr	osd_disable_vblank_interrupt                    	| [ld   (_sfr_6820),a] 0 ... disable IRQ1
 
 *  if ( freezed )  exit
-	btst.b	#1,d3                           	| [bit  1,d]
-	jeq	l_02A8_pop_regs_and_exit           	| [jp   z,l_02A8_pop_regs_and_exit]
+	*btst.b	#1,d3                           	| [bit  1,d]
+	*jeq	l_02A8_pop_regs_and_exit           	| [jp   z,l_02A8_pop_regs_and_exit]
 
 *
 * Execute the Scheduler
@@ -1099,6 +1125,407 @@ d_cpu0_task_table:
 	.long	f_0827
 	.long	f_0977
 
+
+
+*=============================================================================
+p_flv_004b:
+	.byte 0x23,0xf0,0x26,0x23,0x14,0x13,0xfe
+	.byte 0x0d,0x0b,0x0a,0x08,0x06,0x04,0x03,0x01,0x23,0xff
+	.byte 0xff,0xff
+p_flv_005e:
+	.byte 0x44,0xe4,0x18,0xfb,0x44,0x00,0xff,0xff
+	.byte 0xc9 | junk ?
+
+db_flv_0067:
+	.byte 0x23,0x08,0x08,0x23,0x03,0x1b,0x23,0x08,0x0f,0x23,0x16,0x15,0xf7
+	.long p_flv_0084
+	.byte 0x23,0x16,0x03,0xf0
+	.long p_flv_0097
+	.byte 0x23,0x16,0x19,0xfb,0x23,0x00,0xff,0xff
+p_flv_0084:
+	.byte 0x23,0x16,0x01,0xfe
+	.byte 0x0d,0x0c,0x0a,0x08,0x06,0x04,0x03,0x01,0x23,0xfc
+	.byte 0x30,0x23,0x00,0xff
+	.byte 0xff
+p_flv_0097:
+	.byte 0x44,0x27,0x0e,0xfb,0x44,0x00,0xff,0xff
+
+db_flv_009f:
+	.byte 0x33,0x06,0x18,0x23,0x00,0x18,0xf7
+	.long p_flv_00b6
+	.byte 0x23,0xf0,0x08,0xf0
+	.long p_flv_00cc
+	.byte 0x23,0xf0,0x20,0xfb,0x23,0x00,0xff,0xff
+p_flv_00b6:
+	.byte 0x23,0xf0,0x20,0x23,0x10,0x0d,0xfe
+	.byte 0x1a,0x18,0x15,0x10,0x0c,0x08,0x05,0x03,0x23,0xfe
+	.byte 0x30,0x23,0x00,0xff
+	.byte 0xff
+p_flv_00cc:
+	.byte 0x33,0xe0,0x10,0xfb,0x44,0x00,0xff,0xff
+
+db_flv_00d4:
+	.byte 0x23,0x03,0x18,0x33,0x04,0x10,0x23,0x08,0x0a,0x44,0x16,0x12,0xf7
+	.long p_flv_0160
+	.byte 0x44,0x16,0x03,0xf0
+	.long p_flv_0173 | stg 13
+	.byte 0x44,0x16,0x1d,0xfb,0x23,0x00,0xff,0xff
+
+db_flv_00f1:
+	.byte 0x12,0x18,0x17,0x12,0x00,0x80,0xff
+* this is probably fill
+.ds 8
+
+* Copy of home position LUT from task_man
+sprt_fmtn_hpos:
+	.byte 0x14,0x06,0x14,0x0c,0x14,0x08,0x14,0x0a,0x1c,0x00,0x1c,0x12,0x1e,0x00,0x1e,0x12
+	.byte 0x1c,0x02,0x1c,0x10,0x1e,0x02,0x1e,0x10,0x1c,0x04,0x1c,0x0e,0x1e,0x04,0x1e,0x0e
+	.byte 0x1c,0x06,0x1c,0x0c,0x1e,0x06,0x1e,0x0c,0x1c,0x08,0x1c,0x0a,0x1e,0x08,0x1e,0x0a
+	.byte 0x16,0x06,0x16,0x0c,0x16,0x08,0x16,0x0a,0x18,0x00,0x18,0x12,0x1a,0x00,0x1a,0x12
+	.byte 0x18,0x02,0x18,0x10,0x1a,0x02,0x1a,0x10,0x18,0x04,0x18,0x0e,0x1a,0x04,0x1a,0x0e
+	.byte 0x18,0x06,0x18,0x0c,0x1a,0x06,0x1a,0x0c,0x18,0x08,0x18,0x0a,0x1a,0x08,0x1a,0x0a
+
+p_flv_0160:
+	.byte 0x44,0x16,0x06,0xfe
+	.byte 0x0c,0x0b,0x0a,0x08,0x06,0x04,0x02,0x01,0x23,0xfe
+	.byte 0x30,0x23,0x00,0xff
+	.byte 0xff
+p_flv_0173:
+	.byte 0x66,0x20,0x14,0xfb,0x44,0x00,0xff,0xff
+
+db_flv_017b:
+	.byte 0x23,0x06,0x18,0x23,0x00,0x18,0xf7
+	.long p_flv_0192
+	.byte 0x44,0xf0,0x08,0xf0
+	.long p_flv_01a8
+	.byte 0x44,0xf0,0x20,0xfb,0x23,0x00,0xff,0xff
+p_flv_0192:
+	.byte 0x44,0xf0,0x26,0x23,0x10,0x0b,0xfe
+	.byte 0x22,0x20,0x1e,0x1b,0x18,0x15,0x12,0x10,0x23,0xfe
+	.byte 0x30,0x23,0x00,0xff
+	.byte 0xff
+p_flv_01a8:
+	.byte 0x66,0xe0,0x10,0xfb,0x44,0x00,0xff,0xff
+
+db_flv_01b0:
+	.byte 0x23,0x03,0x20,0x23,0x08,0x0f,0x23,0x16,0x12,0xf7
+	.long p_flv_01ca
+	.byte 0x23,0x16,0x03,0xf0
+	.long p_flv_01e0
+	.byte 0x23,0x16,0x1d,0xfb,0x23,0x00,0xff,0xff
+p_flv_01ca:
+	.byte 0x23,0x16,0x01,0xfe
+	.byte 0x0d,0x0c,0x0b,0x09,0x07,0x05,0x03,0x02,0x23,0x02,0x20,0x23,0xfc
+	.byte 0x12,0x23,0x00,0xff
+	.byte 0xff
+p_flv_01e0:
+	.byte 0x44,0x20,0x14,0xfb,0x44,0x00,0xff,0xff
+
+db_flv_01e8:
+	.byte 0x23,0x00,0x10,0x23,0x01,0x40,0x22,0x0c,0x37,0x23,0x00,0xff,0xff
+
+db_flv_01f5:
+	.byte 0x23,0x02,0x3a,0x23,0x10,0x09,0x23,0x00,0x18,0x23,0x20,0x10
+	.byte 0x23,0x00,0x18,0x23,0x20,0x0d,0x23,0x00,0xff,0xff
+
+db_flv_020b:
+	.byte 0x23,0x00,0x10,0x23,0x01,0x30,0x00,0x40,0x08,0x23,0xff,0x30,0x23,0x00,0xff,0xff
+
+db_flv_021b:
+	.byte 0x23,0x00,0x30,0x23,0x05,0x80,0x23,0x05,0x4c,0x23,0x04,0x01,0x23,0x00,0x50,0xff
+
+db_flv_022b:
+	.byte 0x23,0x00,0x28,0x23,0x06,0x1d,0x23,0x00,0x11,0x00,0x40,0x08,0x23,0x00,0x11
+	.byte 0x23,0xfa,0x1d,0x23,0x00,0x50,0xff
+
+db_flv_0241:
+	.byte 0x23,0x00,0x21,0x00,0x20,0x10,0x23,0xf8,0x20,0x23,0xff,0x20,0x23,0xf8,0x1b
+	.byte 0x23,0xe8,0x0b,0x23,0x00,0x21,0x00,0x20,0x08,0x23,0x00,0x42,0xff
+
+db_flv_025d:
+	.byte 0x23,0x00,0x08,0x00,0x20,0x08,0x23,0xf0,0x20,0x23,0x10,0x20,0x23,0xf0,0x40
+	.byte 0x23,0x10,0x20,0x23,0xf0,0x20,0x00,0x20,0x08,0x23,0x00,0x30,0xff
+
+db_flv_0279:
+	.byte 0x23,0x10,0x0c,0x23,0x00,0x20,0x23,0xe8,0x10
+	.byte 0x23,0xf4,0x10,0x23,0xe8,0x10,0x23,0xf4,0x32,0x23,0xe8,0x10,0x23,0xf4,0x32
+	.byte 0x23,0xe8,0x10,0x23,0xf4,0x10,0x23,0xe8,0x0e,0x23,0x02,0x30,0xff
+
+db_flv_029e:
+	.byte 0x23,0xf1,0x08,0x23,0x00,0x10,0x23,0x05,0x3c,0x23,0x07,0x42,0x23,0x0a,0x40
+	.byte 0x23,0x10,0x2d,0x23,0x20,0x19,0x00,0xfc,0x14,0x23,0x02,0x4a,0xff
+
+db_flv_02ba:
+	.byte 0x23,0x04,0x20,0x23,0x00,0x16,0x23,0xf0,0x30,0x23,0x00,0x12,0x23,0x10,0x30
+	.byte 0x23,0x00,0x12,0x23,0x10,0x30,0x23,0x00,0x16,0x23,0x04,0x20,0x23,0x00,0x10,0xff
+
+db_flv_02d9:
+	.byte 0x23,0x00,0x15,0x00,0x20,0x08,0x23,0x00,0x11
+	.byte 0x00,0xe0,0x08,0x23,0x00,0x18,0x00,0x20,0x08,0x23,0x00,0x13
+	.byte 0x00,0xe0,0x08,0x23,0x00,0x1f,0x00,0x20,0x08,0x23,0x00,0x30,0xff
+
+db_flv_02fb:
+	.byte 0x23,0x02,0x0e,0x23,0x00,0x34
+	.byte 0x23,0x12,0x19,0x23,0x00,0x20,0x23,0xe0,0x0e,0x23,0x00,0x12,0x23,0x20,0x0e
+	.byte 0x23,0x00,0x0c,0x23,0xe0,0x0e,0x23,0x1b,0x08,0x23,0x00,0x10,0xff
+
+db_flv_031d:
+	.byte 0x23,0x00,0x0d,0x00,0xc0,0x04,0x23,0x00,0x21,0x00,0x40,0x06,0x23,0x00,0x51
+	.byte 0x00,0xc0,0x06,0x23,0x00,0x73,0xff
+
+db_flv_0333:
+	.byte 0x23,0x08,0x20,0x23,0x00,0x16,0x23,0xe0,0x0c,0x23,0x02,0x0b
+	.byte 0x23,0x11,0x0c,0x23,0x02,0x0b,0x23,0xe0,0x0c,0x23,0x00,0x16,0x23,0x08,0x20,0xff
+
+db_flv_atk_yllw:
+	.byte 0x12,0x18,0x1e
+p_flv_0352:
+	.byte 0x12,0x00,0x34,0x12,0xfb,0x26
+p_flv_0358:
+	.byte 0x12,0x00,0x02,0xfc
+	.byte 0x2e,0x12,0xfa,0x3c,0xfa
+	.long p_flv_039e
+p_flv_0363:
+	.byte 0x12,0xf8,0x10,0x12,0xfa,0x5c,0x12,0x00,0x23
+p_flv_036c:
+	.byte 0xf8,0xf9,0xef
+	.long p_flv_037c
+	.byte 0xf6,0xab
+	.byte 0x12,0x01,0x28,0x12,0x0a,0x18,0xfd
+	.long p_flv_0352
+p_flv_037c:
+	.byte 0xf6,0xb0
+	.byte 0x23,0x08,0x1e,0x23,0x00,0x19,0x23,0xf8,0x16,0x23,0x00,0x02,0xfc
+	.byte 0x30,0x23,0xf7,0x26,0xfa
+	.long p_flv_039e
+	.byte 0x23,0xf0,0x0a,0x23,0xf5,0x31,0x23,0x00,0x10,0xfd
+	.long p_flv_036c | oops shot captured fighter
+p_flv_039e:
+	.byte 0x12,0xf8,0x10,0x12,0x00,0x40,0xfb,0x12,0x00,0xff,0xff
+
+db_flv_atk_red:
+	.byte 0x12,0x18,0x1d
+p_flv_03ac:
+	.byte 0x12,0x00,0x28,0x12,0xfa,0x02,0xf3
+  * $03B3
+	.byte 0x3f,0x3b,0x36,0x32,0x28,0x26,0x24,0x22
+  * $03BB
+	.byte 0x12,0x04,0x30,0x12,0xfc,0x30,0x12,0x00,0x18,0xf8,0xf9,0xfa
+	.long p_flv_040c
+	.byte 0xef
+	.long p_flv_03d7
+p_flv_03cc:
+	.byte 0xf6,0xb0
+	.byte 0x12,0x01,0x28,0x12,0x0a,0x15,0xfd
+	.long p_flv_03ac
+p_flv_03d7:
+	.byte 0xf6,0xc0
+	.byte 0x23,0x08,0x10,0x23,0x00,0x23,0x23,0xf8,0x0f,0x23,0x00,0x48,0xf8,0xf9,0xfa
+	.long p_flv_040c
+	.byte 0xf6,0xb0
+	.byte 0x23,0x08,0x20,0x23,0x00,0x08,0x23,0xf8,0x02,0xf3
+	.byte 0x34,0x31,0x2d,0x29,0x22,0x26,0x1f,0x18
+	.byte 0x23,0x08,0x18,0x23,0xf8,0x18,0x23,0x00,0x10,0xf8,0xf9,0xfd
+	.long p_flv_03cc
+p_flv_040c:
+	.byte 0xfb
+	.byte 0x12,0x00,0xff,0xff
+db_flv_0411:
+	.byte 0x12,0x18,0x14
+p_flv_0414:
+	.byte 0x12,0x03,0x2a,0x12,0x10,0x40,0x12,0x01,0x20,0x12,0xfe,0x71
+p_flv_0420:
+	.byte 0xf9,0xf1,0xfa
+	.long p_flv_040c
+p_flv_0425:
+	.byte 0xef
+	.long p_flv_0430
+	.byte 0xf6,0xab
+	.byte 0x12,0x02,0x20,0xfd
+	.long p_flv_0414
+p_flv_0430:
+	.byte 0xf6,0xb0
+	.byte 0x23,0x04,0x1a,0x23,0x03,0x1d,0x23,0x1a,0x25,0x23,0x03,0x10,0x23,0xfd,0x48,0xfd
+	.long p_flv_0420
+
+db_fltv_rogefgter:
+	.byte 0x12,0x18,0x14,0x12,0x03,0x2a,0x12,0x10,0x40,0x12,0x01,0x20,0x12,0xfe,0x78,0xff
+
+db_0454: | capture mode boss
+	.byte 0x12,0x18,0x14,0xf4
+	.byte 0x12,0x00,0x04,0xfc
+	.byte 0x48,0x00,0xfc,0xff
+	.byte 0x23,0x00,0x30,0xf8,0xf9,0xfa
+	.long p_flv_040c
+	.byte 0xfd
+	.long p_flv_0425
+db_flv_cboss:
+	.byte 0x12,0x18,0x14,0xfb
+	.byte 0x12,0x00,0xff,0xff
+db_0473:
+	.byte 0x12,0x18,0x1e,0x12,0x00,0x08,0xf2
+	.long p_flv_0499
+	.byte 0x00,0x00,0x0a,0xf2
+	.long p_flv_0499
+	.byte 0x00,0x00,0x0a
+	.byte 0x12,0x00,0x2c,0x12,0xfb,0x26,0x12,0x00,0x02,0xfc
+	.byte 0x2e
+	.byte 0x12,0xfa,0x3c,0xfa
+	.long p_flv_039e
+	.byte 0xfd
+	.long p_flv_0363
+p_flv_0499:
+	.byte 0x12,0x00,0x2c,0x12,0xfb,0x26,0x12,0x00,0x02,0xfc
+	.byte 0x2e
+	.byte 0x12,0xfa,0x18,0x12,0x00,0x10,0xff
+db_04AB:
+	.byte 0x12,0x18,0x13,0xf2
+	.long p_flv_04c6
+	.byte 0x00,0x00,0x08,0xf2
+	.long p_flv_04cf
+	.byte 0x00,0x00,0x08,0x12,0x18,0x0b,0x12,0x00,0x34,0x12,0xfb,0x26,0xfd
+	.long p_flv_0358
+
+db_flv_04c6:
+p_flv_04c6:
+	.byte 0x12,0x00,0x10,0x12,0x18,0x0b,0xfd
+	.long p_flv_04d8
+
+db_flv_04cf:
+p_flv_04cf:
+	.byte 0x12,0x00,0x08,0x12,0x18,0x0b,0x12,0x00,0x06
+
+db_flv_04d8:
+p_flv_04d8:
+	.byte 0x12,0x00,0x22,0x12,0xfb,0x26,0x12,0x00,0x02,0xfc
+	.byte 0x2e
+	.byte 0x12,0xfa,0x18,0x12,0x00,0x20,0xff
+db_04EA:
+	.byte 0x12,0x18,0x1e,0x12,0x00,0x14,0xf2
+	.long p_flv_0502
+	.byte 0x12,0x00,0x08,0xf2
+	.long p_flv_0502
+	.byte 0x12,0x00,0x18,0x12,0xfb,0x26,0xfd
+	.long p_flv_0358
+
+db_flv_0502:
+p_flv_0502:
+	.byte 0x12,0xe2,0x01,0xf3
+	.byte 0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01,0xf5
+	.byte 0x23,0x00,0x48,0xff
+
+*=============================================================================
+* jp_0513_rst38()
+*  Description:
+*    RST $0038 handler.
+*    The first part uses vsync signal to develop clock references.
+*      ds3_92A0_frame_cts[0]: 60Hz (base rate)
+*      ds3_92A0_frame_cts[1]:  2Hz (div 32)
+*      ds3_92A0_frame_cts[2]:  4Hz (div 16)
+*    The counters are not reset in the course of the game operation.
+*
+*    For efficiency, bit masking is used instead of division so the real base
+*    period is 64 which is close enough to 60Hz.
+*
+*    Note: frame_cts[2] is used as baserate to 4 Game Timers in CPU0:f_1DD2
+*   (rescaled to develop a 2Hz clock)
+
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+jp_0513_rst38:
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,_sfr_6821                    	| [ld   (_sfr_6821),a] 0 ...CPU-sub1 IRQ acknowledge/enable
+	move.b	_sfr_dsw5,d0                    	| [ld   a,(_sfr_dsw5)] DSWA: freeze video
+	and.b	#0x02,d0                         	| [and  #0x02] freeze_ctrl_dsw (6j)
+	jeq	l_0575                             	| [jp   z,l_0575] if paused, goto 0575 // done
+
+* frame_cntr++
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] +=1
+
+* L==t[1], H==t[2]
+	move.w	ds3_92A0_frame_cts+1(pc),a0     	| [ld   hl,(ds3_92A0_frame_cts + 1)] load 16-bits
+
+* if ( cnt % 20 == 1 ) ... update 4Hz (H) only
+	and.b	#0x1F,d0                         	| [and  #0x1F] MOD $20
+	subq.b	#1,d0                           	| [dec  a]
+	jeq	l_0536                             	| [jr   z,l_0536]
+
+* else  if ( cnt % 20 == 0 ) ...
+	addq.b	#1,d0                           	| [inc  a] restores original value and allows test for 0
+	jne	l_0537                             	| [jr   nz,l_0537] A!=0 && A!=1 .... do nothing (why reload from HL?)
+* ...
+* Before incrementing 4Hz, assert that 4Hz is ODD on frame where _92A0[0] increments to 0.
+	move.b	d5,d0                           	| [ld   a,h] t[2] ... MSB
+	or.b	#0x01,d0                          	| [or   #0x01]
+	move.b	d0,d5                           	| [ld   h,a]
+
+* update both 4Hz and 2Hz
+	addq.b	#1,d6                           	| [inc  l] t[1] = L++ ... 2Hz
+l_0536:
+	addq.b	#1,d5                           	| [inc  h] t[2] = H++ ... 4Hz
+l_0537:
+	move.b	d6,ds3_92A0_frame_cts+1         	| [ld   (ds3_92A0_frame_cts + 1),hl] [1]: 32-frame ... ~2Hz timer
+	move.b	d5,ds3_92A0_frame_cts+2         	| [ld   (ds3_92A0_frame_cts + 1),hl] [1]: 32-frame ... ~2Hz timer
+                                                  * [2]: 16-frame ... ~4Hz timer
+
+* flag = ( num_bugs < param07 ) && ds_cpu0_task_actv[0x15]
+	move.b	ds_new_stage_parms+0x07,d0      	| [ld   a,(ds_new_stage_parms + 0x07)] number of aliens left when continous bombing can start
+	move.b	d0,d4                           	| [ld   e,a]
+	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
+	cmp.b	d4,d0                            	| [cp   e]
+	roxl.b	#1,d1                           	| [rl   b] Cy set if E > A ... shift into B ... clever.
+	move.b	ds_cpu0_task_actv+0x15,d0       	| [ld   a,(ds_cpu0_task_actv + 0x15)] cpu0:f_1F04 (reads fire button input)
+	and.b	d1,d0                            	| [and  b]
+	and.b	#0x01,d0                         	| [and  #0x01] mask off bit-0
+	move.b	d0,b_92A0+0x0A                  	| [ld   (b_92A0 + 0x0A),a] continuous bombing flag (set here by tasking kernel)
+
+* find the first ready task.. may run more than one.
+	clr.b	d2                               	| [ld   c,#0]
+l_054F_while:
+	lea	ds_cpu1_task_actv(pc),a0           	| [ld   hl,#ds_cpu1_task_actv]
+	move.b	d2,d0                           	| [ld   a,c]
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	tst.b	d0                               	| [and  a]
+	jne	l_055C                             	| [jr   nz,l_055C]
+	addq.b	#1,d2                           	| [inc  c]
+	jra	l_054F_while                       	| [jr   l_054F_while]
+
+l_055C:
+	move.b	d0,d1                           	| [ld   b,a] A == task status
+	lea	d_003B_task_table(pc),a0           	| [ld   hl,#d_003B_task_table]
+	move.b	d2,d0                           	| [ld   a,c] C == task index
+	asl.b	#1,d0                            	| [sla  a] *=2 ... (sizeof pointer)
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	move.b	(a0),d4                         	| [ld   e,(hl)]
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	(a0),d3                         	| [ld   d,(hl)]
+	exg	a1,a0                              	| [ex   de,hl]
+	movem.w	d1/d2,-(sp)                    	| [push bc]
+	move.l	a4,-(sp)                        	| [push bc]
+
+	jbsr	c_0034                            	| [call c_0034]
+	move.l	(sp)+,a4                        	| [pop  bc]
+	movem.w	(sp)+,d1/d2                    	| [pop  bc]
+	move.b	d1,d0                           	| [ld   a,b] "status" actually adds to index
+	add.b	d2,d0                            	| [add  a,c]
+	move.b	d0,d2                           	| [ld   c,a]
+	and.b	#0xF8,d0                         	| [and  #0xF8] if index < 8 then repeat loop
+	jeq	l_054F_while                       	| [jr   z,l_054F_while]
+
+l_0575:
+	move.b	#1,d0                           	| [ld   a,#1]
+	move.b	d0,_sfr_6821                    	| [ld   (_sfr_6821),a] 1 ...CPU-sub1 IRQ acknowledge/enable
+	jbsr	osd_enable_vblank_interrupt
+	rts                                    	| [ret]
+
 *=============================================================================
 * f_0827()
 *  Description:
@@ -1144,6 +1571,102 @@ l_0850:
 	jeq	l_0850                             	| [jr   z,l_0850] wait
 	rts                                    	| [ret]
 * end task $0828
+
+
+*=============================================================================
+* f_0857()
+*  Description:
+*    triggers various parts of gameplay based on parameters
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+f_0857:
+	move.b	ds4_game_tmrs+2,d0              	| [ld   a,(ds4_game_tmrs + 2)]
+	move.b	d0,d1                           	| [ld   b,a] parameter to c_08AD
+	cmp.b	#0x3C,d0                         	| [cp   #0x3C]
+	jcc	l_0865                             	| [jr   nc,l_0865]
+* increases allowable max_bombers after a time
+	move.b	ds_new_stage_parms+0x05,d0      	| [ld   a,(ds_new_stage_parms + 0x05)]
+	move.b	d0,ds_new_stage_parms+0x04      	| [ld   (ds_new_stage_parms + 0x04),a] new_stage_parms[4] = new_stage_parms[5] ... max bombers
+
+* set bomb drop enable flags
+l_0865:
+	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
+	move.b	d0,d2                           	| [ld   c,a] parameter to c_08BE
+	move.b	ds_new_stage_parms+0x00,d0      	| [ld   a,(ds_new_stage_parms + 0x00)] set bomb drop enable flags
+	lea	d_0909+0*4(pc),a0                  	| [ld   hl,#d_0909 + 0 * 4]
+	jbsr	c_08BE                            	| [call c_08BE] A==new_stage_parms[0], HL==d_0909, C==num_bugs_on_scrn
+	move.b	d0,b_92C0+0x08                  	| [ld   (b_92C0 + 0x08),a] = c_08BE() ... bomb drop enable flags
+
+* flag indicates number of flying aliens is less than new_stage_parm[7]
+* if flag is set by sub-CPU tasking kernel ...
+	move.b	b_92A0+0x0A,d0                  	| [ld   a,(b_92A0 + 0x0A)] continuous bombing when flag set
+	tst.b	d0                               	| [and  a]
+	jeq	l_0888                             	| [jr   z,l_0888]
+
+* then ... set default start values for bomber launch timers in continuous bombing state
+* this will also happen momentarily at start of round until bugs_actv_nbr exceeds ds_new_stage_parms[0x07]
+	lea	b_92C0+4(pc),a0                 	| [ld   hl,#b_92C0 + 0x04] memset( b_92C0_4, 2, 3 )
+	move.b	#2,d0                           	| [ld   a,#2]
+	move.b	#3,d1                           	| [ld   b,#3]
+	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9AA0+0x00                  	| [ld   (b_9AA0 + 0x00),a] 0 ... sound-fx count/enable registers, kill pulsing sound effect (free-fly)
+	rts                                    	| [ret]
+
+l_0888:
+* ... else after bugs_actv_nbr exceeds parameter_7 until continous bombing begins
+	move.b	ds_new_stage_parms+0x01,d0      	| [ld   a,(ds_new_stage_parms + 0x01)]
+	lea	d_0909+8*4(pc),a0                  	| [ld   hl,#d_0909 + 8 * 4] offset the data pointer
+	jbsr	c_08BE                            	| [call c_08BE] A==new_stage_parms[1], HL==d_0929, C==num_bugs_on_scrn
+	move.b	d0,b_92C0+0x04                  	| [ld   (b_92C0 + 0x04),a] c_08BE() ... boss alien default bomber timer
+
+	move.b	ds_new_stage_parms+0x02,d0      	| [ld   a,(ds_new_stage_parms + 0x02)]
+	lea	d_08CD(pc),a0                      	| [ld   hl,#d_08CD]
+	jbsr	c_08AD                            	| [call c_08AD] A==new_stage_parms[2], HL==d_08CD
+	move.b	d0,b_92C0+0x05                  	| [ld   (b_92C0 + 0x05),a] c_08AD() ... red alien default bomber timer
+
+	move.b	ds_new_stage_parms+0x03,d0      	| [ld   a,(ds_new_stage_parms + 0x03)]
+	lea	d_08EB(pc),a0                      	| [ld   hl,#d_08EB]
+	jbsr	c_08AD                            	| [call c_08AD] A==new_stage_parms[3], HL==d_08EB
+	move.b	d0,b_92C0+0x06                  	| [ld   (b_92C0 + 0x06),a] c_08AD() ... yellow alien default bomber timer
+
+	rts                                    	| [ret]
+
+
+*=============================================================================
+* c_08BE()
+*  Description:
+*   for f_0857
+* IN:
+*  A/D0==ds_new_stage_parms + 0x00 or ds_new_stage_parms + 0x01
+*  C/D2==bugs_actv_nbr
+*  HL/A0== pointer _0909, _0929
+* OUT:
+*  A==(hl)
+*-----------------------------------------------------------------------------
+c_08BE:
+* A used as index into sets of 4
+* 16-bit division not needed here, but slightly more efficient to load the
+* dividend into upper byte of HL and take quotient from H
+* the quotient is ranged 0-4, so in the case the A max out at 7 and number
+* of creatures is 40, the selected byte would be at $0929, so d_0909 and
+* d_0929 should be one contiguous table.
+	asl.b	#1,d0                            	| [sla  a]
+	jbsr	rst_08_half                        	| [rst  0x08] HL += 2A
+												| [ex   de,hl] save HL, 
+	move.b	d2,d5                           	| [ld   h,c] we don't care about value of L
+	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
+	jbsr	c_divmod                          	| [call c_divmod] HL=HL/10
+												| [ex   de,hl] 8-bit quotient into d ... restore HL
+	move.b	d5,d0                           	| [ld   a,d] ... quotient into a
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	rts                                    	| [ret]
+
 
 *=============================================================================
 * c_1061()
@@ -1292,7 +1815,7 @@ l_10A0_got_one:
 	move.b	#9,(a0)+                         	| [ld   (hl),#9] obj_status[l].state ... disposition = diving attack
 	move.l	a2,d0                         	| [ld   a,ixl]
 	sub.l	#ds_bug_motion_que,d0
-	addq.b	#1,d6                           	| [inc  l]
+												| [inc  l]
 	move.b	d0,(a0)                         	| [ld   (hl),a] obj_status[L].idx ... index into flying que
 
 
@@ -2263,3 +2786,508 @@ l_1B54_getout:
 	move.b	d0,ds_cpu0_task_actv+0x04       	| [ld   (ds_cpu0_task_actv + 0x04),a] 0: f_1A80 ... this task
 
 	rts                                    	| [ret]
+
+*=============================================================================
+* f_1DE6()
+*  Description:
+*   Provides pulsating movement of the collective.
+*   Enabled by f_2A90 once the initial formation waves have completed.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+f_1DE6:
+*  if ( frame_count % 4 != 0 ) return
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld  a,(ds3_92A0_frame_cts + 0)] frame_ct%4 ... ... (provides 15Hz timer)
+	and.b	#0x03,d0                         	| [and  #0x03]
+	beq.b	0f
+	rts                                    	| [ret  nz]
+0:
+
+	lea	ds_9200_glbls+l_0F(pc),a0          	| [ld   hl,#ds_9200_glbls + 0x0F] nest_direction counter for expand/contract motion.
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	move.b	d0,d4                           	| [ld   e,a] PREVIOUS_nest_direction counter
+
+	move.b	#-1,d3                          	| [ld   d,#-1]
+	btst.b	#7,d0                           	| [bit  7,a]
+	jne	l_1DFC_contracting                 	| [jr   nz,l_1DFC_contracting]
+* expanding
+	addq.b	#2,d3                           	| [inc  d] * 2
+	addq.b	#1,(a0)                         	| [inc  (hl)] nest_direction = 1
+	jra	l_1DFD                             	| [jr   l_1DFD]
+l_1DFC_contracting:
+	subq.b	#1,(a0)                         	| [dec  (hl)] nest_direction = -1
+
+l_1DFD:
+	cmp.b	#0x1F,d0                         	| [cp   #0x1F] counting up from $00 to $1F
+	jne	l_1E03                             	| [jr   nz,l_1E03]
+	bset.b	#7,(a0)                         	| [set  7,(hl)] count|= $80 ... = $A0
+l_1E03:
+	cmp.b	#0x81,d0                         	| [cp   #0x81] counting down from $A0 to $81 (-$60 to -$7F)
+	jne	l_1E09                             	| [jr   nz,l_1E09]
+	bclr.b	#7,(a0)                         	| [res  7,(hl)] count &= ~$80 ... = $00
+
+* Now we have updated the counter, and have D==1 if expanding, D==-1 if contracting.
+* Every 8*4 (32) frames, we change the bitmap which determines the positions that are
+* updated. This happens to correspond with the "flapping" animation... ~1/2 second per flap.
+l_1E09:
+	move.b	(a0),d2                         	| [ld   c,(hl)] grab nest_direction while we still have the pointer
+
+	and.b	#0x07,d0                         	| [and  #0x07] previous_cntr % 8
+
+	move.b	d3,d0                           	| [ld   a,d] direction counter increment (+1 or -1)
+	move.b	d0,ds_9200_glbls+0x11           	| [ld   (ds_9200_glbls + 0x11),a] formatn_mv_signage, cpu2 cp with b_9A80 + 0x00
+
+	move.b	d4,d0                           	| [ld   a,e] reload previous_nest_direction counter
+
+* if ( previous_counter % 8 == 0 ) then update_bitmap i.e. even multiple of 8
+	jne	l_1E23                             	| [jr   nz,l_1E23]
+
+	lea	d_1E64_bitmap_tables(pc),a0        	| [ld   hl,#d_1E64_bitmap_tables]
+
+* count * 2 i.e. count / 8 * 16 ... index into table row
+	move.b	d2,d0                           	| [ld   a,c] A = updated_counter
+	and.b	#0x18,d0                         	| [and  #0x18] make it even multiple of 8
+	jbsr	rst_08_half                            	| [rst  0x08] HL += 2A   .... table entries are $10 bytes long
+
+	move.b	d4,d0                           	| [ld   a,e] reload previous_nest_direction counter
+
+	lea	ds10_9920(pc),a1                   	| [ld   de,#ds10_9920] $10 bytes copied from 1E64+2*A
+	move.w	#0x0010,d1                      	| [ld   bc,#0x0010] 16
+	jbsr	ldir                              	| [ldir]
+
+l_1E23:
+* A ^= (HL) ... set Cy determines which parameter is taken. Bit-7 XOR'd with
+* flip_screen-bit... done efficiently by rotating bit-7 into bit-0 and back.
+	lea	b_9215_flip_screen(pc),a0          	| [ld   hl,#b_9215_flip_screen]
+	rol.b	#1,d0                            	| [rlca] A == previous_counter
+	move.b	(a0),d7
+	eor.b	d7,d0                            	| [xor  (hl)]
+	ror.b	#1,d0                            	| [rrca] Cy now indicates state of bit-7
+
+* Setup parameters for first function call. The first call does just the
+* left-most 5 columns. The second call does the rightmost 5 columns and the
+* 6 row coordinates, which incidentally will have the same sign! So we stash
+* the parameter for the second call in C, at the same time that B is set.
+
+	lea	ds10_9920(pc),a0                   	| [ld   hl,#ds10_9920] 16 bytes copied from _bitmap_tables+2*A
+	lea	ds_hpos_loc_offs(pc),a1            	| [ld   de,#ds_hpos_loc_offs] hl==ds10_9920
+
+	jcc	l_1E36                             	| [jr   nc,l_1E36]
+
+	lea	l_01FF(pc),a4                      	| [ld   bc,#0x01FF] B==1, C==-1 (contracting group, non-inverted)
+	jra	l_1E39                             	| [jr   l_1E39]
+
+l_1E36:
+	lea	l_FF01(pc),a4                      	| [ld   bc,#0xFF01] B==-1, C==1 (expanding group, non-inverted)
+
+l_1E39:
+ld   ixl,#5                                ; 5 leftmost columns
+	jbsr	c_1E43                            	| [call c_1E43]
+
+* setup parameters for second function call
+	move.b	d2,d1                           	| [ld   b,c] load second parameter
+ld   ixl,0x0b                              ; 5 right columns + 6 rows
+
+       * 1E43()
+
+*=============================================================================
+* c_1E43()
+*  Description:
+*   Compute row/col coordinates of formation in expand/contract movement.
+*   The selected bitmap table determines whether any given coordinate
+*   dimension is incremented at this update.
+* IN:
+*    HL == saved pointer into working copy of selected bitmap table ($10 bytes)
+*    DE == saved pointer into home_posn_loc[]
+*        ... object positioning (even: relative offsets .... odd: defaults/origin)
+*    B == +/- 1 increment.
+*    IXL == 5  (repeat count for 5 leftmost columns)
+*    IXL == 11 (repeat count, for 5 rightmost columns + 6 rows which have the same sign)
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_1E43:
+j_1E43:
+* check if updating this one
+	ror.b	#1,(a0)                          	| [rrc  (hl)]
+	jcc	l_1E5C_update_ptrs                 	| [jr   nc,l_1E5C_update_ptrs]
+
+* obj_pos_rel[ n ] += B
+	move.b	(a1),d0                         	| [ld   a,(de)] even-bytes: relative offset
+	add.b	d1,d0                            	| [add  a,b] +/- 1
+	move.b	d0,(a1)                         	| [ld   (de),a]
+
+* _home_posn_org[ n ] += B ... 10 column coordinates, 6 row coordinates, 16-bits per coordinate
+	lea	ds_hpos_spcoords(pc),a1            	| [ld   d,#>ds_hpos_spcoords]
+	and.w	#0xFF,d4
+	add.w	d4,a1
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	add.b	d1,d0                            	| [add  a,b] +/- 1
+	move.b	d0,(a1)                         	| [ld   (de),a]
+
+* check for carry
+	roxr.b	#1,d0                           	| [rra]
+	eor.b	d1,d0                            	| [xor  b]
+	rol.b	#1,d0                            	| [rlca]
+	jcc	l_1E5A                             	| [jr   nc,l_1E5A]
+* handle carry
+												| [inc  e]
+	move.b	(1,a1),d0                         	| [ld   a,(de)] MSB
+	eor.b	#0x01,d0                         	| [xor  #0x01]
+	move.b	d0,(1,a1)                         	| [ld   (de),a]
+												| [dec  e] LSB again
+
+l_1E5A:
+	lea	ds_hpos_loc_offs(pc),a1            	| [ld   d,#>ds_hpos_loc_offs] reset pointer
+	and.w	#0xFF,d4
+	add.w	d4,a1
+	      ^^^^ review XX value
+
+l_1E5C_update_ptrs:
+	addq.b	#2,d4                           	| [inc  e] * 2
+	addq.b	#1,d6                           	| [inc  l]
+	subq.b	#1,ixl                          	| [dec  ixl]
+	jne	j_1E43                             	| [jr   nz,j_1E43]
+
+	rts                                    	| [ret]
+
+*=============================================================================
+* d_1E64_bitmap_tables
+*  Description:
+*   bitmaps determine at which intervals the corresponding coordinate will
+*   be incremented... allows outmost and lowest coordinates to expand faster.
+*
+*                                       	|<-------------- COLUMNS --------------------->|<---------- ROWS ---------->|
+*
+*-----------------------------------------------------------------------------
+d_1E64_bitmap_tables:
+
+	.byte 0xFF,0x77,0x55,0x14,0x10,0x10,0x14,0x55,0x77,0xFF,0x00,0x10,0x14,0x55,0x77,0xFF
+	.byte 0xFF,0x77,0x55,0x51,0x10,0x10,0x51,0x55,0x77,0xFF,0x00,0x10,0x51,0x55,0x77,0xFF
+	.byte 0xFF,0x77,0x57,0x15,0x10,0x10,0x15,0x57,0x77,0xFF,0x00,0x10,0x15,0x57,0x77,0xFF
+	.byte 0xFF,0xF7,0xD5,0x91,0x10,0x10,0x91,0xD5,0xF7,0xFF,0x00,0x10,0x91,0xD5,0xF7,0xFF
+
+*=============================================================================
+* f_2916()
+*  Description:
+*   Inserts creature objects from the attack wave table into the movement
+*   queue. Essentially, it launches the attack formations swarming into the
+*   screen. The table of attack wave structures is built in c_25A2.
+*   Each struct starts with $7E, and the end of table marker is $7F.
+*   This task will be enabled by stg_init_env... after the
+*   creature classes and formation tables are initialized.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+f_2916:
+
+* check for end of table
+* if ( 7f == current_token ) goto complete
+	move.l	ds_plyr_actv+_p_atkwav_tbl,a0	| [ld   hl,(ds_plyr_actv +_p_atkwav_tbl)] &ds_8920[n]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	cmp.b	#0x7F,d0                         	| [cp   #0x7F]
+	jeq	l_2A29_attack_waves_complete       	| [jp   z,l_2A29_attack_waves_complete]
+
+* check for start of table structure
+* if ( 7e == token ) then .... else .... goto _next_pair
+	cmp.b	#0x7E,d0                         	| [cp   #0x7E]
+	jne	l_2953_next_pair                   	| [jr   nz,l_2953_next_pair]
+
+* if ( ! _attack_wave_enable ) return
+	move.b	ds_plyr_actv+_b_atk_wv_enbl,d0  	| [ld   a,(ds_plyr_actv +_b_atk_wv_enbl)] 0 if restarting the stage (respawning player ship)
+	tst.b	d0                               	| [and  a]
+	bne.b	0f
+	rts                                    	| [ret  z]
+0:
+
+* if ( 0 != bugs_flying_nbr ) goto _set_tmr0
+	move.b	b_bugs_flying_nbr,d0            	| [ld   a,(b_bugs_flying_nbr)]
+										| [and  a]
+	jne	l_294D_set_tmr0                    	| [jr   nz,l_294D_set_tmr0]
+
+* if ( 0 == not_challenge_stg ) ...
+	move.b	ds_plyr_actv+_b_not_chllg_stg,d0	| [ld   a,(ds_plyr_actv +_b_not_chllg_stg)] ==(stg_ctr+1)%4 ...i.e. 0 if challenge stage
+	move.b	d0,d1                           	| [ld   b,a] this does nothing ;)
+											| [and  a]
+	jne	l_2944_attack_wave_start           	| [jr   nz,l_2944_attack_wave_start]
+* ...
+*  if ( 1 == game_tmrs[0] ) ..
+	move.b	ds4_game_tmrs+0,d0              	| [ld   a,(ds4_game_tmrs + 0)] if tmr==1 ( on stage 3 ..challenge stage)
+	cmp.b	#1,d0                            	| [cp   #1]
+	jne	l_2942_chk_tmr0                    	| [jr   nz,l_2942_chk_tmr0]
+*  ..
+	move.b	#8,d0                           	| [ld   a,#8]
+	move.b	d0,w_bug_flying_hit_cnt         	| [ld   (w_bug_flying_hit_cnt),a] 8 ... count down each flying bug hit
+	rts                                    	| [ret]
+*  ..
+* if ( 0 != game_tmrs[0] ) return
+l_2942_chk_tmr0:
+	tst.b	d0                               	| [and  a] game_tmr0
+	beq.b	0f
+	rts                                    	| [ret  nz]
+0:
+* ...
+
+* Finally... sending out next wave of creatures. We are on start token 7E so do nothing on this time step.
+l_2944_attack_wave_start:
+	addq.w	#1,a0                           	| [inc  hl]
+	move.l	a0,ds_plyr_actv+_p_atkwav_tbl   	| [ld   (ds_plyr_actv +_p_atkwav_tbl),hl] +=1 (first element of byte-pair following the 7e)
+	lea	ds_plyr_actv+_b_attkwv_ctr,a0  	| [ld   hl,#ds_plyr_actv +_b_attkwv_ctr] +=1
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+	rts                                    	| [ret]
+
+l_294D_set_tmr0:
+	move.b	#2,d0                           	| [ld   a,#2]
+	move.b	d0,ds4_game_tmrs+0              	| [ld   (ds4_game_tmrs + 0),a] 2
+	rts                                    	| [ret]
+* ....
+
+* finally, next token-pair !
+l_2953_next_pair:
+	move.b	d0,d2                           	| [ld   c,a] *.p_atkwav_tbl ... stash for later
+* bit-7 is set if this toaster is a wing-man or a split waves, and therefore no delay,
+* otherwise it is clear for trailing formation i.e. delay before launching.
+* if ( 0 == *.p_atkwav_tbl & 0x80 ) ...
+	btst.b	#7,d0                           	| [bit  7,a]
+	jne	l_295E                             	| [jr   nz,l_295E]
+* then ...
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	and.b	#0x07,d0                         	| [and  #0x07]
+	beq.b	0f
+	rts                                    	| [ret  nz]
+0:
+
+* ready to stick another bug in the flying queue
+l_295E:
+* make byte offset into lut at db_2A3C  (_finalize_object) ... also we're done with bit-7
+	asl.b	#1,d2                            	| [sla  c]
+
+* find a slot in the queue
+	move.b	#0x0C,d1                        	| [ld   b,#0x0C] number of structures in array
+	move.w	#0x0014,d3                      	| [ld   de,#0x0014] size of 1 data structure 20
+	lea	ds_bug_motion_que(pc),a2           	| [ld   ix,#ds_bug_motion_que]
+l_2969_while:
+	btst.b	#0,(0x13,a2)                    	| [bit  0,0x13(ix)]
+	jeq	l_2974_got_slot                    	| [jr   z,l_2974_got_slot]
+	add.w	d3,a2                            	| [add  ix,de] advance pointer
+	subq.b	#1,d1                           	| [...]
+	jne	l_2969_while                       	| [djnz l_2969_while]
+
+	rts                                    	| [ret] can't find a slot... bummer
+
+* each time is another bug of a new wave formation getting ready to appear
+l_2974_got_slot:
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	(a0),d0                         	| [ld   a,(hl)] atkwav_tbl[n].pair.h ... object ID/offset, e.g. 58
+	move.b	d0,d1                           	| [ld   b,a] stash it
+
+* if object >= $78  &&  object < $80 ) ...
+	and.b	#0x78,d0                         	| [and  #0x78]
+	cmp.b	#0x78,d0                         	| [cp   #0x78]
+	move.b	d1,d0                           	| [ld   a,b]
+	jne	l_2980                             	| [jr   nz,l_2980]
+* ...  then ...
+	bclr.b	#6,d0                           	| [res  6,a] what object is > $78?
+l_2980:
+	move.b	d0,(0x10,a2)                    	| [ld   0x10(ix),a] object index
+
+	addq.w	#1,a0                           	| [inc  hl]
+	move.l	a0,ds_plyr_actv+_p_atkwav_tbl   	| [ld   (ds_plyr_actv +_p_atkwav_tbl),hl] advance to next token-pair e.g. HL:=8923
+
+	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
+	and.w	#0xFF,d6
+	move.b	d0,d6                           	| [ld   l,a]
+	add.w	d6,a0
+	move.b	#7,(a0)                         	| [ld   (hl),#7] 8800[L].l ... disposition = "spawning" ... i.e. case_2590
+
+* store the slot index (offset) for this object
+	addq.w	#1,a0                           	| [inc  l]
+	addq.w	#1,d6
+	move.l	a2,d4
+	sub.l	#ds_bug_motion_que,d4			| compute offset from base
+												| [ld   e,ixl]
+	move.b	d4,(a0)                         	| [ld   (hl),e] 8800[L].h ... offset of slot (n*$14)
+
+	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
+	and.w	#0xFF,d6
+	add.w	d6,a0
+
+* if ( object >= $38 && object < $40 ) then goto _setup_transients
+	and.b	#0x38,d0                         	| [and  #0x38]
+	cmp.b	#0x38,d0                         	| [cp   #0x38]
+	jeq	l_29B3_setup_transients            	| [jr   z,l_29B3_setup_transients]
+* else ...
+* Init routine c_2896 has populated the sprite code buffer such that each even
+* byte consists of the "primary" code (multiple of 8), AND'd with the color.
+	subq.b	#1,d6                           	| [dec  l] e.g. HL=9358
+	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code] sprite[L].code.b0 &= 0x78
+	and.w	#0xFF,d6
+	add.w	d6,a0
+
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	move.b	d0,d3                           	| [ld   d,a] stash it
+	and.b	#0x78,d0                         	| [and  #0x78] base sprite code for this object (multiple of 8)
+	move.b	d0,(a0)+                         	| [ld   (hl),a] sprite[n].cclr.b0
+	addq.b	#1,d6                           	| [inc  l] .b1
+	move.b	d3,d0                           	| [ld   a,d]
+	and.b	#0x07,d0                         	| [and  #0x07] color table in bits <0:2>
+	btst.b	#7,d3                           	| [bit  7,d]
+	move.b	d0,(a0)                         	| [ld   (hl),a] sprite[n].cclr.b1
+
+* if ( ! code_bit_7 )
+	clr.b	d0                               	| [ld   a,#0]
+	jeq	l_29AE                             	| [jr   z,l_29AE]
+* else
+	move.b	b_92E2+0x01,d0                  	| [ld   a,(b_92E2 + 0x01)] to 0x0F(ix) ... _stg_dat[1] ... bomb drop enable flags
+
+l_29AE:
+	move.b	d0,(0x0F,a2)                    	| [ld   0x0F(ix),a] 0, or b_92E2[1] ... bomb drop enable flags
+	jra	l_29D1_finalize_object_setup       	| [jr   l_29D1_finalize_object_setup]
+
+* handle the additional "transient" buggers that fly-in but don't join ... Stage 4 or higher.
+l_29B3_setup_transients:
+	move.w	#2*256+0x10,d3             	| [ld   de,#0x02 * 256 + 0x0010] redmoth, color 02, 270-deg rotation
+	btst.b	#6,d1                           	| [bit  6,b]
+	jne	l_29C7                             	| [jr   nz,l_29C7]
+	move.w	#3*256+0x0018,d3             	| [ld   de,#0x03 * 256 + 0x0018] yellowbee, color 03, 270-deg rotation
+	move.b	ds_plyr_actv+_b_attkwv_ctr,d0   	| [ld   a,(ds_plyr_actv +_b_attkwv_ctr)]
+	cmp.b	#0x02,d0                         	| [cp   #0x02]
+	jne	l_29C7                             	| [jr   nz,l_29C7]
+	move.w	#8,d3               	| [ld   de,#0x0000 + 0x0008] boss, color 00, 270-deg rotation (>=stage 9)
+l_29C7:
+	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
+	and.w	#0xFF,d6
+	add.w	d6,a0
+	move.b	d3,(a0)+                         	| [ld   (hl),d] color, e.g. 8B3B=$03
+	subq.b	#1,d6                           	| [dec  l]
+	move.b	d4,(a0)+                         	| [ld   (hl),e] color, e.g. 8B3A=$18
+	addq.b	#1,d6                           	| [inc  l]
+	clr.b	(0x0F,a2)                        	| [ld   0x0F(ix),#0] setup transients ... bomb drop enable flags
+
+l_29D1_finalize_object_setup:
+	move.b	d2,d3                           	| [ld   d,c] first byte of token-pair, left-shifted 1 (byte-1 of _stg_dat triplet)
+	bclr.b	#7,d2                           	| [res  7,c]
+	move.b	#8,d1                           	| [ld   b,#8] critters that enter at the top
+* if ( C & 0x02 ) ...
+	btst.b	#1,d2                           	| [bit  1,c]
+	jeq	l_29DC                             	| [jr   z,l_29DC]
+* then ...
+	move.b	#0x44,d1                        	| [ld   b,#0x44] critters that enter on the sides
+l_29DC:
+	move.b	d1,(0x0E,a2)                    	| [ld   0x0E(ix),b] $08 or $44 ... bomb drop counter
+
+* ds_bug_move_queue[IX].b08 = db_2A3C[C] ... LSB of data pointer
+	clr.w	d1                               	| [ld   b,#0]
+	move.b	d2,d1
+	lea	db_2A3C(pc),a0                     	| [ld   hl,#db_2A3C]
+	add.w	d1,a0                            	| [add  hl,bc] only C is significant
+
+	move.b	(a0)+,d0                         	| [ld   a,(hl)]
+	addq.w	#1,d6                           	| [inc  hl]
+	move.b	d0,(0x08,a2)                    	| [ld   0x08(ix),a] lo-byte of pointer e.g. cpu-sub1:001D
+
+* get upper nibble of word at db_2A3C[w] (bits 5:7 will be masked by 0x0E below)
+* rld (hl): Performs a 4-bit leftward rotation of the 12-bit number whose
+* 4 most signigifcant bits are the 4 least significant bits of A
+	clr.b	d0                               	| [xor  a]
+
+
+	jbsr		rld								| [rld]
+	move.b	d0,d1                           	| [ld   b,a]
+
+* ds_bug_move_queue[IX].b09  = db_2A3C[C + 1] & 0x1F ... MSB of data pointer
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	and.b	#0x1F,d0                         	| [and  #0x1F]
+	move.b	d0,(0x09,a2)                    	| [ld   0x09(ix),a] hi-byte of pointer e.g. cpu-sub1:001D
+
+* ... get upper 4-bits of word at db_2A3C[w] which were rld'd into A: these
+* are $2 thru $A even, and this is multiplied by 3 by the expression A*2+A
+	move.b	d1,d0                           	| [ld   a,b]
+	and.b	#0x0E,d0                         	| [and  #0x0E] bits 5:7 of db_2A3C[].b1
+	move.b	d0,d1                           	| [ld   b,a]
+	rol.b	#1,d0                            	| [rlca]
+	add.b	d1,d0                            	| [add  a,b]
+	lea	db_2A6C(pc),a0                     	| [ld   hl,#db_2A6C]
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+
+* D is b0 of byte-pair (left shifted 1, so in _stg_dat it is 0x40)
+* if ( D & 0x80 )
+	btst.b	#7,d3                           	| [bit  7,d] 29FE
+	jeq	l_2A05                             	| [jr   z,l_2A05]
+* ... then ... HL += 3 ... selects the second set of 3 bytes
+	addq.w	#3,a0                           	| [inc  hl] * 3
+
+l_2A05:
+	move.b	(a0)+,d0                         	| [ld   a,(hl)]
+												| [inc  hl]
+	move.b	d0,(0x01,a2)                    	| [ld   0x01(ix),a] db_2A6C[L].b0
+	move.b	(a0)+,d0                         	| [ld   a,(hl)]
+												| [inc  hl]
+	move.b	d0,(0x03,a2)                    	| [ld   0x03(ix),a] db_2A6C[L].b1
+	move.b	(a0)+,d0                         	| [ld   a,(hl)]
+												| [inc  hl]
+	move.b	d0,(0x05,a2)                    	| [ld   0x05(ix),a] db_2A6C[L].b2
+
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,(0x00,a2)                    	| [ld   0x00(ix),a] 0
+	move.b	d0,(0x02,a2)                    	| [ld   0x02(ix),a] 0
+	move.b	d0,(0x04,a2)                    	| [ld   0x04(ix),a] 0
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,(0x0D,a2)                    	| [ld   0x0D(ix),a] 1 ... expiration counter
+	or.b	d3,d0                             	| [or   d] 1st byte of current byte-pair (left shifted 1, so in _stg_dat it is 0x40)
+	and.b	#0x81,d0                         	| [and  #0x81] .b13<7> negates rotation angle
+	move.b	d0,(0x13,a2)                    	| [ld   0x13(ix),a] A &= $81 ... .b13<0> makes object slot active
+	rts                                    	| [ret]
+
+* all 8 of the last wave of bees are on screen now... waiting for them to get in position.
+* if (nbr_flying bugs > 0 ) return
+l_2A29_attack_waves_complete:
+	move.b	b_bugs_flying_nbr,d0            	| [ld   a,(b_bugs_flying_nbr)]
+	                               	| [and  a]
+	beq.b	0f
+	rts                                    	| [ret  nz]
+0:
+
+* the last one has found its position in the collective.
+	move.b	d0,ds_cpu0_task_actv+0x08       	| [ld   (ds_cpu0_task_actv + 0x08),a] 0  (f_2916 ... end of attack waves)
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,ds_cpu0_task_actv+0x04       	| [ld   (ds_cpu0_task_actv + 0x04),a] 1  (f_1A80 ... bonus-bee manager)
+	move.b	d0,ds_cpu0_task_actv+0x10       	| [ld   (ds_cpu0_task_actv + 0x10),a] 1  (f_1B65 ... manage bomber attack )
+	move.b	d0,ds_plyr_actv+_b_nestlr_inh   	| [ld   (ds_plyr_actv +_b_nestlr_inh),a] 1  ... inhibit nest left/right movement
+
+	rts                                    	| [ret]
+
+
+*=============================================================================
+
+* bits 0:12  - pointer to data tables for flying pattern control.
+* bits 13:15 - selection index into lut 2A6C.
+db_2A3C:
+	.long db_flv_001d + 0x0000, db_flv_0067 + 0x2000, db_flv_009f + 0x4000, db_flv_00d4 + 0x2000
+	.long db_flv_017b + 0x0000, db_flv_01b0 + 0x6000, db_flv_01e8 + 0x0000, db_flv_01f5 + 0x2000
+	.long db_flv_020b + 0x0000, db_flv_021b + 0x2000, db_flv_022b + 0x8000, db_flv_0241 + 0x2000
+	.long db_flv_025d + 0x8000, db_flv_0279 + 0x2000, db_flv_029e + 0x0000, db_flv_02ba + 0x2000
+	.long db_flv_02d9 + 0x0000, db_flv_02fb + 0x2000, db_flv_031d + 0x0000, db_flv_0333 + 0x2000
+	.long db_flv_0fda + 0x0000, db_flv_0ff0 + 0x2000, db_flv_022b + 0xA000, db_flv_025d + 0xA000
+
+* bits 13:15 from above provide bits<1:3> of the index
+* bit-6 of _stg_dat provide bits<1> of the index (second set of 3-bytes in each pair)
+db_2A6C:
+* (ix)0x01 (ix)0x03 (ix)0x05
+	.byte 0x9B,0x34,0x03 | 0
+	.byte 0x9B,0x44,0x03
+	.byte 0x23,0x00,0x00 | 2
+	.byte 0x23,0x78,0x02
+	.byte 0x9B,0x2C,0x03 | 4
+	.byte 0x9B,0x4C,0x03
+	.byte 0x2B,0x00,0x00 | 6
+	.byte 0x2B,0x78,0x02
+	.byte 0x9B,0x34,0x03 | 8
+	.byte 0x9B,0x34,0x03
+	.byte 0x9B,0x44,0x03 | A
+	.byte 0x9B,0x44,0x03
+

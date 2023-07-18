@@ -24,7 +24,7 @@
 _STRUCT  | plyr_state
   _DS  _b_nships             1   | 0x00  = mchn_cfg_nships
   _DS  _b_stgctr             1   | 0x01
-  _DS  _p_atkwav_tbl         2   | 0x02  player's private pointer to attack wave object setup tables
+  _DS  _p_atkwav_tbl         2+2   | 0x02  player's private pointer to attack wave object setup tables
   _DS  _b_nestlr_inh         1   | 0x04  1 or 0 .. flag to f_2A90, if 1 signifies nest left/right movement should stop
   _DS  _b_not_chllg_stg      1   | 0x05  stg_ctr+1%4 (1 if not challenge stage)
   _DS  _b_attkwv_ctr         1   | 0x06  atack_wave_ctr++
@@ -41,7 +41,7 @@ _STRUCT  | plyr_state
   _DS  _b_bbee_clr_b         1   | 0x0F  flashing color 'B' for special bonus convoys
 
   _DS  _ds_bmbr_boss_scode   8   | 0x10  bonus code/score attributes e.g. "01B501B501B501B5"
-  _DS  _unused               6   | 0x18-0x1D ?
+  _DS  _unused               6-2   | 0x18-0x1D ?
   _DS  _b_mcfg_bonus         1   | 0x1E  load at game start from w_mchn_cfg_bonus ... $9980
   _DS  _b_plyr_swap_tmr      1   | 0x1F  game_tmr_2, player1/2 switch
   _DS  _b_plyr_nbr           1   | 0x20  0==plyr1, 1==plyr2
