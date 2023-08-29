@@ -1877,12 +1877,15 @@ l_10DC:
 
 l_10ED:
 	lsr.b	#1,d0                            	| [srl  a]
-	move.b	d0,(0x03,a2)                    	| [ld   0x03(ix),a] sX<8:1>
 	bcc.b	0f
+	* duplicated move instruction else C is cleared
+	move.b	d0,(0x03,a2)                    	| [ld   0x03(ix),a] sX<8:1>
 	* carry set: set bit 7
 	move.b	#0x80,d0
 	bra.b	1f
 0:
+	* duplicated move instruction else C is cleared
+	move.b	d0,(0x03,a2)                    	| [ld   0x03(ix),a] sX<8:1>
 	* carry clear: clear bit 7
 	moveq	#0,d0
 1:
@@ -1984,12 +1987,16 @@ l_1741:
 
 	move.b	ds_sprite_posn+0x62,d0          	| [ld   a,(ds_sprite_posn + 0x62)] ship (1) position
 	sub.b	(a0),d0                          	| [sub  (hl)]
-	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
-	jeq	l_1755                             	| [jr   z,l_1755]
-	move.b	#0x08,d0                        	| [ld   a,#0x08] right
-	jcs	l_1755                             	| [jr   c,l_1755]
+	* jotd: changed to preserve sub flags
+	jeq	l_1755_A                             	| [jr   z,l_1755]
+	jcs	l_1755_8                             	| [jr   c,l_1755]
 	move.b	#2,d0                           	| [ld   a,#2] left
-l_1755:
+	bra.b	l_1755_cont
+l_1755_8:
+	move.b	#0x08,d0                        	| [ld   a,#0x08] right
+l_1755_A:
+	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
+l_1755_cont:
 	jbsr	c_1F92                            	| [call c_1F92]
 	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
 	and.b	#0x03,d0                         	| [and  #0x03]
@@ -3088,11 +3095,14 @@ l_2974_got_slot:
 * if object >= $78  &&  object < $80 ) ...
 	and.b	#0x78,d0                         	| [and  #0x78]
 	cmp.b	#0x78,d0                         	| [cp   #0x78]
-	move.b	d1,d0                           	| [ld   a,b]
 	jne	l_2980                             	| [jr   nz,l_2980]
 * ...  then ...
 	bclr.b	#6,d0                           	| [res  6,a] what object is > $78?
+	bra.b	l_2981	
 l_2980:
+	* jotd moved move instruction here to preserve cmp flag
+	move.b	d1,d0                           	| [ld   a,b]
+l_2981:
 	move.b	d0,(0x10,a2)                    	| [ld   0x10(ix),a] object index
 
 	addq.w	#1,a0                           	| [inc  hl]
@@ -3136,15 +3146,18 @@ l_2980:
 	move.b	d3,d0                           	| [ld   a,d]
 	and.b	#0x07,d0                         	| [and  #0x07] color table in bits <0:2>
 	btst.b	#7,d3                           	| [bit  7,d]
-	move.b	d0,(a0)                         	| [ld   (hl),a] sprite[n].cclr.b1
 
 * if ( ! code_bit_7 )
-	clr.b	d0                               	| [ld   a,#0]
+	* jotd: preserve btst flag
 	jeq	l_29AE                             	| [jr   z,l_29AE]
 * else
+	move.b	d0,(a0)                         	| [ld   (hl),a] sprite[n].cclr.b1
 	move.b	b_92E2+0x01,d0                  	| [ld   a,(b_92E2 + 0x01)] to 0x0F(ix) ... _stg_dat[1] ... bomb drop enable flags
-
+	bra.b	l_29AE_1
 l_29AE:
+	move.b	d0,(a0)                         	| [ld   (hl),a] sprite[n].cclr.b1
+	clr.b	d0                             	| [ld   a,#0]
+l_29AE_1:
 	move.b	d0,(0x0F,a2)                    	| [ld   0x0F(ix),a] 0, or b_92E2[1] ... bomb drop enable flags
 	jra	l_29D1_finalize_object_setup       	| [jr   l_29D1_finalize_object_setup]
 
