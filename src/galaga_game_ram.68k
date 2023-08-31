@@ -205,7 +205,7 @@
 	.global		b_9AA0
 	.global		b_9AC0
 	.global		_stack_cpu_sub2
-	.global		ds_sprite_ctrl
+	.global		ds_sprite_ctrl_9B00
 	.global		mrw_sprite_ctrl
 	.global		sfr_sprite_ctrl
 
@@ -367,7 +367,7 @@ ds_9200:
 
 *-----------------------------------------------------------------------------
 * The following motley collection of global variables are situated at
-* odd addresses, apparently becuase the the clever designers didn't want to
+* odd addresses, apparently because the clever designers didn't want to
 * waste the odd-bytes at 0x9200. At the end of these globals, the instruction
 * counter will be rollled-back and a new label created to define the array of
 * $30 bytes and allow it to be treated as a separate structure.
@@ -753,8 +753,8 @@ _stack_cpu_sub2:
 *_stack_cpu_sub2_init:
 
 
-* sprite control buffer and SFRs
-ds_sprite_ctrl:
+* sprite control buffer and SFRs (9B00)
+ds_sprite_ctrl_9B00:
 
 mrw_sprite_ctrl:
        ds.b     0x40       | sprite control l (buffer)

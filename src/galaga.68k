@@ -81,11 +81,20 @@ rld:
 * < A1: destination (DE)
 * < D1: decremented (16 bit)
 ldi:
-
     move.b    (a0)+,(a1)+
     subq.w    #1,d1
     rts
 
+* < A0: source (HL)
+* < A1: destination (DE)
+* < D1: decremented (16 bit)
+ldd:
+    move.b    (a0),(a1)
+    subq.w  #1,a0
+    subq.w  #1,a1
+    subq.w    #1,d1
+    rts
+	
 * < A0: source (HL)
 * < A1: destination (DE)
 * < D1: length (16 bit)
@@ -1921,7 +1930,7 @@ l_10A0_got_one:
 	move.b	(a0)+,d2                         	| [ld   c,(hl)] sprite_x
 	addq.b	#1,d6                           	| [inc  l]
 	move.b	(a0),d1                         	| [ld   b,(hl)] sprite_y<7:0>
-	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00(pc),a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprite_y<8>
 	ror.b	#1,d0                            	| [rrca] sY<8> into Cy
@@ -2577,10 +2586,10 @@ l_19D2_fighter_captured:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	move.b	d0,(a1)                         	| [ld   (de),a]
 * odd byte of sprite ctrl...
-	lea		ds_sprite_ctrl,a0             	| [ld   h,#>ds_sprite_ctrl]
+	lea		ds_sprite_ctrl_9B00,a0             	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	lea		ds_sprite_ctrl,a1                     	| [ld   d,h]
+	lea		ds_sprite_ctrl_9B00,a1                     	| [ld   d,h]
 	add.w	d6,a1
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	move.b	d0,(a1)                         	| [ld   (de),a]
@@ -2640,7 +2649,7 @@ l_1A31:
 	eor.b	d1,d0                            	| [xor  b]
 	rol.b	#1,d0                            	| [rlca]
 	and.b	#0x01,d0                         	| [and  #0x01]
-	lea		ds_sprite_ctrl,a0             	| [ld   h,#>ds_sprite_ctrl] .b1
+	lea		ds_sprite_ctrl_9B00,a0             	| [ld   h,#>ds_sprite_ctrl_9B00] .b1
 	move.l	a0,a1                           	| [ld   d,h]
 	add.w	d6,a0
 	add.w	d4,a1
@@ -2685,7 +2694,7 @@ l_1A58:
 	bcs.b	0f
 	rts                                    	| [ret  nc]
 0:
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	eor.b	#0x01,d0                         	| [xor  #0x01]
@@ -2889,6 +2898,70 @@ l_1B54_getout:
 	rts                                    	| [ret]
 
 *=============================================================================
+* f_1DB3() ... 0x0B
+*  Description:
+*   Update enemy status.
+*
+*   only disabled when default task config is
+*   re-loaded from ROM (c_1230_init_taskman_structs) just prior to the Top5
+*   screen shown in attract-mode.
+*
+*   memory structure of enemy army:
+*
+*                         00 04 06 02            ; captured ships
+*                         30 34 36 32
+*                   40 48 50 58 5A 52 4A 42
+*                   44 4C 54 5C 5E 56 4E 46
+*                08 10 18 20 28 2A 22 1A 12 0A
+*                0C 14 1C 24 2C 2E 26 1E 16 0E
+*
+* IN:
+*   obj_collsn_notif[L] set by cpu1:_rocket_hit_detection to $81.
+*   detect and reset bit-7. $01 remains
+*
+* OUT:
+* _obj_status.b0: "activity" byte (see d_23FF_jp_tbl for codes)
+* _obj_status.b1: ($40...$45 if exploding)
+*
+*  mrw_sprite.cclr[ L ].color set to $0A for explosion
+*  obj_collsn_notif[L]  == $01
+*
+*-----------------------------------------------------------------------------
+f_1DB3:
+	lea	b_9200_obj_collsn_notif,a0     	| [ld   hl,#b_9200_obj_collsn_notif] $30 bytes ... test bit-7
+	move.b	#0x30,d1                        	| [ld   b,#0x30]
+l_1DB8:
+	btst.b	#7,(a0)                         	| [bit  7,(hl)] bit-7 set ($81) by cpu1 (l_07DB) if the orc has been hit
+	jne	l_1DC1_make_him_dead               	| [jr   nz,l_1DC1_make_him_dead]
+	addq.w	#1,a0                           	| [inc  l]
+l_1DBD:
+	addq.w	#1,(a0)                           	| [inc  l]
+	subq.b	#1,d1                           	| [...]
+	jne	l_1DB8                             	| [djnz l_1DB8]
+
+	rts                                    	| [ret]
+
+l_1DC1_make_him_dead:
+	bclr.b	#7,(a0)                         	| [res  7,(hl)] b_9200_obj_collsn_notif[n] for rckt_hit_hdlr
+	move.l	a0,d6
+	sub.l	#b_9200_obj_collsn_notif,d6
+	lea	b_8800,a0                      	| [ld   h,#>b_8800] disposition = 4 (dying/exploding)
+	add.w	d6,a0
+	move.b	#4,(a0)+                         	| [ld   (hl),#4]
+* use obj_status[].mctl_q_index for explosion counter (que object should already have been released at l_081E_hdl_flyng_bug
+	addq.b	#1,d6                           	| [inc  l]
+	move.b	#0x40,(a0)                      	| [ld   (hl),#0x40] start value for the explosion (40...45)
+	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
+	add.w	d6,a0
+
+	move.b	#0x0A,(a0)                      	| [ld   (hl),#0x0A] update color for inactive/dead sprite
+	lea	b_9200_obj_collsn_notif(pc),a0     	| [ld   h,#>b_9200_obj_collsn_notif] reload ptr
+	add.w	d6,a0
+	jra	l_1DBD                             	| [jr   l_1DBD]
+* end 1DB3
+
+
+*=============================================================================
 * f_1DE6()
 *  Description:
 *   Provides pulsating movement of the collective.
@@ -3075,6 +3148,476 @@ d_1E64_bitmap_tables:
 	.byte 0xFF,0x77,0x57,0x15,0x10,0x10,0x15,0x57,0x77,0xFF,0x00,0x10,0x15,0x57,0x77,0xFF
 	.byte 0xFF,0xF7,0xD5,0x91,0x10,0x10,0x91,0xD5,0xF7,0xFF,0x00,0x10,0x91,0xD5,0xF7,0xFF
 
+*=============================================================================
+* f_1EA4()
+*  Description:
+*    Bomb position updater... this task is not disabled.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+f_1EA4:
+* Determine y-increment: each frame alternates 2 or 3 pixels-per-frame
+* increment to provide the average Y velocity, and negated for inverted screen.
+	move.b	ds3_92A0_frame_cts,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	and.b	#0x01,d0                         	| [and  #0x01]
+	addq.b	#2,d0                           	| [add  a,#2]
+	move.b	d0,d1                           	| [ld   b,a]
+	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
+	tst.b	d0                               	| [and  a]
+	jeq	l_1EB5                             	| [jr   z,l_1EB5]
+	move.b	d1,d0                           	| [ld   a,b]
+	neg.b	d0                               	| [neg]
+
+l_1EB5:
+	move.b	d1,d0                           	| [ld   a,b]
+	move.b	d0,ixh		| [ld   ixh,a]
+	move.b	#0x68,d6                        	| [ld   l,#0x68] offset into object group for missiles
+	lea	b_92B0(pc),a1                 	| [ld   de,#b_92B0 + 0x00] bomb h-rate array ( 8 * 2 )
+	move.b	#0x8,d5						| [ld   ixl,0x08]
+
+l_1EBF_while:
+* if sprite[bomb + n].code == $30 ...
+	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
+	and.w	#0xFF,d6
+	add.w	d6,a0
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	cmp.b	#0x30,d0                         	| [cp   #0x30] bomb sprite codes don't show up until some new-game inits are done
+	jne	l_1EFF                             	| [jr   nz,l_1EFF]
+* ... sprite[bomb + n].posn.x != 0
+	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
+	add.w	d6,a0
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+											| [and  a]
+	jeq	l_1EFF                             	| [jr   z,l_1EFF]
+
+* Fun fixed point math: X rate in 92B0[ even ] has a scale factor of
+* 32-counts -> 1 pixel-per-frame. Each frame, the (unchanging) dividend
+* is loaded from 92B0, the previous MOD32 is added, the new MOD32 is stashed
+* in 92B1, and the quotient becomes the new X-offset. Eventually those
+* remainders add up to another whole divisor which will add an extra pixel
+* to the offset every nth frame. Easy peasy!
+* BTW there really is odd values in 92B0, but we just seem to not care about it i.e. mask 7E.
+
+	exg	a1,a0                              	| [ex   de,hl] stash &sprite_posn[n].b0 in DE
+	move.b	(a0),d1                         	| [ld   b,(hl)] bomb_rate[n].b0
+	move.b	d1,d0                           	| [ld   a,b]
+	and.b	#0x7E,d0                         	| [and  #0x7E] Bit-7 for negative ... and we don't want the 1 ???
+	addq.b	#1,d6                           	| [inc  l]
+	add.b	(a0),d0                          	| [add  a,(hl)]
+	move.b	d0,d2                           	| [ld   c,a] C = A = A + 92B0[odd] ... accumulated division remainder
+	and.b	#0x1F,d0                         	| [and  #0x1F] MOD 32
+	move.b	d0,(a0)                         	| [ld   (hl),a] bomb_rate[n].b1
+	addq.b	#1,d6                           	| [inc  l]
+* a >>= 5 (divide-by-32)
+	move.b	d2,d0                           	| [ld   a,c]
+	rol.b	#3,d0                            	| [rlca] * 3
+	and.b	#0x07,d0                         	| [and  #0x07]
+
+* use negative offset of X coordinate if bomb path is to the left
+	btst.b	#7,d1                           	| [bit  7,b]
+	jeq	l_1EE4                             	| [jr   z,l_1EE4]
+	neg.b	d0                               	| [neg]
+
+l_1EE4:
+	exg	a1,a0                              	| [ex   de,hl] &sprite_posn[n].b0 from DE
+* update X
+	add.b	(a0),d0                          	| [add  a,(hl)]
+	move.b	d0,(a0)                         	| [ld   (hl),a] 9868[ even ] += A
+
+* update Y, and handle Cy for value > $ff
+	addq.b	#1,d6                           	| [inc  l]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	add.b	ixh,d0                           	| [add  a,ixh]
+	move.b	d0,(a0)                         	| [ld   (hl),a] sprite[n].y<7:0> += ixh
+
+	roxr.b	#1,d0                           	| [rra] shifts CY into bit-7 on overflow from addition
+	move.b	ixh,d7
+	eor.b	d7,d0                            	| [xor  ixh]
+	rol.b	#1,d0                            	| [rlca] Cy xor'd with ixh<7> ... to Cy
+	jcc	l_1EF9                             	| [jr   nc,l_1EF9]
+
+* update "bit-8" of Y coordinate ... should only overflow the Y coordinate once.
+	lea	ds_sprite_ctrl_9B00(pc),a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sY<8>
+	and.w	#0xFF,d6
+	add.w	d6,a0
+	move.b	(a0),d0
+	ror.b	#1,d0                          	| [rrc  (hl)] sY<8> into Cy
+
+	bcs.b	0f
+	move.b	d0,(a0)
+	CLEAR_XC_FLAGS
+	bra.b	1f
+0:
+	move.b	d0,(a0)
+	SET_XC_FLAGS
+1:
+	move.b	(a0),d0
+	roxl.b	#1,d0                         	| [rl   (hl)] sY<8>
+	move.b	d0,(a0)
+l_1EF9:
+	addq.b	#1,d6                           	| [inc  l]
+	subq.b	#1,d5                          	| [dec  ixl]
+	jne	l_1EBF_while                       	| [jr   nz,l_1EBF_while]
+
+	rts                                    	| [ret]
+
+l_1EFF:
+	addq.b	#1,d6                           	| [inc  l]
+	addq.b	#2,d4                           	| [inc  e] * 2
+	jra	l_1EF9                             	| [jr   l_1EF9]
+
+*=============================================================================
+* f_1F04()
+*  Description:
+*   Read fire button input.
+*   The IO port is determined according to whether or not the screen is flipped.
+*   The button state is read from bit-4. Based on observation in the MAME
+*   debugger, it appears that the IO control chip initially places the value
+*   $1F on the port (bit-5 pulled low), and then some time following that bit-4
+*   is pulled low ($0F). Presumably this is provide a debounce feature. If
+*   there is no activity on either the button or the left-right control, then
+*   the value read from the port is $3F.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+f_1F04:
+	rts		| TEMP stub
+* select the input port depending upon whether screen is flipped.
+*	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
+*	add.b	<ds3_99B5_io_input+0x01,d0       	| [add  a,#<ds3_99B5_io_input + 0x01] add lsb
+*	move.b	d0,d6                           	| [ld   l,a]
+*	lea	ds3_99B5_io_input(pc),a0      	| [ld   h,#>ds3_99B5_io_input + 0x00] msb
+*	and.w	#0xFF,d6
+*	add.w	d6,a0
+*	      ^^^^ TODO: review XX value
+*	btst.b	#4,(a0)                         	| [bit  4,(hl)]
+*	beq.b	0f
+*	rts                                    	| [ret  nz] active low input
+*0:
+* else
+       * call c_1F0F
+
+*=============================================================================
+* c_1F0F()
+*  Description:
+*   Intialize sprite objects for rockets.
+*   rocket sprite.cclr[n].b0 is initialized by c_game_or_demo_init
+*   Updates game shots fired count.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_1F0F:
+* if ( 0 != sprite[ RCKT0 ].sX ) ...
+	lea	ds_sprite_posn+0x64(pc),a0         	| [ld   hl,#ds_sprite_posn + 0x64] ROCKET_0
+	lea	b_92A0+0x04(pc),a1                 	| [ld   de,#b_92A0 + 0x04] rockt_attribute[0]
+	clr.b	d0                               	| [xor  a]
+	cmp.b	(a0),d0                          	| [cp   (hl)] if (0)
+	jeq	l_1F1E                             	| [jr   z,l_1F1E]
+
+* ... then ... if ( 0 != sprite[ RCKT1 ].sX )  return
+	addq.w	#2,a0								| [ld   l,#<ds_sprite_posn + 0x66] ROCKET_1
+	addq.b	#1,d4                           	| [inc  e] rockt_attribute[1]
+	cmp.b	(a0),d0                          	| [cp   (hl)] if (0 != sprite[RCKT1].sX)  ret
+	beq.b	0f
+	rts                                    	| [ret  nz]
+0:
+
+l_1F1E:
+* save pointer to attribute, and stash 'offsetof( RCKT_X )' in E
+
+	move.l	a1,-(sp)                        	| [push de] &rockt_attribute[n].posn.b0
+	exg	a1,a0                              	| [ex   de,hl]
+	sub.l	#ds_sprite_posn+0x64,a1
+	
+	lea	ds_sprite_ctrl_9B00+0x62+1(pc),a0       	| [ld   hl,#ds_sprite_ctrl_9B00 + 0x62 + 1] sprite.ctrl[FIGHTR].b1
+	add.l	#ds_sprite_ctrl_9B00+1,a1                           	| [ld   d,h]
+											| [inc  e] sprite[RCKT_X].ctrl.b1
+
+	btst.b	#2,(a0)                         	| [bit  2,(hl)] sprite.ctrl[FIGHTR].b1<2> ... ?
+	jeq	l_1F2B                             	| [jr   z,l_1F2B]
+
+	move.l	(sp)+,a1                        	| [pop  de]
+	rts                                    	| [ret]
+
+
+l_1F2B:
+* sprite.ctrl[RCKT+n].b1 = sprite.ctrl[SHIP].b1 ... ship.sY, bit-8
+	jbsr	ldd                               	| [ldd] e.g. *(9B65--) = *(9B63--)
+	move.l	a0,d6
+	sub.l	#ds_sprite_ctrl_9B00,d6
+	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
+	add.w	d6,a0
+
+** TEMP debug this with MAME!
+***	move.b	d5,d3                           	| [ld   d,h] stash it
+**** sprite.posn[RCKT+n].b0 = sprite.posn[SPR_IDX_SHIP].b0  ... ship.sX
+***	jbsr	ldi                               	| [ldi] e.g. *(9B64++) = *(9B62++)
+**** sprite.posn[RCKT+n].b1 = sprite.posn[SPR_IDX_SHIP].b1  ... ship.sY, bit 0-7
+***	jbsr	ldd                               	| [ldd] e.g. *(9B65--) = *(9B63--)
+***
+***
+**** B = sprite.ctrl[SHIP].b0
+***	lea	ds_sprite_ctrl_9B00(pc),a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
+***	and.w	#0xFF,d6
+***	add.w	d6,a0
+***	      ^^^^ TODO: review XX value
+***	move.b	d5,d3                           	| [ld   d,h]
+***	move.b	(a0),d1                         	| [ld   b,(hl)] sprite.ctrl[FGHTR].b0: normally 0 (not doubled or flipped)
+***                                                  * stash in B ... see l_1F5E below
+***	exg	a1,a0                              	| [ex   de,hl] HL := sprite.ctrl[RCKT].b0
+***
+**** sprite.ctrl[RCKT].b0.dblw = (two_ship << 3 )
+***	move.b	ds_plyr_actv+_b_2ship,d0        	| [ld   a,(ds_plyr_actv +_b_2ship)]
+***	and.b	#0x01,d0                         	| [and  #0x01] make sure its only bit-0 I guess ?
+***	rol.b	#3,d0                            	| [rlca] * 3
+***
+**** sprite.ctrl[SHIP].b0 ... typically 0, unless ship is spinning
+***	or.b	d1,d0                             	| [or   b] .ctrl[RCKT].b0|= .ctrl[SHIP].b0
+***	move.b	d0,(a0)                         	| [ld   (hl),a]
+***
+**** determine rocket sprite code based on ship sprite code, which ranges from 6 (upright orientation)
+**** down to the 90 degree rotation. Rocket code can be 30, 31, or 33 (360, 315, or 90 degree).
+**** rocket sprite 32 is also 360 or 0 degree but not used ? (unless its the 2nd rocket, which is done by sprite doubling).
+***	lea	ds_sprite_code(pc),a1              	| [ld   d,#>ds_sprite_code]
+***	and.w	#0xFF,d4
+***	add.w	d4,a1
+***	      ^^^^ TODO: review XX value
+***	move.b	(a1),d0                         	| [ld   a,(de)]
+***	move.b	d3,d5                           	| [ld   h,d]
+***	and.b	#0x07,d0                         	| [and  #0x07] fighter sprite codes are $00...$07
+***
+***	move.b	#0x30,d2                        	| [ld   c,#0x30] code $30 ... 360 degree default orientation
+**** if ( A >= 5 ) then  ... code = $30
+***	cmp.b	#5,d0                            	| [cp   #5]
+***	jcc	l_1F56_set_rocket_sprite_code      	| [jr   nc,l_1F56_set_rocket_sprite_code]
+**** else ( A >= 2 ) then .. code = $31
+***	addq.b	#1,d2                           	| [inc  c] code $31 ... 45 degree rotation
+***	cmp.b	#2,d0                            	| [cp   #2]
+***	jcc	l_1F56_set_rocket_sprite_code      	| [jr   nc,l_1F56_set_rocket_sprite_code]
+**** else  ... code = $33
+***	addq.b	#2,d2                           	| [inc  c] code $32 is skipped (also 360) * 2
+***
+***l_1F56_set_rocket_sprite_code:
+***	move.b	d2,(a0)                         	| [ld   (hl),c]
+
+
+* Displacement in both X and Y axis must be computed in order to launch rockets
+* from the spinning ship. The "primary" axis of travel is whichever one the
+* ship is more closely aligned with and is assigned the maximum displacement
+* value of 6.
+*
+* If the code is 4 thru 6, sY is the primary axis of motion (norm
+* for non-rotated ship), indicated by setting the orientation bit (+ $40).
+*
+* dX in the secondary axis is determined by the sprite rotation (code)
+* as shown in the table below, where the displacement ranges from 0 (ship
+* rotated 90 * n) to a maximum amount of 3 as the ship approaches a rotation
+* of primary+45.
+*
+* See c_0704_update_rockets in cpu1.
+*
+*   code= 6     dS=0      $40     ... 7 - (6+1)
+*   code= 5     dS=1      $40     ... 7 - (5+1)
+*   code= 4     dS=2      $40     ... 7 - (4+1)
+*   code= 3     dS=3      $00
+*   code= 2     dS=2      $00
+*   code= 1     dS=1      $00
+*   code= 0     dS=0      $00
+
+**** if ( A >= 4 ) ...
+***	cmp.b	#4,d0                            	| [cp   #4] A == sprite.cclr[SHIP].b0;
+***	jcs	l_1F5E                             	| [jr   c,l_1F5E]
+***
+**** ... dS = 7 - ( code + 1 ) + 0x40
+***	not.b	d0                               	| [cpl]
+***	add.b	0x40+7,d0                        	| [add  a,#0x40 + 7]
+**** else ... no orientation swap needed, use sprite code for dS
+***
+***l_1F5E:
+***	asl.b	#1,d0                            	| [sla  a] "orientation" bit into bit-7 ...
+***	move.b	d0,d2                           	| [ld   c,a] ... and displacement << 1  into bits 1:2
+***
+**** sprite.ctrl bits ...  flipx into bit:5, flipy into bit:6
+***	move.b	d1,d0                           	| [ld   a,b] sprite.ctrl[SHIP].b0
+***	ror.b	#3,d0                            	| [rrca] * 3
+***	and.b	#0x60,d0                         	| [and  #0x60] mask of rotated SPRCTRL[0]:0 and SPRCTRL[0]:1 bits
+***	move.b	d0,d1                           	| [ld   b,a]
+***
+***	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
+***	tst.b	d0                               	| [and  a]
+***	jne	l_1F71                             	| [jr   nz,l_1F71]
+***	move.b	d1,d0                           	| [ld   a,b] flipx/flipy bits (0x60)
+***	eor.b	#0x60,d0                         	| [xor  #0x60] screen not flipped so invert those bits
+***
+***l_1F71:
+***	move.b	d1,d0                           	| [ld   a,b] flipx/flipy bits (0x60)
+***	or.b	d2,d0                             	| [or   c] bit7=orientation, bit6=flipY, bit5=flipX, 1:2=displacement
+***	move.l	(sp)+,a1                        	| [pop  de] pointer to rocket attribute
+***	move.b	d0,(a1)                         	| [ld   (de),a]
+***
+***	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800] disposition = 6 ... active rocket object
+***	and.w	#0xFF,d6
+***	add.w	d6,a0
+***	      ^^^^ TODO: review XX value
+***	move.b	#6,(a0)                         	| [ld   (hl),#6] L == offsetof(rocket)
+***
+***	move.b	#1,d0                           	| [ld   a,#1]
+***	move.b	d0,b_9AA0+0x0F                  	| [ld   (b_9AA0 + 0x0F),a] 1 ... sound-fx count/enable registers, shot-sound
+***
+***	move.w	ds_plyr_actv+_w_shot_ct(pc),a0  	| [ld   hl,(ds_plyr_actv +_w_shot_ct)]
+***	addq.w	#1,a0                           	| [inc  hl]
+***	move.b	a0,ds_plyr_actv+_w_shot_ct      	| [ld   (ds_plyr_actv +_w_shot_ct),hl] game shots fired count ++
+***
+***	rts                                    	| [ret]
+* end 1F04
+
+*=============================================================================
+* f_1F85()
+*  Description:
+*   Handle changes in controller IO Input bits, update ship movement.
+*   (Called continuously in game-play, but also toward end of demo starting
+*   when the two ships are joined.)
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+f_1F85:
+***	move.b	ds_plyr_actv+_b_2ship,d0        	| [ld   a,(ds_plyr_actv +_b_2ship)]
+***	move.b	d0,d4                           	| [ld   e,a]
+***
+**** read from io_input[1] or io_input[2] depending whether screen is flipped.
+***	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
+***	add.b	<ds3_99B5_io_input+0x01,d0       	| [add  a,#<ds3_99B5_io_input + 0x01] LSB
+***	move.b	d0,d6                           	| [ld   l,a]
+***	lea	ds3_99B5_io_input+l_00(pc),a0      	| [ld   h,#>ds3_99B5_io_input + 0x00] MSB
+***	and.w	#0xFF,d6
+***	add.w	d6,a0
+***	      ^^^^ TODO: review XX value
+***	move.b	(a0),d0                         	| [ld   a,(hl)]
+***
+****      call c_1F92
+
+
+*=============================================================================
+* c_1F92()
+*  Description:
+*   Skip real IO input in the demo.
+*
+*   The dX.flag determines the movement step (dX): when the ship movement
+*   direction is changed, dX is 1 pixel increment for 1 frame and then 2 pixel
+*   step thereafter as long as the control stick is held continously to the
+*   direction. If the stick input is neutral, dX.flag (b_92A0[3]) is cleared.
+*
+*   In a two-ship configuration, the position is handled with respect to the
+*   left ship... the right limit gets special handling accordingly.
+*
+* IN:
+*   A == IO input control bits
+*        2 ---> R
+*        8 ---> L
+*   E == actv_plyr_state[7]  .... double ship flag
+*
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_1F92:
+* if ( ( A & 0x0A ) == $0A ... inputs are active low, neither left or right active
+	and.b	#0x0A,d0                         	| [and  #0x0A]
+	cmp.b	#0x0A,d0                         	| [cp   #0x0A]
+	jeq	l_1FCF_no_input                    	| [jr   z,l_1FCF_no_input]
+
+* invert the input bits if screen flipped (swap L/R direction)
+	lea	b_9215_flip_screen,a0          	| [ld   hl,#b_9215_flip_screen]
+	btst.b	#0,(a0)                         	| [bit  0,(hl)]
+	jeq	l_1FA1_set_ship_dx                 	| [jr   z,l_1FA1_set_ship_dx]
+	eor.b	#0x0A,d0                         	| [xor  #0x0A] screen is flipped
+
+* set ship.dX (1 or 2)
+l_1FA1_set_ship_dx:
+	lea	b_92A0+0x03,a0                 	| [ld   hl,#b_92A0 + 0x03] ship_dX_flag
+	move.b	d0,d1                           	| [ld   b,a] stash the control input bits
+	move.b	#1,d2                           	| [ld   c,#1] ship_dX = 1
+* toggle ship_dX_flag
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	eor.b	#0x01,d0                         	| [xor  #0x01]
+	move.b	d0,(a0)                         	| [ld   (hl),a] dX.flag ^= 1
+
+* if (0 == ship_dX_flag) ship_dX++
+	jne	l_1FAE_handle_input_bits           	| [jr   nz,l_1FAE_handle_input_bits]
+	addq.b	#1,d2                           	| [inc  c]
+
+l_1FAE_handle_input_bits:
+* if ( ship.posn.x == 0 ) return
+	lea	ds_sprite_posn+0x62,a0         	| [ld   hl,#ds_sprite_posn + 0x62] "main" ship (single) position
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	tst.b	d0                               	| [and  a]
+	bne.b	0f
+	rts                                    	| [ret  z]
+0:
+
+* if ( input.Right ) ...
+	btst.b	#1,d1                           	| [bit  1,b] if ( ! input bits.right ) ... inverted
+	jne	l_1FC7_test_llmt                   	| [jr   nz,l_1FC7_test_llmt]
+
+* if ( ship.posn.x > 0xD1) ... moving right: check right limit for double-ship
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	cmp.b	#0xD1,d0                         	| [cp   #0xD1] right limit, double-ship
+	jcs	l_1FC0_test_rlmt_single            	| [jr   c,l_1FC0_test_rlmt_single]
+* else if ( double_ship ) return
+	btst.b	#0,d4                           	| [bit  0,e] if ( is_double_ship & 0x01 )
+	beq.b	0f
+	rts                                    	| [ret  nz] at right limit of double-ship
+0:
+
+l_1FC0_test_rlmt_single:
+* if ( ship.posn.x >= 0xE1 ) return
+	cmp.b	#0xE1,d0                         	| [cp   #0xE1] right limit, single-ship
+	bcs.b	0f
+	rts                                    	| [ret  nc]
+0:
+* add dX for right direction
+	add.b	d2,d0                            	| [add  a,c] fighter dX
+	move.b	d0,(a0)                         	| [ld   (hl),a]
+	jra	l_1FD4_update_two_ship             	| [jr   l_1FD4_update_two_ship]
+
+* ... else ... test left limit
+l_1FC7_test_llmt:
+* if ( ship.posn.x < 0x12 ) return
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	cmp.b	#0x12,d0                         	| [cp   #0x12] left limit
+	bcc.b	0f
+	rts                                    	| [ret  c]
+0:
+* else
+	sub.b	d2,d0                            	| [sub  c] subtract dX
+	move.b	d0,(a0)                         	| [ld   (hl),a]
+	jra	l_1FD4_update_two_ship             	| [jr   l_1FD4_update_two_ship]
+
+l_1FCF_no_input:
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_92A0+0x03                  	| [ld   (b_92A0 + 0x03),a] ship_dX_flag = 0
+	rts                                    	| [ret]
+
+
+l_1FD4_update_two_ship:
+* if ( ! two_ship_plyr )  return
+	btst.b	#0,d4                           	| [bit  0,e]
+	bne.b	0f
+	rts                                    	| [ret  z]
+0:
+* else ... ship2.posn.x = ship1.posn.x + $0F
+	add.b	#0x0F,d0                         	| [add  a,#0x0F] +single ship position
+	move.b	d0,ds_sprite_posn+0x60          	| [ld   (ds_sprite_posn + 0x60), a] double ship position
+	rts                                    	| [ret]
+
+* end 1F85
 *=============================================================================
 * f_2916()
 *  Description:
