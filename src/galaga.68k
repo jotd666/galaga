@@ -41,6 +41,16 @@
 m_tile_ram = 0x8000
 m_color_ram = 0x8400
 
+	.macro CLEAR_XC_FLAGS
+	moveq	#0,d7
+	roxl.b	#1,d7
+	.endm
+	
+	.macro SET_XC_FLAGS
+	st	d7
+	roxl.b	#1,d7
+	.endm
+	
 * < A0 (HL)
 * < D0 (A)
 * Performs a 4-bit leftward rotation of the 12-bit number whose
@@ -86,7 +96,16 @@ ldir:
     dbf        d1,0b
     clr.w    d1
     rts
-
+	
+* < A0: source (HL)
+* < D1: decremented
+* > D0.B value searched for (A)
+* > Z flag if found
+* careful: d1 overflow not emulated
+cpi:
+    subq.w    #1,d1
+    cmp.b    (a0)+,d0
+    rts
 *=============================================================================
 * RST_08()
 *  Description:
@@ -538,7 +557,6 @@ c_1230_init_taskman_structs:
 	lea	ds_cpu0_task_actv(pc),a1           	| [ld   de,#ds_cpu0_task_actv] $20 bytes copied from task_enable_tbl_def
 	move.w	#0x0020,d1                      	| [ld   bc,#0x0020] 32
 	movem.w	d1/d2,-(sp)                    	| [push bc]
-	move.l	a4,-(sp)                        	| [push bc]
 
 	move.l	a0,-(sp)                        	| [push hl]
 	jbsr	ldir                              	| [ldir]
@@ -546,7 +564,6 @@ c_1230_init_taskman_structs:
 * memcpy(_task_resrv, task_enable_tbl_def, 0x20)|
 *  for ( de = 98e0, hl = 1249| bc++ | bc < 0$20 ) de[bc] = hl[bc]|
 	move.l	(sp)+,a0                        	| [pop  hl]
-	move.l	(sp)+,a4                        	| [pop  bc]
 	movem.w	(sp)+,d1/d2                    	| [pop  bc]
 	lea	ds_cpu0_task_resrv(pc),a1          	| [ld   de,#ds_cpu0_task_resrv] $20 bytes copied from task_enable_tbl_def
 	jbsr	ldir                              	| [ldir]
@@ -904,6 +921,89 @@ s_15E7:
 	.ascii "0000 PTS/"
 	.align	2
 	
+
+*=============================================================================
+* stg_init_env()
+*  Description:
+*   Initialize new stage environment and handle rack-advance if enabled.
+*   This section is broken out so that splash screen can be skipped in demo.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+stg_init_env:
+	move.b	#120,d0                         	| [ld   a,#120]
+	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] load the timer ($78 - new stage)
+	jbsr	c_2896                            	| [call c_2896] Initializes each creature by position
+	jbsr	c_25A2                            	| [call c_25A2] mob setup
+
+* set game_tmrs[0] (attack formation timing)
+	move.b	#2,d0                           	| [ld   a,#2]
+	move.b	d0,ds4_game_tmrs+0              	| [ld   (ds4_game_tmrs + 0),a] 2
+
+	clr.b	d0                               	| [xor  a]
+	jbsr	c_12C3                            	| [call c_12C3] A == 0 .... set MOB coordinates, new stage
+
+* initialize array (even-bytes)
+	clr.b	d0                               	| [xor  a]
+	move.b	#0x30,d1                        	| [ld   b,#0x30]
+	lea	b_9200_obj_collsn_notif(pc),a0     	| [ld   hl,#b_9200_obj_collsn_notif] 00-5F, even-bytes = 0
+l_01DF:
+	move.b	d0,(a0)                         	| [ld   (hl),a]
+	addq.w	#2,a0                           	| [inc  l] * 2
+	subq.b	#1,d1                           	| [...]
+	jne	l_01DF                             	| [djnz l_01DF]
+
+	move.b	d0,ds_cpu0_task_actv+0x09       	| [ld   (ds_cpu0_task_actv + 0x09),a] 0  (f_1DE6 ... collective bug movement)
+	move.b	d0,ds_cpu0_task_actv+0x10       	| [ld   (ds_cpu0_task_actv + 0x10),a] 0  (f_1B65 ... manage bomber attack )
+	move.b	d0,ds_cpu0_task_actv+0x04       	| [ld   (ds_cpu0_task_actv + 0x04),a] 0  (f_1A80 ... bonus-bee manager)
+
+	move.b	d0,b_bug_flyng_hits_p_round     	| [ld   (b_bug_flyng_hits_p_round),a] 0
+
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_wingm	| [ld   (ds_plyr_actv +_b_bmbr_boss_wingm),a] 0: bomber boss wingman-enable will toggle to 1 on first boss-bomber launch
+	move.b	d0,ds_plyr_actv+_b_bbee_tmr     	| [ld   (ds_plyr_actv +_b_bbee_tmr),a] 0: bonus bee launch timer
+	move.b	d0,ds_plyr_actv+_b_atk_wv_enbl  	| [ld   (ds_plyr_actv +_b_atk_wv_enbl),a] 0: attack_wave_enable
+	move.b	d0,ds_plyr_actv+_b_attkwv_ctr   	| [ld   (ds_plyr_actv +_b_attkwv_ctr),a] 0: atack_wave_ctr
+
+	move.b	d0,b8_99B0_X3attackcfg_ct       	| [ld   (b8_99B0_X3attackcfg_ct),a] 0
+	move.b	d0,ds_plyr_actv+_b_nestlr_inh   	| [ld   (ds_plyr_actv +_b_nestlr_inh),a] 0: nest_lr_flag
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,ds_plyr_actv+_b_bbee_obj     	| [ld   (ds_plyr_actv +_b_bbee_obj),a] 1: bonus_bee_obj_offs
+	move.b	d0,ds_plyr_susp+_b_bbee_obj     	| [ld   (ds_plyr_susp +_b_bbee_obj),a] 1
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] 1: invalidate the capture boss object
+
+	move.b	d0,ds_cpu0_task_actv+0x0B       	| [ld   (ds_cpu0_task_actv + 0x0B),a] 1: f_1DB3 ... Update enemy status.
+	move.b	d0,ds_cpu0_task_actv+0x08       	| [ld   (ds_cpu0_task_actv + 0x08),a] 1: f_2916 ... Launches the attack formations
+	move.b	d0,ds_cpu0_task_actv+0x0A       	| [ld   (ds_cpu0_task_actv + 0x0A),a] 1: f_2A90 ... left/right movement of collective while attack waves coming
+	jbsr	c_2C00                            	| [call c_2C00] new stage setup
+
+	lea	ds_plyr_actv+_ds_bmbr_boss_scode(pc),a0	| [ld   hl,#ds_plyr_actv +_ds_bmbr_boss_scode] set 8 bytes "01B501B501B501B5"
+	move.b	#0x1,d3
+	move.b	#0x80+0x35,d4		            	| [ld   de,#0x0100 + 0x80 + 0x35] 400 sprite (d = $04 - $03)
+	move.b	#4,d1                           	| [ld   b,#4]
+l_0220:
+	move.b	d3,(a0)+                         	| [ld   (hl),d]
+	                           	| [inc  l]
+	move.b	d4,(a0)+                         	| [ld   (hl),e]
+	                           	| [inc  l]
+	subq.b	#1,d1                           	| [...]
+	jne	l_0220                             	| [djnz l_0220]
+
+*  if ( !RackAdvance ) return (active low)
+	move.b	_sfr_dsw6,d0                    	| [ld   a,(_sfr_dsw6)] DSWA rack advance operation
+	btst.b	#1,d0                           	| [bit  1,a]
+	beq.b	0f
+	rts                                    	| [ret  nz] _plyr_startup
+0:
+*  else handle rack advance operation
+	move.b	#0x0B,d2                        	| [ld   c,#0x0B]
+	lea	m_tile_ram+0x03A0+0x10,a0      	| [ld   hl,#m_tile_ram + 0x03A0 + 0x10]
+	jbsr	c_string_out                      	| [call c_string_out] erase "stage X" text"
+
+	jra	stg_init_splash                    	| [jp   stg_init_splash] start over again
+
+
 *=============================================================================
 * jp_Task_man()
 *  Description:
@@ -933,7 +1033,6 @@ jp_Task_man:
 	*exg	af,af'                             	| [ex   af,af']
 	move.w	d0,-(sp)                        	| [push af]
 	movem.w	d1/d2,-(sp)                    	| [push bc]
-	move.l	a4,-(sp)                        	| [push bc]
 	movem.w	d3/d4,-(sp)                    	| [push de]
 	move.l	a1,-(sp)                        	| [push de]
 
@@ -1021,9 +1120,7 @@ l_0280_nonzero_tbl_entry:
 	exg	a1,a0                              	| [ex   de,hl] jp address in HL
 
 	movem.w	d1/d2,-(sp)                    	| [push bc]
-	move.l	a4,-(sp)                        	| [push bc]
 	jbsr	c_task_switcher                   	| [call c_task_switcher] p_taskfn()
-	move.l	(sp)+,a4                        	| [pop  bc]
 	movem.w	(sp)+,d1/d2                    	| [pop  bc]
 
 *    index+=task_activ_tbl[index]
@@ -1054,7 +1151,6 @@ l_02A8_pop_regs_and_exit:
 	move.l	(sp)+,a0                        	| [pop  hl]
 	move.l	(sp)+,a1                        	| [pop  de]
 	movem.w	(sp)+,d3/d4                    	| [pop  de]
-	move.l	(sp)+,a4                        	| [pop  bc]
 	movem.w	(sp)+,d1/d2                    	| [pop  bc]
 	move.w	(sp)+,d0                        	| [pop  af]
 	*exg	af,af'                             	| [ex   af,af']
@@ -1509,10 +1605,8 @@ l_055C:
 	move.b	(a0),d3                         	| [ld   d,(hl)]
 	exg	a1,a0                              	| [ex   de,hl]
 	movem.w	d1/d2,-(sp)                    	| [push bc]
-	move.l	a4,-(sp)                        	| [push bc]
 
 	jbsr	c_0034                            	| [call c_0034]
-	move.l	(sp)+,a4                        	| [pop  bc]
 	movem.w	(sp)+,d1/d2                    	| [pop  bc]
 	move.b	d1,d0                           	| [ld   a,b] "status" actually adds to index
 	add.b	d2,d0                            	| [add  a,c]
@@ -2812,7 +2906,7 @@ f_1DE6:
 	rts                                    	| [ret  nz]
 0:
 
-	lea	ds_9200_glbls+l_0F(pc),a0          	| [ld   hl,#ds_9200_glbls + 0x0F] nest_direction counter for expand/contract motion.
+	lea	ds_9200_glbls+0x0F(pc),a0          	| [ld   hl,#ds_9200_glbls + 0x0F] nest_direction counter for expand/contract motion.
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	move.b	d0,d4                           	| [ld   e,a] PREVIOUS_nest_direction counter
 
@@ -2883,19 +2977,21 @@ l_1E23:
 
 	jcc	l_1E36                             	| [jr   nc,l_1E36]
 
-	lea	l_01FF(pc),a4                      	| [ld   bc,#0x01FF] B==1, C==-1 (contracting group, non-inverted)
+	moveq	#1,d1
+	moveq	#-1,d2					      	| [ld   bc,#0x01FF] B==1, C==-1 (contracting group, non-inverted)
 	jra	l_1E39                             	| [jr   l_1E39]
 
 l_1E36:
-	lea	l_FF01(pc),a4                      	| [ld   bc,#0xFF01] B==-1, C==1 (expanding group, non-inverted)
+	moveq	#-1,d1
+	moveq	#1,d2						| [ld   bc,#0xFF01] B==-1, C==1 (expanding group, non-inverted)
 
 l_1E39:
-ld   ixl,#5                                ; 5 leftmost columns
+	moveq	#5,d7								| [ld   ixl,#5]              ; 5 leftmost columns
 	jbsr	c_1E43                            	| [call c_1E43]
 
 * setup parameters for second function call
 	move.b	d2,d1                           	| [ld   b,c] load second parameter
-ld   ixl,0x0b                              ; 5 right columns + 6 rows
+	move.l	#11,d7								| [ld   ixl,0x0b]           ; 5 right columns + 6 rows
 
        * 1E43()
 
@@ -2918,9 +3014,11 @@ ld   ixl,0x0b                              ; 5 right columns + 6 rows
 c_1E43:
 j_1E43:
 * check if updating this one
-	ror.b	#1,(a0)                          	| [rrc  (hl)]
+	move.b	(a0),d0
+	ror.b	#1,d0                          	| [rrc  (hl)]
 	jcc	l_1E5C_update_ptrs                 	| [jr   nc,l_1E5C_update_ptrs]
-
+	move.b	d0,(a0)
+	
 * obj_pos_rel[ n ] += B
 	move.b	(a1),d0                         	| [ld   a,(de)] even-bytes: relative offset
 	add.b	d1,d0                            	| [add  a,b] +/- 1
@@ -2935,6 +3033,7 @@ j_1E43:
 	move.b	d0,(a1)                         	| [ld   (de),a]
 
 * check for carry
+	CLEAR_XC_FLAGS
 	roxr.b	#1,d0                           	| [rra]
 	eor.b	d1,d0                            	| [xor  b]
 	rol.b	#1,d0                            	| [rlca]
@@ -2950,12 +3049,12 @@ l_1E5A:
 	lea	ds_hpos_loc_offs(pc),a1            	| [ld   d,#>ds_hpos_loc_offs] reset pointer
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	      ^^^^ review XX value
 
 l_1E5C_update_ptrs:
+	move.b	d0,(a0)
 	addq.b	#2,d4                           	| [inc  e] * 2
 	addq.b	#1,d6                           	| [inc  l]
-	subq.b	#1,ixl                          	| [dec  ixl]
+	subq.b	#1,d7                          	| [dec  ixl]
 	jne	j_1E43                             	| [jr   nz,j_1E43]
 
 	rts                                    	| [ret]
