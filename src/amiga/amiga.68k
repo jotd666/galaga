@@ -1,10 +1,10 @@
 *
-*	Amiga-specific portions of Galaga
+*	Amiga-specific portions of donkey_kong
 *
-* (c) JOTD 2023
+* (c) JOTD 2024
 *
 
-.include "../src/galaga.inc"
+.include "../src/donkey_kong.inc"
 .include "custom.i"
 .include "exec_lvos.i"
 .include "dos_lvos.i"
@@ -15,15 +15,26 @@ AFB_68010 = 0
 AFB_68020 = 1
 NO68020 = 1
 
-DYNAMIC_COPPER_ROWS = 228
+SPRITE_Y_CORRECTION = 0
+SPRITE_X_CORRECTION = 1
 
-SCREEN_ADDRESS = 0x8000
+BASE_BPLCON2_VALUE = 0x0024
+SCREEN_ADDRESS = 0x7400
 
-DYN_COLOR_INDEX = 4
 
-ROW_Y_OFFSET = 3
+BORDERBLANK = 0
+SCORE_FILE_SIZE = 0xAA
 
-SCORE_FILE_SIZE = 0x1E
+* if the alloc_sprite & update_sprite routines
+* are reused, changing those offsets can make
+* a quick reuse from game to game as most sprite
+* RAMs have 4 bytes per sprite, only the order
+* and some bits differ
+
+TARGET_SPRITE_X = 0   | this is Y in the original code, set 0 to hide sprite
+TARGET_SPRITE_ATTRIBUTES = 2
+TARGET_SPRITE_CODE = 1
+TARGET_SPRITE_Y = 3
 
 
 
@@ -31,35 +42,6 @@ SCORE_FILE_SIZE = 0x1E
 OPT_ENABLE_PROFILING = 0         | DO NOT CHANGE THIS
 OPT_ENABLE_LOGGING = 0           | DO NOT CHANGE THIS
 ONE_TICK = 1
-	* check most used options in release mode
-	* to avoid creating a version with cheats on!
-	.ifne	OPT_DISABLE_BG_LAYER
-	.error	"debug option OPT_DISABLE_BG_LAYER in release mode"
-	.endif
-	.ifne	OPT_DISABLE_SPRITES
-	.error	"debug option OPT_DISABLE_SPRITES in release mode"
-	.endif
-	.ifne	OPT_SKIP_THANKS_SCREEN
-	.error	"nonzero OPT_SKIP_THANKS_SCREEN option in release mode"
-	.endif
-	.ifne	OPT_SKIP_TITLE_SCREEN
-	.error	"nonzero OPT_SKIP_TITLE_SCREEN option in release mode"
-	.endif
-	.ifne	OPT_ONLY_ONE_LIFE
-	.error	"nonzero OPT_ONLY_ONE_LIFE option in release mode"
-	.endif
-	.ifne	OPT_SKIP_GAME_DEMO
-	.error	"nonzero OPT_SKIP_GAME_DEMO option in release mode"
-	.endif
-	.ifne	OPT_SKIP_ICE_PACK_SCREEN
-	.error	"nonzero OPT_SKIP_ICE_PACK_SCREEN option in release mode"
-	.endif
-	.ifne	OPT_START_SCORE
-	.error	"nonzero OPT_START_SCORE option in release mode"
-	.endif
-	.ifne	OPT_ONLY_ONE_SNOBEE
-	.error	"OPT_ONLY_ONE_SNOBEE option in release mode"
-	.endif
 	.else
 OPT_ENABLE_LOGGING = 0
 OPT_ENABLE_PROFILING = 0
@@ -70,16 +52,18 @@ ONE_TICK = 1
 	.endif
 	
 
-OPT_ENABLE_DOUBLE_BUFFERING_BG = 0
+OPT_ENABLE_DOUBLE_BUFFERING = 1
 
 _custom = 0xDFF000
 
 
 NB_PLAYFIELD_PLANES = 4
-TOTAL_NB_COLORS = 16   | 8+8+16
+TOTAL_NB_COLORS = 1<<NB_PLAYFIELD_PLANES
 NB_BYTES_PER_ROW = 40
-NB_LINES = 288
+NB_ROWS = 32
+NB_LINES = NB_ROWS*8+8  | 262
 Y_MAX = NB_LINES
+
 NB_PLAYFIELD_LINES = NB_LINES
 
 BG_SCREEN_PLANE_SIZE = NB_BYTES_PER_ROW*NB_PLAYFIELD_LINES
@@ -87,20 +71,19 @@ BG_SCREEN_SIZE =  BG_SCREEN_PLANE_SIZE*NB_PLAYFIELD_PLANES
 FG_SCREEN_PLANE_SIZE = BG_SCREEN_PLANE_SIZE
 FG_SCREEN_SIZE =  FG_SCREEN_PLANE_SIZE*NB_PLAYFIELD_PLANES
 
-* we're going to try to fit 6 sprites into 8 sprites
-* the extra 2 sprites will hopefully help to get more
-* independent colors
 NB_HOST_SPRITES = 8
-NB_TARGET_SPRITES = 6
+* hardware can take 128 sprites but game only shadows
+* 76 of them rest is zero!
 
+NB_TARGET_SPRITES = NB_HARDWARE_SPRITES
+
+* for host sprites
 SPRITE_X = 0
 SPRITE_Y = 1
 SPRITE_CODE = 2
 SPRITE_CLUT = 3
 SPRITE_SIZEOF = 4
 
-	move.l	a7,old_stack
-	bra	_user
 
 | write current PC value to some address
 .macro LOGPC	address
@@ -153,19 +136,11 @@ w\@:
 	blitz_bypass
 .endm
 
+start:
+	move.l	a7,old_stack
+	bra	_user
     
 	
-* < D0 as native game offset
-* > D0,D1 as amiga X,Y
-.macro GET_XY_FROM_OFFSET
-	move.w	d0,d1
-	subq.w	#2,d1
-	and.w	#0x3F,d1	| Y is computed
-	lsr.w	#6,d0
-	neg.w	d0
-	add.w	#32,d0	| mirror: X is computed
-.endm
-
 
 * exports
 
@@ -174,29 +149,24 @@ w\@:
 		.global _demo_end
 
 * osd layer		
-		.global osd_enable_vblank_interrupt
+		.global osd_interrupt_control
 		.global osd_ack_vblank_interrupt
-		.global osd_disable_vblank_interrupt
 		.global osd_break		| for debug	
-		*.global osd_calibrate_display		| for debug
+		.global osd_blitz		| for debug
+		.global osd_w_videoram_no_update
 		.global osd_w_videoram
-		.global osd_w_colorram
 		.global osd_r_videoram
-		.global osd_r_colorram
-		.global osd_set_bank_selectors
 		.global osd_update_sprites
-		.global osd_set_vblank_return_address
-		.global osd_read_dipswitches
-		.global osd_small_wait
-		.global osd_read_inputs
+		.global osd_read_dsw_1
+		.global osd_read_dsw_2
+		.global osd_read_in_2
+		.global osd_read_in_0
 		.global osd_read_high_scores
 		.global osd_write_high_scores
-		.global osd_get_sync_period
 		.global osd_sound_start
 		.global osd_sound_stop
-		.global osd_sound_enable
-		.global osd_sound_disable
-
+		.global	osd_update_palette_bank
+		.global	osd_wait
 
 	
 	.include	"ReadJoypad.i"
@@ -218,6 +188,7 @@ _user:
         
     cmp.l   #0x05748444c,D0	| WHDL
     bne.b   .standard
+	move.b	d1,_keyexit
     move.l a0,_resload
 
 	move.l	a0,a2
@@ -239,6 +210,7 @@ _user:
 	move.l	#program_args_end-program_args,d0
 	lsr.l	#2,d0		| number of longs
 	
+
 	bsr	get_args_BCPL
 
 0:	
@@ -254,65 +226,38 @@ _user:
 	or.l	#2,cheat_flags
 	st.b	cheat_used
 2:
+	move.l	(A0)+,D0	| INFTIME/S
+	beq.b	2f
+	or.l	#4,cheat_flags
+	st.b	cheat_used
+2:
 	move.l	(A0)+,D0	| CHEATKEYS/S
 	beq.b	2f
 	* cheat isn't used as long as no cheat key is used
-	or.l	#4,cheat_flags
-2:
-	move.l	(A0)+,D0	| STARTLEVEL/S
-	beq.b	2f
-	bsr		bcpl_string_to_int
-	subq	#1,d0
-	move.l	d0,start_level_option
-
-2:
-	moveq.l	#0,d7
-
-
-	move.l	(A0)+,D0	| BAT50000/S
-	beq.b	2f
-	bset	#0,d7
-2:
-	move.l	(A0)+,D0	| QUICKMAZEDRAW/S
-	beq.b	2f
-	bset	#1,d7
+	or.l	#0x10,cheat_flags
 2:
 
-	move.l	(A0)+,D0	| NOINTERMISSIONS/S
-	beq.b	2f
-	bset	#2,d7
-2:
 
-	move.l	(A0)+,D0	| ALTMUSIC/S
-	beq.b	2f
-	bset	#3,d7
-2:
-
-	move.l	(A0)+,D0	| SKILL/S
-	beq.b	2f
-	bsr		bcpl_string_to_int
-	move.l	d0,dip_switch_difficulty
-2:
 	move.l	(A0)+,D0	| STARTLIVES/S
 	beq.b	2f
 	bsr		bcpl_string_to_int
-	subq	#2,d0
+	subq.b	#3,d0
 	bmi.b	2f
 	move.l	d0,dip_switch_start_lives
 	bra.b	3f
 2:
-	move.l	#2,dip_switch_start_lives		| 3 lives default
+	move.l	#0,dip_switch_start_lives		| 3 lives default
 3:
-	
-	move.l	d7,misc_options
-	
-	bsr		store_system
-	
+	move.l	(A0)+,D0		| STARTLEVEL/K/N
+	beq.b	2f
+	bsr		bcpl_string_to_int
+	subq	#1,d0
+	move.l	d0,start_level_option
+2:
 	lea		_custom,a5
 	lea		debug_copperlist,a0
 	move.l	a0,cop1lc(a5)
 
-	
 	move.l	4.W,A6
 	lea graphicsname,a1
     moveq.l #0,d0
@@ -353,6 +298,7 @@ _user:
     *move.l  _gfxbase(pc),a4
     *move.l StartList(a4),gfxbase_copperlist
 
+	
     move.l  4,a6
     jsr _LVOForbid(a6)
 
@@ -363,44 +309,43 @@ _user:
 	move.l	#-1,184(A0)	| pr_WindowPtr: no more system requesters (insert volume, write protected...)
 
 .no_forbid:
-	move.l	dip_switch_difficulty(pc),d0
-	lsl.b	#6,d0
+	moveq	#0,d0
 	
-	move.b	dip_switch_start_lives+3(pc),d1
-	sub.b	#1,d1
-	bpl.b	1f
-	move.w	#1,d1	| 3 lives
-1:
-	lsl.b	#3,d1
-	or.b	d1,d0
-*	bset	#3,d0	| upright
-*	bset	#2,d0	| demo sounds on
+	move.b	dip_switch_start_lives+3(pc),d0
+	
+*   bit 3 : \bonus at
+*   bit 2 : / 00 = 7000  01 = 10000  10 = 15000  11 = 20000: leave to 0 (7000)
+*   bit 1 : \ 00 = 3 lives  01 = 4 lives
+*   bit 0 : / 10 = 5 lives  11 = 6 lives
 
-	move.l	misc_options,d1
+	move.b	d0,dip_switches
+	
+	move.l	misc_options(pc),d1
+	.ifndef	RELEASE
+	btst	#31,d1
+	sne		break_at_startup_flag
+	.endif
 	btst	#0,d1
-	bne.b	0f
-	bset	#0,d0
-0:
-	not.b	d0		| active low
-	move.b	d0,dip_switches+1
-	
-	move.l	start_level_option(pc),d0
-	and.b	#0x0F,d0
-	move.b	d0,start_level		| 0-15 => 1-16
-	
+	sne		skip_introduction_flag
+
+
+	move.l	start_level_option,d0
+	move.b	d0,start_level
+
 	move.l	cheat_flags,d0
 	btst	#0,d0
 	sne		invincible_flag
-	btst	#1,cheat_flags
+	btst	#1,d0
 	sne		infinite_lives_flag
+	btst	#2,d0
+	sne		infinite_time_flag
 	
-	* we don't need extra joypad buttons, and that will save a few cycles
-	* because reading CD32 joypad is (relatively) costly. Usually it doesn't
-	* matter but I've seen issues (Shadow of the beast 3 for instance)
-	*
-	*jsr	 _detect_controller_types 
+	jsr	 _detect_controller_types 
 	clr.b	controller_joypad_0
 	clr.b	controller_joypad_1
+
+	* palette 0
+	bsr		osd_update_palette_bank
 
 	jra		demo_game
 
@@ -601,9 +546,9 @@ save_highscores:
     rts
     
 	
-* To get the core to run, you just need to jump to galaga_reset after
+* To get the core to run, you just need to jump to donkey_kong_reset after
 * you've initialised the platform (Amiga) stuff. That essentially does a
-* Z80 reset. You also need to call galaga_im1_irq from the Amiga vblank
+* Z80 reset. You also need to call donkey_kong_im1_irq from the Amiga vblank
 * routine. They are the only 2 entry points required for the core to run,
 * even if there's no other I/O.
 
@@ -612,17 +557,17 @@ demo_game:
 		move		#0x4000,_custom+intena						| disable interrupts
 		move		#0x7FFF,_custom+intreq						| ack all interrupts
 		bsr			platform_init					| amiga-specific init
-		move.l	cheat_flags(pc),d0
-		btst	#0,D0
-		sne		invincible_flag
-		btst	#1,D0
-		sne		infinite_lives_flag
 		
 0:	
-		jmp			galaga_reset					| pass control to the galaga core
+		jmp			donkey_kong_reset					| pass control to the donkey_kong core
 		
 	
-				
+* just in case some hardware calls nmi
+_nmi:
+	move.w	#0x7FFF,_custom+intreq
+	move.w	#0x7FFF,_custom+intreq
+	rts
+	
 _vblank:
     movem.l d0-d7/a0-a6,-(a7)
 	lea		_custom,a5
@@ -630,6 +575,12 @@ _vblank:
 	btst	#5,d0
 	beq.b		1f
 
+	* emergency system to skip a frame if needed!
+	tst.b	skip_screen_update
+	bne.b	0f
+	jbsr	really_update_sprites
+0:
+	clr.b	skip_screen_update
 	move.l	_joypad_state(pc),d1
 	moveq	#1,d0
 	jsr	_read_joystick
@@ -646,15 +597,24 @@ _vblank:
 	* here music doesn't loop. We have to stop it when it ends
 	move.w	music_tick(pc),d1
 	beq.b	13f
-	subq.w	#1,d1
+	
+	subq	#1,d1
+
 	move.w	d1,music_tick
 	bne.b	13f
 	bsr		osd_sound_stop
+	* kludge (one more doesn't hurt :)): if music was then
+	cmp.w	#5,music_pattern
+	bne.b	13f
+	* play gorilla yell
+	move.w	#GORILLA_YELLS_SND,d0
+	jbsr	osd_sound_start
 13:
+	
 	* ack vbl twice (040/pistorm bug)
 	move.w	#0x20,(intreq,a5)
 	move.w	#0x20,(intreq,a5)	
-	bra.b	3f
+	jra	3f
 1:
 	* has to be copper
 	* we're going to ack copper interrupt now
@@ -677,10 +637,22 @@ _vblank:
 	tst.b	pause_flag
 	bne.b	23f
 
-	jbsr		galaga_irq
-	.ifne  OPT_ENABLE_DOUBLE_BUFFERING_BG
+	sub.w	d1,delay_timer
+	
+	.ifne  OPT_ENABLE_DOUBLE_BUFFERING
 	bsr		switch_screen_buffers
 	.endif
+	
+	* declare that we're in interrupt mode so osd_disable_interrupts/osd_enable_interrupts
+	* also set SR accordingly
+	st.b	interrupt_mode
+	jbsr		donkey_kong_irq
+	cmp.b	#ONE_TICK*2,vb_ticks_count
+	bne.b	0f
+	jbsr		donkey_kong_irq	
+0:
+	clr.b	interrupt_mode
+	
 23:
 	* now we check copper interrupt again
 	move.w	_custom+intreqr,d0
@@ -689,7 +661,10 @@ _vblank:
 	* copper interrupt has been called, which means that
 	* rendering was so slow that we couldn't cope within a frame
 	* skip a tick and ack again, we lose one update frame
-	addq.b	#ONE_TICK,vb_ticks_count
+	st.b	skip_screen_update
+	.ifndef	RELEASE
+	move.w	#0xF00,0xDFF180
+	.endif
 	move.w	#0x10,_custom+intreq
 3:
     movem.l (a7)+,d0-d7/a0-a6
@@ -700,95 +675,187 @@ _vblank:
 4:
     rte
 	
-osd_break:
+
+osd_blitz:
 	blitz
 	rts
 	
+osd_break:
+	* sends a WinUAE command to enter WinUAE debugger
+	.ifndef	RELEASE
+	move.l	D0,-(a7)
+	pea     0.w
+	* Normally it would point to where the result of the command is written, but since the last parameter (first pushed)
+	* indicating the number of bytes to write is 0, nothing is written.
+	pea     0.w	
+	pea     1003f-1002f
+	pea     1002f(pc)
+	pea     -1.w
+	pea     82.w
+	jsr     0xf0ff60
+	lea     24(sp),sp
+	move.l	(a7)+,d0
+	.endif
+    rts
+		
+1002: .asciz    "AKS_ENTERDEBUGGER 1"
+1003:
+        .align	
+	
+
 
 	
-* speed regulation for game mainloop, the bigger, the faster
-* Slightly depends on PAL/NTSC.
-* tried to calibrated it the best possible by recording
-* the demo game on MAME and on this version and comparing
-* them. 12 makes a slightly slower game, 13 should be all right
+* < A0: pointer on sprite shadow zone
 
-osd_get_sync_period:
-	move.w	#13,d0
-	rts
-	
-* this needs tuning. waits roughly 400 micro seconds
-* this emulates Z80 active loop found in the intro and in other
-* places too
-*        djnz itself (10 FE)
-* < D1: 0: max (actually $100), > 0: lower
-osd_small_wait:
-	movem.w	d0/d1,-(a7)
-	and.w	#0xFF,d1
-	bne.b	0f
-	move.w	#0x100,d1
-0:
-	divu	#12,d1		| empiric
-	move.w	d1,d0
-	bsr		beamdelay
-	movem.w	(a7)+,d0/d1
-	rts
-	
-*osd_calibrate_display:
-*	movem.l	a0/d0-d1,-(a7)
-*	move.l	bg_drawed_screen_ptr,a0
-*	move.w	#NB_LINES-1,d1
-*	clr		d0
-*0:
-*	st.b	(8,a0,d0.W)
-*	st.b	(9,a0,d0.W)
-*	st.b	(10,a0,d0.W)
-*	
-*	add.w	#NB_BYTES_PER_ROW,d0
-*	dbf		D1,0b
-*	movem.l	(a7)+,a0/d0-d1
-*	rts
 
-* < A0: pointer on 8FF2 zone:
-* the first byte contains the sprite image number (bits 2-7), Y flip (bit 0),
-*                        X flip (bit 1); the second byte the color
-* < A1: pointer on 9022 zone (X,Y coords)
 osd_update_sprites:
-	*lea		test_sprites_xy,a1
-	*lea		test_sprites_code,a0
-	move.l	a0,0x110
-	move.l	a1,0x114
-	* clear host sprites
-	move.w	#NB_HOST_SPRITES-1,d0
+	lea		sprite_buffer(pc),a1
+	move.w	#NB_TARGET_SPRITES-1,d7
+	cmp.b	#1,screen_number_6227
+	beq.b	1f
+0:
+	move.l	(a0)+,(a1)+
+	dbf		d7,0b
+	rts
+1:
+	moveq	#0,d2		| nb barrels
+2:
+	* special case for screen 1: there can be 10 barrels
+	* which is too much for our 8 sprites
+	* count how many barrels there are and if it's too much,
+	* change the last ones by BOB codes (+$50, fake defined)
+	move.l	(a0)+,d0
+	move.l	d0,d1
+	tst.b	d1
+	jeq		3f		| Y=0: skip
+	rol.l	#8,d1	| get X in byte position (the one which is zeroed by the game when hidden)
+	tst.b	d1
+	jeq		3f		| X=0 => skip
+	rol.l	#8,d1	| now sprite code is in byte position
+	bclr	#7,d1
+	cmp.b	#0x15,d1
+	bcs.b	3f
+	cmp.b	#0x18,d1
+	bcc.b	3f
+	* 0x15 <= code < 0x18: brown barrel
+	addq	#1,d2
+	cmp.b	#NB_HOST_SPRITES+1,d2
+	bcs.b	3f		| okay, not too many barrels
+	* 9 or more barrels : change the others to BOB type
+	* by adding 0x50 (as we faked 3 spare sprite codes
+	* when converting graphics)
+	swap	d0
+	add.b	#0x50,d0
+	swap	d0
+3:
+	move.l	d0,(a1)+
+	dbf		d7,2b
+	rts
+	
+really_update_sprites:
 
+	*lea		test_sprites,a0
+	movem.l	a0-a6/d0-d7,-(a7)
+	* first, make sure we have the proper palette
+	move.b	screen_number_6227,d0
+	cmp.b	palette_number(pc),d0
+	beq.b	1f			| already the proper palette
+	* not matching: update palette
+	move.b	d0,palette_number
+	bsr		load_palette_in_copperlist
+1:
+	bsr		update_hardware_sprites
+	bsr		update_bobs
+	
+	movem.l	(a7)+,a0-a6/d0-d7
+	rts
+	
+sprite_toggle:
+	dc.w	0
+	
+update_hardware_sprites:
+	lea		sprite_buffer(pc),a0
+	* clear host sprites
+	moveq	#NB_HOST_SPRITES-1,d0
+	
+	lea		sprite_table,a4
 	lea		host_sprites(pc),a2
 0:
 	clr.b	(SPRITE_X,a2)	| clear X is enough to know it's free
 	st.b	(SPRITE_CLUT,a2) | invalid clut
 	addq.w	#SPRITE_SIZEOF,a2
 	dbf		d0,0b
-	
+
 	* check active sprites, we'll disable the sprites that aren't active anymore
+	lea		hardware_sprite_flag_table,a5
 	moveq	#NB_TARGET_SPRITES-1,d7
 1:
-	move.b	(a1),d0
+	* code = 0 and clut = 0 => disabled
+	moveq	#0,d2
+	move.b	(TARGET_SPRITE_CODE,a0),d2
 	beq.b	2f
-	move.b	(1,a1),d1
+	move.b	screen_number_6227,d5
+	btst.b	d5,(a5,d2.w)		| is that a sprite for this screen?
 	beq.b	2f
-	move.w	(a0),d3	| clut index
-	move.w	d3,d2
-	lsr.w	#8,d2	| code & flip bits
+	* -1 for ignored bobs
+	bmi.b	2f
+
+	
+	* check if real/attached sprite
+	* this part is needed when mixing sprites & bobs
+	* or when using "attached" sprites
+	* (my definition of attached sprites differs from
+	* the Amiga HW attached sprites which I don't use)
+	* here I just save a lot of sprites by displaying
+	* one 16x32 sprite instead of 2 16x16 for some objects
+	* like barrels next to kong
+	
+	* the fact that there's 0 isn't a problem either
+	* in this mixed sprite/bob port as it is probably
+	* a bob. For games like Bagman & Pengo, there are no
+	* bobs, so if a sprite doesn't exist, we have to signal it
+	* but not here. Here the filtering has to be done early
+	* else we'll allocate a sprite and figure out it's not
+	* a sprite, but it will be too late!
+
+	moveq	#0,d3
+	move.w	d2,d4
+	bclr	#7,d4
+	add.w	d4,d4
+	add.w	d4,d4
+	tst.l	(a4,d4.w)	| test pointer
+	bmi.b	2f			| attached: skip
+	beq.b	2f			| not a sprite: skip
+	
+	move.b	(TARGET_SPRITE_Y,a0),d1  | sprite Y
+	beq.b	2f			| Y set to 0: not shown
+	cmp.b	#255,d1
+	beq.b	2f			| Y set to 255: not shown	
+	move.b	(TARGET_SPRITE_X,a0),d0  | sprite X
+	beq.b	2f
+	
+	.ifne	SPRITE_Y_CORRECTION
+	add.w	#SPRITE_Y_CORRECTION,d1
+	.endif
+	
+
+	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d3
+	and.b	#0xF,d3	| get attributes
+
+* < D2: sprite code & flags
+* < D3: sprite color (clut index)
+* > D6: allocated sprite index
+
 	* sprite active: allocate a sprite in host table
-	* it HAS to succeed
+	* it HAS to succeed (in Pengo it did, here I'm less sure)
 	bsr		alloc_sprite
 2:
-	addq.w	#2,a1
-	addq.w	#2,a0
+	addq.w	#4,a0
 	dbf		d7,1b
 	
 	* all sprites are allocated: now display them
 	lea		host_sprites(pc),a2		| input structure
 	lea		sprites,a3				| copperlist
-	lea		sprite_table,a4
 	moveq	#0,d6
 10:
 	move.b	(SPRITE_X,a2),d0
@@ -807,58 +874,92 @@ osd_update_sprites:
 	move.b	(SPRITE_Y,a2),d1
 	moveq	#0,d2
 	move.b	(SPRITE_CODE,a2),d2
+	bclr	#7,d2
+	sne		d5
 	move.w	d2,d4
-	and.b	#0xFC,d4	| mask 2 last bits
-	tst.b	alternate_bank_selectors
-	beq.b	1f
-	add.w	#0x40*4,d4	| alternate bank (ice pack)
-1:
-	move.l	(a4,d4.w),a5	| get pointer
-	move.w	d6,d4
+	add.w	d4,d4
+	add.w	d4,d4
+	move.l	(a4,d4.w),d4	| get pointer
+*   filtering of BOBs & attached sprites has been done
+*   above, let's trust the values to be valid
+	bne.b	25f
+	.ifdef	RELEASE
+	jra		30f
+	.else
+	* sprite doesn't exist: blitz and bail out
+	blitz
+	move.b	d1,d1
+	move.b	d2,d2
+	.endif
+	jra		30f
+25:
+	
+	move.l	d4,a5
+	move.w	d6,d4					| add sprite slot
 	add.w	d4,d4
 	add.w	d4,d4
 	move.l	(a5,d4.W),a5			| get buffer for this sprite index
-	btst	#1,d2			| x flip bit
-	beq.b	21f
-	addq.w	#4,a5
-21:
-	move.l	(a5),d4
-	bne.b	22f
-	blitz		| should not happen
-22:
-	move.l	d4,a5	| sprite pointer
-	not.b	d0
-	add.b	#8,d0
-	not.b	d1
-	add.b	#16,d1
-	tst.b	alternate_bank_selectors
-	bne.b	222f
-	subq.b	#ROW_Y_OFFSET,d1
-222:
-	bsr		store_sprite_pos_16
-	move.l	d0,(a5)
-	* set colors
+	* now a5 points to a table of 1-4 pointers of variously oriented sprite pics
+	* for this slot
+	* we'll add 0 to 12 to select the proper orientation depending on the attributes
 	moveq	#0,d3
 	move.b	(SPRITE_CLUT,a2),d3
-	lea		normal_cluts+2,a6
-	lsl.w	#3,d3		| times 8
-	tst.b	alternate_bank_selectors
-	beq.b	23f
-	lea		alt_cluts+2,a6
-23:
+	cmp.b	#0x44,d2		| elevator (kludge)
+	bne.b	251f
+	move.b	#0x10,d3		| extra clut
+251:
+	bclr	#7,d3
+	beq.b	26f
+	addq	#8,a5		| y flip
+26:
+	tst.b	d5
+	beq.b	27f
+	addq	#4,a5		| x mirror
+27:
+	move.l	(a5),d4
+	jne		28f
+	* orientation not available for that sprite
+	move.b	(SPRITE_CLUT,a2),d3
+	move.b	(SPRITE_CODE,a2),d2
+	move.w	#0x0F0,0xDFF180
+	bra		30f
+28:
+
+	move.l	d4,a5
+
+	.ifne	SPRITE_Y_CORRECTION
+	add.w	#SPRITE_Y_CORRECTION,d1
+	.endif
+	.ifne	SPRITE_X_CORRECTION
+	add.w	#SPRITE_X_CORRECTION,d0
+	.endif	
+
+	bsr		store_sprite_pos_16
+
+	move.l	d0,(a5)
+	* set colors
+	lea		sprite_cluts+2,a6
+	cmp.w	#0x3,d3
+	bne		444f
+	move.B	#0,0x200
+444:
+	lsl.w	#3,d3		| clut times 8
+
 	add.w	d3,a6
 	* check if CLUT doesn't contain only color zero
 	* (we may as well cache the values in spare registers)
 	move.l	(a6)+,d3
 	move.w	(a6)+,d7
-	bne.b	24f
-	tst.l	d3
-	bne.b	24f
-	* all black: snobees would hide galaga sprites & tiles
-	* we want to hide them instead (no need to change palette)
-	move.l	#blank_sprite,d4
-	bra.b	25f
-24:
+*	bne.b	24f
+*	tst.l	d3
+*	bne.b	24f
+*	* all black sprites would hide donkey_kong sprites & tiles
+*	* we want to hide them instead (no need to change palette)
+*	* inherited from pengo, probably not required
+*	move.l	#blank_sprite,d4
+*	bra.b	25f
+*24:
+	move.l	a5,d4		| sprite pointer
 	* d6 is the sprite index: compute/set proper color
 	move.w	d6,d5
 	bclr	#0,d5
@@ -872,23 +973,6 @@ osd_update_sprites:
 	swap	d3
 	move.w	d3,(a5)
 	move.w	d7,(8,a5)
-	tst.b	dynamic_color_mode
-	beq.b	25f
-	cmp.w	#DYNAMIC_COPPER_ROWS,d1
-	bcc.b	25f		| too low: not doing it
-	* dynamic color mode: we need to update copperlist row 3 colors
-	lea		color_line_copper+4,a0
-	lsl.w	#4,d1		| times 16
-	add.w	d1,a0		| get relevant row
-
-	add.w	#color+34,d5	| color register
-	
-	lea		(-6,a6),a6
-	.rept	3
-	move.w	d5,(a0)+
-	addq.w	#2,d5
-	move.w	(a6)+,(a0)+
-	.endr
 25:
 	* set sprite in copperlist
 	move.w	d4,(6,a3)
@@ -903,22 +987,570 @@ osd_update_sprites:
 	jne	10b	
 	rts
 
-test_sprites_xy:
-	**dc.b	0xEA,0xD8,0xEB,0xB0,0xEB,0x90,0xFF,0xF8,0xFF,0xE8,0xFF,0xC8,0x00,0x00
-	*       snobee                      galaga   ice block 
-	**.word	0xC792,0xFF00,0xFF00,0xFF00,0x2730,0x2768,0x0000
-	.word	0xFF00,0xFF00,0xFF00,0xFF00,0x4410,0xFF00,0x0000,0x0000
-test_sprites_code:
-	**dc.b	0x5E,0x0A,0x16,0x0B,0x5E,0x01,0x08,0x0B,0x08,0x0D,0x08,0x0C,0x00,0x00
-	**.word	0x5401,0x0000,0x0000,0x0000,0x000B,0x7009,0x0000
-	* galaga alone in the end
-	.word	0x8401,0x8001,0x8001,0x0000,0x160B,0x7009,0x0000
+* the original display engine used 32 colors and only BOBs. It was nice & simple but...
+* just too slow, even with double buffering. So sprites were introduced, but it was
+* still a waste for some static sprites or not so much redrawn, so optimization system
+* was coded. BUT sometimes there are exceptions where those optimized draws should not
+* be done, which explains a lot of kludges to get proper display without drawing too
+* many BOBs unneccessarily. It kills the "generic" aspect of the BOB engine (the sprite
+* engine is pretty generic, though, I've been using it since Pengo almost without changes, 
+* except now it has symmetry/flip support)
+
+KONG_PICKING_BARREL = 0x2B
+STASHED_BARREL_CODE = 0x18
+KONG_BACK_FOOT_CODE = 0x36
+DEATH_BARREL_CODE = 0x19
+FOUR_BARRELS_X = 0x14
+FOUR_BARRELS_Y = 0x3B
+
+	
+	
+blit_four_barrels:
+	movem.l	d0-d7/a0-a3/a5,-(a7)
+	lea		_custom,a5
+	move.w	#FOUR_BARRELS_X,d0
+	move.w	#FOUR_BARRELS_Y,d1
+	lea		four_barrels_bitmap,a0
+	move.l	(NB_PLAYFIELD_PLANES*4,a0),a3
+	move.w	#6,d2
+	move.w	#NB_PLAYFIELD_PLANES,d3
+	move.w	#32,d4
+	moveq	#0,d5
+	move.l	bg_drawed_screen_ptr(pc),a1
+	
+	bsr		blit_planes_any_internal_cookie_cut
+	movem.l	(a7)+,d0-d7/a0-a3/a5
+	rts
+	
+* not called very often, only when we quit screen 1
+* but sometimes there are background tiles so simple erase
+* doesn't cut it! (title after demo)
+* it's not time critical as it's not called often, and not in-game
+erase_four_barrels:
+	movem.l	d0-d7/a0-a3/a5,-(a7)
+	move.w	#FOUR_BARRELS_X,d0                                     | speedup kludge
+	move.w	#FOUR_BARRELS_Y,d1                                     | speedup kludge
+	bsr		restore_16x_background									| speedup kludge
+	move.w	#FOUR_BARRELS_X,d0                                     | speedup kludge
+	move.w	#FOUR_BARRELS_Y+16,d1                                     | speedup kludge
+	bsr		restore_16x_background
+	movem.l	(a7)+,d0-d7/a0-a3/a5
+	rts
+	
 
 
+update_bobs:
+	move.l		bob_previous_drawed_sprites(pc),a4
+	lea			sprite_buffer(pc),a3
+	move.l	a3,a0
+	lea			hardware_sprite_flag_table,a2
+	
+	clr.b	climbing_kong_present									| speedup kludge
+	clr.b	four_barrels_present									| speedup kludge
+	
+	* clear previous positions
+	moveq	#NB_TARGET_SPRITES-1,d7
+	move.b		screen_number_6227,d6		| we need the screen number to display sprites or bobs!
+1:
+	moveq	#0,d0
+	move.b	(TARGET_SPRITE_X,a4),d0
+	beq.b	11f		| x=0: inactive
+	move.l	(a4),d1
+	cmp.l	(a3),d1
+	beq.b	11f		| same as sprite to be displayed: no need to erase
+	moveq	#0,d2
+	move.b	(TARGET_SPRITE_CODE,a4),d2		| code & flip bits (taken into account in table)
+	btst.b	d6,(a2,d2.w)					| is this sprite a HW sprite for this given screen?
+	bne.b	11f		| hardware sprite: no need to restore background either!
+
+	moveq	#0,d1
+	move.b	(TARGET_SPRITE_Y,a4),d1	
+
+	
+12:
+	cmp.b	#KONG_BACK_FOOT_CODE,d2		| kong climbs: disable all smart redraw (princess) speedup kludge
+	beq.b	21f
+	st.b	climbing_kong_present
+21:
+	cmp.b	#STASHED_BARREL_CODE,d2		| stashed barrel: check coords, erase only once
+	bne.b	22f
+	cmp.b	#FOUR_BARRELS_X,d0
+	bne.b	11f
+	cmp.b	#FOUR_BARRELS_Y,d1
+	bne.b	11f
+	* leftmost top barrels of 4 stashed barrels: erase
+	bsr		erase_four_barrels
+	jra		11f
+22:
+	* clear 16x16 area where the sprite was
+	.ifne	SPRITE_Y_CORRECTION
+	add.w	#SPRITE_Y_CORRECTION,d1
+	.endif
+	.ifne	SPRITE_X_CORRECTION
+	add.w	#SPRITE_X_CORRECTION,d0
+	.endif	
+	bsr		restore_16x_background
+11:
+	addq	#4,a4
+	addq	#4,a3
+	dbf		d7,1b
+	
+	
+	lea		smart_redraw_flag_table,a5
+	lea		bob_table,a4
+	move.l	bob_previous_drawed_sprites(pc),a6
+	moveq	#NB_TARGET_SPRITES-1,d7
+1:
+	move.l	(a0),d1		| current sprite 4cc (x,y,code,attribs)
+	tst.b	in_intro_flag                                                       | speedup kludge
+	bne.b	111f		| no smart redraw in intro                              | speedup kludge
+	tst.b	climbing_kong_present                                               | speedup kludge
+	bne.b	111f		| no smart redraw if kong climbs                        | speedup kludge
+																				| speedup kludge
+						
+	move.b	(TARGET_SPRITE_CODE,a0),d0  | sprite code
+	tst.b	(a5,d0.w)
+	beq.b	111f
+	** smart draw: if previous sprite == current then do nothing
+	cmp.l	(a6),d1
+	jeq		211f
+	
+111:
+	move.l	d1,(a6)			| store current sprite attributes to previous ones
+	moveq	#0,d0
+	move.b	(TARGET_SPRITE_X,a0),d0  | sprite X	
+	jeq		211f				| x=0: don't show
+
+	
+	moveq	#0,d2
+	move.b	(TARGET_SPRITE_CODE,a0),d2
+	
+	bclr	#7,d2		| clear & test X mirror mode
+	sne		d6			| d6 nonzero means we'll use mirrored bob data
+
+
+
+
+	cmp.b	#STASHED_BARREL_CODE,d2		| stashed barrel: don't erase
+	bne.b	112f
+	st.b	four_barrels_present
+	jra		211f
+	
+	move.b	(TARGET_SPRITE_Y,a0),d1  | sprite Y
+	
+112:
+	moveq	#0,d1
+	moveq	#0,d3
+	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d3
+	btst	#7,d3		| test Y flip mode
+	sne		d5
+	and.b	#0xF,d3	| get attributes
+
+	move.b		screen_number_6227,d4
+	btst	d4,(a2,d2.w)
+	bne.b	211f			| hardware sprite for this level: skip
+	
+	move.w	d2,d4
+	add.w	d4,d4
+	add.w	d4,d4
+	move.l	(a4,d4.w),d4	| test pointer
+	bmi.b	211f			| hardware sprite: skip
+	bne.b	11f
+	* not known/registered: we should log that!
+	move.w	#0xF00,0xDFF180
+	move.b	d2,d2
+	bra.b	211f
+11:
+	moveq	#0,d1
+	move.b	(TARGET_SPRITE_Y,a0),d1  | sprite Y
+	beq.b	211f			| Y set to 0: not shown
+
+	
+
+	
+
+	* < D2: sprite code & flags
+	* < D3: sprite color (clut index)
+	
+	add.w	d3,d3
+	add.w	d3,d3
+	move.l	a0,-(a7)
+	move.l	d4,a0
+	move.l	(a0,d3.w),d4
+	bne.b	12f
+	* bob is valid but wrong clut
+	lsr		#2,d3
+	move.w	#0xFF0,0xDFF180
+	bra.b	22f
+12:
+	move.l		bg_drawed_screen_ptr(pc),a1
+	* D0 and D1 are already set
+	move.l	d4,a0	| plane list (+ mask)
+	tst.b	d6
+	beq.b	13f
+	* Y-flip: fetch mirrored planes
+	* note that there is no safety: if it's mirrored
+	* and mirror isn't declared when creating sprite, the engine
+	* will fetch the next bob (pretty visible when testing!!)
+	add.w	#(NB_PLAYFIELD_PLANES+1)*4,a0
+13:
+	move.l	(NB_PLAYFIELD_PLANES*4,a0),d2	| mask plane is after bob data
+	beq.b	22f		| mask is zero: blank tile => skip
+	move.l	d2,a3
+	moveq	#0,d2	| no y-clip
+	move.w	#16,d3	| height = 16 for all bobs
+
+	.ifne	SPRITE_Y_CORRECTION
+	add.w	#SPRITE_Y_CORRECTION,d1
+	.endif
+	.ifne	SPRITE_X_CORRECTION
+	add.w	#SPRITE_X_CORRECTION,d0
+	.endif
+
+	move.l	a5,-(a7)
+
+	tst.b	d5
+	bne.b	14f
+
+	bsr		blit_planes_cookie_cut_16x
+21:
+	move.l	(a7)+,a5
+22:
+	move.l	(a7)+,a0
+211:
+	addq.w	#4,a0
+	addq.w	#4,a6		| next previous sprite pos
+	dbf		d7,1b
+	
+	* in the end, blit 4 upper barrels if required
+	tst.b	four_barrels_present
+	beq.b	300f
+	move.b	#1,four_barrels_drawn
+	* draw all 4 barrels once and for all, nothing can erase them
+	* except maybe blue barrel, in which case we'll clear the four_barrels_drawn
+	* flag (we have to check this blue barrel in sprites to eraseprior loop)
+	bsr		blit_four_barrels
+300:	
+	rts
+	* rarer case: blit upside down (kong falling)
+14:
+	bsr		blit_planes_cookie_cut_16x_flipped	
+	bra.b	21b
+	
+* what: blits 32x16 background data on bg plane, no horizontal shifting (erase)
+* then erases the 3 other planes
+* args:
+* < D0: X (rounded to smaller 8-multiple)
+* < D1: Y
+
+* trashes: D0-D1
+
+restore_16x_background:
+	movem.l	d2-d6/a0-a5,-(a7)
+	lea		bg_background_data,a0		| copy of tiles
+	lea		_custom,a5
+	move.l	bg_drawed_screen_ptr(pc),a1
+	* adjust offset X: X//8
+	lsr.w	#3,d0
+	lea		mulNB_BYTES_PER_ROW_table(pc),a4
+	add.w	d1,d1
+	* add Y offset: Y*40
+	add.w	(a4,d1.w),d0
+	* same offset for source and destination
+	add.w	d0,a1
+	add.w	d0,a0
+	
+	moveq	#16,d4		| height
+    move.l  #0x09f00000,d3    | A->D copy, ascending mode
+	moveq	#4,d2			| 32 bits blit
+	move.w	#NB_BYTES_PER_ROW,d1		| blit modulo
+
+    sub.w   d2,d1       | blit modulo
+    lsl.w   #6,d4
+    lsr.w   #1,d2		| blit width
+    add.w   d2,d4       | blit height
+	
+    * always the same settings
+
+    * now just wait for blitter ready to write all registers
+	WAIT_BLIT
+    
+    * blitter registers set
+
+	move.l d3,bltcon0(a5)	| sets con0 and con1
+
+    move.w  d1,bltamod(a5)	|A modulo
+    move.w  d1,bltdmod(a5)	|D modulo
+							
+	move.l a0,bltapt(a5)	|source graphic top left corner
+	move.l a1,bltdpt(a5)	|destination top (bottom) left corner
+	move.w  d4,bltsize(a5)	|rectangle size, starts blit
+	
+	lea	(BG_SCREEN_PLANE_SIZE,a0),a0
+	lea	(BG_SCREEN_PLANE_SIZE,a1),a1
+	WAIT_BLIT
+	* second bitplane
+	move.l a0,bltapt(a5)	|source graphic top left corner
+	move.l a1,bltdpt(a5)	|destination top (bottom) left corner
+	move.w  d4,bltsize(a5)	|rectangle size, starts blit
+
+	.rept	NB_PLAYFIELD_PLANES-2
+	lea	(BG_SCREEN_PLANE_SIZE,a1),a1
+    move.l  #0x01000000,d3    | minterm useD & rect clear (0xA) 
+	WAIT_BLIT
+	* now simply erase the 3 other planes
+	move.l d3,bltcon0(a5)	
+	move.l a1,bltdpt(a5)	|destination top left corner
+	move.w  d4,bltsize(a5)	|rectangle size, starts blit
+	.endr
+	
+	
+	movem.l	(a7)+,d2-d6/a0-a5
+	rts
+
+
+* < A5: custom
+* < D0,D1: x,y
+* < A1: plane pointer
+* < D2: width in bytes (inc. 2 extra for shifting)
+* < D4: blit height
+* trashes D0-D6
+* > A1: even address where blit was done
+clear_plane_any_blitter_internal:
+	moveq	#1,d3
+* < A5: custom
+* < D0,D1: x,y
+* < A1: foreground plane pointer (often first plane!)
+* < D2: width in bytes (inc. 2 extra for shifting)
+* < D3: number of planes to clear
+* < D4: blit height
+* < D7: mask (disabled, -1 set at start)
+* trashes D0-D6
+clear_planes_any_blitter_internal:
+    * pre-compute the maximum of shit here
+	move.w	d1,d6
+    beq.b   1f    | optim
+	* check if y start + height > Y_MAX
+	* (ignores case where y = 0, no risk)
+	add.w	d4,d6
+	sub.w	#Y_MAX,d6
+	bmi.b	0f
+	* y start + height > Y_MAX: clip height
+	sub.w	d6,d4
+	beq.b	10f
+	bpl.b	0f
+10:
+	* null or negative height after clipping: out
+	rts
+0:
+    lea mulNB_BYTES_PER_ROW_table(pc),a2
+    add.w   d1,d1
+    move.w  (a2,d1.w),d1
+1:
+    move.l  #0x01000000,d5   | minterm useD & rect clear (0xA) 
+    move    d0,d6
+    beq.b   2f
+    MOVEQ #15,D6
+    AND.W D0,D6
+    and.w   #0x1F0,d0
+    lsr.w   #3,d0
+    add.w   d0,d1
+    LSL.W #8,D6
+    LSL.W #4,D6
+
+    swap    d6
+    or.l    d6,d5            | add shift
+2:   
+    add.w   d1,a1       | plane position (always even)
+
+	move.w #NB_BYTES_PER_ROW,d0
+    sub.w   d2,d0       | blit width
+
+    lsl.w   #6,d4
+    lsr.w   #1,d2
+    add.w   d2,d4       | blit height
+
+    * now just wait for blitter ready to write all registers
+	WAIT_BLIT
+    
+    * blitter registers set
+	.ifdef	VARIABLE_BLITTER_MASKS_AND_MODS
+    move.l  d7,bltafwm(a5)
+	.endif
+	
+	move.l d5,bltcon0(a5)	
+    move.w  d0,bltdmod(a5)	|D modulo
+	
+	subq	#1,d3
+	beq.b	4f
+	subq	#1,d3
+3:
+	move.l a1,bltdpt(a5)	|destination top left corner
+	move.w  d4,bltsize(a5)	|rectangle size, starts blit
+	lea		(BG_SCREEN_PLANE_SIZE,a1),a1
+	WAIT_BLIT
+	dbf		d3,3b
+4:
+	move.l a1,bltdpt(a5)	|destination top left corner
+	move.w  d4,bltsize(a5)	|rectangle size, starts blit
+	
+    rts
+
+* y-flipped version
+blit_planes_cookie_cut_16x_flipped:
+    lea _custom,A5
+	move.w	d2,d5
+	move.w	d3,d4
+	neg.w	d4
+	moveq	#NB_PLAYFIELD_PLANES,d3
+    moveq  #4,d2       | 16 pixels + 2 shift bytes
+    jra blit_planes_any_internal_cookie_cut
+
+* what: blits 16x? data on one plane, cookie cut
+* args:
+* < A0: pointers on 16x? data
+* < A1: plane  (40 rows)
+* < A2: background (40 rows) to mix with cookie cut
+* < A3: source mask for cookie cut (16x16)
+* < D0: X
+* < D1: Y
+* < D2: source y-offset
+* < D3: height of data
+* trashes: D0-D1
+blit_planes_cookie_cut_16x:
+    lea _custom,A5
+	move.w	d2,d5
+	move.w	d3,d4
+	moveq	#NB_PLAYFIELD_PLANES,d3
+    moveq  #4,d2       | 16 pixels + 2 shift bytes
+* < A5: custom
+* < D0.W,D1.W: x,y
+* < A0: source (pointer on array of planes)
+* < A1: destination fg plane, also background to mix with cookie cut fg plane
+* < A3: source mask for cookie cut
+* < D2: width in bytes (inc. 2 extra for shifting)
+* < D3: number of planes
+* < D4: height. If negative, source is copied with negative modulo (flip)
+* < D5: y offset for source planes
+* < D7: blit mask (not considered, optim, -1 all through the game)
+* blit mask set
+* returns: start of destination in A1 (computed from old A1+X,Y)
+* trashes: a1
+blit_planes_any_internal_cookie_cut:
+    movem.l d0-d7/a2/a4,-(a7)
+    * pre-compute the maximum of shit here
+	tst.w	d4
+	bpl.b	1f
+	* inverted y blit
+	
+	sub.w	d4,d1	| pre-add height to d1
+	subq.w	#1,d1	| minus one
+1:	
+	tst	d1
+    beq.b   2f    | optim
+    lea		mulNB_BYTES_PER_ROW_table,a4
+	.ifdef	NO68020
+	add.w	d1,d1
+    move.w  (a4,d1.w),d1	| y times 40
+	.else
+    move.w  (a4,d1.w*2),d1	| y times 40
+	.endif
+2:
+	move.w	d5,-(a7)
+	moveq	#0,d5
+    move.w  #0x0fca,d5    | B+C-A->D cookie cut   
+	swap	d5
+	moveq	#0,d6		| make sure D6.L is zero!!
+    move.w  d0,d6
+    beq.b   4f
+    lsr.w   #3,d0
+	bclr	#0,d0
+    and.w   #0xF,d6
+	beq.b	3f				| if 0 shift, optimize a few instructions
+    lsl.l   #8,d6
+    lsl.l   #4,d6
+    or.w    d6,d5            | add shift to mask (bltcon1)
+    swap    d6
+    clr.w   d6
+    or.l    d6,d5            | add shift
+3:   
+    add.w   d0,d1
+4:
+    * make offset even. Blitter will ignore odd address
+    * but a 68000 CPU doesn't and since we RETURN A1...
+    bclr    #0,d1
+    add.w   d1,a1       | plane position (D1 < 0x7FFF, 288*40=0x2D00)
+	move.w	#NB_BYTES_PER_ROW,d0
+	tst.w	d4
+	bpl.b	5f
+	neg.w	d0
+	neg.w	d4    | make d4 positive again
+5:
+    sub.w   d2,d0       | blit width
+    lsl.w   #6,d4
+    lsr.w   #1,d2
+    add.w   d2,d4       | blit height
+    * always the same settings (ATM)
+
+    * now just wait for blitter ready to write all registers
+	WAIT_BLIT
+    
+    * blitter registers set
+
+	clr.w bltamod(a5)		|A modulo=bytes to skip between lines
+	clr.w bltbmod(a5)		|B modulo=bytes to skip between lines
+	move.l d5,bltcon0(a5)	| sets con0 and con1: full cookie cut 2 sources & 1 mask
+	move.l	d5,d7			| save bltcon
+	move.w	(a7)+,d5
+	
+    move.w  d0,bltcmod(a5)	|C modulo
+    move.w  d0,bltdmod(a5)	|D modulo
+					
+	add.w	d5,a3			| apply to mask too
+	subq	#1,d3
+	beq.b	7f
+	subq	#1,d3
+6:
+	jbsr	process_1_plane
+	lea		(BG_SCREEN_PLANE_SIZE,a1),a1
+	WAIT_BLIT
+	dbf		d3,6b
+7:
+	jbsr	process_1_plane
+   
+    movem.l (a7)+,d0-d7/a2/a4
+    rts
+	
+process_1_plane:
+	move.l a3,bltapt(a5)	|source graphic top left corner (mask)
+	move.l (a0)+,d0
+	beq.b	60f
+	move.l	d0,a4
+	add.w	d5,a4
+	bra.b	61f
+60:
+	* source is 0: just apply mask (less bandwidth lost) and change bltcon
+	move.l	#0x0BCA0000,d1
+	or.l	d6,d1
+	move.l	d1,bltcon0(a5)	| sets con0 and con1: C-A->D cookie cut, B fixed
+ 	clr.w	bltbdat(a5)	|B word is zero
+	bra.b	62f
+61:
+	* non-zero: set data source & bltcon
+	move.l	d7,bltcon0(a5)	| sets con0 and con1: C-A+B->D cookie cut full
+	move.l	a4,bltbpt(a5)	|source graphic top left corner
+62:
+ 	move.l	a1,bltcpt(a5)	|pristine background top (bottom) left corner
+	move.l	a1,bltdpt(a5)	|destination top (bottom) left corner
+	move.w  d4,bltsize(a5)	|rectangle size, starts blit
+	
+	rts
+
+	
 * < D0: sprite X
 * < D1: sprite Y
 * < D2: sprite code & flags
-* < D3: sprite color (clut index)
+* < D3: sprite color (clut index, no flip information)
 * > D6: allocated sprite index
 alloc_sprite:
 	* first pass: find a free sprite next to a sprite with
@@ -945,7 +1577,7 @@ alloc_sprite:
 	move.b	d0,(a2)+		| X
 	move.b	d1,(a2)+		| Y
 	move.b	d2,(a2)+		| code
-	move.b	d3,(a2)+		| clut
+	move.b	d3,(a2)+		| clut (no flip information)
 	rts						| done
 1:
 	* even: check if next entry is free
@@ -993,16 +1625,8 @@ alloc_sprite:
 	bne.b	11b
 	
 	* third pass: last chance/emergency: there ARE free slots
-	* (since only 6 sprites on the target) but maybe too many
-	* different cluts so we can't find a suitable slot. In that
-	* case, pick the first free slot, we'll handle the color changes
-	* with a dynamic copperlist, let's hope that it works out
-	* (only happens in demo screens)
-	*
-	* the strategy globally works because during game, all 4 enemies
-	* share the same palette. galaga uses another one, and ice block
-	* another one too. Blinking stunned enemies can be a problem
-	* because of the extra blue color
+	* but maybe too many different cluts so we can't find a suitable slot.
+	* In that case, pick the first free slot
 	*
 	lea		host_sprites(pc),a2
 	moveq	#0,d6
@@ -1018,42 +1642,50 @@ alloc_sprite:
 	cmp.w	#NB_HOST_SPRITES,d6
 	bne.b	21b
 	* just cannot happen
-	* if we reach that point there's a big problem
-	blitz
-	illegal
-	illegal
-	illegal
+	* if we reach that point there's a big problem, break if dev mode
+	* hopefully if we save buffer in A1 we can reproduce the issue at will!
+	.ifndef	RELEASE
+	lea			sprite_buffer(pc),a1
+	lea			sprite_allocation_error,a0
+	jbsr	osd_break
+	.endif
+	* in release mode, just discard this sprite, maybe we'll get away with it!
 	rts
 	
-* this enables alternate bank selectors
-* (only for ice-pack screen)
+	.ifndef		RELEASE
 
-osd_set_bank_selectors:
-	bsr		reset_dynamic_colors
-	move.b	d0,alternate_bank_selectors
-	* alternate bank: enable dynamic sprites
-	sne		dynamic_color_mode
-	bsr		load_palette_in_copperlist
-	rts
-	
-osd_sound_enable:	
-	rts
-osd_sound_disable:	
-	rts
+test_sprites:
+
+.byte  0x6f,0x10,0x09,0x23,0x6f,0x11,0x0a,0x33,0x47,0x27,0x08,0x4c,0x2f,0xa7,0x08,0x4c	|	0x0000
+.byte  0x3b,0x25,0x08,0x4c,0x00,0x70,0x08,0x44,0x3b,0x23,0x07,0x3c,0x46,0xa9,0x08,0x40	|	0x0010
+.byte  0x00,0x70,0x08,0x44,0x30,0x29,0x08,0x40,0x00,0x70,0x08,0x44,0x00,0x70,0x0a,0x44	|	0x0020
+.byte  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00	|	0x0030
+.byte  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x72,0x80,0x02,0xf0	|	0x0040
+.byte  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00	|	0x0050
+.byte  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00	|	0x0060
+.byte  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00	|	0x0070
+.byte  0x3b,0x1a,0x0c,0x9b,0x59,0x15,0x0b,0x4e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00	|	0x0080
+.byte  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00	|	0x0090
+.byte  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1e,0x18,0x0b,0x4b,0x14,0x18,0x0b,0x4b	|	0x00a0
+.byte  0x1e,0x18,0x0b,0x3b,0x14,0x18,0x0b,0x3b,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00	|	0x00b0
+.byte  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00	|	0x00c0
+.byte  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00	|	0x00d0
+.byte  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00	|	0x00e0
+.byte  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x27,0x49,0x0c,0xf0	|	0x00f0
+.byte  0x4f,0x3a,0x0f,0x18,0x5f,0x3a,0x0f,0x18,0x6f,0x3a,0x0f,0x18,0x00,0x00,0x00,0x00	|	0x0100
+.byte  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x24,0x1e,0x07,0x64,0xbb,0x1e,0x07,0xc0	|	0x0110
+.byte  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x27,0x70,0x01,0xe0,0x00,0x00,0x00,0x00	|	0x0120
+	.endif
+
 osd_sound_start:
 	movem.l	d0/d1/a0/a6,-(a7)
-	tst.b	d0
-	jmi	7f		| should stop the sound
 	and.w	#0xFF,d0
 	lea		_custom,a6
 	
 	
 	lsl.w	#3,d0
-	lea		sound_table_set_2,a0
-	tst.b	alternate_music_flag
-	bne.b	0f
-	lea		sound_table_set_1,a0	
-0:
+	lea		sound_table,a0
+
 	move.w	(a0,d0.w),d1	| sound type
 	beq.b	0f		| no sound
 
@@ -1085,7 +1717,7 @@ osd_sound_start:
 	* music
 4:
 	* don't play if game not in play
-	* could have been handled at generic galaga.68k level
+	* could have been handled at generic donkey_kong.68k level
 	* but it's way simpler here. I suppose than the real game
 	* just turns music volume off to get away with it
 	*tst.b	game_playing_8817
@@ -1094,8 +1726,8 @@ osd_sound_start:
 	* don't play if already playing
 	* (music_tick value is not important for looped tunes
 	* as long as it's not zero)
-	tst.w	music_tick
-	bne.b	1b
+	*tst.w	music_tick
+	*bne.b	1b
 	* play the proper module pattern
 	* load up the countdown if loop
 	move.w	(2,a0,d0.w),d1	| pattern number in .mod file
@@ -1107,7 +1739,7 @@ osd_sound_start:
 	bsr		osd_sound_stop
     lea _custom,a6
  	movem.l	d0/a0,-(a7)
-    lea	galaga_tunes,a0
+    lea	dkong_tunes,a0
 	move.b	d1,music_track_start_number
 	move.w	d1,d0
     sub.l   a1,a1		| samples are in the module
@@ -1119,6 +1751,7 @@ osd_sound_start:
 	move.b	(7,a0,d0.w),music_loops
 	move.w	(2,a0,d0.w),music_pattern	| pattern number in .mod file
 	move.w	(4,a0,d0.w),d2
+
 	move.w	d2,music_duration
 	move.w	d2,music_tick
 
@@ -1139,7 +1772,7 @@ osd_sound_start:
 	bsr		osd_sound_stop
 	jra	1b
 	
-
+	
 osd_sound_stop:
 	movem.l	d0/a0/a6,-(a7)
 	lea		_custom,a6
@@ -1153,12 +1786,15 @@ osd_sound_stop:
 	
 
 
-switch_screen_buffers:	
-	.ifne	OPT_ENABLE_DOUBLE_BUFFERING_BG
+switch_screen_buffers:
+
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	* let's switch screen buffers, background (chars)
 	* toggle fg planes (double buffering)
+	* also toggle previous sprite positions
 	lea		bg_drawed_screen_ptr(pc),a0
-	lea		bg_displayed_screen_ptr(pc),a4
+	lea		bob_previous_positions_1(pc),a2
+	lea		bob_previous_positions_2(pc),a3
 	lea		bg_screen_data_1,a1
 	lea		bg_screen_data_2,a5
 	* also switch previous state memory
@@ -1167,10 +1803,13 @@ switch_screen_buffers:
 	* screen data 1 is displayed screen
 	* set it to drawn screen
 	exg		a1,a5
+	exg		a2,a3
 2:
 	move.l	a1,(a0)
-	move.l	a5,(a4)
-	jbsr		set_bg_bitplanes
+	move.l	a5,bg_displayed_screen_ptr
+	move.l	a3,bob_previous_displayed_sprites
+	move.l	a2,bob_previous_drawed_sprites
+	jbsr		set_bitplanes
 	.endif
 	
 	rts
@@ -1188,6 +1827,7 @@ store_system:
 	btst	#AFB_68010,d0
 	beq.b	1f
 	lea	get_vbr,a5
+
 	jsr		_LVOSupervisor(a6)
 	move.l	d0,system_vbr
 1:
@@ -1210,6 +1850,7 @@ store_system:
 	move.l	(0x70,a1),(a0)+
 	move.l	(0x74,a1),(a0)+
 	move.l	(0x78,a1),(a0)+
+	move.l	(0x7C,a1),(a0)+
 	rts
 
 restore_system:
@@ -1219,12 +1860,13 @@ restore_system:
 	move.w	#0x4000,intena(a6)	| ints off
 	lea		old_sysvectors,a0
 	move.l	system_vbr(pc),a1
-	move.l	(a0)+,(0x0064,a1)
-	move.l	(a0)+,(0x0068,a1)
-	move.l	(a0)+,(0x006c,a1)
-	move.l	(a0)+,(0x0070,a1)
-	move.l	(a0)+,(0x0074,a1)
-	move.l	(a0)+,(0x0078,a1)
+	move.l	(a0)+,(0x64,a1)
+	move.l	(a0)+,(0x68,a1)
+	move.l	(a0)+,(0x6c,a1)
+	move.l	(a0)+,(0x70,a1)
+	move.l	(a0)+,(0x74,a1)
+	move.l	(a0)+,(0x78,a1)
+	move.l	(a0)+,(0x7C,a1)
 
 
 	bclr	#6,0xbfee01
@@ -1263,41 +1905,47 @@ restore_system:
 	rts
 
 quit_to_os:
+	tst.l	_resload
+	bne.b	0f
 	bsr		restore_system
+	* set SR to 0 from here, so we return to OS with SR=0
+	* (else it kills the system pretty quickly)
+	* it works as quit_to_os is called from an interrupt
 	move.w	#0,SR
 	move.l	old_stack(pc),a7
 	bsr		save_highscores
 	moveq	#0,d0
 	rts
-	
+0:
+	pea	  TDREASON_OK
+	move.l	_resload(pc),-(a7)
+	addq.l	#resload_Abort,(a7)
+	rts
 
 platform_init:
 	bsr		store_system
 	
+
 	lea		_custom,a5
 	move.w	#0x7FFF,dmacon(a5)
 	move.w	#0x7FFF,intena(a5)
 	* set blitter parameters once and for all
-	.ifndef	VARIABLE_BLITTER_MASKS_AND_MODS
     move.l  #-1,bltafwm(a5)
-	.endif
 	
 	* restrict borders: we don't see bobs on the borders!
     move.w #0x1C99,diwstrt(a5)
-    move.w #0x3881-8,diwstop(a5)
+	*         VVHH
+    move.w #0x2479,diwstop(a5)
     move.w #0x0038,ddfstrt(a5)
     move.w #0x00D0,ddfstop(a5)
-    move.w #0x4200,bplcon0(a5) | 4 bitplanes
-    move.w #0x0024,bplcon2(a5)
+    move.w #0x200+(NB_PLAYFIELD_PLANES<<12)+BORDERBLANK,bplcon0(a5)
+    move.w #BASE_BPLCON2_VALUE,bplcon2(a5)
 	* AGA-compatible ECS default values
-    move.w #0x0C00,bplcon3(a5)     | no AGA specificities, default ECS
+    move.w #0x0C00+BORDERBLANK<<5,bplcon3(a5)     | no AGA specificities, default ECS
     move.w #0x0011,bplcon4(a5)     | ECS default for sprite colors
     move.w #0,fmode(a5)			
-	
+    move.w #0,bplcon1(a5)
 
-	* screen with galaga bg/fg tiles
-    **move.w #2<<4,bplcon1(a5)    | foreground tiles shifted by 2 pixels
-    move.w #0,bplcon1(a5)    | foreground tiles
 	move.w	#0,d0
     move.w d0,bpl1mod(a5)
     move.w d0,bpl2mod(a5)
@@ -1315,7 +1963,8 @@ platform_init:
 	addq.w	#8,a1
 	dbf		d1,0b
 	
-	bsr		set_bg_bitplanes
+	bsr		set_bitplanes
+	
 	
 	* set copperlist
 	move.l	#copperlist,cop1lc(a5)
@@ -1339,6 +1988,8 @@ platform_init:
 	move.l	(a7)+,(0x68,a1)
 	pea		_vblank(pc)
 	move.l	(a7)+,(0x6C,a1)
+	pea		_nmi(pc)
+	move.l	(a7)+,(0x7C,a1)
 
 	* soundfx lib
 	lea		_custom,a6
@@ -1362,83 +2013,75 @@ platform_init:
 
 	
     rts
-
 	
 load_palette_in_copperlist:
 	movem.l	d0-d1/a0-a1,-(a7)
-	lea		palette,a0
-	tst.b	alternate_bank_selectors
-	beq.b	0f
-	* alternate palette
-	add.w	#32,a0
-0:
-	move.w	(DYN_COLOR_INDEX*2,a0),orig_color_4
-	move.w	#TOTAL_NB_COLORS-1,d0
-	lea		copperlist_colors+2,a1
-1:
-	move.w	(a0)+,(a1)+
-	addq.w	#2,a1
-	dbf		d0,1b
+	lea		palette(pc),a0
+	moveq	#0,d0
+	move.b	palette_number(pc),d0
+	subq	#1,d0		| starts at 1
+	lsl.w	#5,d0		| times 32
+	add.w	d0,a0		| skip to the proper palette
+	move.w	#TOTAL_NB_COLORS,d0
+	lea		colors,a1
+	bsr		load_palette
 	movem.l	(a7)+,d0-d1/a0-a1
+
+	
+	rts
+
+	
+
+
+
+* < A0: palette
+* < A1: copperlist
+* < D0: number of colors to load	
+load_palette:
+	subq.w	#1,d0
+	beq.b	2f
+1:
+	addq.w	#2,a1
+	move.w	(a0)+,(a1)+
+	dbf		d0,1b
+2:
 	rts
 	
 
+osd_is_vblank_interrupt_enabled:
+	move.w	_custom+intenar,d0
+	btst	#5,d0			| check vblank interrupt
+	rts
+	
+* < d0: 0 disable interrupts, 1 enable interrupts
+osd_interrupt_control:
+	tst.b	d0
+	beq.b	osd_disable_interrupts
 * 60Hz VBLANK interrupt (also keyboard)
-osd_enable_vblank_interrupt:
+osd_enable_interrupts:
+	tst.b	interrupt_mode
+	beq.b	0f
+	* clear SR from interrupt mode, so enable interrupts really
+	* works from the game (which calls enable interrupts from interrupt)
+	move.w	#0x2000,SR
+0:
 	move.w	#0xC038,_custom+intena
 	rts
-
-osd_ack_vblank_interrupt:
-	move.w	#0x30,_custom+intreq
- 	rts
-		
-* not used after all
-*osd_test_vblank_interrupt:
-*	move.w	_custom+intreqr,d0
-*	btst	#5,d0
-*	rts
 	
-osd_disable_vblank_interrupt:
+osd_disable_interrupts:
+	tst.b	interrupt_mode
+	beq.b	0f
+	* if interrupts are disabled again from interrupt, re-set SR
+	move.w	#0x2700,SR
+0:
 	move.w	#0x0030,_custom+intena
 	rts
 
 
 
 	
-reset_dynamic_colors:
-	movem.l	a0/d2-d3,-(a7)
-	lea	color_line_copper+4,a0
-	move.w	#DYNAMIC_COPPER_ROWS-1,d3
-	move.w	#0x1FE,d2
-0:
-	move.w	d2,(a0)
-	addq.w	#4,a0
-	move.w	d2,(a0)
-	addq.w	#4,a0
-	move.w	d2,(a0)
-	addq.w	#8,a0
-	dbf		d3,0b
-	movem.l	(a7)+,a0/d2-d3
-	rts
 
-	
-* < D6: video ram offset
-* < D0: data to write
-update_dynamic_color_mode:
-	tst.b	alternate_bank_selectors
-	bne.b	1f		| alternate bank selectors: don't change, stay dynamic
-	cmp.w	#0x19B,d6
-	beq.b	0f
-1:
-	rts
-0:
-	bsr		reset_dynamic_colors
-	* see if we disable or enable dyn color mode
-	* because (R) is there (title screen)
-	cmp.b	#0x22,d0
-	seq.b	dynamic_color_mode
-	rts
-	
+
 * < D4: sprite properties
 *     Y code+attrs clut X
 * > D0,D1: X,Y.B
@@ -1455,266 +2098,213 @@ decode_sprite_data:
 	move.b	d4,d0	| sprite Y (aka X on amiga)
 	rts
 
-* d6=screen address
-osd_r_videoram:
-	movem.l	a0/d6,-(a7)
-	sub.w	#SCREEN_ADDRESS,d6
-	cmp.w	#0x400,d6
-	bcs.b	1f
-	* should not happen
-	move.w	#0,d6
-1:
-	lea		bg_videoram,a0
-	move.b	(a0,d6.w),d0
-	movem.l	(a7)+,a0/d6
-	rts
-* d6=screen address
-osd_r_colorram:
-	movem.l	a0/d6,-(a7)
-	sub.w	#SCREEN_ADDRESS+0x400,d6
-	cmp.w	#0x400,d6
-	bcs.b	1f
-	* should not happen
-	move.w	#0,d6
-1:	
-	lea		bg_colorram,a0
-	move.b	(a0,d6.w),d0
-	movem.l	(a7)+,a0/d6
-	rts
-	
-* d6=screen address (preserved), d0=tile (preserved)
-* d6 starts at 0x8000 ends at 0x83FF
+* d7=screen address (preserved), d0=tile (preserved)
 * should preserve all registers
 
 osd_w_videoram:
     .ifeq OPT_DISABLE_BG_LAYER
-	movem.l	d0-d3/d6/a0-a2,-(a7)
+	movem.l	d0-d7/a0-a3,-(a7)
 	
-	sub.w	#SCREEN_ADDRESS,d6
-	cmp.w	#0x400,d6
+
+	
+	sub.w	#SCREEN_ADDRESS,d7
+	bcs.b	0f
+	cmp.w	#0x400,d7
 	bcs.b	1f
+0:
+	.ifndef		RELEASE
+
 	* should not happen
-	move.w	#0,d6
+	lea		write_videoram_out_of_range_error(pc),a0
+	jbsr	osd_break
+	nop	
+	.endif
+	bra.b	0f
+	
 1:
 	lea		bg_videoram,a1
-	add.w	d6,a1
+	add.w	d7,a1
 	
-	* force write of digits (force score refresh because of 2 lines hack)
-	cmp.b	#48,d0
-	bcs.b	2f
-	cmp.b	#58,d0
-	bcs.b	3f
-2:
-	* detect (R) sega registered logo
-	* to enable sprite dynamic color mode
-	bsr		update_dynamic_color_mode
-
 	cmp.b	(a1),d0
 	beq.b	0f		| already the proper value
 3:
+
 	move.b	d0,(a1)	| update logical grid
-	lea		bg_colorram,a1
-	move.b	(a1,d6.W),d1
+
+
 	jbsr		update_bg_tile
 0:
-	movem.l	(a7)+,d0-d3/d6/a0-a2
+	movem.l	(a7)+,d0-d7/a0-a3
     .endif | OPT_DISABLE_BG_LAYER
 	rts
 
-* d6=screen address (preserved), d0=attribute (preserved)
-* d6 starts at 0x8000 ends at 0x83FF
-* should preserve all registers
 
-osd_w_colorram:
-    .ifeq OPT_DISABLE_BG_LAYER
-	movem.l	d0-d3/d6/a0-a2,-(a7)
-	sub.w	#SCREEN_ADDRESS+0x400,d6
-	cmp.w	#0x400,d6
-	bcs.b	1f
-	* should not happen
-	move.w	#0,d6
-1:
-	lea		bg_colorram,a1
-	add.w	d6,a1
-	cmp.b	(a1),d0
-	beq.b	0f		| already the proper value
-	
-
-	move.b	d0,(a1)	| update logical grid
-	move.b	d0,d1
-	lea		bg_videoram,a1
-	move.b	(a1,d6.W),d0
-	
-	jbsr		update_bg_tile
-0:
-	movem.l	(a7)+,d0-d3/d6/a0-a2
-    .endif | OPT_DISABLE_BG_LAYER
-	rts
-
-	move.w	orig_color_4(pc),copperlist_colors+DYN_COLOR_INDEX*4+2	| change 4th color with color clut
-
-* d6: screen offset
-* d0: tile code
-* d1: attribute
-*
-* the layout is strange to say the least
-* first row (last row in memory) is shown "normally" (X is mirrored, but horizontal,
-* Y is at top of the screen)
-* other rows use a X/Y transposed system like Galaxian or Xevious!
-*
-update_bg_tile:
-	* compute Y
-	and.w	#0xFF,d0	| mask up to 255
-	and.w	#0xFF,d1	| mask up to 255
-	tst.b	alternate_bank_selectors
+osd_update_palette_bank:
+	movem.l	d0/d1/a0/a1,-(a7)
+	lea 	palette_table(pc),a0
+	moveq	#0,d0
+	move.b	reg_palette_a,d0
+	lsl.w	#2,d0
+	tst.b	reg_palette_b
 	beq.b	0f
-	* tile 0x100->0x1FF
-	clr.b	first_row_standard_bank_selector
-	bset	#8,d0
+	bset	#3,d0
 0:
-	.ifne	OPT_ENABLE_LOGGING
-	* when logging is enabled, play a while
-	* and break. Get the address in 0x100 then do
-	* S used_cluts <address at $100> $10000
-	* then run the compute_used_cluts.py program again
+	move.l	(a0,d0.w),a0
 	
-	lea		tile_log_table,a0
-	move.l	a0,0x100
-	movem.w	d0-d1,-(a7)
-	and.l	#0xFFFF,d0
-	lsl.l	#7,d0
-	add.w	d1,d0
-	st.b	(a0,d0.l)
-	movem.w	(a7)+,d0-d1
-	.endif
-
-
-	cmp.w	#0x3C0,d6
-	bcc.b	0f
-	cmp.w	#0x40,d6
-	bcs.b	2f
-	move.w	d6,d3
-	lsr.w	#5,d6		| this is X
-	neg.w	d6
-	add.w	#32,d6
-	and.w	#0x1F,d3	| this is Y
-	addq.w	#2,d3
-	bra.b	1f
-	* two first rows are special
-0:
-	move.w	d6,d3
-	lsr.w	#5,d3		| this is Y
-	
-	sub.w	#30,d3		| minus 2
-	and.w	#0x1F,d6	| this is X
-	neg.w	d6
-	add.w	#32,d6
-	bra.b	1f
-	* two last rows as well
-2:
-	move.w	d6,d3
-	lsr.w	#5,d3		| this is Y
-	add.w	#34,d3		| plus 2
-	and.w	#0x1F,d6	| this is X
-	neg.w	d6
-	add.w	#32,d6
+	* dest copper lists
+	lea		top_color_line_copper+4,a1
+	move.w	#NB_ROWS-5,d0			| number of rows
 1:
+	moveq	#2,d1
+0:
+	move.w	(a0)+,(2,a1)
+	addq.w	#4,a1
+	dbf		d1,0b
+	addq.w	#4,a1	| skip next wait instruction
+	dbf		d0,1b
+	
+	lea		bottom_color_line_copper+4,a1
+	move.w	#3,d0			| number of rows
+1:
+	moveq	#2,d1
+0:
+	move.w	(a0)+,(2,a1)
+	addq.w	#4,a1
+	dbf		d1,0b
+	addq.w	#4,a1	| skip next wait instruction
+	dbf		d0,1b
+	
+	movem.l	(a7)+,d0/d1/a0/a1
+	rts
+	
+	
+* d7: screen offset
+* d0: tile code
+*
+
+update_bg_tile:
+	and.w	#0xFF,d0	| mask up to 255
+
+	move.w	d7,d3
+	and.w	#0x1F,d3	| this is Y (tile)
+	addq	#1,d3
+	
+	lsr.w	#5,d7		| this is X (tile)
+	not.w	d7
+	add.w	#0x21,d7
+
+	cmp.b	#0xF0,d0
+	jne		0f
+	cmp.b	#4,d3
+	jne		0f
+	* remove extra girders at X = (4,11), (4,13) replace by blank
+	* (original game used to put black sprites there, which is not that good
+	* to save blitter bandwidth). I suppose that game reads video memory
+	* to check if those girders are there when Kong climbs the ladder so we
+	* can't just remove them in the code
+	*
+	move.b	#0x10,d0		| draw blank instead of girders
+0:
+
 	lea		mulNB_BYTES_PER_ROW_table(pc),a0
 
+	moveq	#1,d4		| 2 bitplanes
 	
+	move.w	#BG_SCREEN_PLANE_SIZE,d5
+	
+	* we update the drawed bitplanes and also the backbuffer
+	* that we use to erase the sprites with
+	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
 	move.l	bg_drawed_screen_ptr(pc),a1
+	.else
+	lea		bg_screen_data_1,a1
+	lea		bg_screen_data_2,a3
+	.endif
+	lea		bg_background_data,a2
 	* D3 = Y
-	tst.b	alternate_bank_selectors
-	bne.b	3f
-	tst		d3
-	seq		first_row_standard_bank_selector
-	beq.b	3f
-	* no-first-line hack: first row displayed isn't shifted
-	* but other lines are. We get away with it because what's there
-	* is score then galaga lives which aren't too high (2 first rows are black)
-	* shifting that way allows to see most of the 'ACT' bottom status bar, still
-	* slightly truncated but good enough.
-	lea	(-NB_BYTES_PER_ROW*ROW_Y_OFFSET,a1),a1
-3:
+
 	add.w	d3,d3
 	move.w	(a0,d3.w),d3
 	lsl.w	#3,d3		| times 8
-	add.w	d3,a1
-	add.w	d6,a1
-
-	moveq	#NB_PLAYFIELD_PLANES-1,d3
+	add.w	d3,d7
+	add.w	d7,a1
+	add.w	d7,a2
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	add.w	d7,a3
+	.endif
 
 	* optimization when a well-known
 	* empty character is passed (standard charset)
-	cmp.w	#0x20,d0	| empty character
-	jeq	1f
+	cmp.b	#0x10,d0
+	jeq	11f
 
 	lea		character_table,a0
 	add.w	d0,d0
 	add.w	d0,d0
 	move.l	(a0,d0.w),d0
-	jeq	1f
-	move.l	d0,a0		| pointer on clut table
-	* now we use d1 (attribute)
-	add.w	d1,d1
-	add.w	(a0,d1.w),a0
-	cmp.l	d0,a0
-	jeq		12f		| should not happen
-	tst.b	first_row_standard_bank_selector
-	bne.b	5f
+	jeq	2f
+	move.l	d0,a0		| pointer on char data
+	
+	* just copy
 4:
 	.set	offset,0
 	.rept	8
-	move.b	(a0)+,(offset,a1)	
+	move.b	(a0)+,d0
+	move.b	d0,(offset,a1)	
+	move.b	d0,(offset,a2)
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	move.b	d0,(offset,a3)
+	.endif
 	.set	offset,offset+NB_BYTES_PER_ROW
 	.endr
-	add.w	#BG_SCREEN_PLANE_SIZE,a1
-	dbf		d3,4b
+	add.w	d5,a1
+	add.w	d5,a2
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	add.w	d5,a3
+	.endif
+	dbf		d4,4b
 0:
 	rts
-5:
-	.set	offset,0
-	.rept	7
-	move.b	(a0)+,(offset,a1)	
-	.set	offset,offset+NB_BYTES_PER_ROW
-	.endr
-	addq.w	#1,a0		| skip last row
-	add.w	#BG_SCREEN_PLANE_SIZE,a1
-	dbf		d3,5b
-	rts
+
+	
 	* clear tile
-1:
-	tst.b	first_row_standard_bank_selector
-	bne.b	55f
+
 11:
+
+111:
 	.set	offset,0
 	.rept	8
 	clr.b	(offset,a1)
+	clr.b	(offset,a2)
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	clr.b	(offset,a3)
+	.endif
 	.set	offset,offset+NB_BYTES_PER_ROW
 	.endr
-	add.w	#BG_SCREEN_PLANE_SIZE,a1
-	dbf		d3,11b
+	add.w	d5,a1
+	add.w	d5,a2
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	add.w	d5,a3
+	.endif
+	dbf		d4,111b
 2:
 	rts
-55:
-	.set	offset,0
-	.rept	7
-	clr.b	(offset,a1)
-	.set	offset,offset+NB_BYTES_PER_ROW
-	.endr
-	add.w	#BG_SCREEN_PLANE_SIZE,a1
-	dbf		d3,55b
-	rts
+
 12:
 	* clut/tile combo not declared as used
 	**blitz
 	rts
 
-
 			
 store_sprite_pos_16:
 	move.l	a1,-(a7)
 	lea		HW_SpriteYTable_16,a1
+	bsr		store_sprite_pos
+	move.l	(a7)+,a1
+	rts
+store_sprite_pos_32:
+	move.l	a1,-(a7)
+	lea		HW_SpriteYTable_32,a1
 	bsr		store_sprite_pos
 	move.l	(a7)+,a1
 	rts
@@ -1763,145 +2353,205 @@ HW_SpriteYTable_\height:
   .endr
 	.endm
 
-	DEF_HW_SPRITE_Y_TABLE	0
-	DEF_HW_SPRITE_Y_TABLE	8
+
 	DEF_HW_SPRITE_Y_TABLE	16
 	DEF_HW_SPRITE_Y_TABLE	32
 
 
 
-	
 * set_bitplanes
 * what: sets bitplanes in copperlist
+* sets 6 bitplanes at start even if only 4 are used in the panel
+* or it will just be big headaches to compute...
+* a small amount of chipmem is wasted for the 2 bitplanes that aren't active
+* in the first 48 lines but we're talking about 48*40*2 = 3840 bytes...
+* maybe we can use that memory for something at some point.
 
-set_bg_bitplanes:
+set_bitplanes:
     move.l	bg_displayed_screen_ptr(pc),a0
     moveq #NB_PLAYFIELD_PLANES-1,d1
 	move.l	a0,d0
-    lea	bg_bitplanes+2,a0
+    lea	panel_bitplanes+2,a0
+	moveq	#0,d2
+	move.w	#BG_SCREEN_PLANE_SIZE,d2
 1:
     swap d0
     move.w d0,(a0)
     swap d0
     move.w d0,(4,a0)    
     addq.w  #8,a0
-    add.l #BG_SCREEN_PLANE_SIZE,d0
+    add.l d2,d0		| LONG!
     dbf d1,1b
+
     rts
+
 
 	
 
 osd_debug_hook:
 	rts
 	
-* 9000 bits in d0.0-7
-* 9040 bits in D0:8-15
-
-osd_read_dipswitches:
-	move.w	dip_switches(pc),d0
+osd_get_random:
+* > D0: pseudo random value (8 bits, all other bits zeroed)
+	movem.l	a0,-(a7)
+	lea	seed(pc),a0
+	move.l	(a0),d0
+	* thanks meynaf
+	mulu #0xa57b,d0
+	addi.l #0xbb40e62d,d0
+	rol.l #6,d0	
+	move.l	d0,(a0) 
+	movem.l	(a7)+,a0
+	add.b	_custom+vposr,d0
+	and.l	#0xFF,d0
 	rts
+seed:
+	dc.l	0x12345678
+
 	
-* reads most inputs in one call
-* bits 0-8     coins
-* bits 16-24   start buttons
-* bits 24-28   joystick directions
-* bit 31       joystick fire
-osd_read_inputs:
-	bsr		handle_keyboard
-	moveq	#-1,d0
-	movem.l	a0/d1,-(a7)
-	* misc control keys
+* d7=screen address
+osd_r_videoram:
+	movem.l	a0/d7,-(a7)
+	sub.w	#SCREEN_ADDRESS,d7
+	bmi.b	0f
+	cmp.w	#0x400,d7
+	bcs.b	1f
+0:
+	.ifndef		RELEASE
+	* should not happen
+	lea		read_videoram_out_of_range_error(pc),a0
+	jbsr	osd_break
+	clr.b	d0
+	move.b	D1,d1
+	nop
+	.endif
+	bra.b	2f
+1:
+	lea		bg_videoram,a0
+	move.b	(a0,d7.w),d0
+2:
+	movem.l	(a7)+,a0/d7
+	rts
+
+	
+osd_read_in_2:
+	moveq	#0,d0
+	movem.l	a0/d1-d2,-(a7)
 	lea		keyboard_table(pc),a0
+	* misc control keys
+
 	tst.b	(5,a0)		| "5" key like in MAME
 	beq.b	0f
-	bclr	#6,d0
+	bset	#7,d0
 0:
-	tst.b	(6,a0)		| "6" key like in MAME
-	beq.b	0f
-	bclr	#6,d0
-0:	
 	tst.b	(1,a0)		| "1" key like in MAME
 	beq.b	0f
-	bclr	#5+16,d0
+	bset	#2,d0
 0:
 	tst.b	(2,a0)		| "2" key like in MAME
 	beq.b	0f
-	bclr	#6+16,d0
+	bset	#3,d0
 0:	
-	tst.b	(0x4F,a0)		| "<-" key
-	beq.b	0f
-	bclr	#26,d0
-0:
-	tst.b	(0x4E,a0)		| "->" key
-	beq.b	0f
-	bclr	#27,d0
-0:
-	tst.b	(0x4C,a0)		| "up" key
-	beq.b	0f
-	bclr	#24,d0
-0:
-	tst.b	(0x4D,a0)		| "down" key
-	beq.b	0f
-	bclr	#25,d0
-0:
-	tst.b	(0x63,a0)		| "ctrl" key
-	beq.b	0f
-	bclr	#31,d0
-0:
-	* directions + fire
+	cmp.b	#3,gamemode1_6005
+	beq.b	1f
+	* not playing: ability to insert coin with "fire"
+	* and start game with up/down
 	move.l	_joypad_state(pc),d1
-	btst	#JPB_BTN_UP,d1
-	beq.b	0f
-	bclr	#24,d0
-0:
-	btst	#JPB_BTN_DOWN,d1
-	beq.b	0f
-	bclr	#25,d0
-0:
-	btst	#JPB_BTN_LEFT,d1
-	beq.b	0f
-	bclr	#26,d0
-0:
-	btst	#JPB_BTN_RIGHT,d1
-	beq.b	0f
-	bclr	#27,d0
-0:
-	btst	#JPB_BTN_RED,d1
-	beq.b	0f
-	bclr	#31,d0
-0:
-	*tst.b	game_playing_8817
-	*bne.b	3f
-	move.l	d2,-(a7)
 	move.l	_previous_joypad_state(pc),d2
 	* save prev state as game loops within vblank
 	* pushing fire would either lockup the game
 	* or insert a lot of credits simulatenously
-	move.l	_joypad_state,_previous_joypad_state
-	
+	move.l	d1,_previous_joypad_state
+
 	* game not in play, accept start 1P game with "up"
 	btst	#JPB_BTN_UP,d1
 	beq.b	0f
-	bclr	#5+16,d0
+	bset	#2,d0
 0:
 	* game not in play, accept start 2P game with "down"
 	btst	#JPB_BTN_DOWN,d1
 	beq.b	0f
-	bclr	#6+16,d0
+	bset	#3,d0
+0:
+	btst	#JPB_BTN_RED,d1
+	beq.b	1f
+	btst	#JPB_BTN_RED,d2
+	bne.b	1f
+	* game not in play, accept insert coin with fire
+	bset	#7,d0
+1:
+	
+	movem.l	(a7)+,a0/d1-d2
+	rts
+	
+osd_read_in_1:
+	moveq	#-1,d0
+	rts
+	
+
+
+osd_read_in_0:
+	moveq	#0,d0
+	movem.l	a0/d1,-(a7)
+	* keyboard directions
+	lea		keyboard_table(pc),a0
+	tst.b	(0x4F,a0)		| "<-" key
+	beq.b	0f
+	bset	#1,d0
+0:
+	tst.b	(0x4E,a0)		| "->" key
+	beq.b	0f
+	bset	#0,d0
+0:
+	tst.b	(0x4C,a0)		| "up" key
+	beq.b	0f
+	bset	#2,d0
+0:
+	tst.b	(0x4D,a0)		| "down" key
+	beq.b	0f
+	bset	#3,d0
+0:
+	* joystick directions
+	move.l	_joypad_state(pc),d1
+	btst	#JPB_BTN_UP,d1
+	beq.b	0f
+	bset	#2,d0
+0:
+	btst	#JPB_BTN_DOWN,d1
+	beq.b	0f
+	bset	#3,d0
+0:
+	btst	#JPB_BTN_LEFT,d1
+	beq.b	0f
+	bset	#1,d0
+0:
+	btst	#JPB_BTN_RIGHT,d1
+	beq.b	0f
+	bset	#0,d0
+0:
+	
+	* jump
+	
+	tst.b	(0x63,a0)		| "ctrl" key
+	beq.b	0f
+	bset	#4,d0
 0:
 	btst	#JPB_BTN_RED,d1
 	beq.b	0f
-	btst	#JPB_BTN_RED,d2
-	bne.b	0f
-	* game not in play, accept insert coin with fire
-	bclr	#6,d0
+	bset	#4,d0
 0:
-	move.l	(a7)+,d2
-3:
 
 	movem.l	(a7)+,a0/d1
+
 	rts
 	
+	
+osd_read_dsw_1:
+	* actual dipswitches
+	move.b	dip_switches(pc),d0
+	
+
+	rts
 
 
 		
@@ -1918,11 +2568,7 @@ osd_read_high_scores:
 	beq.b	1f
 	bsr		get_hiscore_name
 	move.l	a3,a1
-	jsr		resload_LoadFile(a2)
-	* set highest score entry
-    move.b    (a3)+,(a4)+
-    move.b    (a3)+,(a4)+
-    move.b    (a3)+,(a4)+		
+	jsr		resload_LoadFile(a2)		
 	bra.b	1f
 0:
 	tst.b	highscore_loaded
@@ -1940,8 +2586,11 @@ osd_read_high_scores:
 	
 osd_write_high_scores:
 	movem.l	d0-d7/a0-a6,-(a7)
+	.ifdef	RELEASE
 	tst.b	cheat_used		| don't save score if cheat on
 	bne.b	1f
+	.endif
+	
 	move.l	_resload(pc),d0
 	beq.b	0f
 	move.l	d0,a2
@@ -1982,7 +2631,6 @@ handle_keyboard:
 	CLR.B	0x1C01(A5)
   
     lea keyboard_table(pc),a0
-	
     bclr    #7,d0
     seq (a0,d0.w)       | updates keyboard table
     jne   2f     | we don't care about key release
@@ -1992,41 +2640,70 @@ handle_keyboard:
 
     bsr	toggle_pause
 0:
-	btst	#2,cheat_flags+3
-	beq.b	10f
+	cmp.b	#0x10,d0	| "Q" key (US)
+	bne.b	0f
+	* game over, no lives + kill mario
+	clr.b	mario_array_6200
+	move.b	#1,number_of_lives_remaining_6228
+0:
+
+	btst	#4,cheat_flags+3
+	jeq		10f
 	* cheat keys
 	cmp.b	#0x50,d0	| F1 key
 	bne.b	0f
 	move.w	#0x0FF,_custom+color
+	* level skip
+	* MAME cheat method
+	clr.b	number_of_rivets_left_6290
+	move.b	#0x30,mario_y_position_6205
 	st.b	cheat_used
-	* will be triggered as soon as a diamond is pushed,
-	* not before
-
+	
 0:
 	cmp.b	#0x51,d0	| F2 key
 	bne.b	0f
-	* no snobees: level completed
 	st.b	cheat_used
-
+	* give hammer
+	move.w	#0x0FF,_custom+color
+	move.b	#1,hammer_active_6217
+	move.b	#1,second_hammer_sprite_6690+1
 	
 0:
 	cmp.b	#0x52,d0	| F3 key
 	bne.b	0f
-	* snobees play chicken
 	st.b	cheat_used
-	
+	* add 1000 points
+	movem.w	d0/d1,-(a7)
+	move.b	#0x8,d0
+	add.b	d0,d0		| clears X
+	move.b	player_1_score_address_60b2+1,d1
+	abcd	d0,d1
+	move.b	d1,player_1_score_address_60b2+1
+	movem.w	(a7)+,d0/d1
 0:
-	cmp.b	#0x53,d0	| F4 key
+	.ifndef	RELEASE
+	* cheat but not very rewarding as it triggers a "hurry up!"
+	cmp.b	#0x58,d0	| F9 key
 	bne.b	0f
-
-	st.b	cheat_used
+	move.b	#9,onscreen_timer_638c
 	move.w	#0x0FF,_custom+color
-	eor.b	#1,invincible_flag
+	.endif
 0:
+*	cmp.b	#0x54,d0	| F5 key
+*	bne.b	0f
+*	st.b	cheat_used
+*	move.w	#0x0FF,_custom+color
+*0:
+
 10:
-	tst.l	_resload
-	bne.b	2f
-	cmp.b	#0x45,d0	| "ESC" key
+	.ifndef	RELEASE
+	cmp.b	#0x58,d0	| F9 key crashes game (restarts whdload)
+	bne.b	0f
+	illegal
+	.endif
+0:
+
+	cmp.b	_keyexit,d0	| "ESC" key or whdload quitkey
 	bne.b	2f
 	BSET	#0x06,0x1E01(A5)
 	moveq	#2,d0
@@ -2045,8 +2722,12 @@ handle_keyboard:
 	
 toggle_pause:
 	* pause only within game
-	*tst.b	game_playing_8817
-	*beq.b	0f
+*	tst.b	gameplay_allowed_6054
+*	beq.b	0f
+*	tst.b	check_scenery_disabled_61ED
+*	bne.b	0f
+*	tst.b	game_locked_6053
+*	bne.b	0f
 	eor.b   #1,pause_flag
 0:
 	rts
@@ -2064,8 +2745,9 @@ beamdelay:
 	dbf	d0,0b
 	rts
 
-	
-	MUL_TABLE	NB_BYTES_PER_ROW,288
+	* add 16 to account for reverted Y blit
+	MUL_TABLE	NB_BYTES_PER_ROW,256+16
+
 
 	.align	4		| leave this long word alignment
 program_args:	ds.l	64,0
@@ -2074,9 +2756,8 @@ program_args_end:
 	.align	4
 read_args_string:
 	.byte	read_args_string_end-read_args_string
-	.ascii	"INVINCIBLE/S,INFLIVES/S,CHEATKEYS/S,STARTLEVEL/K/N,"
-	.ascii	"BAT50000/S,QUICKMAZEDRAW/S,NOINTERMISSIONS/S,ALTMUSIC/S"
-	.ascii	",SKILL/K/N,STARTLIVES/K/N"
+	.ascii	"INVINCIBLE/S,INFLIVES/S,INFTIME/S,"
+	.ascii	"CHEATKEYS/S,STARTLIVES/K/N,STARTLEVEL/K/N"
 read_args_string_end:
 	.align	2
 
@@ -2092,12 +2773,30 @@ hw_sprite_slots:
 amiga_sprite_slots:
 	ds.b	8
 
+	.ifndef	RELEASE
+sprite_allocation_error:
+	.asciz	"sprite allocation error"
+sprite_doesnt_exist_error:
+	.asciz	"sprite doesn't exist"
+sprite_buffer_doesnt_exist_error:
+	.asciz	"sprite buffer doesn't exist"
+read_videoram_out_of_range_error:
+	.asciz	"read videoram out of range"
+write_videoram_out_of_range_error:
+	.asciz	"write videoram out of range"
+write_colorram_out_of_range_error:
+	.asciz	"write colorram out of range"
+	.align	2
+
+	.endif
+
+
 old_intena:
 	.long	0
 old_dmacon:
 	.long	0
 old_sysvectors:
-	ds.l	8
+	ds.l	10
 old_vbr:
 	.long	0
 old_syscoplist:
@@ -2108,27 +2807,36 @@ old_stack:
 	.long	0
 return_address:
 	.long	0
+palette_number:
+	.word	0
+four_barrels_drawn:
+	.byte	0
+four_barrels_present:
+	.byte	0
+climbing_kong_present:
+	.byte	0
+skip_screen_update:
+	.byte	0
 	
-	
+	.align	2	
 _tag:
 		.long	WHDLTAG_CUSTOM1_GET
 cheat_flags:
 		.long	0
-		.long	WHDLTAG_CUSTOM2_GET
-start_level_option:
-		.long	0
+
 		.long	WHDLTAG_CUSTOM3_GET
 misc_options:
 		.long	0
 		.long	WHDLTAG_CUSTOM4_GET
-dip_switch_difficulty:
+start_level_option:
 		.long	0
 		.long	WHDLTAG_CUSTOM5_GET
 dip_switch_start_lives:
 		.long	0
 	.long	0
 dip_switches:
-		.word	0
+		.byte	0x0
+		.byte	0
 
 system_vbr:
 	.long	0
@@ -2152,9 +2860,11 @@ host_sprites:
 keyboard_table:
 	ds.b	0x100
 
+interrupt_mode:
+	.word	0
 	
 pause_flag:
-	dc.w	0
+	.word	0
 
 	* sound variables
 music_duration:
@@ -2179,10 +2889,14 @@ _gfxbase:
 	.long	0
 _dosbase:
 	.long	0
+delay_timer:
+	.word	0
+one_out_of_five:
+	.word	0
 bg_drawed_screen_ptr:
 	.long	bg_screen_data_1
 bg_displayed_screen_ptr:
-	.ifne	OPT_ENABLE_DOUBLE_BUFFERING_BG
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	.long	bg_screen_data_2
 	.else
 	.long	bg_screen_data_1
@@ -2191,10 +2905,10 @@ bg_displayed_screen_ptr:
 
 	.include	"sound_entries.68k"
 
-alternate_bank_selectors:
-	.byte	0
-first_row_standard_bank_selector:
-	.byte	0
+
+	
+_keyexit:
+	.byte	0x45	| ESC by default unless whdload overwrites it
 music_loops:
 	.byte	0
 music_volume:
@@ -2205,8 +2919,7 @@ music_muted:
 	.byte	0
 dynamic_color_mode:
 	.byte	0
-alternate_music_flag:
-	.byte	0
+
 cheat_used:
 	.byte	0
 dosname:
@@ -2216,7 +2929,7 @@ graphicsname:
 	.ascii	"graphics.library"
 	.byte	0
 normal_hiscorename:
-	.asciz	"galaga.high"
+	.asciz	"donkey_kong.high"
 floppy_file:
 	.ascii	"floppy"
 	.byte	0
@@ -2225,14 +2938,32 @@ temp_filename_buffer:
 _end_of_ng_code:
 		
 	.align 2
+
+sprite_buffer:
+	ds.l	NB_TARGET_SPRITES
+	
+bob_previous_positions_1:
+	ds.l	NB_TARGET_SPRITES
+bob_previous_drawed_sprites:
+	.long	bob_previous_positions_1
+bob_previous_displayed_sprites:
+	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
+	.long	bob_previous_positions_1
+	.else
+	.long	bob_previous_positions_2	
+bob_previous_positions_2:
+	ds.l	NB_TARGET_SPRITES	
+	.endif
+	
 palette:
 	.include "palette.68k"
-	* sprites "individual" 4-color palettes
 
+	.include	"row_colors.68k"
+	* sprites "individual" 4-color palettes
+sprite_cluts:
 	.include "palette_cluts.68k"
 	
-	
-	* on amiga, this file is included in galaga.68k file
+	* on amiga, this file is included in donkey_kong.68k file
 	* so the assembler can optimize by using PC-relative addressing
 	* whenever possible (and it does)
 	.ifndef	RELEASE
@@ -2241,8 +2972,9 @@ palette:
 
 	.ifne	OPT_ENABLE_LOGGING
 	.section	.bss
+	.ascii	"TILE"
 tile_log_table:
-	* 128 cluts, 256 tiles
+	* 32 cluts, 1024 tiles
 	* a lot of combinations aren't used (fortunately!)
 	ds.w	0x10000
 	.endif
@@ -2252,22 +2984,23 @@ tile_log_table:
 
 	.section	.datachip
 	
-.macro	DECL_4_BITPLANES	bpoff_start
+.macro	DECL_BITPLANES	bpoff_start,nb_planes
 	.set	bpoff,\bpoff_start
-	.rept	NB_PLAYFIELD_PLANES
+	.rept	\nb_planes
 	dc.w  0xe0+bpoff,0
 	dc.w  0xe2+bpoff,0
 	.set	bpoff,bpoff+4
 	.endr
 	.endm
 
-.macro	DECL_16_COLORS	offset
+.macro	DECL_COLORS	offset,nb_colors
 	.set	colidx,\offset
-	.rept	16
+	.rept	\nb_colors
 	dc.w	color+(colidx*2),0
 	.set	colidx,colidx+1
 	.endr
 	.endm
+
 
 blank_sound:
 	ds.l	4
@@ -2283,17 +3016,19 @@ blank_sprite:
 	.long	0
 	.endr
 	
+	* ATM sprite colors are out of copperlist
 	
 	* main copperlist
 copperlist:
-    *.word   0x1801,0xFFFE	
+    *.word   0x1801,0xFFFE
 
-bg_bitplanes:
-	DECL_4_BITPLANES	0
-copperlist_colors:
-	DECL_16_COLORS	0
+
+panel_bitplanes:
+	DECL_BITPLANES	0,NB_PLAYFIELD_PLANES
+colors:
+	DECL_COLORS	0,TOTAL_NB_COLORS
 sprite_cols:
-	DECL_16_COLORS	16
+	DECL_COLORS	16,16
 sprites:
     * #0
     .word    sprpt+0,0
@@ -2320,30 +3055,35 @@ sprites:
     .word    sprpt+28,0
     .word    sprpt+30,0
 
-	.set    beampos,0x1C01
-color_line_copper:
-	.rept	DYNAMIC_COPPER_ROWS
+top_color_line_copper:
+	* first colored rows
+ 	.set    beampos,0x2401
+	.rept	NB_ROWS-4
 	.word	beampos,0xFFFE
-	.word	0x1FE,0
-	.word	0x1FE,0
-	.word	0x1FE,0
-	.set    beampos,beampos+0x100
+	* 3 first color registers to change dynamically each 8 lines
+	.word	color+2,0
+	.word	color+4,0
+	.word	color+6,0
+	.set    beampos,beampos+0x800
 	.endr
 
 
+	
 	* pal limit
     .word  0xFFDF,0xFFFE       | PAL wait
-    .word  0x0401,0xFFFE
-
-	.set    beampos,0x0401
-    .word   beampos,0xFFFE	
+ 	.set    beampos,0x0401		| more lines to align
+bottom_color_line_copper:
+	.rept	4
+	.word	beampos,0xFFFE
+	* the 4 last colored rows
+	.word	color+2,0
+	.word	color+4,0
+	.word	color+6,0
+	.set    beampos,beampos+0x800
+	.endr
+	* the line where "credits" is drawn
+    .word	 intreq,0x8010	| no bobs from now on, get more drawing time
 	
-color_row_29:
-	
-	.set    beampos,0x1401
-	
- 	.word	beampos,0xFFFE   | wait before interrupt, avoid losing last bobs lines
-    .word	 intreq,0x8010
     .long    -2					
 	.ascii	"ENDCPLST"
 
@@ -2352,11 +3092,13 @@ color_row_29:
 	.align	8
 	
 		.section .bsschip
-
+bg_background_data:
+	ds.b	BG_SCREEN_SIZE
+	ds.b	NB_BYTES_PER_ROW*12*3
 bg_screen_data_1:
 	ds.b	BG_SCREEN_SIZE
 	ds.b	NB_BYTES_PER_ROW*12*3
-	.ifne  OPT_ENABLE_DOUBLE_BUFFERING_BG
+	.ifne  OPT_ENABLE_DOUBLE_BUFFERING
 bg_screen_data_2:
 	ds.b	BG_SCREEN_SIZE
 	ds.b	NB_BYTES_PER_ROW*12*3

@@ -1,6 +1,4 @@
-General:
-
-
-Amiga:
-
-- highscore screen letter flashing too fast (no speed regulation, sounds good on A1260...)
+- mockup of 40+ sprites
+- 1/2 HW sprites for ship, 2 for lasers
+- 1 sprite for stars (takes a slot of 2 sprites!)
+- 2 sprites for explosions?
