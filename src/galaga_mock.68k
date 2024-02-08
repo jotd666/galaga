@@ -1,0 +1,19 @@
+* exports
+
+    * ROM
+
+    .global galaga_irq
+    .global galaga_reset
+
+
+	.ifdef	__amiga__
+	.include "galaga_ram.68k"
+	.align	2
+	.endif
+	
+galaga_irq:
+	rts
+	
+galaga_reset:
+	.word	0x60FE
+	

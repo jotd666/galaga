@@ -4,6 +4,7 @@
 	.global invincible_flag
 	.global start_level
 	.global vb_ticks_count
+	.global break_at_startup_flag
 	.global	ixh
 	
 	.ifdef   __amiga__
@@ -70,6 +71,8 @@ current_ticks_count:
 vbl_sync_flag:
 	.byte	0
 vbl_sync_counter:
+	.byte	0
+break_at_startup_flag:
 	.byte	0
 * fake IXH register
 ixh:
