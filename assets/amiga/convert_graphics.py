@@ -5,6 +5,39 @@ gamename = "galaga"
 
 import collections
 
+ripped_palette = """222,222,222,255
+255,0,0,255
+255,255,0,255
+255,151,0,255
+255,184,0,255
+255,0,222,255
+0,255,222,255
+184,184,222,255
+222,71,0,255
+0,255,0,255
+33,151,0,255
+0,104,222,255
+151,0,222,255
+0,0,222,255
+0,151,151,255
+0,0,0,255
+222,222,222,255
+255,0,0,255
+255,255,0,255
+255,151,0,255
+0,0,0,255
+255,0,222,255
+0,255,222,255
+0,184,222,255
+0,0,0,255
+0,255,0,255
+0,0,0,255
+0,104,222,255
+184,0,222,255
+0,0,222,255
+0,0,0,255
+0,0,0,255
+""".splitlines()
 
 #transparent = (60,100,200)  # whatever is not a used RGB is ok
 
@@ -81,13 +114,16 @@ flip=False):
 def add_sprite(code,prefix,cluts,sprite_type=ST_BOB,mirror=False,flip=False):
     add_sprite_block(code,code+1,prefix,cluts,sprite_type,mirror,flip=flip)
 
-add_sprite_block(0,0x8,"ship",[2,9])
-add_sprite_block(0x8,0x10,"boss_ship",[0,3])
+add_sprite_block(0x8,0x10,"boss_ship",[0,1])
+# I'd like to hack player ship into a sprite only for clut 2
+# but use a BOB for clut 9 (captured)
+#add_sprite_block(0,0x8,"ship",[2,9])
+add_sprite_block(0,0x8,"ship",2,sprite_type=ST_HW_SPRITE)
 add_sprite_block(0x10,0x18,"red_bee",2)
 add_sprite_block(0x18,0x20,"blue_bee",3)
-add_sprite_block(0x50,0x57,"mutant_galaxian_boss",4)
-add_sprite_block(0x58,0x5F,"mutant_scorpion",5)
-add_sprite_block(0x60,0x67,"mutant_green",6)
+add_sprite_block(0x50,0x57,"mutant_galaxian_boss",4,sprite_type=ST_HW_SPRITE)
+add_sprite_block(0x58,0x5F,"mutant_scorpion",5,sprite_type=ST_HW_SPRITE)
+add_sprite_block(0x60,0x67,"mutant_green",6,sprite_type=ST_HW_SPRITE)
 add_sprite_block(0x68,0x6F,"challenge_butterfly",2) # or 7?
 add_sprite_block(0x70,0x77,"challenge_ship",7)
 add_sprite_block(0x78,0x7F,"challenge_rocket",7)
@@ -144,9 +180,10 @@ with open(os.path.join(this_dir,"..",f"{gamename}_gfx.c")) as f:
 
 
 palette = [tuple(x) for x in block_dict["palette"]["data"]]
+# ripped palette is wrong. MAME gfxsave to the rescue!
+palette = [tuple(int(x) for x in line.split(",")[0:3]) for line in ripped_palette]
 sprite_clut = [[tuple(palette[x]) for x in clut] for clut in block_dict["sprite_clut"]["data"]]
 
-print(sprite_clut)
 
 def replace_color(img,color,replacement_color):
     rval = Image.new("RGB",img.size)
@@ -177,8 +214,9 @@ sprites_used_colors = collections.Counter()
 hsize = 16
 
 def generate_16x16_image(cidx,sprdat,sprconf):
-    img = Image.new('RGB',(16,hsize))
+    img = Image.new("RGB",(16,hsize))
     spritepal = get_sprite_clut(cidx)
+
     is_sprite = sprconf and sprconf["sprite_type"] & ST_HW_SPRITE
     d = iter(sprdat)
     for j in range(16):
@@ -194,10 +232,6 @@ def switch_values(t,a,b):
     t[a],t[b] = t[b],t[a]
 
 
-# MAME shows more accurate colors but Mark provided 5 bit colors only
-original_palette = [(r,g,b) for r,g,b in block_dict["palette"]["data"]]
-
-level_palette = dict()
 
 # if palette is taken as-is, we need 32 colors to display the full game, even less than that
 # but using 32 colors has a lot of disadvantages:
@@ -224,24 +258,24 @@ for k,sprdat in enumerate(block_dict["sprite"]["data"]):
                 for x in range(img.size[0]):
                     for y in range(img.size[1]):
                         colors.add(img.getpixel((x,y)))
-colors.discard((0,0,0))  # remove black!
-colors = sorted(colors)
-if len(colors)>12:
-    raise Exception("Too many colors, must be <=12")
-# pad (some levels have even less colors)
-colors = colors + [0,1,2]*(16-len(colors))
-# start by fake colors (black first, then 3 colors not in palette to be sure
-# bitplane conversion won't pick them (used for tile dynamic colors only!)
+
+# rebuild the reduced palette from used sprites (& tiles!). Should not exceed 16
+# ATM we have 6 spare colors and we could probably gain more with dynamic copper shit for tiles
+# if required
+palette = sorted(colors)
+
+palette = palette + [(0x10,0x20,0x30)]*(16-len(palette))
+
 
 
 # dump cluts as RGB4 for sprites
 with open(os.path.join(src_dir,"palette_cluts.68k"),"w") as f:
     for clut_index in range(16):
         clut = get_sprite_clut(clut_index)   # simple slice of palette
-        if clut_index==3:
-            # kludge for moving ladders (clut looks wrong and ladders are green)
-            clut[3] = (255,255,255)
-            clut[1] = (0xe0,0x30,0x90) #,0x0800,0x01ff
+##        if clut_index==3:
+##            # kludge for moving ladders (clut looks wrong and ladders are green)
+##            clut[3] = (255,255,255)
+##            clut[1] = (0xe0,0x30,0x90) #,0x0800,0x01ff
         rgb4 = [bitplanelib.to_rgb4_color(x) for x in clut]
         bitplanelib.dump_asm_bytes(rgb4,f,mit_format=True,size=2)
 
@@ -284,9 +318,10 @@ if True:
             name = sprconf["name"]
             sprite_type = sprconf["sprite_type"]
         else:
-            clut_range = [0,1,2,3]
+            clut_range = [0]
             name = f"unknown_{k:02x}"
             sprite_type = ST_NONE
+            continue
 
         for cidx in clut_range:
             img = generate_16x16_image(cidx,sprdat,sprconf)
@@ -354,7 +389,8 @@ if True:
                     img_to_raw = img
 
                     plane_list = []
-                    #print(f"converting {name}, screen {sprconf['screens'][0]}")
+                    print(f"converting {name}, code {k}, clut {cidx}, {[[hex(c) for c in x]for x in sprite_clut[cidx] ]}")
+
                     for mirrored in range(2):
                         bitplanes = bitplanelib.palette_image2raw(img_to_raw,None,bobs_palette,forced_nb_planes=NB_BOB_PLANES,
                             palette_precision_mask=0xFF,generate_mask=True,blit_pad=True)
@@ -392,43 +428,28 @@ if True:
 
                     csb[cidx] = plane_list
 
-smart_redraw_flag = [0]*256
+
 hw_sprite_flag = [0]*256
 for k,v in sprite_config.items():
     sprite_type = v["sprite_type"]
     if sprite_type & ST_HW_SPRITE:
-        hw_sprite_flag[k] = v["hw_sprite_level_mask"]
-        hw_sprite_flag[k+128] = v["hw_sprite_level_mask"]  # mirror code
+        hw_sprite_flag[k] = 1
+        hw_sprite_flag[k+128] = 1
     elif sprite_type == ST_NONE:
         hw_sprite_flag[k] = 255
         hw_sprite_flag[k+128] = 255  # mirror code
-    smf = v["smart_redraw"]
-    smart_redraw_flag[k] = smf
-    smart_redraw_flag[k+128] = smf  # mirror code
 
-# create special 4 barell image for level 1
-img = generate_16x16_image(11,block_dict["sprite"]["data"][0x18],None)
-four_barrels = Image.new("RGB",(32,32))
-for sx in range(0,20,10):
-    for sy in range(0,32,16):
-        for x in range(0,16):
-            for y in range(0,16):
-                p = img.getpixel((x,y))
-                if p != (0,0,0):
-                    four_barrels.putpixel((x+sx,y+sy),p)
+
 
 with open(os.path.join(src_dir,"graphics.68k"),"w") as f:
     f.write("\t.global\tcharacter_table\n")
     f.write("\t.global\tsprite_table\n")
     f.write("\t.global\tbob_table\n")
     f.write("\t.global\thardware_sprite_flag_table\n")
-    f.write("\t.global\tsmart_redraw_flag_table\n")
     f.write("\t.global\tfour_barrels_bitmap\n")
 
     f.write("\nhardware_sprite_flag_table:")
     bitplanelib.dump_asm_bytes(hw_sprite_flag,f,mit_format=True)
-    f.write("\nsmart_redraw_flag_table:")
-    bitplanelib.dump_asm_bytes(smart_redraw_flag,f,mit_format=True)
 
     f.write("\ncharacter_table:\n")
     for i,c in enumerate(character_codes):
@@ -541,28 +562,11 @@ with open(os.path.join(src_dir,"graphics.68k"),"w") as f:
                     else:
                         f.write(f"\t.long\t0\n")
 
-    # four_barrels
-    f.write("four_barrels_bitmap:\n")
-    four_sprites_bitplanes = []
-    fsdata = bitplanelib.palette_image2raw(four_barrels,None,bobs_palette,forced_nb_planes=NB_BOB_PLANES,
-        palette_precision_mask=0xFF,generate_mask=True,blit_pad=True)
-    plane_size = len(fsdata)//5
 
-    for i in range(5):
-        fsplane = fsdata[i*plane_size:(i+1)*plane_size]
-        if any(fsplane):
-            f.write(f"\t.long\tfour_barrels_bitplane_{i}\n")
-            four_sprites_bitplanes.append(fsplane)
-        else:
-            f.write("\t.long\t0\n")
-            four_sprites_bitplanes.append(None)
+
 
     f.write("\n\t.section\t.datachip\n\n")
 
-    for i,fsplane in enumerate(four_sprites_bitplanes):
-        if fsplane:
-            f.write(f"four_barrels_bitplane_{i}:")
-            bitplanelib.dump_asm_bytes(fsplane,f,mit_format=True)
 
 
     # sprites
