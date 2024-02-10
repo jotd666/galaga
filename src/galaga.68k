@@ -1,3 +1,18 @@
+	* read register to var, little endian
+	.macro	MOVE_TO_VAR	reg,var
+	move.b	\reg,\var
+	ror.w	#8,\reg
+	move.b	\reg,\var+1
+	ror.w	#8,\reg	
+	.endm
+	
+	* read var to register, little endian
+	.macro	MOVE_TO_REG	var,reg
+	move.b	\var+1,\reg	
+	ror.w	#8,\reg
+	move.b	\var,\reg
+	.endm
+	
 	.macro CLEAR_XC_FLAGS
 	move.w	d7,-(a7)
 	moveq	#0,d7
@@ -32,6 +47,45 @@
 	roxr.b	#1,d7
 	movem.w	(a7)+,d7
 	.endm
+	
+	.macro	SET_C_FROM_X
+	move.w	d7,-(a7)
+	roxl.b	#1,d7
+	roxr.b	#1,d7
+	movem.w	(a7)+,d7
+    .endm
+
+
+	.macro	LOAD_D1_16_FROM_D1D2
+	and.l	#0xFFFF,d1
+	lsl.w	#8,d1
+	move.b	d2,d1
+	.endm
+	
+	.macro	LOAD_D3_16_FROM_D3D4
+	and.l	#0xFFFF,d3
+	lsl.w	#8,d3
+	move.b	d4,d3
+	.endm
+	.macro	LOAD_D5_16_FROM_D5D6
+	and.l	#0xFFFF,d5
+	lsl.w	#8,d5
+	move.b	d6,d5
+	.endm
+	.macro	LOAD_D1D2_FROM_D1_16
+	move.b	d1,d2
+	lsr.w	#8,d1
+	.endm
+	.macro	LOAD_D5D6_FROM_D5_16
+	move.b	d5,d6
+	lsr.w	#8,d5
+	.endm
+	.macro	LOAD_D3D4_FROM_D3_16
+	move.b	d3,d4
+	lsr.w	#8,d3
+	.endm
+
+	
 * input file game_ctrl.s
 *
 * game_ctrl.s:
@@ -39,7 +93,7 @@
 *
 *  Manage high-level game control.
 *
-*  j_Game_init:
+*  j_Game_init_02d3:
 *      One time entry from power-up routines.
 *  g_main:
 *      Initializes game state. Starts with Title Screen, or "Press Start"
@@ -67,12 +121,12 @@
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-j_Game_init:
+j_Game_init_02d3:
 	lea	ds_stk_cpu0_init,a7  | [ld   sp,#ds_stk_cpu0_init]
 
 *  memset(ds4_game_tmrs,0,4)
 	clr.b	d0                               	| [xor  a]
-	lea	ds4_game_tmrs+0(pc),a0             	| [ld   hl,#ds4_game_tmrs + 0] memset(...,0,4)
+	lea	ds4_game_tmrs(pc),a0             	| [ld   hl,#ds4_game_tmrs + 0] memset(...,0,4)
 	move.b	#4,d1                           	| [ld   b,#4]
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
@@ -102,24 +156,21 @@ j_Game_init:
 * playfield area.
 
 *  memset($83c0,$24,$40)
-	lea	m_tile_ram+0x03C0(pc),a0           	| [ld   hl,#m_tile_ram + 0x03C0] clear top 2 tile rows ($40 bytes)
+	move.w	#0x83C0,a0           	| $02F8: [ld   hl,#0x8000 + 0x03C0] clear top 2 tile rows ($40 bytes)
 	move.b	#0x40,d1                        	| [ld   b,#0x40]
 	move.b	#0x24,d0                        	| [ld   a,#0x24] "space" character
-	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	jbsr	rst_18_video                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
 *  memset($8000,$24,$40)
-	lea	m_tile_ram(pc),a0                  	| [ld   h,#>m_tile_ram] clear bottom 2 tile rows ($40 bytes)
-	and.w	#0xFF,d6
-	add.w	d6,a0
-	      ^^^^ TODO: review XX value
+	move.w	#0x8000,a0                   	| [ld   h,#>0x8000] clear bottom 2 tile rows ($40 bytes)
 	move.b	#0x40,d1                        	| [ld   b,#0x40]
-	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	jbsr	rst_18_video                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
 *  memset($8400,$03,$40)
-	lea	m_color_ram(pc),a0                 	| [ld   hl,#m_color_ram] $40 bytes (code 03)
+	move.w	#0x8000,a0                 	| [ld   hl,#m_color_ram] $40 bytes (code 03)
 	move.b	#0x40,d1                        	| [ld   b,#0x40]
 	move.b	#0x03,d0                        	| [ld   a,#0x03]
-	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	jbsr	rst_18_color                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
 	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr] clear remainder of grid pattern from the playfield tiles (14x16)
 * all tile ram is now wiped
@@ -153,9 +204,9 @@ l_032A:
 	move.b	#0x01,d0                        	| [ld   a,#0x01]
 	move.b	d0,b8_9201_game_state           	| [ld   (b8_9201_game_state),a] 1 == ATTRACT_MODE
 
-	lea	l_A005(pc),a0                      	| [ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
-	clr.b	(a0)                             	| [ld   (hl),#0]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+	*lea	l_A005(pc),a0                      	| [ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
+	*clr.b	(a0)                             	| [ld   (hl),#0]
+	*move.b	d0,(a0)                         	| [ld   (hl),a]
 
 	jbsr	c_sctrl_sprite_ram_clr            	| [call c_sctrl_sprite_ram_clr]
 
@@ -313,16 +364,16 @@ l_0003D8:
 
 * /****  start button was hit ******************/
 
-	move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] sound_mgr_reset: non-zero causes re-initialization of sound mgr process
+	**move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] sound_mgr_reset: non-zero causes re-initialization of sound mgr process
 
 * clear sprite mem etc.
 	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr]
 	jbsr	c_sctrl_sprite_ram_clr            	| [call c_sctrl_sprite_ram_clr]
 
 * stars paused
-	lea	l_A005(pc),a0                      	| [ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
-	clr.b	(a0)                             	| [ld   (hl),#0]
-	move.b	#1,(a0)                         	| [ld   (hl),#1]
+	*lea	l_A005(pc),a0                      	| [ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
+	*clr.b	(a0)                             	| [ld   (hl),#0]
+	*move.b	#1,(a0)                         	| [ld   (hl),#1]
 
 * Not sure about the intent of clearing $A0 bytes.. player data and resv data are only $80 bytes.
 * The structure at 98B0 is $30 bytes so it would not all be cleared (only $10 bytes)
@@ -335,12 +386,12 @@ l_0003D8:
 *ld hl, ds_plyr_actv +_b_stgctr   ; HELP_ME_DEBUG
 *ld (hl), #6
 
-	move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] 0 ... do not reset sound mgr process?
+	*move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] 0 ... do not reset sound mgr process?
 
-	move.b	d0,ds_99B9_star_ctrl+0x00       	| [ld   (ds_99B9_star_ctrl + 0x00),a] 0 ... star ctrl stop (1 when ship on screen)
+	*move.b	d0,ds_99B9_star_ctrl+0x00       	| [ld   (ds_99B9_star_ctrl + 0x00),a] 0 ... star ctrl stop (1 when ship on screen)
 
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,b_9AA0+0x0B                  	| [ld   (b_9AA0 + 0x0B),a] 1 ... sound-fx count/enable registers, start of game theme
+	*addq.b	#1,d0                           	| [inc  a]
+	*move.b	d0,b_9AA0+0x0B                  	| [ld   (b_9AA0 + 0x0B),a] 1 ... sound-fx count/enable registers, start of game theme
 
 	move.b	d0,ds_cpu0_task_actv+0x12       	| [ld   (ds_cpu0_task_actv + 0x12),a] 1 ... f_1D76, star ctrl
 	move.b	d0,ds_cpu0_task_resrv+0x12      	| [ld   (ds_cpu0_task_resrv + 0x12),a] 1 ... f_1D76, star ctrl
@@ -372,7 +423,7 @@ l_0414_while_tmr_3:
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
 * settext($0b, $83b0)
-	lea	m_tile_ram+0x03B0(pc),a0           	| [ld   hl,#m_tile_ram + 0x03B0]
+	lea	0x8000+0x03B0(pc),a0           	| [ld   hl,#0x8000 + 0x03B0]
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
 	jbsr	c_string_out                      	| [call c_string_out] erase PLAYER 1 text
 
@@ -406,12 +457,12 @@ c_game_bonus_info_show_line:
 
 * set next position to append 'X0000 PTS'
 	exg	a1,a0                              	| [ex   de,hl] get position of final character from string_out (digit now in L)
-	move.b	d4,d0                           	| [ld   a,e]
-	add.b	#0x40,d0                         	| [add  a,#0x40] Offset position by 2 characters to the left.
-	move.b	d0,d4                           	| [ld   e,a]
+	                        	| [ld   a,e]
+	add.w	#0x40,a1                         	| [add  a,#0x40] Offset position by 2 characters to the left.
+	                        	| [ld   e,a]
 
 	clr.b	d5                               	| [ld   h,#0]
-	jbsr	c_text_out_i_to_d                 	| [call c_text_out_i_to_d] HL contains number to display, returns updated destination in DE
+	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] HL contains number to display, returns updated destination in DE
 
 	exg	a1,a0                              	| [ex   de,hl]
 	move.b	#0x1E,d2                        	| [ld   c,#0x1E]
@@ -477,11 +528,11 @@ gctl_game_init:
 *    .3FF     .3FD                              .3E2  .3E0     <- Row 1
 
 * Two 0's + 4 spaces + 1 non-visible space on the left
-	lea	m_tile_ram+0x03E0+0x18(pc),a1      	| [ld   de,#m_tile_ram + 0x03E0 + 0x18] player 1 score, rightmost of "00"
+	lea	0x8000+0x03E0+0x18(pc),a1      	| [ld   de,#0x8000 + 0x03E0 + 0x18] player 1 score, rightmost of "00"
 	lea	d_0495(pc),a0                      	| [ld   hl,#d_0495] "00"
 	jbsr	gctl_init_puts                    	| [call gctl_init_puts]
 
-	lea	m_tile_ram+0x03E0+0x03(pc),a1      	| [ld   de,#m_tile_ram + 0x03E0 + 0x03] player 2 score (rightmost column is .3C2)
+	lea	0x8000+0x03E0+0x03(pc),a1      	| [ld   de,#0x8000 + 0x03E0 + 0x03] player 2 score (rightmost column is .3C2)
 	lea	d_0495(pc),a0                      	| [ld   hl,#d_0495] "00"
 
 * if ( two_plyr_game )  _putc ... draw 2 0's and 5 spaces in plyr 2 score
@@ -510,7 +561,7 @@ gctl_init_puts:
 
 * erase "2UP" ...start at '_' of '2UP_'  (gets re-drawn momentarily)
 	lea	d_0495+2(pc),a0                    	| [ld   hl,#d_0495 + 2]
-	lea	m_tile_ram+0x03C0+3(pc),a1         	| [ld   de,#m_tile_ram + 0x03C0 + 3] rightmost column is .3C2
+	lea	0x8000+0x03C0+3(pc),a1         	| [ld   de,#0x8000 + 0x03C0 + 3] rightmost column is .3C2
 	move.w	#4,d1                           	| [ld   c,#4]
 	jbsr	ldir                              	| [ldir]
 
@@ -628,7 +679,7 @@ gctl_plyr_terminate:
 	                               	| [and  a]
 	jeq	l_04FD_end_of_game                 	| [jr   z,l_04FD_end_of_game]
 *  then ... adjust message text for two player game-over
-	lea	m_tile_ram+0x0240+0x0E(pc),a0      	| [ld   hl,#m_tile_ram + 0x0240 + 0x0E]
+	lea	0x8000+0x0240+0x0E(pc),a0      	| [ld   hl,#0x8000 + 0x0240 + 0x0E]
 	move.b	ds_plyr_actv+_b_plyr_nbr,d0     	| [ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
 	addq.b	#4,d0                           	| [add  a,#4]
 	move.b	d0,d2                           	| [ld   c,a] string index
@@ -658,23 +709,21 @@ l_0509_while:
 	move.b	#0x16,d2                        	| [ld   c,#0x16] string index
 	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("SHOTS FIRED")
 
-	lea	m_tile_ram+0x0120+0x12(pc),a1      	| [ld   de,#m_tile_ram + 0x0120 + 0x12]
-	move.w	ds_plyr_actv+_w_shot_ct(pc),a0  	| [ld   hl,(ds_plyr_actv +_w_shot_ct)] puts game shots fired count
-                  ^^^^^^ TODO: review move.w into address register
-	jbsr	c_text_out_i_to_d                 	| [call c_text_out_i_to_d] puts game shots fired count
+	lea	0x8000+0x0120+0x12,a1      	| [ld   de,#0x8000 + 0x0120 + 0x12]
+	move.w	ds_plyr_actv+_w_shot_ct(pc),d5  	| [ld   hl,(ds_plyr_actv +_w_shot_ct)] puts game shots fired count
+	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] puts game shots fired count
 
 	move.b	#0x18,d2                        	| [ld   c,#0x18] string index
 	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("NUMBER OF HITS")
 
-	lea	m_tile_ram+0x0120+0x15(pc),a1      	| [ld   de,#m_tile_ram + 0x0120 + 0x15]
-	move.w	ds_plyr_actv+_w_hit_ct(pc),a0   	| [ld   hl,(ds_plyr_actv +_w_hit_ct)] puts game number of hits
-                  ^^^^^^ TODO: review move.w into address register
-	jbsr	c_text_out_i_to_d                 	| [call c_text_out_i_to_d] puts game number of hits
+	lea	0x8000+0x0120+0x15,a1      	| [ld   de,#0x8000 + 0x0120 + 0x15]
+	move.w	ds_plyr_actv+_w_hit_ct,d5   	| [ld   hl,(ds_plyr_actv +_w_hit_ct)] puts game number of hits
+	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] puts game number of hits
 
 	move.b	#0x19,d2                        	| [ld   c,#0x19] string index
 	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("HIT-MISS RATIO")
 
-	jbsr	c_0A72_puts_hitmiss_ratio         	| [call c_0A72_puts_hitmiss_ratio]
+	jbsr	c_puts_hitmiss_ratio_0A72         	| [call c_puts_hitmiss_ratio_0A72]
 
 	exg	a1,a0                              	| [ex   de,hl] HL becomes c_string_out<IN:position in tile RAM>
 	move.b	#0x1A,d2                        	| [ld   c,#0x1A] string index
@@ -809,7 +858,6 @@ l_05D1:
 	move.b	b_mchn_cfg_cab_type,d0          	| [ld   a,(b_mchn_cfg_cab_type)] 0==UPRIGHT, 1==TABLE
 	and.b	d2,d0                            	| [and  c]
 	*move.b	d0,0xA007                       	| [ld   (0xA007),a] sfr_flip_screen
-          ^^^^^^ TODO: review absolute 16-bit address write
 	move.b	d0,b_9215_flip_screen           	| [ld   (b_9215_flip_screen),a]
 
 * gctl_stg_fmtn_hpos_init
@@ -818,8 +866,7 @@ l_05D1:
 
 * set Cy to disable sound clicks for level tokens on player change (value of A is irrelevant)
 	SET_XC_FLAGS                           	| [scf]
-	exg	d0,d7                              	| [ex   af,af']
-         ^^^ TODO review: wrong if carry is needed or D7 used in between!
+	scs	d7                              	| [ex   af,af']
 	jbsr	c_new_level_tokens                	| [call c_new_level_tokens] Cy' == 1, A == don't care
 
 * if ( _enmy_ct_actv == 0 )  ... then _stg_init ... player was previously destroyed by collision with last enemy in the round
@@ -881,7 +928,7 @@ plyr_respawn_plyrup:
 	move.b	ds_plyr_actv+_b_plyr_nbr,d0     	| [ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
 	addq.b	#4,d0                           	| [add  a,#4] P1 text is index 4, P2 is index 5
 	move.b	d0,d2                           	| [ld   c,a] index into string table
-	lea	m_tile_ram+0x0260+0x0E(pc),a0      	| [ld   hl,#m_tile_ram + 0x0260 + 0x0E] not position encoded, this one is 1C left and 2R up
+	lea	0x8000+0x0260+0x0E(pc),a0      	| [ld   hl,#0x8000 + 0x0260 + 0x0E] not position encoded, this one is 1C left and 2R up
 	jbsr	c_string_out                      	| [call c_string_out] puts PLAYER X ("1" or "2") .
 
 *-----------------------------------------------------------------------------
@@ -912,11 +959,11 @@ plyr_respawn_rdy:
 	move.b	d0,ds_plyr_actv+_b_atk_wv_enbl  	| [ld   (ds_plyr_actv +_b_atk_wv_enbl),a] 1  (0 when respawning player ship)
 
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
-	lea	m_tile_ram+0x03B0(pc),a0           	| [ld   hl,#m_tile_ram + 0x03B0]
+	lea	0x8000+0x03B0(pc),a0           	| [ld   hl,#0x8000 + 0x03B0]
 	jbsr	c_string_out                      	| [call c_string_out] erase "READY" or "STAGE X"
 
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
-	lea	m_tile_ram+0x03A0+0x0E(pc),a0      	| [ld   hl,#m_tile_ram + 0x03A0 + 0x0E]
+	lea	0x8000+0x03A0+0x0E(pc),a0      	| [ld   hl,#0x8000 + 0x03A0 + 0x0E]
 	jbsr	c_string_out                      	| [call c_string_out] erase "PLAYER 1"
 
 	jra	gctl_game_runner                   	| [jp   gctl_game_runner] resume background super loop
@@ -955,8 +1002,8 @@ l_065E:
 * DE = adjusted offset into tile ram on return
 	move.b	d4,d6                           	| [ld   l,e] E==nbr of flying bugs hit this round
 	clr.b	d5                               	| [ld   h,#0]
-	lea	m_tile_ram+0x0100+0x10(pc),a1      	| [ld   de,#m_tile_ram + 0x0100 + 0x10]
-	jbsr	c_text_out_i_to_d                 	| [call c_text_out_i_to_d] HL contains number to display (number of hits)
+	lea	0x8000+0x0100+0x10(pc),a1      	| [ld   de,#0x8000 + 0x0100 + 0x10]
+	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] HL contains number to display (number of hits)
 
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 
@@ -979,14 +1026,14 @@ l_065E:
 * then ...
 	move.b	d0,d6                           	| [ld   l,a]
 	clr.b	d5                               	| [ld   h,#0]
-	jbsr	c_text_out_i_to_d                 	| [call c_text_out_i_to_d] HL contains number to display (1000's,100's place of bonus pts awarded)
+	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] HL contains number to display (1000's,100's place of bonus pts awarded)
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,(a1)                         	| [ld   (de),a] putc(0) ... 10's place of bonus pts awarded
-	jbsr	rst_20                            	| [rst  0x20] DE-=$20
+	jbsr	write_videoram_a1					| [ld   (de),a] putc(0) ... 10's place of bonus pts awarded
+	sub.w	#0x20,a1                            	| [rst  0x20] DE-=$20
 	clr.b	d0                               	| [xor  a]
 
 l_0693_put_ones:
-	move.b	d0,(a1)                         	| [ld   (de),a] putc(0) ... 1's place of bonus pts awarded
+	jbsr	write_videoram_a1                         	| [ld   (de),a] putc(0) ... 1's place of bonus pts awarded
 	move.b	b_bug_flyng_hits_p_round,d0     	| [ld   a,(b_bug_flyng_hits_p_round)]
 	jra	l_06BA                             	| [jr   l_06BA]
 
@@ -1029,11 +1076,11 @@ l_06BA:
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 
-	lea	m_tile_ram+0x03A0+0x10(pc),a0      	| [ld   hl,#m_tile_ram + 0x03A0 + 0x10]
+	lea	0x8000+0x03A0+0x10(pc),a0      	| [ld   hl,#0x8000 + 0x03A0 + 0x10]
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
 	jbsr	c_string_out                      	| [call c_string_out] erase "Number of hits XX" (line below Perfect)
 
-	lea	m_tile_ram+0x03A0+0x13(pc),a0      	| [ld   hl,#m_tile_ram + 0x03A0 + 0x13]
+	lea	0x8000+0x03A0+0x13(pc),a0      	| [ld   hl,#0x8000 + 0x03A0 + 0x13]
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
 	jbsr	c_string_out                      	| [call c_string_out] erase "Special Bonus 10000 Pts" (or Bonus xxxx)
 
@@ -1085,9 +1132,9 @@ ei
 	lea	ds_9AA0(pc),a0                     	| [ld   hl,#ds_9AA0] count/enable registers for sound effects, $20 bytes cleared
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
-	lea	m_tile_ram+0x03E0+0x19(pc),a1      	| [ld   de,#m_tile_ram + 0x03E0 + 0x19] 83f9 is 10's place score digit, below P of '1UP'
+	lea	0x8000+0x03E0+0x19(pc),a1      	| [ld   de,#0x8000 + 0x03E0 + 0x19] 83f9 is 10's place score digit, below P of '1UP'
 	jbsr	c_mach_info_add_score             	| [call c_mach_info_add_score]
-	lea	m_tile_ram+0x03E0+0x04(pc),a1      	| [ld   de,#m_tile_ram + 0x03E0 + 0x04] 83e4 is 10's place score digit, below P of '2UP'
+	lea	0x8000+0x03E0+0x04(pc),a1      	| [ld   de,#0x8000 + 0x03E0 + 0x04] 83e4 is 10's place score digit, below P of '2UP'
 	jbsr	c_mach_info_add_score             	| [call c_mach_info_add_score]
 
 *  Update total plays (up to 9999 bcd)
@@ -1123,12 +1170,11 @@ d_0725:
 *-----------------------------------------------------------------------------
 gctl_supv_score:
 *  if ( activ_plyr_state.plyr_1or2 == plyr1 )
-	move.b	ds_plyr_actv+_b_plyr_nbr,d0     	| [ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
 	                               	| [and  a]
 *    tmp = $f9
 	move.b	#0xF9,d0                        	| [ld   a,#0xF9] offset to 10's place from _tile_ram + 0x0300 (plyr 1)
+	tst.b	ds_plyr_actv+_b_plyr_nbr     	| [ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
 	jeq	l_0732                             	| [jr   z,l_0732]
-      ^^^^^^ TODO: review cpu flags (move.b,jeq)
 *  else tmp = $E4
 	move.b	#0xE4,d0                        	| [ld   a,#0xE4] offset to 10's place from _tile_ram + 0x0300 (plyr 2)
 
@@ -1153,7 +1199,7 @@ l_0740:
 	subq.b	#1,(a0)                         	| [dec  (hl)] bug_collsn[HL] decrement accumulated hit count
 	exg	a1,a0                              	| [ex   de,hl] DE := &bug_collsn[0x00]
 
-	move.w	m_tile_ram+0x0300(pc),a0        	| [ld   h,#>(m_tile_ram + 0x0300)] tile rows 32-35:  $83C0 - 83FF
+	move.w	0x8000+0x0300(pc),a0        	| [ld   h,#>(0x8000 + 0x0300)] tile rows 32-35:  $83C0 - 83FF
                   ^^^^^^ TODO: review move.w into address register
 	move.b	#ixl,d0                         	| [ld   a,ixl] offset to 10's place in tile ram
 	move.b	d0,d6                           	| [ld   l,a]
@@ -1180,8 +1226,8 @@ l_0762:
 	move.b	#ixl,d0                         	| [ld   a,ixl]
 	addq.b	#4,d0                           	| [add  a,#4]
 	move.b	d0,d4                           	| [ld   e,a]
-	lea	m_tile_ram+0x03E0+0x12(pc),a0      	| [ld   hl,#m_tile_ram + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2)
-	move.w	m_tile_ram+0x0300(pc),a1        	| [ld   d,#>(m_tile_ram + 0x0300)]
+	lea	0x8000+0x03E0+0x12(pc),a0      	| [ld   hl,#0x8000 + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2)
+	move.w	0x8000+0x0300(pc),a1        	| [ld   d,#>(0x8000 + 0x0300)]
                   ^^^^^^ TODO: review move.w into address register
 
 	move.b	#6,d1                           	| [ld   b,#6]
@@ -1309,10 +1355,10 @@ l_07E7:
 	sub.b	#0x0A,d0                         	| [sub  #0x0A]
 
 l_07E9_while_1:
-	move.b	d0,(a0)+                         	| [ld   (hl),a] m_tile_ram[hl] = a
+	move.b	d0,(a0)+                         	| [ld   (hl),a] 0x8000[hl] = a
 
 	                           	| [inc  l]
-	move.b	(a0),d0                         	| [ld   a,(hl)] a = m_tile_ram[hl + 1]
+	move.b	(a0),d0                         	| [ld   a,(hl)] a = 0x8000[hl + 1]
 	cmp.b	#0x24,d0                         	| [cp   #0x24] $24==' '
 	jne	l_07F1                             	| [jr   nz,l_07F1]
 	clr.b	d0                               	| [xor  a]
@@ -1322,7 +1368,7 @@ l_07F1:
 	jeq	l_07F8_while                       	| [jr   z,l_07F8_while]
 
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,(a0)                         	| [ld   (hl),a] m_tile_ram[hl] = a
+	move.b	d0,(a0)                         	| [ld   (hl),a] 0x8000[hl] = a
 	rts                                    	| [ret] end call 07d8
 
 l_07F8_while:
@@ -1642,7 +1688,7 @@ c_093C:
 
 	and.b	d2,d0                            	| [and  c] C == 1 if wipe
 	lea	str_1UP(pc),a0                     	| [ld   hl,#str_1UP]
-	lea	m_tile_ram+0x03C0+0x19(pc),a1      	| [ld   de,#m_tile_ram + 0x03C0 + 0x19] 'P' of 1UP
+	lea	0x8000+0x03C0+0x19(pc),a1      	| [ld   de,#0x8000 + 0x03C0 + 0x19] 'P' of 1UP
 	jbsr	c_095F                            	| [call c_095F] wipe if A != 0
 
 * if ( two_plyr_game ) then ...
@@ -1656,7 +1702,7 @@ c_093C:
 	move.b	d1,d0                           	| [ld   a,b] 1 if 2UP
 	and.b	d2,d0                            	| [and  c] C == 1 if wipe
 	lea	str_2UP(pc),a0                     	| [ld   hl,#str_2UP]
-	lea	m_tile_ram+0x03C0+0x04(pc),a1      	| [ld   de,#m_tile_ram + 0x03C0 + 0x04] 'P' of 2UP
+	lea	0x8000+0x03C0+0x04(pc),a1      	| [ld   de,#0x8000 + 0x03C0 + 0x04] 'P' of 2UP
 *       call c_095F
 
 *=============================================================================
@@ -1775,7 +1821,7 @@ l_099F_update_freeplay_or_credit:
 	move.b	b8_99B8_credit_cnt,d0           	| [ld   a,(b8_99B8_credit_cnt)] if free-play == $A0  i.e. > 99 (BCD)
 	cmp.b	#0xA0,d0                         	| [cp   #0xA0]
 
-	lea	m_tile_ram+0x0000+0x3C(pc),a1      	| [ld   de,#m_tile_ram + 0x0000 + 0x3C] dest of "C" of "CREDIT"
+	lea	0x8000+0x0000+0x3C(pc),a1      	| [ld   de,#0x8000 + 0x0000 + 0x3C] dest of "C" of "CREDIT"
 
 * if (credit_cnt == 0xA0 )  // goto puts_freeplay ...  i.e. > 99 (BCD)
 	jeq	l_09D9_puts_freeplay               	| [jr   z,l_09D9_puts_freeplay] skip credits status
@@ -1966,18 +2012,19 @@ daa
 	rts                                    	| [ret]
 
 *=============================================================================
-* c_text_out_i_to_d()
+* c_text_out_i_to_d_0A53()
 *  Description:
 *   Display an integer value as decimal.
 * IN:
-*   HL: input value (max $FFFF)
-*   DE: points to destination.
+*   D5: input value (max $FFFF)
+*   A1.W: points to destination.
 * OUT:
-*   DE: points to (destination - count * 0x40)
+*   A1.W: points to (destination - count * 0x40)
 *-----------------------------------------------------------------------------
-c_text_out_i_to_d:
+c_text_out_i_to_d_0A53:
 	move.b	#1,d1                           	| [ld   b,#1] there is at least 1 digit ... (but maybe more)
 l_0A55:
+	LOAD_D5D6_FROM_D5_16
 * check HL > 10 ... but we can only cp 8 bits in A, so we have to break HL into 2 bytes.
 * while ( ( H > 0 )  ...
 	subq.b	#1,d5                           	| [dec  h]
@@ -2010,8 +2057,11 @@ l_0A68:
 	rts                                    	| [ret]
 
 c_0A6E:
-	move.b	d0,(a1)                         	| [ld   (de),a]
-	jra	rst_DEminus20                      	| [jp   rst_DEminus20] it will 'ret' from the jp.
+	jbsr	osd_w_videoram	             	| [ld   (de),a]
+	sub.w	#0x20,d7
+	rts
+	
+	                      	| [jp   rst_DEminus20] it will 'ret' from the jp.
 * end 0a53
 
 *=============================================================================
@@ -2023,7 +2073,7 @@ c_0A6E:
 * OUT:
 *  DE == resultant pointer to screen ram to be used by caller
 *-----------------------------------------------------------------------------
-c_0A72_puts_hitmiss_ratio:
+c_puts_hitmiss_ratio_0A72:
 
 	move.w	ds_plyr_actv+_w_hit_ct(pc),d6   	| [ld   hl,(ds_plyr_actv +_w_hit_ct)]
 
@@ -2083,14 +2133,14 @@ l_0AA5_while:
 l_0AAD:
 	exg	a1,a0                              	| [ex   de,hl] lsb of HL+A -> HL, pointer to DE
 	jbsr	c_0B06                            	| [call c_0B06] HL *= 10 ... MSB->A
-	exg	d0,d7                              	| [ex   af,af'] stash 1st product msb
+	scs	d7                              	| [ex   af,af'] stash 1st product msb
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 	exg	(sp),a0                            	| [ex   (sp),hl] 2nd product to HL, 1st product to (SP)
 	jbsr	c_0B06                            	| [call c_0B06] HL *= 10 ... MSB->A
 	exg	(sp),a0                            	| [ex   (sp),hl] 1st product to HL, 2nd product to (SP)
 	jbsr	rst_10                            	| [rst  0x10] HL += A ... 1st product + 2nd product (msb)
-	exg	d0,d7                              	| [ex   af,af'] 1st product msb -> A, stash sum lsb
+	scs	d7                              	| [ex   af,af'] 1st product msb -> A, stash sum lsb
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	add.b	d5,d0                            	| [add  a,h] 1st product msb + sum msb
 	clr.b	d5                               	| [ld   h,#0] done with this byte
@@ -2127,7 +2177,7 @@ l_0AD7:
 	move.b	#4,d1                           	| [ld   b,#4]
 	clr.b	d2                               	| [ld   c,#0] use <:1> as flag
 	lea	b16_99B0_tmp(pc),a0                	| [ld   hl,#b16_99B0_tmp] &hitratio.b0 (BCD)
-	lea	m_tile_ram+0x0120+0x18(pc),a1      	| [ld   de,#m_tile_ram + 0x0120 + 0x18]
+	lea	0x8000+0x0120+0x18(pc),a1      	| [ld   de,#0x8000 + 0x0120 + 0x18]
 
 * loop to putc 4 characters (XXX.X)
 l_0AE1_while:
@@ -2369,41 +2419,22 @@ l_1058:
 *   Flag into A and from A through Cy back into HL.
 * IN:
 *  D0 = Divisor
-*  D6 = Dividend
+*  D5/D6 = Dividend
 * OUT:
-*  D6 = Quotient
+*  D5/D6 = Quotient
 *  D0 =  Modulus
 * PRESERVES: BC, DE
 *-----------------------------------------------------------------------------
 c_divmod:
-	movem.w	d1/d2,-(sp)                    	| [push bc]
-	move.b	d0,d2                           	| [ld   c,a] keep the divisor in C
-	clr.b	d0                               	| [xor  a]
-	move.b	#16+1,d1                        	| [ld   b,#16 + 1] bit shift counter (pre-increment for djnz)
-l_1066:
-adc  a,a                                  ; "left shift" the modulus portion and pick up any overflow from HL.
-	jcs	l_1074                             	| [jr   c,l_1074]
-      ^^^^^^ TODO: review cpu flags (move.b,jcs)
-	cmp.b	d2,d0                            	| [cp   c] hint: this does a-c
-	jcs	l_106D                             	| [jr   c,l_106D] if (a<c )then goto ccf ... (Cy is set and the ccf will clear it)
-	sub.b	d2,d0                            	| [sub  c] else subtract_divisor ... (Cy is not set, the ccf will set it)
-l_106D:
-
-	bcs.b	0f
-	clr.b	d7
-	bra.b	1f
-0:
-	st.b	d7
-1:
-	sub.b	#1,d7                            	| [ccf] Compliment Cy Flag ... if set then the modulus result has overflowed...
-l_106E:
-	addx.w  d6,d6                                ; ... and overflow out of modulus result is added to quotient.
-	subq.b	#1,d1                           	| [...]
-	jne	l_1066                             	| [djnz l_1066]
-
-
-	movem.w	(sp)+,d1/d2                    	| [pop  bc]
-	rts                                    	| [ret]
+	LOAD_D5_16_FROM_D5D6
+	* completely rewritten using 68000 divu for faster op & bugfree code :)
+	divu	d0,d5
+	swap	d5
+	move.w	d5,d0
+	swap	d5
+	LOAD_D5D6_FROM_D5_16
+	rts
+	
 
 l_1074:                                           ; handle overflow out of A
 	sub.b	d2,d0                            	| [sub  c]
@@ -2427,7 +2458,7 @@ c_1079:
 
 	and.b	#0x80,d0                         	| [and  #0x80] if set then negate rotation angle to (ix)0x0C
 	addq.b	#1,d0                           	| [inc  a] set bit-0, .b13<0> makes object slot active
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 	bclr.b	#7,d6                           	| [res  7,l]
@@ -2451,7 +2482,7 @@ c_1083:
 
 	and.b	#0x80,d0                         	| [and  #0x80] if set then negate rotation angle to (ix)0x0C
 	addq.b	#1,d0                           	| [inc  a] set bit-0, .b13<0> makes object slot active
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 *=============================================================================
@@ -2499,7 +2530,7 @@ l_10A0_got_one:
 	move.b	d6,d2                           	| [ld   c,l] stash index to obj_status[], sprite etc.
 	move.b	d2,(0x10,a2)                    	| [ld   0x10(ix),c] index of object, sprite etc.
 
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.b	d0,d3                           	| [ld   d,a] function parameter from A' to 0x13(ix)
 
@@ -2533,13 +2564,13 @@ l_10A0_got_one:
 	jne	l_10DC                             	| [jr   nz,l_10DC]
 * not flipped screen
 * 160 - sprite_y + 1 ... backwards math since sY<8:1> already loaded in B, and this is only for flipped screen
-	exg	d0,d7                              	| [ex   af,af'] stash Cy ... sY<:0>
+	scs	d7                              	| [ex   af,af'] stash Cy ... sY<:0>
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.b	d1,d0                           	| [ld   a,b]
 	add.b	<(-0x0160>>1),d0                 	| [add  a,#<(-0x0160 >> 1)] adjust addend for scale factor 2
 	neg.b	d0                               	| [neg]
 	move.b	d0,d1                           	| [ld   b,a]
-	exg	d0,d7                              	| [ex   af,af'] un-stash Cy
+	scs	d7                              	| [ex   af,af'] un-stash Cy
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 	bcs.b	0f
@@ -2713,18 +2744,18 @@ l_1171:
 *-----------------------------------------------------------------------------
 c_new_level_tokens:
 *  memset($8002,$24,$12)
-	lea	m_tile_ram+2(pc),a0                	| [ld   hl,#m_tile_ram + 2] second row from bottom at right
+	lea	0x8000+2,a0                	| [ld   hl,#0x8000 + 2] second row from bottom at right
 	move.b	#0x12,d1                        	| [ld   b,#0x12]
 	move.b	#0x24,d0                        	| [ld   a,#0x24]
-	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	jbsr	rst_18_video                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 *  memset($8022,$24,$12)                          ; bottom row at right
 	move.b	#0x22,d6                        	| [ld   l,#0x22]
 	move.b	#0x12,d1                        	| [ld   b,#0x12]
-	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	jbsr	rst_18_video                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
 	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] c_new_level_tokens
 	clr.b	d1                               	| [ld   b,#0] tmp_quotient 50
-	lea	m_tile_ram+1(pc),a0                	| [ld   hl,#m_tile_ram + 1] offset into tile ram
+	lea	0x8000+1,a0                	| [ld   hl,#0x8000 + 1] offset into tile ram
 
 
 * stage_ctr/50 and stage_ctr%50 (by brute force!)
@@ -2749,7 +2780,7 @@ l_119F:
 	move.b	d0,d5                           	| [ld   h,a] A = HL % 10 ... (still have L==HL/10)
 
 
-	move.l	a0,-(sp)                        	| [push hl] stack the quotient and mod10 result
+	movem.w	d5/d6,-(sp)                        	| [push hl] stack the quotient and mod10 result
 	exg	a1,a0                              	| [ex   de,hl]
 
 * now HL == tile_ram address  and  DE == div10 and mod10 result
@@ -2871,11 +2902,11 @@ l_11FA_show_10s_20s_30s_50s:
 c_build_token_1:
 
 * check sound_disable_flag
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	jcs	l_1215_restore_A_and_continue      	| [jr   c,l_1215_restore_A_and_continue]
 * put it back
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 * set the delay count 8 ... preserve frame count
 	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
@@ -2887,12 +2918,12 @@ l_120B:
 	jne	l_120B                             	| [jr   nz,l_120B]
 
 * actv_plyr_state[0x05]==0 for challenge stage ... 0 count/enable for stage tokens clicks
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.b	d0,b_9AA0+0x15                  	| [ld   (b_9AA0 + 0x15),a] 2 ... sound-fx count/enable registers, clicks for stage tokens
 
 l_1215_restore_A_and_continue:
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 *=============================================================================
@@ -3332,7 +3363,7 @@ c_player_respawn:
 
 * check if "STAGE X" text shown and if so skip showing "READY"
 *  if ( *(8270) ) == ' ' ) ...
-	move.b	m_tile_ram+0x0260+0x10,d0       	| [ld   a,(m_tile_ram + 0x0260 + 0x10)]
+	move.b	0x8000+0x0260+0x10,d0       	| [ld   a,(0x8000 + 0x0260 + 0x10)]
 	cmp.b	#0x24,d0                         	| [cp   #0x24]
 	jne	l_133A                             	| [jr   nz,l_133A]
 * ... else
@@ -3410,7 +3441,7 @@ draw_resv_ships:
 	addq.b	#6,d0                           	| [add  a,#6] max nr of icons
 	move.b	d0,d4                           	| [ld   e,a]
 	move.b	#0x49,d3                        	| [ld   d,#0x49] $4A,$4B,$4C,$4D ... / \ [ ]
-	lea	m_tile_ram+0x0000+0x1D(pc),a0      	| [ld   hl,#m_tile_ram + 0x0000 + 0x1D]
+	lea	0x8000+0x0000+0x1D(pc),a0      	| [ld   hl,#0x8000 + 0x0000 + 0x1D]
 	jbsr	draw_resv_ship_tile               	| [call draw_resv_ship_tile]
 	subq.w	#1,a0                           	| [dec  l] advance 1 column right
             ^^^^ TODO check dec register d6 or a0
@@ -3481,7 +3512,7 @@ l_1390:
 *  IN:
 *    HL: position in tile RAM.
 *    C: index into table of string pointers (d_cstring_tbl)
-*    CY: "set" if jumped to j_string_out_pe
+*    CY: "set" if jumped to j_string_out_pe_13b5
 *  OUT:
 *    HL contains final string character display position.
 *
@@ -3489,10 +3520,9 @@ l_1390:
 *-----------------------------------------------------------------------------
 c_string_out:
 	tst.b	d0                               	| [and  a] clear CY flag.
-	exg	d0,d7                              	| [ex   af,af'] save CY flag.
-         ^^^ TODO review: wrong if carry is needed or D7 used in between!
+	scs		d7                              	| [ex   af,af'] save CY flag.
 
-j_string_out_pe:
+j_string_out_pe_13b5:
 	movem.w	d3/d4,-(sp)                    	| [push de] preserves DE
 	move.l	a1,-(sp)                        	| [push de] preserves DE
 	exg	a1,a0                              	| [ex   de,hl] DE := position in tile RAM
@@ -3505,23 +3535,22 @@ j_string_out_pe:
 
 * De-reference the string pointer
 * sptr = *(p_sptr)
-	move.b	(a0),d0                         	| [ld   a,(hl)] lsb
-	addq.w	#1,a0                           	| [inc  hl]
+	move.b	(a0)+,d0                         	| [ld   a,(hl)] lsb
+	                           	| [inc  hl]
 	move.b	(a0),d5                         	| [ld   h,(hl)] msb
 	move.b	d0,d6                           	| [ld   l,a] lsb
-
+	LOAD_D5_16_FROM_D5D6
+	
 * Restore flags and check CY
-	exg	d0,d7                              	| [ex   af,af']
-         ^^^ TODO review: wrong if carry is needed or D7 used in between!
-
+	tst.b	d7                              	| [ex   af,af']
 * if ( CY ) ...
 	jcc	l_13AE                             	| [jr   nc,l_13AE]
 * ... do PE stuff: get position into DE ... HL-=2, DE:=*(HL)
 	subq.w	#2,a0                           	| [dec  hl] * 2
-	move.b	(a0),d4                         	| [ld   e,(hl)] LSB
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	(a0),d3                         	| [ld   d,(hl)] MSB
-	addq.w	#1,a0                           	| [inc  hl] HL now pointing to "color".
+	move.b	(a0)+,d4                         	| [ld   e,(hl)] LSB
+	                           	| [inc  hl]
+	move.b	(a0)+,d3                         	| [ld   d,(hl)] MSB
+	                           	| [inc  hl] HL now pointing to "color".
 
 * now DE == position, so the rest is the same...
 l_13AE:
@@ -3587,7 +3616,7 @@ d_cstring_tbl:
 * the top two rows and bottom two rows of tiles.
 * (See tile RAM & color RAM layout ascii art diagram in mrw.s).
 .macro  _dea  _R _C
-	.long    m_tile_ram + $$40 + ( $$1C - _C - 1 ) * $$20 + _R
+	.long    0x8000 + $$40 + ( $$1C - _C - 1 ) * $$20 + _R
 .endm
 
 
@@ -4383,12 +4412,12 @@ l_19D2_fighter_captured:
 l_1A01_erase_text:
 * check if text has been cleared yet?
 *  if ( *82d1 == $24 ) goto $1a10
-	move.b	m_tile_ram+0x02C0+0x11,d0       	| [ld   a,(m_tile_ram + 0x02C0 + 0x11)] 'I' of fighter captured
+	move.b	0x8000+0x02C0+0x11,d0       	| [ld   a,(0x8000 + 0x02C0 + 0x11)] 'I' of fighter captured
 	cmp.b	#0x24,d0                         	| [cp   #0x24]
 	jeq	l_1A10                             	| [jr   z,l_1A10]
 *  clear "fighter captured" text
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
-	lea	m_tile_ram+0x03A0+0x11(pc),a0      	| [ld   hl,#m_tile_ram + 0x03A0 + 0x11] "leftmost" column of row where "fighter captured" is displayed
+	lea	0x8000+0x03A0+0x11(pc),a0      	| [ld   hl,#0x8000 + 0x03A0 + 0x11] "leftmost" column of row where "fighter captured" is displayed
 	jbsr	c_string_out                      	| [call c_string_out] erase fighter capture text
 l_1A10:
 	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d0	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)]
@@ -4589,7 +4618,7 @@ l_1AD5_in_one_already:
 	addq.b	#1,d0                           	| [inc  a] A == delay count until bonus-bee launch
 	jeq	l_1AF4_ready_go                    	| [jr   z,l_1AF4_ready_go]
 	move.b	d0,ds_plyr_actv+_b_bbee_tmr     	| [ld   (ds_plyr_actv +_b_bbee_tmr),a] A<0 (delay count until bonus-bee launch)
-	exg	d0,d7                              	| [ex   af,af'] stash the counter
+	scs	d7                              	| [ex   af,af'] stash the counter
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	lea	ds_plyr_actv+_b_bbee_obj(pc),a0    	| [ld   hl,#ds_plyr_actv +_b_bbee_obj]
 	move.b	(a0),d4                         	| [ld   e,(hl)]
@@ -4608,7 +4637,7 @@ l_1AD5_in_one_already:
 	      ^^^^ TODO: review XX value
 	addq.w	#1,a0                           	| [inc  l] HL:=982E   ... color 'A'
             ^^^^ TODO check inc register d6 or a0
-	exg	d0,d7                              	| [ex   af,af'] recover the counter
+	scs	d7                              	| [ex   af,af'] recover the counter
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	btst.b	#4,d0                           	| [bit  4,a] check for %$10 (alternate color every 1/4 second)
 	jeq	l_1AF0_alternating_colors          	| [jr   z,l_1AF0_alternating_colors]
@@ -4769,7 +4798,7 @@ l_1B8B:
 	bclr.b	#7,d4                           	| [res  7,e] bit-7 was used to indicate negated rotation angle to (ix)0x0C
 
 * stash A ... object/index from boss_wing_slots[n] (with bit-7 possibly set for negating rotation angle)
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 * if (STAND_BY != obj_status[E].state) return ... disposition resting/inactivez
@@ -4787,7 +4816,7 @@ l_1B8B:
 	move.b	(a0),d3                         	| [ld   d,(hl)] e.g. 92CA[].b2, msb of pointer to data
 
 * reload A
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.b	d0,d6                           	| [ld   l,a] byte-0 of boss_wing_slots[n*3] ... object index/offset
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800] e.g. b_8800[$30]
@@ -5078,7 +5107,7 @@ j_1CAE:
       ^^^^^^ TODO: review cpu X flag
 	ror.b	#1,d0                            	| [rrca] flag in Cy and in bit-7
 	move.b	d0,bmbr_boss_pool+0             	| [ld   (bmbr_boss_pool + 0),a] object/index of bomber boss
-	exg	d0,d7                              	| [ex   af,af'] stash Cy for rotation flag
+	scs	d7                              	| [ex   af,af'] stash Cy for rotation flag
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.b	a3,bmbr_boss_pool+1             	| [ld   (bmbr_boss_pool + 1),iy] flight vector of bomber boss
 
@@ -5143,7 +5172,7 @@ l_1CF2_while:
 * setup A and Cy' parameters (HL, IY already loaded)
 *  HL == &_boss_pool[n] ... n = { 3, 6, 9 }
 *  IY == pointer to flight vector data
-	exg	d0,d7                              	| [ex   af,af'] unstash rotation flag
+	scs	d7                              	| [ex   af,af'] unstash rotation flag
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.b	d2,d0                           	| [ld   a,c] object/index of captured ship
 	jra	l_1D16                             	| [jr   l_1D16] ... jp past setup section of function
@@ -5187,7 +5216,7 @@ l_1D0D:
 	jbsr	rst_10                            	| [rst  0x10] HL += A
 
 * setup parameters (IY, pointer to flight vector data, already loaded)
-	exg	d0,d7                              	| [ex   af,af'] unstash rotation flag
+	scs	d7                              	| [ex   af,af'] unstash rotation flag
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.b	(a0),d0                         	| [ld   a,(hl)] d_escorts[a] ... object/index
 	exg	a1,a0                              	| [ex   de,hl] &boss_wing_slots[n] to HL
@@ -5210,7 +5239,7 @@ l_1D16:
 	move.b	d0,(a0)                         	| [ld   (hl),a] &boss_wing_slots[n + 0]
 
 * re-stash Cy (rotation flag)
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 	addq.w	#1,a0                           	| [inc  l]
@@ -6576,7 +6605,7 @@ c_2188_ship_spin:
 	                           	| [dec  c]
 	tst.b	d2                           	| [inc  c]
 	jne	l_21A7                             	| [jr   nz,l_21A7]
-	exg	d0,d7                              	| [ex   af,af'] ship rotated around through 180 degrees
+	scs	d7                              	| [ex   af,af'] ship rotated around through 180 degrees
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.b	ds5_928A_captr_status+0x03,d0   	| [ld   a,(ds5_928A_captr_status + 0x03)]
 	                               	| [and  a]
@@ -6585,7 +6614,7 @@ c_2188_ship_spin:
 	rts                                    	| [ret]
 
 l_21A6:
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 l_21A7:
 	btst.b	#0,d2                           	| [bit  0,c]
@@ -7115,7 +7144,7 @@ case_2422:
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)] X coordinate offset
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.b	d2,d6                           	| [ld   l,c] row position index
 	move.b	(a0),d2                         	| [ld   c,(hl)] Y coordinate offset
@@ -7129,7 +7158,7 @@ case_2422:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.b	d0,(a0)                         	| [ld   (hl),a] X coordinate offset
 	addq.b	#1,d6                           	| [inc  l] 0x12(ix)
@@ -7292,7 +7321,7 @@ l_24C2:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
-	exg	d0,d7                              	| [ex   af,af'] stash this till after the l_24DA
+	scs	d7                              	| [ex   af,af'] stash this till after the l_24DA
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	sub.b	#8,d0                            	| [sub  #8]
@@ -7320,7 +7349,7 @@ l_24DA:
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
 	move.b	#0x0C,(a0)                      	| [ld   (hl),#0x0C]
-	exg	d0,d7                              	| [ex   af,af'] unstash A which is the count
+	scs	d7                              	| [ex   af,af'] unstash A which is the count
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 l_24E0:
 	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
@@ -8516,11 +8545,11 @@ l_2AE9_done:
 * Note: 83ED-83F2 is high score in tile RAM.
 *-----------------------------------------------------------------------------
 c_top5_dlg_proc:
-	lea	m_tile_ram+0x03E0+0x1D(pc),a0      	| [ld   hl,#m_tile_ram + 0x03E0 + 0x1D] 100000's digit of plyr1 score (83F8-FD)
+	lea	0x8000+0x03E0+0x1D(pc),a0      	| [ld   hl,#0x8000 + 0x03E0 + 0x1D] 100000's digit of plyr1 score (83F8-FD)
 	move.b	ds_plyr_actv+_b_plyr_nbr,d0     	| [ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
 	                               	| [and  a]
 	jeq	l_300C                             	| [jr   z,l_300C]
-	lea	m_tile_ram+0x03E0+0x08(pc),a0      	| [ld   hl,#m_tile_ram + 0x03E0 + 0x08] 100000's digit of plyr2 score (83E3-E8)
+	lea	0x8000+0x03E0+0x08(pc),a0      	| [ld   hl,#0x8000 + 0x03E0 + 0x08] 100000's digit of plyr2 score (83E3-E8)
 
 l_300C:
 * setup pointer to active player score in HL. Offset 5 advances pointer to 100000's place character.
@@ -8607,13 +8636,13 @@ l_3073:
 	jbsr	c_text_out                        	| [call c_text_out] "SCORE  NAME"          HL==3298
 	jbsr	c_text_out_ce                     	| [call c_text_out_ce] "TOP 5"                HL==32AB
 
-	lea	m_tile_ram+0x0300+0x09(pc),a1      	| [ld   de,#m_tile_ram + 0x0300 + 0x09]
+	lea	0x8000+0x0300+0x09(pc),a1      	| [ld   de,#0x8000 + 0x0300 + 0x09]
 	move.w	b_8A00+0x00(pc),a0              	| [ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
                   ^^^^^^ TODO: review move.w into address register
 	jbsr	c_3275                            	| [call c_3275] puts players score below "SCORE"
 
 * puts_AAA (default initials of new score entry) below NAME
-	lea	m_tile_ram+0x0140+0x09(pc),a0      	| [ld   hl,#m_tile_ram + 0x0140 + 0x09] row below 'A' in "NAME"
+	lea	0x8000+0x0140+0x09(pc),a0      	| [ld   hl,#0x8000 + 0x0140 + 0x09] row below 'A' in "NAME"
 	move.w	#-32,d3                         	| [ld   de,#-32] offset 1 column right -32
 	move.b	#0x0A,(a0)                      	| [ld   (hl),#0x0A]
 	add.w	d3,a0                            	| [add  hl,de]
@@ -8699,7 +8728,7 @@ l_30ED:
 
 	move.b	b_8A00+0x10,d0                  	| [ld   a,(b_8A00 + 0x10)] lower byte of first character's address in v-ram
 	move.b	d0,d6                           	| [ld   l,a]
-	lea	m_tile_ram+>l_0100(pc),a0          	| [ld   h,#>m_tile_ram + >0x0100]
+	lea	0x8000+>l_0100(pc),a0          	| [ld   h,#>0x8000 + >0x0100]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
@@ -8752,7 +8781,7 @@ l_311D_stick_right:
 * get lower byte of current character's address in v-ram
 	move.b	b_8A00+0x10,d0                  	| [ld   a,(b_8A00 + 0x10)] HL = $8000 + $0100 + b_8A00[ 0x10 ]
 	move.b	d0,d6                           	| [ld   l,a]
-	lea	m_tile_ram+>l_0100(pc),a0          	| [ld   h,#>m_tile_ram + >0x0100]
+	lea	0x8000+>l_0100(pc),a0          	| [ld   h,#>0x8000 + >0x0100]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
@@ -8853,7 +8882,7 @@ j_314C_select_char:
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
 	clr.b	(a0)                             	| [ld   (hl),#0] set color to Cyan
-	lea	m_tile_ram+>l_0100(pc),a0          	| [ld   h,#>m_tile_ram + >0x0100]
+	lea	0x8000+>l_0100(pc),a0          	| [ld   h,#>0x8000 + >0x0100]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
@@ -9201,22 +9230,22 @@ l_3277:
 *-----------------------------------------------------------------------------
 s_327F_enter_your_initials:
 * "ENTER YOUR INITIALS !"
-	.long m_tile_ram + 0x0320 + 0x04
+	.long 0x8000 + 0x0320 + 0x04
 	.byte 0x15
 	.byte 0x04                                   | color code (c_text_out_ce)
 	.byte 0x0E,0x17,0x1D,0x0E,0x1B,0x24,0x22,0x18,0x1E,0x1B,0x24,0x12,0x17,0x12,0x1D,0x12,0x0A,0x15,0x1C,0x24,0x2C
 * "SCORE       NAME" (after l_3073, in cyan ... not color encoded)
-	.long m_tile_ram + 0x02E0 + 0x07
+	.long 0x8000 + 0x02E0 + 0x07
 	.byte 0x10
 	.byte 0x1C,0x0C,0x18,0x1B,0x0E,0x24,0x24,0x24,0x24,0x24,0x24,0x24,0x17,0x0A,0x16,0x0E
 * "TOP 5" (32AB)
-	.long m_tile_ram + 0x0240 + 0x10
+	.long 0x8000 + 0x0240 + 0x10
 	.byte 0x05
 	.byte 0x04                                   | color code (c_text_out_ce)
 	.byte 0x1D,0x18,0x19,0x24,0x05
 s_32B4_score_name:
 * "SCORE     NAME" (c_puts_top5scores)
-	.long m_tile_ram + 0x0280 + 0x12
+	.long 0x8000 + 0x0280 + 0x12
 	.byte 0x0E
 	.byte 0x1C,0x0C,0x18,0x1B,0x0E,0x24,0x24,0x24,0x24,0x24,0x17,0x0A,0x16,0x0E
 
@@ -9227,31 +9256,31 @@ s_32B4_score_name:
 *   byte *score_bcd    ( e.g. "123456" encoded as "06 05 04 03 02 01" and ptr=&"01")
 *   byte *initials
 s_32C5:
-	.long m_tile_ram + 0x0340 + 0x14
+	.long 0x8000 + 0x0340 + 0x14
 	.byte 0x1C,0x1D  || "ST"
           ^^^^^^ TODO: review absolute 16-bit address write
 	.long b_best5_score1 + 0x05
 	.long b_best5_name1
        *
-	.long m_tile_ram + 0x0340 + 0x16
+	.long 0x8000 + 0x0340 + 0x16
 	.byte 0x17,0x0D  || "ND"
           ^^^^^^ TODO: review absolute 16-bit address write
 	.long b_best5_score2 + 0x05
 	.long b_best5_name2
        *
-	.long m_tile_ram + 0x0340 + 0x18
+	.long 0x8000 + 0x0340 + 0x18
 	.byte 0x1B,0x0D  || "RD"
           ^^^^^^ TODO: review absolute 16-bit address write
 	.long b_best5_score3 + 0x05
 	.long b_best5_name3
        *
-	.long m_tile_ram + 0x0340 + 0x1A
+	.long 0x8000 + 0x0340 + 0x1A
 	.byte 0x1D,0x11  || "TH"
           ^^^^^^ TODO: review absolute 16-bit address write
 	.long b_best5_score4 + 0x05
 	.long b_best5_name4
        *
-	.long m_tile_ram + 0x0340 + 0x1C
+	.long 0x8000 + 0x0340 + 0x1C
 	.byte 0x1D,0x11  || "TH"
           ^^^^^^ TODO: review absolute 16-bit address write
 	.long b_best5_score5 + 0x05
@@ -9292,7 +9321,7 @@ l_3300_finish:
 	move.l	(sp)+,a0                        	| [pop  hl]
 
 * Setup HL and DE as pointers for copy from input characters to new Top5 table name entry.
-	lea	m_tile_ram+>l_0100(pc),a0          	| [ld   h,#>m_tile_ram + >0x0100]
+	lea	0x8000+>l_0100(pc),a0          	| [ld   h,#>0x8000 + >0x0100]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
@@ -9396,13 +9425,13 @@ l_3340:
 *=============================================================================
 str_3345:
 * "THE GALACTIC HEROES"
-	.long m_tile_ram + 0x0320 + 0x05
+	.long 0x8000 + 0x0320 + 0x05
 	.byte 0x13
 	.byte 0x02
 	.byte 0x1D,0x11,0x0E,0x24,0x10,0x0A,0x15,0x0A,0x0C,0x1D,0x12,0x0C,0x24,0x11,0x0E,0x1B,0x18,0x0E,0x1C
 *_335C:
 * "-- BEST 5 --"
-	.long m_tile_ram + 0x02C0 + 0x0C
+	.long 0x8000 + 0x02C0 + 0x0C
 	.byte 0x0C
 	.byte 0x04
 	.byte 0x26,0x26,0x24,0x0B,0x0E,0x1C,0x1D,0x24,0x05,0x24,0x26,0x26
@@ -9431,7 +9460,7 @@ _tileram_test_loop:
 	jbsr	exx                               	| [exx] save outer loop count
      ^^^^ TODO: review special instruction inputs
 
-	lea	m_tile_ram(pc),a1                  	| [ld   de,#m_tile_ram]
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000]
 	move.w	#0x0000,d5                      	| [ld   hl,#0x0000] 0
 	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
 	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
@@ -9451,7 +9480,7 @@ adc  hl,hl
 	or.b	d2,d0                             	| [or   c]
 	jne	_wr_zero_loop                      	| [jr   nz,_wr_zero_loop]
 
-	lea	m_tile_ram(pc),a1                  	| [ld   de,#m_tile_ram]
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000]
 	move.w	#0x0000,d5                      	| [ld   hl,#0x0000] 0
 	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
 	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
@@ -9472,7 +9501,7 @@ adc  hl,hl
 	or.b	d2,d0                             	| [or   c]
 	jne	_rd_zero_loop                      	| [jr   nz,_rd_zero_loop]
 
-	lea	m_tile_ram(pc),a1                  	| [ld   de,#m_tile_ram]
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000]
 	lea	l_5555(pc),a0                      	| [ld   hl,#0x5555]
 	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
 	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
@@ -9492,7 +9521,7 @@ adc  hl,hl
 	or.b	d2,d0                             	| [or   c]
 	jne	_wr_5555_loop                      	| [jr   nz,_wr_5555_loop]
 
-	lea	m_tile_ram(pc),a1                  	| [ld   de,#m_tile_ram]
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000]
 	lea	l_5555(pc),a0                      	| [ld   hl,#0x5555]
 	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
 	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
@@ -9513,7 +9542,7 @@ adc  hl,hl
 	or.b	d2,d0                             	| [or   c]
 	jne	_rd_5555_loop                      	| [jr   nz,_rd_5555_loop]
 
-	lea	m_tile_ram(pc),a1                  	| [ld   de,#m_tile_ram]
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000]
 	lea	l_AAAA(pc),a0                      	| [ld   hl,#0xAAAA]
 	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
 	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
@@ -9533,7 +9562,7 @@ adc  hl,hl
 	or.b	d2,d0                             	| [or   c]
 	jne	_wr_aaaa_loop                      	| [jr   nz,_wr_aaaa_loop]
 
-	lea	m_tile_ram(pc),a1                  	| [ld   de,#m_tile_ram]
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000]
 	lea	l_AAAA(pc),a0                      	| [ld   hl,#0xAAAA]
 	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
 	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
@@ -9561,7 +9590,7 @@ adc  hl,hl
 *  } // end while tile ram test loop
 
 *  color RAM, tile RAM, and data RAM tests.
-ld   sp,#m_tile_ram + 0x0400               ; tmp stack for function calls
+ld   sp,#0x8000 + 0x0400               ; tmp stack for function calls
 
 	lea	m_color_ram(pc),a1                 	| [ld   de,#m_color_ram]
 	jbsr	c_ram_test_block                  	| [call c_ram_test_block]
@@ -9590,7 +9619,7 @@ ld   sp,#m_tile_ram + 0x0400               ; tmp stack for function calls
      ^^^^ TODO: review special instruction inputs
 
 ld   sp,#ds_8800_RAM0 + 0x0300             ; tmp stack for function calls
-	lea	m_tile_ram(pc),a1                  	| [ld   de,#m_tile_ram] 8000-83ff Video RAM
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000] 8000-83ff Video RAM
 	jbsr	c_ram_test_block                  	| [call c_ram_test_block]
 
 	jbsr	c_tileram_regs_clr                	| [call c_tileram_regs_clr]
@@ -9720,8 +9749,8 @@ l_34DA:
 	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
 	jbsr	exx                               	| [exx]
      ^^^^ TODO: review special instruction inputs
-	lea	m_tile_ram(pc),a0                  	| [ld   hl,#m_tile_ram]
-	lea	m_tile_ram+0x01(pc),a1             	| [ld   de,#m_tile_ram + 0x01]
+	lea	0x8000(pc),a0                  	| [ld   hl,#0x8000]
+	lea	0x8000+0x01(pc),a1             	| [ld   de,#0x8000 + 0x01]
 	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
 	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
 	move.b	#0x24,(a0)                      	| [ld   (hl),#0x24]
@@ -9735,7 +9764,7 @@ l_34DA:
 	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
 	jbsr	exx                               	| [exx]
      ^^^^ TODO: review special instruction inputs
-	lea	m_tile_ram+0x02E0+0x02(pc),a0      	| [ld   hl,#m_tile_ram + 0x02E0 + 0x02]
+	lea	0x8000+0x02E0+0x02(pc),a0      	| [ld   hl,#0x8000 + 0x02E0 + 0x02]
 	move.b	#0x1B,(a0)                      	| [ld   (hl),#0x1B]
 	move.b	#0xE0,d0                        	| [ld   a,#0xE0]
 	subq.b	#1,d5                           	| [dec  h]
@@ -9820,7 +9849,7 @@ l_3527:
 j_romtest_ng:
 	lea	str_3B88(pc),a0                    	| [ld   hl,#str_3B88]
 	jbsr	c_text_out                        	| [call c_text_out]
-	lea	m_tile_ram+0x0240+0x04(pc),a1      	| [ld   de,#m_tile_ram + 0x0240 + 0x04]
+	lea	0x8000+0x0240+0x04(pc),a1      	| [ld   de,#0x8000 + 0x0240 + 0x04]
 	lea	ds_rom_test_status+0x02(pc),a0     	| [ld   hl,#ds_rom_test_status + 0x02] load error code
 	clr.b	d0                               	| [xor  a]
 	jbsr	rld                               	| [rld] rld  (hl)
@@ -10161,7 +10190,7 @@ l_3699:
 	jbsr	c_spriteposn_regs_init            	| [call c_spriteposn_regs_init]
 
 	lea	d_easteregg_data(pc),a1            	| [ld   de,#d_easteregg_data]
-	lea	m_tile_ram+0x0040+0x02(pc),a0      	| [ld   hl,#m_tile_ram + 0x0040 + 0x02]
+	lea	0x8000+0x0040+0x02(pc),a0      	| [ld   hl,#0x8000 + 0x0040 + 0x02]
 
 	move.b	#0x1C,d1                        	| [ld   b,#0x1C] each count is 1 column (28)
 *  while ( b-- != 0 ) call EasterEgg
@@ -10198,152 +10227,153 @@ l_36B4:
 *  ...
 *-----------------------------------------------------------------------------
 j_36BA_Machine_init:
-* wait 8 frame counts
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] 0
-*  while ( vtimer < 0x08 ) {}
-l_36BE:
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
-	cmp.b	#8,d0                            	| [cp   #8]
-	jcs	l_36BE                             	| [jr   c,l_36BE]
-
-*  Make sure Test-switch is Off before proceeding? (not sure how it could get
-*  out of Self-test mode if it were on.... ???)
-*  if ( test_switch_on ) { goto test_menu }
-	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] check for test switch
-	add.b	d0,d0                            	| [add  a,a] active low... $80+$80 sets carry if off.
-	jcc	j_Test_menu_proc                   	| [jp   nc,j_Test_menu_proc]
-
-	jbsr	c_spriteposn_regs_init            	| [call c_spriteposn_regs_init]
-
-* drawing the cross hatch pattern - tile ram layout is pretty clumsy!
-	lea	m_tile_ram(pc),a0                  	| [ld   hl,#m_tile_ram]
-
-	move.b	#0x10,d1                        	| [ld   b,#0x10]
-l_36D4:
-	move.b	#0x28,(a0)                      	| [ld   (hl),#0x28]
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	#0x27,(a0)                      	| [ld   (hl),#0x27]
-	addq.w	#1,a0                           	| [inc  hl]
-	subq.b	#1,d1                           	| [...]
-	jne	l_36D4                             	| [djnz l_36D4]
-
-	move.b	#0x10,d1                        	| [ld   b,#0x10]
-l_36DE:
-	move.b	#0x2D,(a0)                      	| [ld   (hl),#0x2D]
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	#0x2B,(a0)                      	| [ld   (hl),#0x2B]
-	addq.w	#1,a0                           	| [inc  hl]
-	subq.b	#1,d1                           	| [...]
-	jne	l_36DE                             	| [djnz l_36DE]
-
-	move.b	#0x10,d1                        	| [ld   b,#0x10]
-l_36E8:
-	move.b	#0x28,(a0)                      	| [ld   (hl),#0x28]
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	#0x2D,(a0)                      	| [ld   (hl),#0x2D]
-	addq.w	#1,a0                           	| [inc  hl]
-	subq.b	#1,d1                           	| [...]
-	jne	l_36E8                             	| [djnz l_36E8]
-
-	move.b	#0x10,d1                        	| [ld   b,#0x10]
-l_36F2:
-	move.b	#0x27,(a0)                      	| [ld   (hl),#0x27]
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	#0x2B,(a0)                      	| [ld   (hl),#0x2B]
-	addq.w	#1,a0                           	| [inc  hl]
-	subq.b	#1,d1                           	| [...]
-	jne	l_36F2                             	| [djnz l_36F2]
-
-* remainder of cross hatch pattern is copied, i.e.  *(m_tile_ram + DE) = *(m_tile_ram + HL)
-	exg	a1,a0                              	| [ex   de,hl]
-
-	lea	m_tile_ram+0x0040(pc),a0           	| [ld   hl,#m_tile_ram + 0x0040] DE==$8080
-	move.b	#0x03,d1                        	| [ld   bc,#0x0340] 832
-	move.b	#0x40,d2                        	| [ld   bc,#0x0340] 832
-	jbsr	ldir                              	| [ldir]
-     ^^^^ TODO: review special instruction inputs
-
-	lea	m_tile_ram(pc),a0                  	| [ld   hl,#m_tile_ram] DE==$83C0
-	move.b	#0x00,d1                        	| [ld   bc,#0x0040] 64
-	move.b	#0x40,d2                        	| [ld   bc,#0x0040] 64
-	jbsr	ldir                              	| [ldir]
-     ^^^^ TODO: review special instruction inputs
-
-* wait about two seconds before checking Test-switch.
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] :=0
-*  while ( vtimer < 0x80 ) {}
-l_370F:
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
-	add.b	d0,d0                            	| [add  a,a] count $80
-	jcc	l_370F                             	| [jr   nc,l_370F]
-
-* if you wish to keep this test pattern on the monitor ...slide switch back to ON
-*  while( test_switch_on ) {}
-l_3715:
-	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] check for test switch
-	add.b	d0,d0                            	| [add  a,a] active low... $80+$80 sets carry if off.
-	jcc	l_3715                             	| [jr   nc,l_3715]
-
-di
-	jbsr	c_io_cmd_wait                     	| [call c_io_cmd_wait]
-
-*  timer = -2...  while ( timer != 0 ) {}
-	move.b	#-2,d0                          	| [ld   a,#-2]
-	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] :=$FE) (-2)
-l_3724:
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
-	                               	| [and  a]
-	jne	l_3724                             	| [jr   nz,l_3724]
-
-	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
-
-*  do {
-l_372D:
-* setup for IO cmd $E1 - typical values might be:
-*        01 01 01 01 01 02 03 00 .....Mame interprets as follows:
-* 01 + 4 arguments: set coinage
-* 02: go in "credit" mode and enable start buttons
-* 03: disable joystick remapping (Galaga needs only L/R joy indications)
-* 00: nop
-	lea	ds8_9280_tmp_IO_parms(pc),a0       	| [ld   hl,#ds8_9280_tmp_IO_parms] writing default IO params for credit-mode (8 bytes)
-	lea	l_7000(pc),a1                      	| [ld   de,#0x7000] IO data xfer (write)
-	move.b	#0x00,d1                        	| [ld   bc,#0x0008] 8
-	move.b	#0x08,d2                        	| [ld   bc,#0x0008] 8
-	jbsr	exx                               	| [exx]
-     ^^^^ TODO: review special instruction inputs
-	move.b	#0xE1,d0                        	| [ld   a,#0xE1]
-	*move.b	d0,0x7100                       	| [ld   (0x7100),a] IO cmd ($E1 -> go into credit mode)
-          ^^^^^^ TODO: review absolute 16-bit address write
-	jbsr	c_io_cmd_wait                     	| [call c_io_cmd_wait]
-
-* Wait for valid status from IO controller?
-* Setup for IO cmd $B1 ...read 3 bytes (num credits, plyr 1, plyr 2)
-	lea	l_7000(pc),a0                      	| [ld   hl,#0x7000] IO data xfer (read)
-	lea	ds3_9288_tmp_IO_data(pc),a1        	| [ld   de,#ds3_9288_tmp_IO_data]
-	move.b	#0x00,d1                        	| [ld   bc,#0x0003] 3
-	move.b	#0x03,d2                        	| [ld   bc,#0x0003] 3
-	jbsr	exx                               	| [exx]
-     ^^^^ TODO: review special instruction inputs
-	move.b	#0xB1,d0                        	| [ld   a,#0xB1] IO command "only issued after $E1" (go into credit mode)
-	*move.b	d0,0x7100                       	| [ld   (0x7100),a] IO cmd ($B1 -> reading/polling data)
-          ^^^^^^ TODO: review absolute 16-bit address write
-	jbsr	c_io_cmd_wait                     	| [call c_io_cmd_wait]
-
-*  } while ( a > $a0                    	|| ( a & $0f > $09 ) )
-	move.b	ds3_9288_tmp_IO_data,d0         	| [ld   a,(ds3_9288_tmp_IO_data)] $FF if in test-mode when test switch off...
-	cmp.b	#0xA1,d0                         	| [cp   #0xA1] $A0 (100d) may be valid for credit mode? so compare to $A1
-	jcc	l_372D                             	| [jr   nc,l_372D] generate a Cy if A<$A1
-	and.b	#0x0F,d0                         	| [and  #0x0F]
-	cmp.b	#0x0A,d0                         	| [cp   #0x0A] in credit mode bcd digits should be less than 9
-	jcc	l_372D                             	| [jr   nc,l_372D]
-
-* svc switch off... let'er rip!
-ei
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,m_tile_ram+0x0200+0x10       	| [ld   (m_tile_ram + 0x0200 + 0x10),a] 0 in middle of screen
-	jra	j_Game_init                        	| [jp   j_Game_init]
+** wait 8 frame counts
+*	clr.b	d0                               	| [xor  a]
+*	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] 0
+**  while ( vtimer < 0x08 ) {}
+*l_36BE:
+*	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+*	cmp.b	#8,d0                            	| [cp   #8]
+*	jcs	l_36BE                             	| [jr   c,l_36BE]
+*
+**  Make sure Test-switch is Off before proceeding? (not sure how it could get
+**  out of Self-test mode if it were on.... ???)
+**  if ( test_switch_on ) { goto test_menu }
+*	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] check for test switch
+*	add.b	d0,d0                            	| [add  a,a] active low... $80+$80 sets carry if off.
+*	jcc	j_Test_menu_proc                   	| [jp   nc,j_Test_menu_proc]
+*
+*	jbsr	c_spriteposn_regs_init            	| [call c_spriteposn_regs_init]
+*
+** drawing the cross hatch pattern - tile ram layout is pretty clumsy!
+*	lea	0x8000(pc),a0                  	| [ld   hl,#0x8000]
+*
+*	move.b	#0x10,d1                        	| [ld   b,#0x10]
+*l_36D4:
+*	move.b	#0x28,(a0)                      	| [ld   (hl),#0x28]
+*	addq.w	#1,a0                           	| [inc  hl]
+*	move.b	#0x27,(a0)                      	| [ld   (hl),#0x27]
+*	addq.w	#1,a0                           	| [inc  hl]
+*	subq.b	#1,d1                           	| [...]
+*	jne	l_36D4                             	| [djnz l_36D4]
+*
+*	move.b	#0x10,d1                        	| [ld   b,#0x10]
+*l_36DE:
+*	move.b	#0x2D,(a0)                      	| [ld   (hl),#0x2D]
+*	addq.w	#1,a0                           	| [inc  hl]
+*	move.b	#0x2B,(a0)                      	| [ld   (hl),#0x2B]
+*	addq.w	#1,a0                           	| [inc  hl]
+*	subq.b	#1,d1                           	| [...]
+*	jne	l_36DE                             	| [djnz l_36DE]
+*
+*	move.b	#0x10,d1                        	| [ld   b,#0x10]
+*l_36E8:
+*	move.b	#0x28,(a0)                      	| [ld   (hl),#0x28]
+*	addq.w	#1,a0                           	| [inc  hl]
+*	move.b	#0x2D,(a0)                      	| [ld   (hl),#0x2D]
+*	addq.w	#1,a0                           	| [inc  hl]
+*	subq.b	#1,d1                           	| [...]
+*	jne	l_36E8                             	| [djnz l_36E8]
+*
+*	move.b	#0x10,d1                        	| [ld   b,#0x10]
+*l_36F2:
+*	move.b	#0x27,(a0)                      	| [ld   (hl),#0x27]
+*	addq.w	#1,a0                           	| [inc  hl]
+*	move.b	#0x2B,(a0)                      	| [ld   (hl),#0x2B]
+*	addq.w	#1,a0                           	| [inc  hl]
+*	subq.b	#1,d1                           	| [...]
+*	jne	l_36F2                             	| [djnz l_36F2]
+*
+** remainder of cross hatch pattern is copied, i.e.  *(0x8000 + DE) = *(0x8000 + HL)
+*	exg	a1,a0                              	| [ex   de,hl]
+*
+*	lea	0x8000+0x0040(pc),a0           	| [ld   hl,#0x8000 + 0x0040] DE==$8080
+*	move.b	#0x03,d1                        	| [ld   bc,#0x0340] 832
+*	move.b	#0x40,d2                        	| [ld   bc,#0x0340] 832
+*	jbsr	ldir                              	| [ldir]
+*     ^^^^ TODO: review special instruction inputs
+*
+*	lea	0x8000(pc),a0                  	| [ld   hl,#0x8000] DE==$83C0
+*	move.b	#0x00,d1                        	| [ld   bc,#0x0040] 64
+*	move.b	#0x40,d2                        	| [ld   bc,#0x0040] 64
+*	jbsr	ldir                              	| [ldir]
+*     ^^^^ TODO: review special instruction inputs
+*
+** wait about two seconds before checking Test-switch.
+*	clr.b	d0                               	| [xor  a]
+*	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] :=0
+**  while ( vtimer < 0x80 ) {}
+*l_370F:
+*	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+*	add.b	d0,d0                            	| [add  a,a] count $80
+*	jcc	l_370F                             	| [jr   nc,l_370F]
+*
+** if you wish to keep this test pattern on the monitor ...slide switch back to ON
+**  while( test_switch_on ) {}
+*l_3715:
+*	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] check for test switch
+*	add.b	d0,d0                            	| [add  a,a] active low... $80+$80 sets carry if off.
+*	jcc	l_3715                             	| [jr   nc,l_3715]
+*
+*di
+*	jbsr	c_io_cmd_wait                     	| [call c_io_cmd_wait]
+*
+**  timer = -2...  while ( timer != 0 ) {}
+*	move.b	#-2,d0                          	| [ld   a,#-2]
+*	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] :=$FE) (-2)
+*l_3724:
+*	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+*	                               	| [and  a]
+*	jne	l_3724                             	| [jr   nz,l_3724]
+*
+*	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+*
+**  do {
+*l_372D:
+** setup for IO cmd $E1 - typical values might be:
+**        01 01 01 01 01 02 03 00 .....Mame interprets as follows:
+** 01 + 4 arguments: set coinage
+** 02: go in "credit" mode and enable start buttons
+** 03: disable joystick remapping (Galaga needs only L/R joy indications)
+** 00: nop
+*	lea	ds8_9280_tmp_IO_parms(pc),a0       	| [ld   hl,#ds8_9280_tmp_IO_parms] writing default IO params for credit-mode (8 bytes)
+*	lea	l_7000(pc),a1                      	| [ld   de,#0x7000] IO data xfer (write)
+*	move.b	#0x00,d1                        	| [ld   bc,#0x0008] 8
+*	move.b	#0x08,d2                        	| [ld   bc,#0x0008] 8
+*	jbsr	exx                               	| [exx]
+*     ^^^^ TODO: review special instruction inputs
+*	move.b	#0xE1,d0                        	| [ld   a,#0xE1]
+*	*move.b	d0,0x7100                       	| [ld   (0x7100),a] IO cmd ($E1 -> go into credit mode)
+*          ^^^^^^ TODO: review absolute 16-bit address write
+*	jbsr	c_io_cmd_wait                     	| [call c_io_cmd_wait]
+*
+** Wait for valid status from IO controller?
+** Setup for IO cmd $B1 ...read 3 bytes (num credits, plyr 1, plyr 2)
+*	lea	l_7000(pc),a0                      	| [ld   hl,#0x7000] IO data xfer (read)
+*	lea	ds3_9288_tmp_IO_data(pc),a1        	| [ld   de,#ds3_9288_tmp_IO_data]
+*	move.b	#0x00,d1                        	| [ld   bc,#0x0003] 3
+*	move.b	#0x03,d2                        	| [ld   bc,#0x0003] 3
+*	jbsr	exx                               	| [exx]
+*     ^^^^ TODO: review special instruction inputs
+*	move.b	#0xB1,d0                        	| [ld   a,#0xB1] IO command "only issued after $E1" (go into credit mode)
+*	*move.b	d0,0x7100                       	| [ld   (0x7100),a] IO cmd ($B1 -> reading/polling data)
+*          ^^^^^^ TODO: review absolute 16-bit address write
+*	jbsr	c_io_cmd_wait                     	| [call c_io_cmd_wait]
+*
+**  } while ( a > $a0                    	|| ( a & $0f > $09 ) )
+*	move.b	ds3_9288_tmp_IO_data,d0         	| [ld   a,(ds3_9288_tmp_IO_data)] $FF if in test-mode when test switch off...
+*	cmp.b	#0xA1,d0                         	| [cp   #0xA1] $A0 (100d) may be valid for credit mode? so compare to $A1
+*	jcc	l_372D                             	| [jr   nc,l_372D] generate a Cy if A<$A1
+*	and.b	#0x0F,d0                         	| [and  #0x0F]
+*	cmp.b	#0x0A,d0                         	| [cp   #0x0A] in credit mode bcd digits should be less than 9
+*	jcc	l_372D                             	| [jr   nc,l_372D]
+*
+** svc switch off... let'er rip!
+*ei
+*	clr.b	d0                               	| [xor  a]
+*	move.b	d0,0x8000+0x0200+0x10       	| [ld   (0x8000 + 0x0200 + 0x10),a] 0 in middle of screen
+	jbsr	osd_enable_interrupts
+	jra	j_Game_init_02d3                        	| [jp   j_Game_init_02d3]
 
 
 *=============================================================================
@@ -10513,7 +10543,7 @@ l_380F:
 
 	lea	str_3A68(pc),a0                    	| [ld   hl,#str_3A68] base_address of rank-characters (B/C/D/A)
 	jbsr	rst_10                            	| [rst  0x10] HL += A
-	lea	m_tile_ram+0x0220+0x0C(pc),a1      	| [ld   de,#m_tile_ram + 0x0220 + 0x0C] rank-character ("B", "C", "D", or "A")
+	lea	0x8000+0x0220+0x0C(pc),a1      	| [ld   de,#0x8000 + 0x0220 + 0x0C] rank-character ("B", "C", "D", or "A")
 	jbsr	ldi                               	| [ldi] (DE)<-(HL) ..."X" of "RANK X" displayed
      ^^^^ TODO: review special instruction inputs
 	lea	str_3AE4(pc),a0                    	| [ld   hl,#str_3AE4] "RANK"
@@ -10538,9 +10568,9 @@ adc  a,a                                   ; "left-shift" the hi-bit and add the
 	addq.b	#1,d0                           	| [inc  a] this gives "cfg = nbr_of_ships - 1"
 	move.b	d0,b_mchn_cfg_nships            	| [ld   (b_mchn_cfg_nships),a]
 
-*  m_tile_ram[$02EA] = mchn_cfg_nships + 1
+*  0x8000[$02EA] = mchn_cfg_nships + 1
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,m_tile_ram+0x02E0+0x0A       	| [ld   (m_tile_ram + 0x02E0 + 0x0A),a] "X" of "X SHIPS" displayed
+	move.b	d0,0x8000+0x02E0+0x0A       	| [ld   (0x8000 + 0x02E0 + 0x0A),a] "X" of "X SHIPS" displayed
 *  text_out($3AEB)
 	lea	str_3AEB(pc),a0                    	| [ld   hl,#str_3AEB] "SHIPS"
 	jbsr	c_text_out                        	| [call c_text_out]
@@ -10598,21 +10628,21 @@ adc  a,a                                   ; "left-shift" the hi-bit and add the
 	jbsr	ldir                              	| [ldir]
      ^^^^ TODO: review special instruction inputs
 * the next four bytes are the text characters
-	lea	m_tile_ram+0x02E0+0x08(pc),a1      	| [ld   de,#m_tile_ram + 0x02E0 + 0x08]
+	lea	0x8000+0x02E0+0x08(pc),a1      	| [ld   de,#0x8000 + 0x02E0 + 0x08]
 	jbsr	ldi                               	| [ldi] show digit for number of coins
      ^^^^ TODO: review special instruction inputs
-	lea	m_tile_ram+0x0220+0x08(pc),a1      	| [ld   de,#m_tile_ram + 0x0220 + 0x08]
+	lea	0x8000+0x0220+0x08(pc),a1      	| [ld   de,#0x8000 + 0x0220 + 0x08]
 	jbsr	ldi                               	| [ldi] show " " or "S"
      ^^^^ TODO: review special instruction inputs
-	lea	m_tile_ram+0x01E0+0x08(pc),a1      	| [ld   de,#m_tile_ram + 0x01E0 + 0x08]
+	lea	0x8000+0x01E0+0x08(pc),a1      	| [ld   de,#0x8000 + 0x01E0 + 0x08]
 	jbsr	ldi                               	| [ldi] show digit for number of credits
      ^^^^ TODO: review special instruction inputs
-	lea	m_tile_ram+0x00E0+0x08(pc),a1      	| [ld   de,#m_tile_ram + 0x00E0 + 0x08]
+	lea	0x8000+0x00E0+0x08(pc),a1      	| [ld   de,#0x8000 + 0x00E0 + 0x08]
 	jbsr	ldi                               	| [ldi] show " " or "S"
      ^^^^ TODO: review special instruction inputs
 
 	move.b	#0x24,d0                        	| [ld   a,#0x24]
-	move.b	d0,m_tile_ram+0x0200+0x08       	| [ld   (m_tile_ram + 0x0200 + 0x08),a] shows a space after "COIN(S)"
+	move.b	d0,0x8000+0x0200+0x08       	| [ld   (0x8000 + 0x0200 + 0x08),a] shows a space after "COIN(S)"
 	lea	str_3AF3(pc),a0                    	| [ld   hl,#str_3AF3] " COIN"
 	jbsr	c_text_out                        	| [call c_text_out]
 	jbsr	c_text_out                        	| [call c_text_out] "CREDIT" of "X CREDIT"
@@ -10716,7 +10746,7 @@ c_38DA:
 	move.b	(a0),d0                         	| [ld   a,(hl)] ld the table-entry...
 	and.b	#0x7F,d0                         	| [and  #0x7F] ... and mask out bit-7 which indicates there is no 'and-every' setting
 	exg	a1,a0                              	| [ex   de,hl] save address of table-entry in HL... DE==$80B2 (address of ' ' in "PTS ")
-	lea	m_tile_ram+0x01E0+0x10(pc),a0      	| [ld   hl,#m_tile_ram + 0x01E0 + 0x10]
+	lea	0x8000+0x01E0+0x10(pc),a0      	| [ld   hl,#0x8000 + 0x01E0 + 0x10]
 	move.b	d2,d1                           	| [ld   b,c] the first time through here, C==1...
 	subq.b	#1,d1                           	| [...]
 	jne	l_38FF                             	| [djnz l_38FF] ... so the second time, when the Flag is 0 we skip next two lines
@@ -10732,7 +10762,7 @@ l_38FF:
 	move.b	(a1),d0                         	| [ld   a,(de)] A:=$86 for 20-60 setting, the second of the two byte-parameters
 	btst.b	#7,d0                           	| [bit  7,a] if (bit-7)...
 	jne	l_3949                             	| [jp   nz,l_3949] ... then jp (bit test is Z flag... bit-7 set if no 'and-every' bonus)
-	lea	m_tile_ram+0x01E0+0x14(pc),a0      	| [ld   hl,#m_tile_ram + 0x01E0 + 0x14] address of character X in "AND EVERY X 0000 PTS"
+	lea	0x8000+0x01E0+0x14(pc),a0      	| [ld   hl,#0x8000 + 0x01E0 + 0x14] address of character X in "AND EVERY X 0000 PTS"
 	jbsr	c_391E                            	| [call c_391E] display XX of "AND EVERY XX0000 PTS"
 	movem.w	d3/d4,-(sp)                    	| [push de]
 	move.l	a1,-(sp)                        	| [push de]
@@ -10777,7 +10807,7 @@ l_392D:
 * put space characters on the line where "2ND BONUS ?????? PTS" goes ( jp here from $38DC??? )
 l_393B:
 	exg	a1,a0                              	| [ex   de,hl] save HL
-	lea	m_tile_ram+0x0320+0x12(pc),a0      	| [ld   hl,#m_tile_ram + 0x0320 + 0x12]
+	lea	0x8000+0x0320+0x12(pc),a0      	| [ld   hl,#0x8000 + 0x0320 + 0x12]
 	move.b	#0x16,d1                        	| [ld   b,#0x16] writing out $16 characters
 * while ( b > 0 )
 l_3941:
@@ -10790,7 +10820,7 @@ l_3941:
 
 * jp here from $3909... putting space character on the line where "AND EVERY ?????? PTS" goes
 l_3949:
-	lea	m_tile_ram+0x0320+0x14(pc),a0      	| [ld   hl,#m_tile_ram + 0x0320 + 0x14]
+	lea	0x8000+0x0320+0x14(pc),a0      	| [ld   hl,#0x8000 + 0x0320 + 0x14]
 	move.b	#0x16,d1                        	| [ld   b,#0x16]
 l_394E:
 	move.b	#0x24,(a0)                      	| [ld   (hl),#0x24]
@@ -10812,8 +10842,8 @@ l_394E:
 *  ...
 *-----------------------------------------------------------------------------
 c_tileram_regs_clr:
-	lea	m_tile_ram(pc),a0                  	| [ld   hl,#m_tile_ram]
-	lea	m_tile_ram+0x01(pc),a1             	| [ld   de,#m_tile_ram + 0x01]
+	lea	0x8000(pc),a0                  	| [ld   hl,#0x8000]
+	lea	0x8000+0x01(pc),a1             	| [ld   de,#0x8000 + 0x01]
 	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
 	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
 	move.b	#0x24,(a0)                      	| [ld   (hl),#0x24]
@@ -10873,7 +10903,7 @@ l_3977:
 *-----------------------------------------------------------------------------
 c_svc_machine_totals:
 	lea	b16_99E0_ttl_plays_bcd(pc),a0      	| [ld   hl,#b16_99E0_ttl_plays_bcd]
-	lea	m_tile_ram+0x0340+0x1E(pc),a1      	| [ld   de,#m_tile_ram + 0x0340 + 0x1E] at lower left of screen
+	lea	0x8000+0x0340+0x1E(pc),a1      	| [ld   de,#0x8000 + 0x0340 + 0x1E] at lower left of screen
 
 * the first set has 2 digits, followed by the '.'
 	move.b	#2,d2                           	| [ld   c,#2]
@@ -10977,7 +11007,7 @@ c_39AE:
 *  ...
 *-----------------------------------------------------------------------------
 c_svc_machine_ttls_erase:
-	lea	m_tile_ram+0x0340+0x1E(pc),a0      	| [ld   hl,#m_tile_ram + 0x0340 + 0x1E]
+	lea	0x8000+0x0340+0x1E(pc),a0      	| [ld   hl,#0x8000 + 0x0340 + 0x1E]
 
 	move.b	#0x17,d1                        	| [ld   b,#0x17] nr of characters to fill
 	lea	-l_20(pc),a1                       	| [ld   de,#-0x20]
@@ -11076,7 +11106,7 @@ l_3A04:
 	addq.b	#1,d2                           	| [inc  c] when is that jr taken?
 	sub.b	#0x0A,d0                         	| [sub  #0x0A]
 l_3A11:
-	lea	m_tile_ram+0x0220+0x0E(pc),a0      	| [ld   hl,#m_tile_ram + 0x0220 + 0x0E] dest address of "0"
+	lea	0x8000+0x0220+0x0E(pc),a0      	| [ld   hl,#0x8000 + 0x0220 + 0x0E] dest address of "0"
 	move.b	d2,(a0)                         	| [ld   (hl),c] displayed "0" of "SOUND 00"
 	move.b	#0x0E,d6                        	| [ld   l,#0x0E]
 	move.b	d0,(a0)                         	| [ld   (hl),a] displayed (2nd) "0" of "SOUND 00"
@@ -11129,7 +11159,7 @@ l_3A41:
 
 *-----------------------------------------------------------------------------
 str_3A47:
-	.long m_tile_ram + 0x02E0 + 0x0E
+	.long 0x8000 + 0x02E0 + 0x0E
 	.byte 0x05
 	.byte 0x1C,0x18,0x1E,0x17,0x0D || "SOUND"
 
@@ -11220,31 +11250,31 @@ str_3ACC:
 	.long str_3AD0                               | pointer to "UPRIGHT" text
 	.long str_3ADA                               | pointer to "TABLE" text
 str_3AD0:
-	.long m_tile_ram + 0x02E0 + 0x06
+	.long 0x8000 + 0x02E0 + 0x06
 	.byte 0x07
 	.byte 0x1E,0x19,0x1B,0x12,0x10,0x11,0x1D || "UPRIGHT"
 str_3ADA:
-	.long m_tile_ram + 0x02E0 + 0x06
+	.long 0x8000 + 0x02E0 + 0x06
 	.byte 0x07
 	.byte 0x1D,0x0A,0x0B,0x15,0x0E,0x24,0x24 || "TABLE  "
 str_3AE4:
-	.long m_tile_ram + 0x02E0 + 0x0C
+	.long 0x8000 + 0x02E0 + 0x0C
 	.byte 0x04
 	.byte 0x1B,0x0A,0x17,0x14 || "RANK",
 str_3AEB:
-	.long m_tile_ram + 0x02A0 + 0x0A
+	.long 0x8000 + 0x02A0 + 0x0A
 	.byte 0x05
 	.byte 0x1C,0x11,0x12,0x19,0x1C || "SHIPS",
 str_3AF3:
-	.long m_tile_ram + 0x02C0 + 0x08
+	.long 0x8000 + 0x02C0 + 0x08
 	.byte 0x05
 	.byte 0x24,0x0C,0x18,0x12,0x17 || " COIN",
 str_3AFB:
-	.long m_tile_ram + 0x01A0 + 0x08
+	.long 0x8000 + 0x01A0 + 0x08
 	.byte 0x06
 	.byte 0x0C,0x1B,0x0E,0x0D,0x12,0x1D || "CREDIT"
 str_3B04:
-	.long m_tile_ram + 0x02E0 + 0x08
+	.long 0x8000 + 0x02E0 + 0x08
 	.byte 0x12
 	.byte 0x0F,0x1B,0x0E,0x0E,0x24,0x19,0x15,0x0A,0x22 || "FREE PLAY"
 	.byte 0x24,0x24,0x24,0x24,0x24,0x24,0x24,0x24,0x24
@@ -11253,41 +11283,41 @@ str_3B1A:
 	.long str_1ST_BONUS
 	.long str_2ND_BONUS
 str_1ST_BONUS:
-	.long m_tile_ram + 0x0330
+	.long 0x8000 + 0x0330
 	.byte 0x0A
 	.byte 0x01,0x1C,0x1D,0x24,0x0B,0x18,0x17,0x1E,0x1C,0x24 || "1ST BONUS "
 str_3B2B:
-	.long m_tile_ram + 0x01B0
+	.long 0x8000 + 0x01B0
 	.byte 0x08
 	.byte 0x00,0x00,0x00,0x00,0x24,0x19,0x1D,0x1C || "0000 PTS"
 str_2ND_BONUS:
-	.long m_tile_ram + 0x0320 + 0x12
+	.long 0x8000 + 0x0320 + 0x12
 	.byte 0x09
 	.byte 0x02,0x17,0x0D,0x24,0x0B,0x18,0x17,0x1E,0x1C || "2ND BONUS"
 str_3B42:
-	.long m_tile_ram + 0x01B0 + 0x02
+	.long 0x8000 + 0x01B0 + 0x02
 	.byte 0x08
 	.byte 0x00,0x00,0x00,0x00,0x24,0x19,0x1D,0x1C || "0000 PTS"
 str_3B4D:
-	.long m_tile_ram + 0x0320 + 0x14
+	.long 0x8000 + 0x0320 + 0x14
 	.byte 0x09
 	.byte 0x0A,0x17,0x0D,0x24,0x0E,0x1F,0x0E,0x1B,0x22 || "AND EVERY"
 str_3B59:
-	.long m_tile_ram + 0x01A0 + 0x14
+	.long 0x8000 + 0x01A0 + 0x14
 	.byte 0x08
 	.byte 0x00,0x00,0x00,0x00,0x24,0x19,0x1D,0x1C || "0000 PTS"
 str_3B64:
-	.long m_tile_ram + 0x0320 + 0x10
+	.long 0x8000 + 0x0320 + 0x10
 	.byte 0x16
 	.byte 0x0B,0x18,0x17,0x1E,0x1C,0x24,0x17,0x18,0x1D,0x11,0x12,0x17,0x10 || "BONUS NOTHING"
 	.byte 0x24,0x24,0x24,0x24,0x24,0x24,0x24,0x24,0x24
 	.byte 0x24 || this seems to be extra character
 str_3B7E:
-	.long m_tile_ram + 0x02E0 + 0x02
+	.long 0x8000 + 0x02E0 + 0x02
 	.byte 0x07
 	.byte 0x1B,0x0A,0x16,0x24,0x24,0x18,0x14 || "RAM  OK"
 str_3B88:
-	.long m_tile_ram + 0x02E0 + 0x04
+	.long 0x8000 + 0x02E0 + 0x04
 	.byte 0x07
 	.byte 0x1B,0x18,0x16,0x24,0x24,0x18,0x14 || "ROM  OK"
 
@@ -11323,10 +11353,11 @@ _l_3B92:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
+rst_00_cpu1:
 ld   sp,#ds_stk_cpu1_init
 	jra	CPU1_RESET                         	| [jp   CPU1_RESET]
 
-.org 0x0008
+*.org 0x0008
 
 *=============================================================================
 * RST_08()
@@ -11337,12 +11368,13 @@ ld   sp,#ds_stk_cpu1_init
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
+rst_08:
 	add.b	d0,d0                            	| [add  a,a]
 	jcc	_RST_10                            	| [jr   nc,_RST_10]
 	addq.b	#1,d5                           	| [inc  h] when?
 	jra	_RST_10                            	| [jp   _RST_10]
 
-.org 0x0010
+*.org 0x0010
 
 *=============================================================================
 * RST_10()
@@ -11354,16 +11386,18 @@ ld   sp,#ds_stk_cpu1_init
 *  ...
 *-----------------------------------------------------------------------------
 _RST_10:
-	add.b	d6,d0                            	| [add  a,l]
-	move.b	d0,d6                           	| [ld   l,a]
-	bcs.b	0f                               	| [...]
-      ^^^^^^ TODO: review cpu flags (move.b,bcs.b)
-	rts                                    	| [ret  nc] [...]
-0:
-	addq.b	#1,d5                           	| [inc  h] when?
+	LOAD_D5_16_FROM_D5D6
+	and.w	#0xFF,d0
+	add.w	d0,d5
+	LOAD_D5D6_FROM_D5_16
+	   	| [add  a,l]
+	  	| [ld   l,a]
+	   	| [...]
+	 	| [ret  nc] [...]
+	  	| [inc  h] when?
 	rts                                    	| [ret]
 
-.org 0x0018
+*.org 0x0018
 
 *=============================================================================
 * RST_18()
@@ -11382,6 +11416,28 @@ _RST_18:
 	rts                                    	| [ret]
 
 
+rst_18_video:
+* memset((HL), A=fill, B=ct)
+	exg		a0,d7
+0:
+	jbsr	osd_w_videoram
+	addq.w	#1,d7
+	subq.b	#1,d1
+	bne.b	0b
+	exg		a0,d7
+	rts
+
+rst_18_color:
+	exg		a0,d7
+* memset((HL), A=fill, B=ct)
+0:
+	jbsr	osd_w_colorram
+	addq.w	#1,d7
+	subq.b	#1,d1
+	bne.b	0b
+	exg		a0,d7
+	rts
+
 *-----------------------------------------------------------------------------
 
 db_flv_001d:
@@ -11390,6 +11446,7 @@ db_flv_001d:
 	.byte  0x23,0xF0,0x02,0xF0
 	.long  p_flv_005e
 	.byte  0x23,0xF0,0x24,0xFB,0x23,0x00,0xFF,0xFF
+
 
 *.org 0x0034
 
@@ -11407,7 +11464,7 @@ c_0034:
 	jra	(a0)                               	| [jp   (hl)]
 
 
-.org 0x0038
+*.org 0x0038
 
 *=============================================================================
 * RST_38()
@@ -11758,8 +11815,9 @@ jp_0513_rst38:
 	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] +=1
 
 * L==t[1], H==t[2]
-	move.w	ds3_92A0_frame_cts+1(pc),a0     	| [ld   hl,(ds3_92A0_frame_cts + 1)] load 16-bits
-                  ^^^^^^ TODO: review move.w into address register
+
+	MOVE_TO_REG	ds3_92A0_frame_cts+1,d5     	| [ld   hl,(ds3_92A0_frame_cts + 1)] load 16-bits
+	LOAD_D5D6_FROM_D5_16
 
 * if ( cnt % 20 == 1 ) ... update 4Hz (H) only
 	and.b	#0x1F,d0                         	| [and  #0x1F] MOD $20
@@ -11780,28 +11838,28 @@ jp_0513_rst38:
 l_0536:
 	addq.b	#1,d5                           	| [inc  h] t[2] = H++ ... 4Hz
 l_0537:
-	move.b	a0,ds3_92A0_frame_cts+1         	| [ld   (ds3_92A0_frame_cts + 1),hl] [1]: 32-frame ... ~2Hz timer
-                                                  * [2]: 16-frame ... ~4Hz timer
+	LOAD_D5_16_FROM_D5D6
+	MOVE_TO_VAR	d5,ds3_92A0_frame_cts+1         	| [ld   (ds3_92A0_frame_cts + 1),hl] [1]: 32-frame ... ~2Hz timer
 
 * flag = ( num_bugs < param07 ) && ds_cpu0_task_actv[0x15]
 	move.b	ds_new_stage_parms+0x07,d0      	| [ld   a,(ds_new_stage_parms + 0x07)] number of aliens left when continous bombing can start
 	move.b	d0,d4                           	| [ld   e,a]
 	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
 	cmp.b	d4,d0                            	| [cp   e]
+	SET_X_FROM_C
 	roxl.b	#1,d1                           	| [rl   b] Cy set if E > A ... shift into B ... clever.
-      ^^^^^^ TODO: review cpu X flag, cmp doesn't affect it!
 	move.b	ds_cpu0_task_actv+0x15,d0       	| [ld   a,(ds_cpu0_task_actv + 0x15)] cpu0:f_1F04 (reads fire button input)
 	and.b	d1,d0                            	| [and  b]
 	and.b	#0x01,d0                         	| [and  #0x01] mask off bit-0
 	move.b	d0,b_92A0+0x0A                  	| [ld   (b_92A0 + 0x0A),a] continuous bombing flag (set here by tasking kernel)
 
 * find the first ready task.. may run more than one.
-	clr.b	d2                               	| [ld   c,#0]
+	clr.w	d2                               	| [ld   c,#0]
 l_054F_while:
 	lea	ds_cpu1_task_actv(pc),a0           	| [ld   hl,#ds_cpu1_task_actv]
-	move.b	d2,d0                           	| [ld   a,c]
-	add.b	d6,d0                            	| [add  a,l]
-	move.b	d0,d6                           	| [ld   l,a]
+	add.w	d2,a0										| [ld   a,c]
+												| [add  a,l]
+											| [ld   l,a]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	                               	| [and  a]
 	jne	l_055C                             	| [jr   nz,l_055C]
@@ -11811,17 +11869,21 @@ l_054F_while:
 l_055C:
 	move.b	d0,d1                           	| [ld   b,a] A == task status
 	lea	d_003B_task_table(pc),a0           	| [ld   hl,#d_003B_task_table]
+	moveq	#0,d0
+	
 	move.b	d2,d0                           	| [ld   a,c] C == task index
-	asl.b	#1,d0                            	| [sla  a] *=2 ... (sizeof pointer)
-	add.b	d6,d0                            	| [add  a,l]
-	move.b	d0,d6                           	| [ld   l,a]
-	move.b	(a0),d4                         	| [ld   e,(hl)]
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	(a0),d3                         	| [ld   d,(hl)]
-	exg	a1,a0                              	| [ex   de,hl]
+	add.w	d0,d0                            	| [sla  a] *=2 ... (sizeof pointer)
+	add.w	d0,d0                            	| [sla  a] *=2 ... (sizeof pointer)
+	                         	| [add  a,l]
+	                        	| [ld   l,a]
+	                        	| [ld   e,(hl)]
+	                        	| [inc  hl]
+	                        	| [ld   d,(hl)]
+	                       	| [ex   de,hl]
+	move.l	(a0,d0.w),a0
 	movem.w	d1/d2,-(sp)                    	| [push bc]
 
-	jbsr	c_0034                            	| [call c_0034]
+	jbsr	c_0034                            	| [call c_0034] (jumps to (a0) from task table)
 
 	movem.w	(sp)+,d1/d2                    	| [pop  bc]
 	move.b	d1,d0                           	| [ld   a,b] "status" actually adds to index
@@ -12236,7 +12298,7 @@ while_06B7:
 	move.b	d0,b8_ship_collsn_detectd_status	| [ld   (b8_ship_collsn_detectd_status),a] 1 ... fighter hit notif
 
 	or.b	d0,d0                             	| [or   a] nz if fighter hit
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	jra	hitd_dspchr                        	| [jp   hitd_dspchr] return to 'call hitd_det_fghtr'
 l_06F0:
@@ -12290,7 +12352,7 @@ rckt_man:
 
 * if horizontal orientation, dY = A' ... dY is variable ...
 	and.b	#0x07,d0                         	| [and  #0x07] I thought it was only bits 1:2 ?
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 * ... and dX == A ... maximum displacement in X
@@ -12301,7 +12363,7 @@ rckt_man:
 	jeq	l_0713                             	| [jr   z,l_0713]
 
 * ... swap, i.e. dY = A' = 6 ... dY is maximum, and dX = A ... variable
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 l_0713:
@@ -12327,7 +12389,7 @@ ld   ixl,a
 
 	addq.b	#1,d6                           	| [inc  l] offset[1] ... sprite_posn.sy
 * get the stashed dY
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 * if ( ! flipX ) then  dY = -dY
 	btst.b	#5,d1                           	| [bit  5,b] inverted flipX
@@ -12502,7 +12564,7 @@ l_076A_while_object:
 	move.b	d2,d0                           	| [ld   a,c] reload object status e.g. 8800[L]
 	subq.b	#1,d0                           	| [dec  a]
 	and.b	#0xFE,d0                         	| [and  #0xFE]
-	exg	d0,d7                              	| [ex   af,af'] object status to hitd_dspchr
+	scs	d7                              	| [ex   af,af'] object status to hitd_dspchr
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 	move.b	ds_plyr_actv+_b_2ship,d0        	| [ld   a,(ds_plyr_actv +_b_2ship)]
@@ -12606,12 +12668,12 @@ hitd_dspchr:
 	jeq	l_0815_bomb_hit                    	| [jr   z,l_0815_bomb_hit]
 
 * if rocket or ship collided with bug
-	exg	d0,d7                              	| [ex   af,af'] un-stash parameter ... 1 if moving bug (hit by rocket or fighter)
+	scs	d7                              	| [ex   af,af'] un-stash parameter ... 1 if moving bug (hit by rocket or fighter)
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	jne	l_081E_hdl_flyng_bug               	| [jr   nz,l_081E_hdl_flyng_bug] will come back to $07DB or l_07DF
 
 * else if rocket hit stationary bug
-	exg	d0,d7                              	| [ex   af,af'] re-stash parameter
+	scs	d7                              	| [ex   af,af'] re-stash parameter
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 l_07DB:
@@ -12666,7 +12728,7 @@ l_0808:
 	jbsr	rst_10                            	| [rst  0x10] HL += A ... _collsn_hit_mult[sprite.cclr.b1]
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 
-	exg	d0,d7                              	| [ex   af,af'] un-stash parameter/flag
+	scs	d7                              	| [ex   af,af'] un-stash parameter/flag
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	jeq	l_0811                             	| [jr   z,l_0811]
 	addq.b	#1,(a0)                         	| [inc  (hl)] shot blue boss
@@ -12697,7 +12759,7 @@ l_081E_hdl_flyng_bug:
 	      ^^^^ TODO: review XX value
 
 	move.l	a0,-(sp)                        	| [push hl]
-	exg	d0,d7                              	| [ex   af,af'] re-stash parameter
+	scs	d7                              	| [ex   af,af'] re-stash parameter
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	addq.b	#1,d6                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprt_mctl_objs[L].mctl_idx
@@ -13064,7 +13126,7 @@ l_098F_do_split_off_bonus_bee:
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	subq.b	#1,d6                           	| [dec  l] .b0
 	move.b	d6,d0                           	| [ld   a,l]
-	exg	d0,d7                              	| [ex   af,af'] stash index of spawning yellow alien
+	scs	d7                              	| [ex   af,af'] stash index of spawning yellow alien
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 * find available slot or getout
@@ -13121,7 +13183,7 @@ ld   iyh,d
 	move.b	#0x01,(0x0A,a3)                 	| [ld   0x0A(iy),#0x01]
 	move.b	#0x02,(0x0B,a3)                 	| [ld   0x0B(iy),#0x02]
 	move.b	#0x01,(0x0D,a3)                 	| [ld   0x0D(iy),#0x01]
-	exg	d0,d7                              	| [ex   af,af'] index of spawning yellow alien
+	scs	d7                              	| [ex   af,af'] index of spawning yellow alien
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.b	d0,(0x10,a3)                    	| [ld   0x10(iy),a]
 	move.b	d0,d4                           	| [ld   e,a]
@@ -14431,7 +14493,7 @@ l_0F9F:
 	move.b	#0x05,(a0)                      	| [ld   (hl),#0x05]
 	jra	l_0F58                             	| [jr   l_0F58]
 l_0FA3:
-	lea	m_tile_ram+0x03C0+0x0A(pc),a0      	| [ld   hl,#m_tile_ram + 0x03C0 + 0x0A]
+	lea	0x8000+0x03C0+0x0A(pc),a0      	| [ld   hl,#0x8000 + 0x03C0 + 0x0A]
 	lea	ds_89E0+0x01(pc),a1                	| [ld   de,#ds_89E0 + 0x01]
 	move.b	#3,d1                           	| [ld   b,#3]
 l_0FAB:
@@ -14510,7 +14572,7 @@ db_flv_0ff0:
 .BANK cpu_sub2 (BASE=0x000000, FSFX=_sub2)
 .area ROM2 (ABS,OVR,BANK=cpu_sub2)
 
-.org 0x0000
+*.org 0x0000
 
 *=============================================================================
 * RST_00()
@@ -14523,7 +14585,7 @@ db_flv_0ff0:
 ld   sp,#_stack_cpu_sub2 + 0x20
 	jra	RESET                              	| [jp   RESET]
 
-.org 0x0008
+*.org 0x0008
 
 *=============================================================================
 * RST_08()
@@ -14539,7 +14601,7 @@ ld   sp,#_stack_cpu_sub2 + 0x20
 	addq.b	#1,d5                           	| [inc  h]
 	jra	_RST_10                            	| [jr   _RST_10]
 
-.org 0x0010
+*.org 0x0010
 
 *=============================================================================
 * RST_10()
@@ -14560,7 +14622,7 @@ _RST_10:
 	addq.b	#1,d5                           	| [inc  h]
 	rts                                    	| [ret]
 
-.org 0x0018
+*.org 0x0018
 
 *=============================================================================
 * RST_18()
@@ -14580,7 +14642,7 @@ _RST_18:
 	jne	_RST_18                            	| [djnz _RST_18]
 	rts                                    	| [ret]
 
-.org  0x0066
+*.org  0x0066
 
 *=============================================================================
 * RST_66()
@@ -16207,7 +16269,7 @@ d_0F16:
 
 *
 
-.org  0x0000
+*.org  0x0000
 
 *=============================================================================
 * RST_00()
@@ -16220,6 +16282,7 @@ d_0F16:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
+rst_00_cpu0:
 	move.b	#0x10,d0                        	| [ld   a,#0x10]
 	*move.b	d0,0x7100                       	| [ld   (0x7100),a] IO cmd ($10 -> reset/clr chip command state)
           ^^^^^^ TODO: review absolute 16-bit address write
@@ -16228,8 +16291,9 @@ d_0F16:
 
 *
 
-.org 0x0008
+*.org 0x0008
 
+rst_08_cpu0:
 *=============================================================================
 * RST_08()
 *  Description:
@@ -16247,7 +16311,7 @@ d_0F16:
 
 *
 
-.org 0x0010
+*.org 0x0010
 
 *=============================================================================
 * RST_10()
@@ -16273,7 +16337,7 @@ rst_HLplusA:
 
 *
 
-.org 0x0018
+*.org 0x0018
 
 *=============================================================================
 * RST_18()
@@ -16296,33 +16360,10 @@ l_0018:
 
 *
 
-.org 0x0020
-
-*=============================================================================
-* RST_20()
-*  Description:
-*   Quick calculation of DE-=$20
-*   Useful for advancing the "cursor" one character cell to the right on the screen.
-*   Normally called via RST, but in one instance is call'd (jp'd)
-* IN:
-* OUT:
-*  ...
-*-----------------------------------------------------------------------------
-rst_DEminus20:
-	move.b	d4,d0                           	| [ld   a,e]
-	sub.b	#0x20,d0                         	| [sub  #0x20]
-	move.b	d0,d4                           	| [ld   e,a] result in E
-	bcs.b	0f                               	| [...]
-      ^^^^^^ TODO: review cpu flags (move.b,bcs.b)
-	rts                                    	| [ret  nc] [...]
-0:
-	subq.b	#1,d3                           	| [dec  d] D gets the carry
-	rts                                    	| [ret]
+*.org 0x0020
 
 
-*
-
-.org 0x0028
+*.org 0x0028
 
 *=============================================================================
 * RST_28()
@@ -16341,7 +16382,7 @@ rst_DEminus20:
 
 *
 
-.org 0x0030
+*.org 0x0030
 
 *=============================================================================
 * RST_30()
@@ -16352,15 +16393,16 @@ rst_DEminus20:
 * OUT:
 *  HL == final offset in video ram (some code actually uses this!)
 *-----------------------------------------------------------------------------
+rst_30:
 	SET_XC_FLAGS                           	| [scf]
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
-	jra	j_string_out_pe                    	| [jp   j_string_out_pe]
+	jra	j_string_out_pe_13b5                    	| [jp   j_string_out_pe_13b5]
 
 
 *
 
-.org 0x0038
+*.org 0x0038
 
 *=============================================================================
 *  Description:
@@ -16418,7 +16460,7 @@ c_sctrl_sprite_ram_clr:
 
 *
 
-.org 0x0066
+*.org 0x0066
 
 *=============================================================================
 * NMI
@@ -17432,7 +17474,7 @@ d_cpu0_task_table:
 *  ...
 *-----------------------------------------------------------------------------
 c_textout_1uphighscore_onetime:
-	lea	m_tile_ram+0x03E0+0x0D(pc),a1      	| [ld   de,#m_tile_ram + 0x03E0 + 0x0D]
+	lea	0x8000+0x03E0+0x0D(pc),a1      	| [ld   de,#0x8000 + 0x03E0 + 0x0D]
 	lea	d_str20000(pc),a0                  	| [ld   hl,#d_str20000] source of string "20000" (stored backwards)
 	move.b	#0x00,d1                        	| [ld   bc,#0x0005] strlen 5
 	move.b	#0x05,d2                        	| [ld   bc,#0x0005] strlen 5
@@ -17498,8 +17540,8 @@ db_obj_home_posn_rc:
 *  ...
 *-----------------------------------------------------------------------------
 c_sctrl_playfld_clr:
-	lea	m_tile_ram+0x0040(pc),a0           	| [ld   hl,#m_tile_ram + 0x0040]
-	lea	m_tile_ram+0x0041(pc),a1           	| [ld   de,#m_tile_ram + 0x0041]
+	lea	0x8000+0x0040(pc),a0           	| [ld   hl,#0x8000 + 0x0040]
+	lea	0x8000+0x0041(pc),a1           	| [ld   de,#0x8000 + 0x0041]
 	move.b	#0x03,d1                        	| [ld   bc,#0x037F] 895
 	move.b	#0x7f,d2                        	| [ld   bc,#0x037F] 895
 	move.b	#0x24,(a0)                      	| [ld   (hl),#0x24] clear Tile RAM with $24 (space)
@@ -17554,7 +17596,6 @@ stg_init_splash:
 
 *  if ( 0 != plyr_state_active.not_chllng_stg ) ...
 	jeq	l_01A2_set_challeng_stg            	| [jr   z,l_01A2_set_challeng_stg]
-      ^^^^^^ TODO: review cpu flags (move.b,jeq)
 * then {
 	move.b	#0x06,d2                        	| [ld   c,#0x06] C=string_out_pe_index
 	jbsr	rst_30                            	| [rst  0x30] string_out_pe "STAGE "
@@ -17563,7 +17604,7 @@ stg_init_splash:
 	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] show score
 	move.b	d0,d6                           	| [ld   l,a]
 	clr.b	d5                               	| [ld   h,#0]
-	jbsr	c_text_out_i_to_d                 	| [call c_text_out_i_to_d] Print "X" of STAGE X.
+	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] Print "X" of STAGE X.
 	clr.b	d0                               	| [xor  a] 0 ... start value for wave_bonus_ctr (irrelevant if !challenge)
 	jra	l_01AC                             	| [jr   l_01AC]
 * } else {
@@ -17587,7 +17628,7 @@ l_01AC:
 * if ( 0 != plyr_actv.b_not_chllg_stg ) Cy' = 0 ... set Cy to inhibit sound clicks for level tokens at challenge stage (1211)
 	move.b	ds_plyr_actv+_b_not_chllg_stg,d0	| [ld   a,(ds_plyr_actv +_b_not_chllg_stg)] parameter to sound manager passed through to c_build_token_1
 	                               	| [and  a] clear Cy if A != 0
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	jbsr	c_new_level_tokens                	| [call c_new_level_tokens] A' == 0 if challenge stg, else non-zero (stage_ct + 1)
 
@@ -17674,7 +17715,7 @@ l_0220:
 0:
 *  else handle rack advance operation
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B]
-	lea	m_tile_ram+0x03A0+0x10(pc),a0      	| [ld   hl,#m_tile_ram + 0x03A0 + 0x10]
+	lea	0x8000+0x03A0+0x10(pc),a0      	| [ld   hl,#0x8000 + 0x03A0 + 0x10]
 	jbsr	c_string_out                      	| [call c_string_out] erase "stage X" text"
 
 	jra	stg_init_splash                    	| [jp   stg_init_splash] start over again
@@ -17706,7 +17747,7 @@ l_0220:
 *-----------------------------------------------------------------------------
 jp_Task_man:
 	move.w	d0,-(sp)                        	| [push af]
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.w	d0,-(sp)                        	| [push af]
 	movem.w	d1/d2,-(sp)                    	| [push bc]
@@ -17833,7 +17874,7 @@ l_02A8_pop_regs_and_exit:
 
 	movem.w	(sp)+,d1/d2                    	| [pop  bc]
 	move.w	(sp)+,d0                        	| [pop  af]
-	exg	d0,d7                              	| [ex   af,af']
+	scs	d7                              	| [ex   af,af']
 	move.w	(sp)+,d0                        	| [pop  af]
 ei
 	rts                                    	| [ret]
@@ -17873,7 +17914,7 @@ l_02CC:
 
 
 _l_02D3:
-*           000002D3  j_Game_init                        game_ctrl
+*           000002D3  j_Game_init_02d3                        game_ctrl
 
 *
 
