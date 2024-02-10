@@ -16668,8 +16668,8 @@ mrw_sprite_code:
 .ds     $0040     ; sprite code/color l (buffer)
 .ds     $0040     ; sprite code/color h (buffer)
 sfr_sprite_code:
-.ds     $0040     ; sprite code/color l ("video" registers)
-.ds     $0040     ; sprite code/color h ("video" registers)
+.ds     $0040     ; sprite code/color l ("video" registers) 0x8B80
+.ds     $0040     ; sprite code/color h ("video" registers) 0x8BC0
 
 
 *=============================================================================

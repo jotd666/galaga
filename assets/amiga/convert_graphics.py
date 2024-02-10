@@ -118,7 +118,8 @@ add_sprite_block(0x8,0x10,"boss_ship",[0,1])
 # I'd like to hack player ship into a sprite only for clut 2
 # but use a BOB for clut 9 (captured)
 #add_sprite_block(0,0x8,"ship",[2,9])
-add_sprite_block(0,0x8,"ship",2,sprite_type=ST_HW_SPRITE)
+add_sprite_block(0,0x8,"ship",9,sprite_type=ST_HW_SPRITE)
+add_sprite_block(0,0x8,"ship",2)
 add_sprite_block(0x10,0x18,"red_bee",2)
 add_sprite_block(0x18,0x20,"blue_bee",3)
 add_sprite_block(0x50,0x57,"mutant_galaxian_boss",4,sprite_type=ST_HW_SPRITE)
@@ -127,7 +128,7 @@ add_sprite_block(0x60,0x67,"mutant_green",6,sprite_type=ST_HW_SPRITE)
 add_sprite_block(0x68,0x6F,"challenge_butterfly",2) # or 7?
 add_sprite_block(0x70,0x77,"challenge_ship",7)
 add_sprite_block(0x78,0x7F,"challenge_rocket",7)
-add_sprite_block(0x30,0x34,"bomb",0)  # wrong clut
+add_sprite_block(0x30,0x34,"bomb",11)
 add_sprite(0x34,"score_150",0)  # wrong clut
 add_sprite(0x35,"score_400",0)  # wrong clut
 add_sprite(0x36,"score_500",0)  # wrong clut
