@@ -14,8 +14,8 @@ AttnFlags = 0x128
 AFB_68010 = 0
 AFB_68020 = 1
 NO68020 = 1
-PREVIOUS_SPRITE_SIZE = 6
-CURRENT_SPRITE_SIZE = 4
+PREVIOUS_SPRITE_SIZE = 8
+CURRENT_SPRITE_SIZE = 2
 
 SPRITE_Y_CORRECTION = 0
 SPRITE_X_CORRECTION = 1
@@ -33,10 +33,18 @@ SCORE_FILE_SIZE = 0xAA
 * RAMs have 4 bytes per sprite, only the order
 * and some bits differ
 
-TARGET_SPRITE_X = 0   | this is Y in the original code, set 0 to hide sprite
-TARGET_SPRITE_ATTRIBUTES = 2
-TARGET_SPRITE_CODE = 1
-TARGET_SPRITE_Y = 3
+SPRITE_BLOCK_OFFSET = 128			| len of each sprite info table
+
+PREVIOUS_SPRITE_X = 0
+PREVIOUS_SPRITE_Y = 2
+
+TARGET_SPRITE_X_1 = 1+SPRITE_BLOCK_OFFSET
+TARGET_SPRITE_X_2 = 1+SPRITE_BLOCK_OFFSET*2
+TARGET_SPRITE_COLOR = 1
+TARGET_SPRITE_CODE = 0
+TARGET_SPRITE_ATTRIBUTES = SPRITE_BLOCK_OFFSET*2
+TARGET_SPRITE_Y = SPRITE_BLOCK_OFFSET
+
 ACTIVE_BITPLANE_MASK = 4   | for optimized bitplane erase
 
 
@@ -62,8 +70,8 @@ _custom = 0xDFF000
 NB_PLAYFIELD_PLANES = 4
 TOTAL_NB_COLORS = 1<<NB_PLAYFIELD_PLANES
 NB_BYTES_PER_ROW = 40
-NB_ROWS = 32
-NB_LINES = NB_ROWS*8+8  | 262
+NB_ROWS = 36
+NB_LINES = NB_ROWS*8+8  | 288
 Y_MAX = NB_LINES
 
 NB_PLAYFIELD_LINES = NB_LINES
@@ -74,10 +82,10 @@ FG_SCREEN_PLANE_SIZE = BG_SCREEN_PLANE_SIZE
 FG_SCREEN_SIZE =  FG_SCREEN_PLANE_SIZE*NB_PLAYFIELD_PLANES
 
 NB_HOST_SPRITES = 8
-* hardware can take 128 sprites but game only shadows
-* 76 of them rest is zero!
 
-NB_TARGET_SPRITES = 8
+* hardware can take 64 sprites max like Xevious. What a beast!
+
+NB_TARGET_SPRITES = 64
 
 * for host sprites
 SPRITE_X = 0
@@ -712,11 +720,10 @@ osd_update_sprites:
 
 really_update_sprites:
 
-	*lea		test_sprites,a0
 	movem.l	a0-a6/d0-d7,-(a7)
-	* first, make sure we have the proper palette
+	* first, make sure we have the proper palette (TODO challenging stages)
 
-	bsr		update_hardware_sprites
+	*bsr		update_hardware_sprites
 	bsr		update_bobs
 	
 	movem.l	(a7)+,a0-a6/d0-d7
@@ -783,7 +790,7 @@ update_hardware_sprites:
 	beq.b	2f			| Y set to 0: not shown
 	cmp.b	#255,d1
 	beq.b	2f			| Y set to 255: not shown	
-	move.b	(TARGET_SPRITE_X,a0),d0  | sprite X
+	move.b	(TARGET_SPRITE_X_1,a0),d0  | sprite X
 	beq.b	2f
 	
 	.ifne	SPRITE_Y_CORRECTION
@@ -938,28 +945,32 @@ update_hardware_sprites:
 	cmp.w	#NB_HOST_SPRITES,d6
 	jne	10b	
 	rts
-
-* the original display engine used 32 colors and only BOBs. It was nice & simple but...
-* just too slow, even with double buffering. So sprites were introduced, but it was
-* still a waste for some static sprites or not so much redrawn, so optimization system
-* was coded. BUT sometimes there are exceptions where those optimized draws should not
-* be done, which explains a lot of kludges to get proper display without drawing too
-* many BOBs unneccessarily. It kills the "generic" aspect of the BOB engine (the sprite
-* engine is pretty generic, though, I've been using it since Pengo almost without changes, 
-* except now it has symmetry/flip support)
-
-
 	
-
+* < A0: sprite table
+* > D0,D1: X,Y
+compute_sprite_xy:
+	moveq	#0,d0
+	moveq	#0,d1
+	move.b	(TARGET_SPRITE_X_1,a0),d0  | sprite X low (amiga Y)
+	sub.w	#40,d0
+	move.b	(TARGET_SPRITE_X_2,a0),d1
+	and.b	#3,d1
+	lsl.w	#8,d1		| times 0x100
+	add.w	d1,d0
+	moveq	#0,d1
+	move.b	(TARGET_SPRITE_Y,a0),d1  | sprite Y
+	addq	#1,d1		| sprites are buffered and delayed by one scanline
+	exg		d0,d1		| display is rotated 90 degrees!
+	rts
+	
 update_bobs:
+
+	lea			hardware_sprite_flag_table,a2
+	
+	.ifdef	FUCKIT
 	move.l		bob_previous_drawed_sprites(pc),a4
 	lea			sprite_buffer(pc),a3
 	move.l	a3,a0
-	lea			hardware_sprite_flag_table,a2
-	
-	clr.b	climbing_kong_present									| speedup kludge
-	clr.b	four_barrels_present									| speedup kludge
-	
 	* clear previous positions
 	moveq	#NB_TARGET_SPRITES-1,d7
 1:
@@ -992,44 +1003,47 @@ update_bobs:
 	addq	#PREVIOUS_SPRITE_SIZE,a4
 	addq	#CURRENT_SPRITE_SIZE,a3
 	dbf		d7,1b
+	.endif  | FUCKIT
 	
+	* game takes its source from 3 different tables, indexed the same way!
+	* we gathered the tables so they can be accessed with only one address register
+	* each table is 128 bytes long (64*2)
+	
+	lea		sprconf_codes,a0		| mockup!!
 	
 	lea		bob_table,a4
 	move.l	bob_previous_drawed_sprites(pc),a6
 	moveq	#NB_TARGET_SPRITES-1,d7
 1:
-	move.l	(a0),d1		| current sprite 4cc (x,y,code,attribs)
 																				| speedup kludge
 						
-	move.b	(TARGET_SPRITE_CODE,a0),d0  | sprite code
-	
-111:
-	move.l	d1,(a6)			| store current sprite attributes to previous ones
-	moveq	#0,d0
-	move.b	(TARGET_SPRITE_X,a0),d0  | sprite X	
-	jeq		211f				| x=0: don't show
+	bsr		compute_sprite_xy
+	move.w	d0,(PREVIOUS_SPRITE_X,a6)			| store current sprite attributes to previous ones
+	move.w	d1,(PREVIOUS_SPRITE_Y,a6)			| store current sprite attributes to previous ones
+	tst.w	d0
+	jeq		211f
+	jmi		211f
+	tst.w	d1
+	jeq		211f
+	jmi		211f			| don't show
 
 	
 	moveq	#0,d2
 	move.b	(TARGET_SPRITE_CODE,a0),d2
+	bclr	#7,d2		| discard last bit
 	
-	bclr	#7,d2		| clear & test X mirror mode
-	sne		d6			| d6 nonzero means we'll use mirrored bob data
-
-
+	moveq	#0,d6		| temp noflip
+*	bclr	#7,d2		| clear & test X mirror mode
+*	sne		d6			| d6 nonzero means we'll use mirrored bob data
 
 	
-	move.b	(TARGET_SPRITE_Y,a0),d1  | sprite Y
-	
-	moveq	#0,d1
+	moveq	#0,d5		| temp noflip
 	moveq	#0,d3
-	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d3
-	btst	#7,d3		| test Y flip mode
-	sne		d5
-	and.b	#0xF,d3	| get attributes
+	move.b	(TARGET_SPRITE_COLOR,a0),d3
+	and.b	#0x3F,d3	| discard high bits
 
 	tst	(a2,d2.w)
-	bne.b	211f			| hardware sprite: skip
+	jne	211f			| hardware sprite: skip
 	
 	move.w	d2,d4
 	add.w	d4,d4
@@ -1042,11 +1056,6 @@ update_bobs:
 	move.b	d2,d2
 	bra.b	211f
 11:
-	moveq	#0,d1
-	move.b	(TARGET_SPRITE_Y,a0),d1  | sprite Y
-	beq.b	211f			| Y set to 0: not shown
-
-	
 
 	
 
@@ -1195,6 +1204,7 @@ restore_16x_background:
 	move.l d3,bltcon0(a5)	
 	move.l a1,bltdpt(a5)	|destination top left corner
 	move.w  d4,bltsize(a5)	|rectangle size, starts blit
+202:
 	.endr
 	
 	
@@ -1825,9 +1835,9 @@ platform_init:
     move.l  #-1,bltafwm(a5)
 	
 	* restrict borders: we don't see bobs on the borders!
-    move.w #0x1C99,diwstrt(a5)
 	*         VVHH
-    move.w #0x2479,diwstop(a5)
+    move.w #0x1C99,diwstrt(a5)
+    move.w #0x3881-8,diwstop(a5)
     move.w #0x0038,ddfstrt(a5)
     move.w #0x00D0,ddfstop(a5)
     move.w #0x200+(NB_PLAYFIELD_PLANES<<12)+BORDERBLANK,bplcon0(a5)
@@ -2754,7 +2764,11 @@ bg_displayed_screen_ptr:
 
 	.include	"sound_entries.68k"
 
-
+	.ifndef	RELEASE
+	* for mockup display
+	.include	"sprites_conf.68k"
+	.endif
+	
 	
 _keyexit:
 	.byte	0x45	| ESC by default unless whdload overwrites it
@@ -2807,7 +2821,6 @@ bob_previous_positions_2:
 palette:
 	.include "palette.68k"
 
-	.include	"row_colors.68k"
 	* sprites "individual" 4-color palettes
 sprite_cluts:
 	.include "palette_cluts.68k"
@@ -2903,34 +2916,15 @@ sprites:
     * #7
     .word    sprpt+28,0
     .word    sprpt+30,0
-
-top_color_line_copper:
-	* first colored rows
- 	.set    beampos,0x2401
-	.rept	NB_ROWS-4
-	.word	beampos,0xFFFE
-	* 3 first color registers to change dynamically each 8 lines
-	.word	color+2,0
-	.word	color+4,0
-	.word	color+6,0
-	.set    beampos,beampos+0x800
-	.endr
-
-
 	
 	* pal limit
     .word  0xFFDF,0xFFFE       | PAL wait
  	.set    beampos,0x0401		| more lines to align
-bottom_color_line_copper:
-	.rept	4
-	.word	beampos,0xFFFE
-	* the 4 last colored rows
-	.word	color+2,0
-	.word	color+4,0
-	.word	color+6,0
+
+
 	.set    beampos,beampos+0x800
-	.endr
-	* the line where "credits" is drawn
+	.word	beampos,0xFFFE
+
     .word	 intreq,0x8010	| no bobs from now on, get more drawing time
 	
     .long    -2					

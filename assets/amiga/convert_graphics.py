@@ -283,11 +283,11 @@ with open(os.path.join(src_dir,"palette_cluts.68k"),"w") as f:
 
 
 
-##with open(os.path.join(src_dir,"palette.68k"),"w") as f:
-##    for k,v in sorted(screen_palette.items()):
-##        f.write(f"* screen {k}\n")
-##        bitplanelib.palette_dump(v,f,pformat=bitplanelib.PALETTE_FORMAT_ASMGNU)
+with open(os.path.join(src_dir,"palette.68k"),"w") as f:
+    f.write("palette:\n")
+    bitplanelib.palette_dump(palette,f,pformat=bitplanelib.PALETTE_FORMAT_ASMGNU)
 
+bitplanelib.palette_dump(palette,os.path.join(dump_dir,"colors.png"),pformat=bitplanelib.PALETTE_FORMAT_PNG)
 character_codes = []
 
 if True:

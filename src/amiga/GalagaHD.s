@@ -132,5 +132,5 @@ _resload:
 progstart
     dc.l    0
 exe
-	dc.b	"donkey_kong",0
+	dc.b	"galaga",0
 	

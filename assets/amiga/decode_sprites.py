@@ -1,3 +1,9 @@
+# run that to create mockup of real screen with a MAME memory dump.
+# run "convert_graphics.py" first with "dump" switches at True so "dumps" directory
+# is not empty
+
+import bitplanelib
+
 import os
 from PIL import Image
 
@@ -49,6 +55,13 @@ background = Image.new("RGB",(240*2,288*2))
 spriteram = contents[0x8B80:0x8B80+0x80]
 spriteram_2 = contents[0x9380:0x9380+0x80]
 spriteram_3 = contents[0x9b80:0x9b80+0x80]
+
+table_name = ["codes","coords","coords_size"]
+with open("../../src/amiga/sprites_conf.68k","w") as f:
+    for i,sr in enumerate([spriteram,spriteram_2,spriteram_3]):
+        f.write(f"sprconf_{table_name[i]}:")
+        bitplanelib.dump_asm_bytes(sr,f,mit_format=True)
+
 for offs in range(0,0x80,2):
     sprite = spriteram[offs] & 0x7f
     color = spriteram[offs + 1] & 0x3f
@@ -65,7 +78,7 @@ for offs in range(0,0x80,2):
     ar = (sx,sy,sprite,color)
     if sx > 0 and sy > 0:
         sx,sy = sy,sx
-        #print(sx,sy,tile.get(sprite,"")+"_0x{:x}".format(sprite),color,flipy,flipx)
+        print("offset=",hex(offs),sx,sy,tile.get(sprite,"")+"_0x{:x}".format(sprite),color,flipy,flipx)
         pic_name = tile.get(sprite,"")+"_{:02x}_{}.png".format(sprite,color)
         pic_path = os.path.join("dumps/sprites",pic_name)
         img = imgcache.get(pic_path)

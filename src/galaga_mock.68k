@@ -15,5 +15,7 @@ galaga_irq:
 	rts
 	
 galaga_reset:
+	moveq	#1,d0
+	jbsr	osd_interrupt_control
 	.word	0x60FE
 	
