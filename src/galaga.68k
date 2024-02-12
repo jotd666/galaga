@@ -1,3 +1,10 @@
+	* compute d6 index reg from a0 base to reapply
+	* to other bases (when only h is loaded)
+	.macro	COMPUTE_LSB_A0_D6	base
+	move.l	a0,d6
+	sub.l	#\base,d6
+	.endm
+
 	* read register to var, little endian
 	.macro	MOVE_TO_VAR	reg,var
 	move.b	\reg,\var
@@ -2573,18 +2580,16 @@ l_10A0_got_one:
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0)+,d2                         	| [ld   c,(hl)] sprite_x
 	                           	| [inc  l]
 	move.b	(a0),d1                         	| [ld   b,(hl)] sprite_y<7:0>
 	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprite_y<8>
-	ror.b	#1,d0                            	| [rrca] sY<8> into Cy
+	CLEAR_XC_FLAGS
+	roxr.b	#1,d0                            	| [rrca] sY<8> into Cy
 	roxr.b	#1,d1                           	| [rr   b] sY<8> from Cy to b<7> and sY<0> to Cy
-      ^^^^^^ TODO: review cpu X flag
 
 	btst.b	#0,d4                           	| [bit  0,e] test flipped screen
 	jne	l_10DC                             	| [jr   nz,l_10DC]
@@ -2593,29 +2598,20 @@ l_10A0_got_one:
 	scs	d7                              	| [ex   af,af'] stash Cy ... sY<:0>
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	move.b	d1,d0                           	| [ld   a,b]
-	add.b	<(-0x0160>>1),d0                 	| [add  a,#<(-0x0160 >> 1)] adjust addend for scale factor 2
+	add.b	#0x50,d0                 	| [add  a,#<(-0x0160 >> 1)] adjust addend for scale factor 2
 	neg.b	d0                               	| [neg]
 	move.b	d0,d1                           	| [ld   b,a]
-	scs	d7                              	| [ex   af,af'] un-stash Cy
-         ^^^ TODO review: wrong if carry is needed or D7 used in between!
-
-	bcs.b	0f
-	clr.b	d7
-	bra.b	1f
-0:
-	st.b	d7
-1:
-	cmp.b	#1,d7                            	| [ccf] sY<:0> = Cy ^ 1
+	tst.b	d7                              	| [ex   af,af'] un-stash Cy
+	INVERT_XC_FLAGS							  	| [ccf] sY<:0> = Cy ^ 1
 
 * insert sprite X coord into pool structure
 l_10DC:
-* resacale sY<8:0> to fixed-point 9.7
+* rescale sY<8:0> to fixed-point 9.7
 	move.b	d1,(0x01,a2)                    	| [ld   0x01(ix),b] sY<8:1> ... fixed point 9.7
 * sY<:0> from Cy into A<7> ... fixed point 9.7 (LSB)
 	roxr.b	#1,d0                           	| [rra]
-      ^^^^^^ TODO: review cpu X flag
 	and.b	#0x80,d0                         	| [and  #0x80]
-	move.b	d0,(0x00,a2)                    	| [ld   0x00(ix),a] sY<0> ... fixed point 9.7
+	move.b	d0,(a2)                    	| [ld   0x00(ix),a] sY<0> ... fixed point 9.7
 
 	move.b	d2,d0                           	| [ld   a,c] sprite_x
 	btst.b	#0,d4                           	| [bit  0,e] test flipped screen
@@ -2628,7 +2624,6 @@ l_10ED:
 	lsr.b	#1,d0                            	| [srl  a]
 	move.b	d0,(0x03,a2)                    	| [ld   0x03(ix),a] sX<8:1>
 	roxr.b	#1,d0                           	| [rra] Cy into A<8:>
-      ^^^^^^ TODO: review cpu X flag
 	and.b	#0x80,d0                         	| [and  #0x80]
 	move.b	d0,(0x02,a2)                    	| [ld   0x02(ix),a] sX<:0> ... now scaled fixed point 9.7
 	move.b	d3,(0x13,a2)                    	| [ld   0x13(ix),d] function argument (A') sets bit-0 and bit-7
@@ -2682,12 +2677,14 @@ l_111C:
 	lea	ds_susp_plyr_obj_data(pc),a1       	| [ld   de,#ds_susp_plyr_obj_data]
 	move.b	#0x30,d1                        	| [ld   b,#0x30]
 l_112D:
+	* compute d6 offset from 8800 base (applied on ds_sprite_code too)
+	COMPUTE_LSB_A0_D6		b_8800
+		
 	move.b	(a0),d0                         	| [ld   a,(hl)] &sprt_mctl_objs[n]
 	move.b	d0,d2                           	| [ld   c,a]
+	
 	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
-	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	and.b	#0x7F,d0                         	| [and  #0x7F]
 	subq.b	#1,d2                           	| [dec  c]
@@ -2717,22 +2714,19 @@ l_1142:
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	subq.w	#1,a0                           	| [dec  l]
  	move.b	#1,d0                           	| [ld   a,#1]
+	COMPUTE_LSB_A0_D6	ds_sprite_code
 	jra	l_1161                             	| [jr   l_1161]
 
 l_115A:
+	COMPUTE_LSB_A0_D6	ds_sprite_code
 	move.b	d2,(a0)                         	| [ld   (hl),c] hl==8b00
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
-	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	clr.b	(a0)                             	| [ld   (hl),#0] hl==9300
 	move.b	#0x80,d0                        	| [ld   a,#0x80]
-
 l_1161:
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
-	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	addq.w	#1,a1                           	| [inc  de] de==98b0
 	addq.w	#2,a0                           	| [inc  l]
@@ -4915,8 +4909,8 @@ l_1BE3_while:
 	jne	l_1BEB_next                        	| [jr   nz,l_1BEB_next]
 * ... ( L != bonus_bee_index ) then l_1BF0_found_one
 	move.b	d2,d0                           	| [ld   a,c] unstash A ... offset_to_bonus_bee
-	move.l	a0,d6
-	sub.l	#b_8800+0x08,d6		| recompute offset from original a0
+	
+	COMPUTE_LSB_A0_D6		b_8800+0x08		| recompute offset from original a0
 	cmp.b	d6,d0                            	| [cp   l]
 	jne	l_1BF0_found_one                   	| [jr   nz,l_1BF0_found_one]
 l_1BEB_next:
@@ -5473,8 +5467,7 @@ l_1DC1_make_him_dead:
 	bclr.b	#7,(a0)                         	| [res  7,(hl)] b_9200_obj_collsn_notif[n] for rckt_hit_hdlr
 	
 	* compute relative offset/index to apply to 88xx
-	move.l	a0,d6
-	sub.l	#b_9200_obj_collsn_notif,d6
+	COMPUTE_LSB_A0_D6	b_9200_obj_collsn_notif
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800] disposition = 4 (dying/exploding)
 	add.w	d6,a0
 	move.b	#4,(a0)+                         	| [ld   (hl),#4]
@@ -7359,7 +7352,7 @@ l_24C2:
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 
 l_24DA:
-	subq.b	#1,d6                           	| [dec  l] .b0
+	subq.w	#1,a0                           	| [dec  l] .b0
 	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -7425,7 +7418,7 @@ l_24FD:
 
 l_250C:
 	move.b	d2,(a0)                         	| [ld   (hl),c] sprite_cclr[L].clr=c
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
 l_250E:
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
@@ -7453,7 +7446,7 @@ l_251C:
 	eor.b	#0x01,d0                         	| [xor  #0x01]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 l_2529:
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
 	move.b	d2,(a0)                         	| [ld   (hl),c]
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
@@ -7474,7 +7467,7 @@ case_2535:
 	subq.b	#1,(a0)                         	| [dec  (hl)] down counter for score bitmap
 	jne	l_2416                             	| [jp   nz,l_2416]
 
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
 	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] disposition = inactive
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
@@ -7510,7 +7503,7 @@ case_254D:
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprite_posn.y<8>
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
 	ror.b	#1,d0                            	| [rrca] sprite_posn.y<8> into Cy
 	move.b	d2,d0                           	| [ld   a,c]
 	roxr.b	#1,d0                           	| [rra] sprite_posn.y<8:1> in A
@@ -8240,7 +8233,7 @@ l_2980:
 * else ...
 * Init routine c_2896 has populated the sprite code buffer such that each even
 * byte consists of the "primary" code (multiple of 8), AND'd with the color.
-	subq.b	#1,d6                           	| [dec  l] e.g. HL=9358
+	subq.w	#1,a0                           	| [dec  l] e.g. HL=9358
 	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code] sprite[L].code.b0 &= 0x78
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -8282,9 +8275,9 @@ l_29C7:
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
 	move.b	d3,(a0)                         	| [ld   (hl),d] color, e.g. 8B3B=$03
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
 	move.b	d4,(a0)                         	| [ld   (hl),e] color, e.g. 8B3A=$18
-	addq.b	#1,d6                           	| [inc  l]
+	addq.w	#1,a0                           	| [inc  l]
 	clr.b	(0x0F,a2)                        	| [ld   0x0F(ix),#0] setup transients ... bomb drop enable flags
 
 l_29D1_finalize_object_setup:
@@ -9082,8 +9075,8 @@ l_3206:
 	rts                                    	| [ret  nz] [...]
 0:
 l_3208:
-	subq.b	#1,d6                           	| [dec  l]
-	subq.b	#1,d4                           	| [dec  e]
+	subq.w	#1,a0                           	| [dec  l]
+	subq.w	#1,a1                           	| [dec  e]
 	subq.b	#1,d1                           	| [...]
 	jne	l_31FC                             	| [djnz l_31FC]
 
@@ -12149,8 +12142,8 @@ l_064F:
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
 	move.b	#0x0B,(a0)                      	| [ld   (hl),#0x0B] color
-	subq.b	#1,d6                           	| [dec  l]
-	move.b	#0x20,(a0)                      	| [ld   (hl),#0x20] explosion tile
+	                           	| [dec  l]
+	move.b	#0x20,-(a0)                      	| [ld   (hl),#0x20] explosion tile
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -12158,7 +12151,7 @@ l_064F:
 	move.b	#8,(a0)                         	| [ld   (hl),#8] .state, disposition from $80 to "exploding"
 	addq.b	#1,d6                           	| [inc  l]
 	move.b	#0x0F,(a0)                      	| [ld   (hl),#0x0F] mctrl_q index used for explosion counter
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
 	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -12222,7 +12215,8 @@ ld   ixl,a
 	roxr.b	#1,d1                           	| [rr   b] Cy -> b<7>
       ^^^^^^ TODO: review cpu X flag
 ld   ixh,b                                 ; y<15:8> of fixed-point
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
+	TODO FUCK
 	move.b	d6,d4                           	| [ld   e,l] preserved object/index of fighter passed as argument in L
 
 * if ( cpu0:f_2916  active ) ...
@@ -12301,10 +12295,10 @@ while_06B7:
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
 	move.b	(a0),d2                         	| [ld   c,(hl)]
-	subq.b	#1,d6                           	| [dec  l]
-	ror.b	#1,d2                            	| [rrc  c]
+	subq.w	#1,a0                           	| [dec  l]
+	CLEAR_XC_FLAGS
+	roxr.b	#1,d2                            	| [rrc  c]
 	roxr.b	#1,d0                           	| [rra]
-      ^^^^^^ TODO: review cpu X flag
 	sub.b	ixh,d0                           	| [sub  ixh]
 	subq.b	#4,d0                           	| [sub  #4]
 	addq.b	#7,d0                           	| [add  a,#7]
@@ -12482,7 +12476,7 @@ ld   ixh,a                                 ; stash sy<8:1> for hit-detection par
 
 l_0757_call_hit_detection_all:
 * reset HL and count to check $30 objects
-	lea	ds_sprite_posn+0x00(pc),a0         	| [ld   hl,#ds_sprite_posn + 0x00]
+	lea	ds_sprite_posn(pc),a0         	| [ld   hl,#ds_sprite_posn + 0x00]
 	move.b	#0x30,d1                        	| [ld   b,#0x30]
 
 l_075C_call_hit_detection:
@@ -12491,11 +12485,10 @@ l_075C_call_hit_detection:
 
 * terminate out of bounds rockets
 l_0760_disable_rocket_wposn:
-	subq.b	#1,d6                           	| [dec  l] .b0 (sX)
+	subq.w	#1,a0                           	| [dec  l] .b0 (sX)
+	COMPUTE_LSB_A0_D6	ds_sprite_posn
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn] x
-	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 
 * when testing X limits, &sprite_posn[0] already in H so skip loading it
 l_0763_disable_rocket:
@@ -12569,7 +12562,7 @@ l_076A_while_object:
 	ror.b	#1,d3                            	| [rrc  d]
 	roxr.b	#1,d0                           	| [rra]
       ^^^^^^ TODO: review cpu X flag
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
 
 	sub.b	ixh,d0                           	| [sub  ixh] sprite.sy<1:8> -= rocket.sy<1:8>
 	subq.b	#3,d0                           	| [sub  #3] tolerance for hit-check (divided by 2 to account for scaling)
@@ -12679,7 +12672,7 @@ hitd_dspchr:
 	move.b	d0,d2                           	| [ld   c,a] ... for later ....
 	tst.b	d0                               	| [and  a]
 	jeq	l_08CA_hit_green_boss              	| [jp   z,l_08CA_hit_green_boss] color map 0 is the "green" boss
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
 	cmp.b	#0x0B,d0                         	| [cp   #0x0B] color map $B is for "bombs"
 	jeq	l_0815_bomb_hit                    	| [jr   z,l_0815_bomb_hit]
 
@@ -12876,7 +12869,8 @@ l_0852:
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
 	move.b	#9,(a0)                         	| [ld   (hl),#9] color map 9 for white ship
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
+	COMPUTE_LSB_A0_D6	FUCK
 	move.b	d6,d0                           	| [ld   a,l]
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] updated object locator token of rescued ship   (token was 1)
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800] the captured ship object becomes inactive (0)
@@ -12904,8 +12898,8 @@ l_0899:
 	and.b	#7,d0                            	| [and  #7] gets offset of object from $30
 	lea	ds_plyr_actv+_ds_bmbr_boss_scode(pc),a0	| [ld   hl,#ds_plyr_actv +_ds_bmbr_boss_scode] bonus code/scoring attributes for 1 of 4 flying bosses
 	jbsr	rst_10                            	| [rst  0x10] HL += A
-	move.b	(a0),d0                         	| [ld   a,(hl)] .b0 ... add to bug_collsn[$0F] (adjusted scoring increment)
-	addq.b	#1,d6                           	| [inc  l]
+	move.b	(a0)+,d0                         	| [ld   a,(hl)] .b0 ... add to bug_collsn[$0F] (adjusted scoring increment)
+												| [inc  l]
 	move.b	(a0),d3                         	| [ld   d,(hl)] .b1 -> obj_collsn_notif[L] ... sprite code + 0x80
 l_08AA:
 	lea	ds_bug_collsn_hit_mult+0x0F(pc),a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x0F] bonus score increment boss killed
@@ -12942,7 +12936,7 @@ l_08CA_hit_green_boss:
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	move.b	d0,b_9AA0+0x04                  	| [ld   (b_9AA0 + 0x04),a] sound-fx count/enable registers, hit_green_boss
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
 
 	jra	l_07B4_next_object                 	| [jp   l_07B4_next_object]
 
@@ -13140,21 +13134,20 @@ l_098F_do_split_off_bonus_bee:
 	addq.b	#1,d4                           	| [inc  e] .b1
 	move.b	(a1),d0                         	| [ld   a,(de)] _sprite_cclr[index attack leader]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-	subq.b	#1,d6                           	| [dec  l] .b0
+	subq.w	#1,a0                           	| [dec  l] .b0
+	COMPUTE_LSB_A0_D6		FUCK
 	move.b	d6,d0                           	| [ld   a,l]
-	scs	d7                              	| [ex   af,af'] stash index of spawning yellow alien
-         ^^^ TODO review: wrong if carry is needed or D7 used in between!
+	exg		d0,d7                              	| [ex   af,af'] stash index of spawning yellow alien
 
 * find available slot or getout
 	lea	ds_bug_motion_que+0xF0-1(pc),a0    	| [ld   hl,#ds_bug_motion_que + 0xF0 - 1] start at end/top of segment
-	lea	-l_14(pc),a1                       	| [ld   de,#-0x14] sizeof array element
+	move.w	#-14,d3                       	| [ld   de,#-0x14] sizeof array element
 	move.b	#0x0C,d1                        	| [ld   b,#0x0C] nbr of object in the array
 l_09A3:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	and.b	#0x01,d0                         	| [and  #0x01] check if this slot available
 	jeq	l_09AE_doit                        	| [jr   z,l_09AE_doit]
 	add.w	d3,a0                            	| [add  hl,de]
-  ^^^^ TODO: review d3 computation above
 	subq.b	#1,d1                           	| [...]
 	jne	l_09A3                             	| [djnz l_09A3]
 
@@ -13806,13 +13799,13 @@ l_0CC7:
 	add.b	#0x80,d0                         	| [add  a,#0x80] add carry-out from sra
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 l_0CD0:
-	addq.b	#1,d6                           	| [inc  l]
+	addq.w	#1,a0                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)] b01 or b03, depends on "jr   c,l_0CBF"
 adc  a,c                                   ; add with carry-out from addition into lsb
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 
 * stash the pointer to .b0/.b2 in DE (previous DE into HL but no longer used)
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
 	exg	a1,a0                              	| [ex   de,hl]
 	move.b	d4,d0                           	| [ld   a,e]
 	eor.b	#0x02,d0                         	| [xor  #0x02] toggle x/y pointer, .b00 or .b02
@@ -13820,6 +13813,7 @@ adc  a,c                                   ; add with carry-out from addition in
 
 * test L<0> (pushed/popped from left-shifted DE above .. but this would be .b04<7> before left-shift?)
 	move.l	(sp)+,a0                        	| [pop  hl] ..... adjusted rotation angle from push DE above
+	FUCK TODO
 	lsr.b	#1,d6                            	| [srl  l] revert to unshifted, but did not retain bit-7
 	jcc	l_0CE3                             	| [jr   nc,l_0CE3] bit<0> into Cy (which was actually bit<7>
 	move.b	d6,d0                           	| [ld   a,l]
@@ -14116,7 +14110,7 @@ l_0E08_imhome:
 	      ^^^^ TODO: review XX value
 	addq.b	#1,d6                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprite color code
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
 	addq.b	#1,d0                           	| [inc  a]
 	and.b	#0x07,d0                         	| [and  #0x07]
 	cmp.b	#5,d0                            	| [cp   #5]
@@ -14132,7 +14126,7 @@ l_0E08_imhome:
 	move.b	d2,d0                           	| [ld   a,c]
 	and.b	#0x07,d0                         	| [and  #0x07]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-	subq.b	#1,d6                           	| [dec  l]
+	subq.w	#1,a0                           	| [dec  l]
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,ds_plyr_actv+_b_bbee_obj     	| [ld   (ds_plyr_actv +_b_bbee_obj),a] 1 ... offset of object that spawns the bonus bee.
 
