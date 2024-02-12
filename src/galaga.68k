@@ -2510,6 +2510,7 @@ c_divmod:
 *  ...
 *-----------------------------------------------------------------------------
 c_1079:
+	COMPUTE_LSB_A0_D6	b_8800
 	move.b	d6,d0                           	| [ld   a,l]
 
 	and.b	#0x80,d0                         	| [and  #0x80] if set then negate rotation angle to (ix)0x0C
@@ -2517,6 +2518,8 @@ c_1079:
 	exg		d0,d7                              	| [ex   af,af']
 
 	bclr.b	#7,d6                           	| [res  7,l]
+	lea		b_8800,a0
+	add.w	d6,a0
 	jra	j_108A                             	| [jp   j_108A]
 
 *=============================================================================
@@ -3272,7 +3275,7 @@ l_12D1:
 	jne	l_12D1                             	| [djnz l_12D1]
 
 * X coordinates at origin (10 bytes) to even offsets, adjusted for flip-screen.
-	lea	ds_hpos_spcoords(pc),a0            	| [ld   hl,#ds_hpos_spcoords] init origin x-coords (10 columns)
+	lea	ds_hpos_spcoords_9800(pc),a0            	| [ld   hl,#ds_hpos_spcoords_9800] init origin x-coords (10 columns)
 	lea	db_fmtn_hpos_orig(pc),a1           	| [ld   de,#db_fmtn_hpos_orig]
 	move.b	#10,d1                          	| [ld   b,#10]
 l_12E2:
@@ -4846,9 +4849,8 @@ l_1B8B:
  	move.b	d0,d6                           	| [ld   l,a] byte-0 of boss_wing_slots[n*3] ... object index/offset
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800] e.g. b_8800[$30]
 	and.w	#0xFF,d6
-	jbsr	c_1079                            	| [call c_1079] DE, HL, and bit-7 of HL for negation of rotation angle if set
-	* above changes d6, add to a0 now
 	add.w	d6,a0
+	jbsr	c_1079                            	| [call c_1079] DE, HL, and bit-7 of HL for negation of rotation angle if set
 
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,b_9AA0+0x13                  	| [ld   (b_9AA0 + 0x13),a] 1 ... sound-fx count/enable registers, bug dive attack sound
@@ -5020,9 +5022,9 @@ l_1C4F_while:
 	bcs.b	0f                               	| [...]
 	jbsr	c_1C8D                            	| [call nc,c_1C8D] _boss_activate(0xFF, 0, b, 0xFFFF)
 0:
+	SET_X_FROM_C
 l_1C5B:
 	roxr.b	#1,d2                           	| [rr   c]
-      ^^^^^^ TODO: review cpu X flag
 	subq.b	#1,d1                           	| [...]
 	jne	l_1C4F_while                       	| [djnz l_1C4F_while]
 
@@ -5333,7 +5335,7 @@ l_1D4B:
 	move.b	#1,d0                           	| [ld   a,#1] offset is +1
 0:
 	move.b	d0,d2                           	| [ld   c,a]
-	lea	ds_hpos_spcoords+(10*2(pc),a0      	| [ld   hl,#ds_hpos_spcoords + (10 * 2)] + byte offset to row coordinates
+	lea	ds_hpos_spcoords_9800+(10*2(pc),a0      	| [ld   hl,#ds_hpos_spcoords_9800 + (10 * 2)] + byte offset to row coordinates
 
 	move.b	#6,d1                           	| [ld   b,#6] 6 row coordinates to update
 l_1D51:
@@ -5600,7 +5602,7 @@ l_1E09:
 	move.w	#0x10,d1                        	| [ld   bc,#0x0010] 16
 	jbsr	ldir                              	| [ldir]
 
-l_1E23:
+l_1E23:   | 1E29 in galagao
 * A ^= (HL) ... set Cy determines which parameter is taken. Bit-7 XOR'd with
 * flip_screen-bit... done efficiently by rotating bit-7 into bit-0 and back.
 	lea	b_9215_flip_screen(pc),a0          	| [ld   hl,#b_9215_flip_screen]
@@ -5615,7 +5617,7 @@ l_1E23:
 * the parameter for the second call in C, at the same time that B is set.
 
 	lea	ds10_9920(pc),a0                   	| [ld   hl,#ds10_9920] 16 bytes copied from _bitmap_tables+2*A
-	lea	ds_hpos_loc_offs(pc),a1            	| [ld   de,#ds_hpos_loc_offs] hl==ds10_9920
+	lea	ds_hpos_loc_offs_9900(pc),a1            	| [ld   de,#ds_hpos_loc_offs_9900] hl==ds10_9920
 
 	jcc	l_1E36                             	| [jr   nc,l_1E36]
 
@@ -5654,7 +5656,7 @@ l_1E39:
 *  ...
 *-----------------------------------------------------------------------------
 c_1E43:
-j_1E43:
+j_1E43:   | aka 1E49
 * check if updating this one
 	ror.b	#1,(a0)                          	| [rrc  (hl)]
 	jcc	l_1E5C_update_ptrs                 	| [jr   nc,l_1E5C_update_ptrs]
@@ -5665,18 +5667,17 @@ j_1E43:
 	move.b	d0,(a1)                         	| [ld   (de),a]
 
 * _home_posn_org[ n ] += B ... 10 column coordinates, 6 row coordinates, 16-bits per coordinate
-	lea	ds_hpos_spcoords(pc),a1            	| [ld   d,#>ds_hpos_spcoords]
-	and.w	#0xFF,d4
+	COMPUTE_LSB_A1_D4	ds_hpos_loc_offs_9900
+	
+	lea	ds_hpos_spcoords_9800(pc),a1            	| [ld   d,#>ds_hpos_spcoords_9800]
 	add.w	d4,a1
-	      ^^^^ TODO: review XX value
 	move.b	(a1),d0                         	| [ld   a,(de)]
 	add.b	d1,d0                            	| [add  a,b] +/- 1
 	move.b	d0,(a1)                         	| [ld   (de),a]
 
 * check for carry
 	roxr.b	#1,d0                           	| [rra]
-      ^^^^^^ TODO: review cpu X flag
-	eor.b	d1,d0                            	| [xor  b]
+ 	eor.b	d1,d0                            	| [xor  b]
 	rol.b	#1,d0                            	| [rlca]
 	jcc	l_1E5A                             	| [jr   nc,l_1E5A]
 * handle carry
@@ -5687,10 +5688,9 @@ j_1E43:
 	subq.w	#1,a1                           	| [dec  e] LSB again
  
 l_1E5A:
-	lea	ds_hpos_loc_offs(pc),a1            	| [ld   d,#>ds_hpos_loc_offs] reset pointer
-	and.w	#0xFF,d4
+	COMPUTE_LSB_A1_D4	ds_hpos_spcoords_9800
+	lea	ds_hpos_loc_offs_9900(pc),a1            	| [ld   d,#>ds_hpos_loc_offs_9900] reset pointer
 	add.w	d4,a1
-	      ^^^^ TODO: review XX value
 
 l_1E5C_update_ptrs:
 	addq.w	#2,a1                           	| [inc  e]
@@ -5749,7 +5749,6 @@ l_1EBF_while:
 	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	cmp.b	#0x30,d0                         	| [cp   #0x30] bomb sprite codes don't show up until some new-game inits are done
 	jne	l_1EFF                             	| [jr   nz,l_1EFF]
@@ -5814,21 +5813,25 @@ l_1EE4:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
+	move.b	(a0),d7
 	ror.b	#1,(a0)                          	| [rrc  (hl)] sY<8> into Cy
+	move.b	d7,(a0)
 	INVERT_XC_FLAGS                        	| [ccf]
-	roxl.b	#1,(a0)                         	| [rl   (hl)] sY<8>
-      ^^^^^^ TODO: review cpu X flag, cmp doesn't affect it!
-
+	move.b	(a0),d7
+	roxl.b	#1,d7                         	| [rl   (hl)] sY<8>
+	move.b	d7,(a0)
 l_1EF9:
-	addq.w	#1,a0                           	| [inc  l]
-            ^^^^ TODO check inc register d6 or a0
+	*addq.w	#1,a0                           	| [inc  l]
+	addq.w	#1,d6                           	| [inc  l]  also inc d6 for offset
+
 	subq.b	#1,ixl                          	| [dec  ixl]
 	jne	l_1EBF_while                       	| [jr   nz,l_1EBF_while]
 
 	rts                                    	| [ret]
 
 l_1EFF:
-	addq.w	#1,a0                           	| [inc  l]
+	*addq.w	#1,a0                           	| [inc  l]
+	addq.w	#1,d6                           	| [inc  l]
 	addq.w	#2,a1                           	| [inc  e]
 	jra	l_1EF9                             	| [jr   l_1EF9]
 
@@ -7136,7 +7139,7 @@ case_2422:
 	move.b	(a0)+,d2                         	| [ld   c,(hl)] row position index
 	                           	| [inc  l]
 	move.b	(a0),d6                         	| [ld   l,(hl)] column position index
-	lea	ds_hpos_loc_offs(pc),a0            	| [ld   h,#>ds_hpos_loc_offs] .b0
+	lea	ds_hpos_loc_offs_9900(pc),a0            	| [ld   h,#>ds_hpos_loc_offs_9900] .b0
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
@@ -7269,7 +7272,7 @@ l_249B:
 	move.b	(a0)+,d2                         	| [ld   c,(hl)] row position index
 	                           	| [inc  l]
 	move.b	(a0),d6                         	| [ld   l,(hl)] column position index
-	lea	ds_hpos_spcoords(pc),a0            	| [ld   h,#>ds_hpos_spcoords] L == offset to MSB
+	lea	ds_hpos_spcoords_9800(pc),a0            	| [ld   h,#>ds_hpos_spcoords_9800] L == offset to MSB
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
@@ -8432,7 +8435,7 @@ l_2AAB:
 	move.b	#10,d1                          	| [ld   b,#10] nbr of column positions
 l_2AAF:
 * increment the relative position
-	lea	ds_hpos_loc_offs(pc),a0            	| [ld   h,#>ds_hpos_loc_offs] even-bytes, relative offset, all 0's, then all 1's, etc. etc.
+	lea	ds_hpos_loc_offs_9900(pc),a0            	| [ld   h,#>ds_hpos_loc_offs_9900] even-bytes, relative offset, all 0's, then all 1's, etc. etc.
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
@@ -8440,7 +8443,7 @@ l_2AAF:
 	add.b	d2,d0                            	| [add  a,c] +1 or -1
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 * increment sprite position LSB
-	lea	ds_hpos_spcoords(pc),a0            	| [ld   h,#>ds_hpos_spcoords]
+	lea	ds_hpos_spcoords_9800(pc),a0            	| [ld   h,#>ds_hpos_spcoords_9800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	      ^^^^ TODO: review XX value
@@ -8455,7 +8458,7 @@ l_2AAF:
 * if ( 0 == nestlr_inh                  	||  0 != obj_pos_rel[0] )  ...
 	move.b	ds_plyr_actv+_b_nestlr_inh,d0   	| [ld   a,(ds_plyr_actv +_b_nestlr_inh)]
 	                               	| [and  a]
-	move.b	ds_hpos_loc_offs+0x00,d0        	| [ld   a,(ds_hpos_loc_offs + 0x00)] check for 0 i.e. returned to center
+	move.b	ds_hpos_loc_offs_9900+0x00,d0        	| [ld   a,(ds_hpos_loc_offs_9900 + 0x00)] check for 0 i.e. returned to center
 	jeq	l_2AC9                             	| [jr   z,l_2AC9]
       ^^^^^^ TODO: review cpu flags (move.b,jeq)
 	tst.b	d0                               	| [and  a]
@@ -12600,7 +12603,7 @@ case_0B5F:  ; $06
 
 	move.b	(a1),d0                         	| [ld   a,(de)]
 	move.b	d0,d4                           	| [ld   e,a]
-	lea	ds_hpos_spcoords(pc),a1            	| [ld   d,#>ds_hpos_spcoords] col pix coordinate, lsb only
+	lea	ds_hpos_spcoords_9800(pc),a1            	| [ld   d,#>ds_hpos_spcoords_9800] col pix coordinate, lsb only
 	and.w	#0xFF,d4
 	add.w	d4,a1
 
@@ -14566,7 +14569,7 @@ ds_9800_RAM2:
 
 
 * Pixel coordinates for object origin positions in the cylon fleet.
-ds_hpos_spcoords:
+ds_hpos_spcoords_9800:
 
 * 10 column coordinates, 6 row coordinates, 16-bits per coordinate.
 .ds     $20
@@ -14593,7 +14596,7 @@ ds_cpu0_task_resrv:
 * 10 column coordinates, 6 row coordinates, 2-bytes per coordinate.
 
 * even-bytes: offset of home-position coordinate relative to origin
-ds_hpos_loc_offs:
+ds_hpos_loc_offs_9900:
 
 * odd-bytes: copy of origin data for access in CPU1 address space (i.e. bits <8:1> of precision coordinate)
 ds_hpos_loc_orig:
