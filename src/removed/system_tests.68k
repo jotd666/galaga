@@ -1,0 +1,904 @@
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,_sfr_6823                       	| [ld   (0x6823),a] 0 ...halt CPU #2 and #3
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,_sfr_6822                    	| [ld   (_sfr_6822),a] 1 ...cpu #3 nmi acknowledge/enable (Z80_IGNORE_INT)
+di                                         ; disable interrupts
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+*  while ( tileramtestloopcount < $0a ){
+	move.b	#0x0A,d1                        	| [ld   b,#0x0A] loop counter
+_tileram_test_loop:
+	jbsr	exx                               	| [exx] save outer loop count
+
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000]
+	move.w	#0x0000,d5                      	| [ld   hl,#0x0000] 0
+	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
+	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
+_wr_zero_loop:
+	move.b	d6,d0                           	| [ld   a,l] a:=0
+	eor.b	d5,d0                            	| [xor  h]
+	not.b	d0                               	| [cpl]
+	add.b	d0,d0                            	| [add  a,a]
+	add.b	d0,d0                            	| [add  a,a]
+adc  hl,hl
+	move.b	d6,d0                           	| [ld   a,l]
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	move.b	d0,(a1)                         	| [ld   (de),a] a==1, de==tile_ram
+	addq.w	#1,a1                           	| [inc  de]
+	subq.w	#1,a4                           	| [dec  bc]
+	move.b	d1,d0                           	| [ld   a,b]
+	or.b	d2,d0                             	| [or   c]
+	jne	_wr_zero_loop                      	| [jr   nz,_wr_zero_loop]
+
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000]
+	move.w	#0x0000,d5                      	| [ld   hl,#0x0000] 0
+	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
+	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
+_rd_zero_loop:
+	move.b	d6,d0                           	| [ld   a,l] a:=0
+	eor.b	d5,d0                            	| [xor  h]
+	not.b	d0                               	| [cpl]
+	add.b	d0,d0                            	| [add  a,a]
+	add.b	d0,d0                            	| [add  a,a]
+adc  hl,hl
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	eor.b	d6,d0                            	| [xor  l]
+	jne	j_ramtest_ng                       	| [jp   nz,j_ramtest_ng]
+	addq.w	#1,a1                           	| [inc  de]
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	subq.w	#1,a4                           	| [dec  bc]
+	move.b	d1,d0                           	| [ld   a,b]
+	or.b	d2,d0                             	| [or   c]
+	jne	_rd_zero_loop                      	| [jr   nz,_rd_zero_loop]
+
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000]
+	lea	l_5555(pc),a0                      	| [ld   hl,#0x5555]
+	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
+	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
+_wr_5555_loop:
+	move.b	d6,d0                           	| [ld   a,l]
+	eor.b	d5,d0                            	| [xor  h]
+	not.b	d0                               	| [cpl]
+	add.b	d0,d0                            	| [add  a,a]
+	add.b	d0,d0                            	| [add  a,a]
+adc  hl,hl
+	move.b	d6,d0                           	| [ld   a,l]
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	move.b	d0,(a1)                         	| [ld   (de),a]
+	addq.w	#1,a1                           	| [inc  de]
+	subq.w	#1,a4                           	| [dec  bc]
+	move.b	d1,d0                           	| [ld   a,b]
+	or.b	d2,d0                             	| [or   c]
+	jne	_wr_5555_loop                      	| [jr   nz,_wr_5555_loop]
+
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000]
+	lea	l_5555(pc),a0                      	| [ld   hl,#0x5555]
+	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
+	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
+_rd_5555_loop:
+	move.b	d6,d0                           	| [ld   a,l]
+	eor.b	d5,d0                            	| [xor  h]
+	not.b	d0                               	| [cpl]
+	add.b	d0,d0                            	| [add  a,a]
+	add.b	d0,d0                            	| [add  a,a]
+adc  hl,hl
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	eor.b	d6,d0                            	| [xor  l]
+	jne	j_ramtest_ng                       	| [jp   nz,j_ramtest_ng]
+	addq.w	#1,a1                           	| [inc  de]
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	subq.w	#1,a4                           	| [dec  bc]
+	move.b	d1,d0                           	| [ld   a,b]
+	or.b	d2,d0                             	| [or   c]
+	jne	_rd_5555_loop                      	| [jr   nz,_rd_5555_loop]
+
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000]
+	lea	l_AAAA(pc),a0                      	| [ld   hl,#0xAAAA]
+	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
+	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
+_wr_aaaa_loop:
+	move.b	d6,d0                           	| [ld   a,l]
+	eor.b	d5,d0                            	| [xor  h]
+	not.b	d0                               	| [cpl]
+	add.b	d0,d0                            	| [add  a,a]
+	add.b	d0,d0                            	| [add  a,a]
+adc  hl,hl
+	move.b	d6,d0                           	| [ld   a,l]
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	move.b	d0,(a1)                         	| [ld   (de),a]
+	addq.w	#1,a1                           	| [inc  de]
+	subq.w	#1,a4                           	| [dec  bc]
+	move.b	d1,d0                           	| [ld   a,b]
+	or.b	d2,d0                             	| [or   c]
+	jne	_wr_aaaa_loop                      	| [jr   nz,_wr_aaaa_loop]
+
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000]
+	lea	l_AAAA(pc),a0                      	| [ld   hl,#0xAAAA]
+	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
+	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
+_rd_aaaa_loop:
+	move.b	d6,d0                           	| [ld   a,l]
+	eor.b	d5,d0                            	| [xor  h]
+	not.b	d0                               	| [cpl]
+	add.b	d0,d0                            	| [add  a,a]
+	add.b	d0,d0                            	| [add  a,a]
+adc  hl,hl
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	eor.b	d6,d0                            	| [xor  l]
+	jne	j_ramtest_ng                       	| [jp   nz,j_ramtest_ng]
+	addq.w	#1,a1                           	| [inc  de]
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	subq.w	#1,a4                           	| [dec  bc]
+	move.b	d1,d0                           	| [ld   a,b]
+	or.b	d2,d0                             	| [or   c]
+	jne	_rd_aaaa_loop                      	| [jr   nz,_rd_aaaa_loop]
+
+	jbsr	exx                               	| [exx] load outer loop count
+     ^^^^ TODO: review special instruction inputs
+	subq.b	#1,d1                           	| [dec  b] giant_loop_counter--
+	jne	_tileram_test_loop                 	| [jp   nz,_tileram_test_loop]
+*  } // end while tile ram test loop
+
+*  color RAM, tile RAM, and data RAM tests.
+ld   sp,#0x8000 + 0x0400               ; tmp stack for function calls
+
+	lea	m_color_ram(pc),a1                 	| [ld   de,#m_color_ram]
+	jbsr	c_ram_test_block                  	| [call c_ram_test_block]
+
+	lea	ds_8800_RAM0(pc),a1                	| [ld   de,#ds_8800_RAM0] $0400 bytes
+	jbsr	c_ram_test_block                  	| [call c_ram_test_block]
+
+	lea	ds_9000_RAM1(pc),a1                	| [ld   de,#ds_9000_RAM1] $0400 bytes
+	jbsr	c_ram_test_block                  	| [call c_ram_test_block]
+
+	lea	ds20_99E0(pc),a0                   	| [ld   hl,#ds20_99E0] reset 00's to 9000 task tbl ($20 bytes)
+	lea	ds_cpu0_task_actv(pc),a1           	| [ld   de,#ds_cpu0_task_actv] reset 00's from 99E0_mchn_data ($20 bytes)
+	move.b	#0x00,d1                        	| [ld   bc,#0x0020] 32
+	move.b	#0x20,d2                        	| [ld   bc,#0x0020] 32
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+
+	lea	ds_9800_RAM2(pc),a1                	| [ld   de,#ds_9800_RAM2] $0400 bytes
+	jbsr	c_ram_test_block                  	| [call c_ram_test_block]
+
+	lea	ds_cpu0_task_actv(pc),a0           	| [ld   hl,#ds_cpu0_task_actv] reset 00's to 99E0_mchn_data ($20 bytes)
+	lea	ds20_99E0(pc),a1                   	| [ld   de,#ds20_99E0] reset 00's from 9000 task tbl ($20 bytes)
+	move.b	#0x00,d1                        	| [ld   bc,#0x0020] 32
+	move.b	#0x20,d2                        	| [ld   bc,#0x0020] 32
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+
+ld   sp,#ds_8800_RAM0 + 0x0300             ; tmp stack for function calls
+	lea	0x8000(pc),a1                  	| [ld   de,#0x8000] 8000-83ff Video RAM
+	jbsr	c_ram_test_block                  	| [call c_ram_test_block]
+
+	jbsr	c_tileram_regs_clr                	| [call c_tileram_regs_clr]
+
+	lea	str_3B7E(pc),a0                    	| [ld   hl,#str_3B7E] load start address of src string "RAM  OK"
+	jbsr	c_text_out                        	| [call c_text_out] display "RAM  OK"
+
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	jbsr	c_svc_clr_snd_regs                	| [call c_svc_clr_snd_regs] $9AA0, $40 bytes
+
+* enable f_05BE in CPU-sub1 (empty task) ... disabled in game_ctrl start
+	move.b	#7,d0                           	| [ld   a,#7]
+	move.b	d0,ds_cpu1_task_actv+0x00       	| [ld   (ds_cpu1_task_actv + 0x00),a] 7 ... skips to f_05BE in CPU-sub task-table
+
+	jbsr	c_spriteposn_regs_init            	| [call c_spriteposn_regs_init]
+	jra	j_romtest_mgr                      	| [jp   j_romtest_mgr] should jr back to Test_menu_init
+
+*=============================================================================
+* c_ram_test_block()
+*  Description:
+*   call ram_test_single repeatedly.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_ram_test_block:
+	move.b	#0x1E,d1                        	| [ld   b,#0x1E] count
+	move.w	#0x0000,d5                      	| [ld   hl,#0x0000] 0
+l_3484:
+	movem.w	d1/d2,-(sp)                    	| [push bc]
+	jbsr	c_ram_test_single                 	| [call c_ram_test_single]
+
+	movem.w	(sp)+,d1/d2                    	| [pop  bc]
+	subq.b	#1,d1                           	| [...]
+	jne	l_3484                             	| [djnz l_3484]
+	rts                                    	| [ret]
+* end
+
+*=============================================================================
+* c_ram_test_single()
+*  Description:
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_ram_test_single:
+	movem.w	d3/d4,-(sp)                    	| [push de]
+	move.l	a1,-(sp)                        	| [push de]
+
+	move.l	a0,-(sp)                        	| [push hl]
+	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
+	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
+l_3491:
+	move.b	d6,d0                           	| [ld   a,l]
+	eor.b	d5,d0                            	| [xor  h]
+	not.b	d0                               	| [cpl]
+	add.b	d0,d0                            	| [add  a,a]
+	add.b	d0,d0                            	| [add  a,a]
+adc  hl,hl
+	move.b	d6,d0                           	| [ld   a,l]
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	move.b	d0,(a1)                         	| [ld   (de),a]
+	addq.w	#1,a1                           	| [inc  de]
+	subq.w	#1,a4                           	| [dec  bc]
+	move.b	d1,d0                           	| [ld   a,b]
+	or.b	d2,d0                             	| [or   c]
+	jne	l_3491                             	| [jr   nz,l_3491]
+	move.l	(sp)+,a0                        	| [pop  hl]
+	move.l	(sp)+,a1                        	| [pop  de]
+	movem.w	(sp)+,d3/d4                    	| [pop  de]
+	movem.w	d3/d4,-(sp)                    	| [push de]
+	move.l	a1,-(sp)                        	| [push de]
+	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
+	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
+l_34A9:
+	move.b	d6,d0                           	| [ld   a,l]
+	eor.b	d5,d0                            	| [xor  h]
+	not.b	d0                               	| [cpl]
+	add.b	d0,d0                            	| [add  a,a]
+	add.b	d0,d0                            	| [add  a,a]
+adc  hl,hl
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	eor.b	d6,d0                            	| [xor  l]
+	jne	j_ramtest_ng                       	| [jp   nz,j_ramtest_ng]
+	addq.w	#1,a1                           	| [inc  de]
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	subq.w	#1,a4                           	| [dec  bc]
+	move.b	d1,d0                           	| [ld   a,b]
+	or.b	d2,d0                             	| [or   c]
+	jne	l_34A9                             	| [jr   nz,l_34A9]
+	move.l	(sp)+,a1                        	| [pop  de]
+	movem.w	(sp)+,d3/d4                    	| [pop  de]
+	rts                                    	| [ret]
+
+*=============================================================================
+* j_ramtest_ng()
+*  Description:
+*   Handle no-good ram test, do diagnostics and loop forever.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+j_ramtest_ng:
+	move.b	d0,d1                           	| [ld   b,a]
+	move.b	d3,d0                           	| [ld   a,d]
+	roxr.b	#2,d0                           	| [rra] * 2
+      ^^^^^^ TODO: review cpu X flag
+	and.b	#0x07,d0                         	| [and  #0x07]
+	cmp.b	#4,d0                            	| [cp   #4]
+	jcs	l_34CB                             	| [jr   c,l_34CB]
+	subq.b	#1,d0                           	| [dec  a]
+l_34CB:
+	cmp.b	#5,d0                            	| [cp   #5]
+	jcs	l_34D0                             	| [jr   c,l_34D0]
+	subq.b	#1,d0                           	| [dec  a]
+l_34D0:
+	move.b	d0,d4                           	| [ld   e,a]
+	move.b	d1,d0                           	| [ld   a,b]
+	move.b	#0x15,d3                        	| [ld   d,#0x15]
+	and.b	#0x0F,d0                         	| [and  #0x0F]
+	jne	l_34DA                             	| [jr   nz,l_34DA]
+	move.b	#0x11,d3                        	| [ld   d,#0x11]
+l_34DA:
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	jbsr	exx                               	| [exx]
+     ^^^^ TODO: review special instruction inputs
+	lea	0x8000(pc),a0                  	| [ld   hl,#0x8000]
+	lea	0x8000+0x01(pc),a1             	| [ld   de,#0x8000 + 0x01]
+	move.b	#0x04,d1                        	| [ld   bc,#0x0400] 1024
+	move.b	#0x00,d2                        	| [ld   bc,#0x0400] 1024
+	move.b	#0x24,(a0)                      	| [ld   (hl),#0x24]
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+	clr.b	(a0)                             	| [ld   (hl),#0x00]
+	move.b	#0x03,d1                        	| [ld   bc,#0x03FF] 1023
+	move.b	#0xff,d2                        	| [ld   bc,#0x03FF] 1023
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	jbsr	exx                               	| [exx]
+     ^^^^ TODO: review special instruction inputs
+	lea	0x8000+0x02E0+0x02(pc),a0      	| [ld   hl,#0x8000 + 0x02E0 + 0x02]
+	move.b	#0x1B,(a0)                      	| [ld   (hl),#0x1B]
+	move.b	#0xE0,d0                        	| [ld   a,#0xE0]
+	subq.b	#1,d5                           	| [dec  h]
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+	move.b	#0x0A,(a0)                      	| [ld   (hl),#0x0A]
+	move.b	#0xE0,d0                        	| [ld   a,#0xE0]
+	subq.b	#1,d5                           	| [dec  h]
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+	move.b	#0x16,(a0)                      	| [ld   (hl),#0x16]
+	move.b	#0xA0,d0                        	| [ld   a,#0xA0]
+	subq.b	#1,d5                           	| [dec  h]
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+	move.b	d4,(a0)                         	| [ld   (hl),e]
+	move.b	#0xE0,d0                        	| [ld   a,#0xE0]
+	subq.b	#1,d5                           	| [dec  h]
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+	move.b	d3,(a0)                         	| [ld   (hl),d]
+
+* same as spriteposn_vregs_init
+	lea	sfr_sprite_posn(pc),a0             	| [ld   hl,#sfr_sprite_posn] $80 bytes
+	move.b	#0x80,d1                        	| [ld   b,#0x80]
+l_3516:
+	move.b	#0xF1,(a0)                      	| [ld   (hl),#0xF1] init value
+	addq.w	#1,a0                           	| [inc  hl]
+	subq.b	#1,d1                           	| [...]
+	jne	l_3516                             	| [djnz l_3516]
+
+l_ramtest_ng_4ever:
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	jra	l_ramtest_ng_4ever                 	| [jp   l_ramtest_ng_4ever]
+
+*=============================================================================
+* c_rom_test_csum_calc()
+*  Description:
+*   C is set to $00 by the caller, indicating the expected checksum
+*   result. Adding the last byte of each rom section results in a 0 checksum.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_rom_test_csum_calc:
+
+	move.l	a0,-(sp)                        	| [push hl]
+	exg	a1,a0                              	| [ex   de,hl] Swap the starting address from DE to HL.
+	move.b	#0x10,d3                        	| [ld   d,#0x10] Set the MSB of the number of bytes to be summed ($1000)
+	clr.b	d0                               	| [xor  a] A==$00
+	move.b	d0,d1                           	| [ld   b,a] B==$00, so we now have BC==00. The first dec will roll
+                                                  * thru to $FF, giving an effective count of $100.
+l_3527:
+	add.b	(a0),d0                          	| [add  a,(hl)] Begin the checksum loop, with start address now in HL
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	addq.w	#1,a0                           	| [inc  hl]
+	subq.b	#1,d1                           	| [...]
+	jne	l_3527                             	| [djnz l_3527] CPU 1 & CPU 2 kick in around the time this is first called
+	subq.b	#1,d3                           	| [dec  d]
+	jne	l_3527                             	| [jr   nz,l_3527] The MSB of the repeat count is the outer loop count.
+	exg	a1,a0                              	| [ex   de,hl]
+	move.l	(sp)+,a0                        	| [pop  hl]
+	cmp.b	d2,d0                            	| [cp   c] final sum must be $00
+	bne.b	0f                               	| [...]
+	rts                                    	| [ret  z] end 'call c_rom_test_csum_calc' [...]
+0:
+
+*=============================================================================
+* j_romtest_ng()
+*  Description:
+*   Loops for ever if any rom checksum is failed.
+*   this code segment also used for CPU1 or CPU2 failed checksum
+*
+*  ROM test status flags:
+*  $9100 = 0  CPU-sub rom test status, pause/resume (and returns test result)
+*  $9101 = 0  CPU-sub2 rom test status, pause/resume (and returns test result)
+*  $9102      CPU0 test state: 1->$0000, 2->$1000 ... 4->$3000 $FF->CPU0 ROM test complete
+*             Error code, failed ROM test (either sub CPU), passed as parameter to subroutine.
+*
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+j_romtest_ng:
+	lea	str_3B88(pc),a0                    	| [ld   hl,#str_3B88]
+	jbsr	c_text_out                        	| [call c_text_out]
+	lea	0x8000+0x0240+0x04(pc),a1      	| [ld   de,#0x8000 + 0x0240 + 0x04]
+	lea	ds_rom_test_status+0x02(pc),a0     	| [ld   hl,#ds_rom_test_status + 0x02] load error code
+	clr.b	d0                               	| [xor  a]
+	jbsr	rld                               	| [rld] rld  (hl)
+     ^^^^ TODO: review special instruction inputs
+	move.b	d0,(a1)                         	| [ld   (de),a]
+	jbsr	rst_20                            	| [rst  0x20] DE-=$20
+	clr.b	d0                               	| [xor  a]
+	jbsr	rld                               	| [rld] rld  (hl)
+     ^^^^ TODO: review special instruction inputs
+	move.b	d0,(a1)                         	| [ld   (de),a]
+l_romtest_ng_4ever:
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	jra	l_romtest_ng_4ever                 	| [jp   l_romtest_ng_4ever]
+
+*=============================================================================
+* j_romtest_mgr()
+*  Description:
+*   Coordinate ROM tests between multiple CPUs.
+*   jp here following end of RAM tests.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+j_romtest_mgr:
+	lea	ds_rom_test_status(pc),a0          	| [ld   hl,#ds_rom_test_status] initialize 3 bytes
+
+	clr.b	(a0)                             	| [ld   (hl),#0x00] (9101) = 0 ... resume CPUsub1
+	addq.w	#1,a0                           	| [inc  hl]
+	clr.b	(a0)                             	| [ld   (hl),#0x00] (9101) = 0 ... resume CPUsub2
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	#0x01,(a0)                      	| [ld   (hl),#0x01] (9102) = 1 ... checking CPU0-region $0000
+
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_svc_test_snd_slctn         	| [ld   (b_svc_test_snd_slctn),a] 0 (init the test-mode sound-selection variable.)
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,0x6823                       	| [ld   (0x6823),a] 1 (enable sub CPUs)
+          ^^^^^^ TODO: review absolute 16-bit address write
+
+	move.w	#0x0000,d3                      	| [ld   de,#0x0000] start address of test ($1000 bytes are checked per call) 0
+	clr.b	d2                               	| [ld   c,#0]
+	jbsr	c_rom_test_csum_calc              	| [call c_rom_test_csum_calc]
+	addq.b	#1,(a0)                         	| [inc  (hl)] ($9102) = 2 (checking CPU0-region $1000)
+	clr.b	d2                               	| [ld   c,#0]
+	jbsr	c_rom_test_csum_calc              	| [call c_rom_test_csum_calc]
+	addq.b	#1,(a0)                         	| [inc  (hl)] ($9102) = 3 (checking CPU0-region $2000)
+	clr.b	d2                               	| [ld   c,#0]
+	jbsr	c_rom_test_csum_calc              	| [call c_rom_test_csum_calc]
+	addq.b	#1,(a0)                         	| [inc  (hl)] ($9102) = 4 (checking CPU0-region $3000)
+	clr.b	d2                               	| [ld   c,#0]
+	jbsr	c_rom_test_csum_calc              	| [call c_rom_test_csum_calc]
+
+	move.b	#0xFF,(a0)                      	| [ld   (hl),#0xFF] ($9102) = $FF (CPU0 complete)
+
+l_CPU1_rom_test:
+	move.b	ds_rom_test_status+0x00,d0      	| [ld   a,(ds_rom_test_status + 0x00)] check for CPU1 test result
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	tst.b	d0                               	| [and  a]
+	jeq	l_CPU1_rom_test                    	| [jr   z,l_CPU1_rom_test] wait for result (non-zero)
+
+	addq.b	#1,d0                           	| [inc  a] $FF+1=0
+	jeq	l_CPU2_rom_test                    	| [jr   z,l_CPU2_rom_test]
+	subq.b	#1,d0                           	| [dec  a]
+	move.b	d0,ds_rom_test_status+0x02      	| [ld   (ds_rom_test_status + 0x02),a] grab error code...
+	jra	j_romtest_ng                       	| [jp   j_romtest_ng] ...ends in infinite loop
+
+l_CPU2_rom_test:
+	move.b	ds_rom_test_status+0x01,d0      	| [ld   a,(ds_rom_test_status + 0x01)] check for CPU1 test result
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	tst.b	d0                               	| [and  a]
+	jeq	l_CPU2_rom_test                    	| [jr   z,l_CPU2_rom_test] wait for result (non-zero)
+
+	addq.b	#1,d0                           	| [inc  a] $FF+1=0
+	jeq	j_Test_menu_init                   	| [jr   z,j_Test_menu_init] DONE... JP to SVC MODE!
+
+	subq.b	#1,d0                           	| [dec  a]
+	move.b	d0,ds_rom_test_status+0x02      	| [ld   (ds_rom_test_status + 0x02),a] grab error code...
+	jra	j_romtest_ng                       	| [jp   j_romtest_ng] ...ends in infinite loop
+
+*
+d_params_switch_mode:
+	.byte 0x05,0x05,0x05,0x05
+d_params_snd_test:
+	.byte 0x30,0x40,0x00,0x02,0xDF
+	.byte 0x40,0x30,0x30,0x03,0xDF
+	.byte 0x10,0x20
+
+*=============================================================================
+* j_Test_menu_init()
+*  Description:
+*   jr here from completion of ROM tests.
+*   'RAM OK' and 'ROM OK' actually shown right side up, but then in ShowCfg the
+*   flip screen gets set because of the check that is done on the IO input value.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+j_Test_menu_init:
+	lea	str_3B88(pc),a0                    	| [ld   hl,#str_3B88] ld src address of string "ROM  OK"
+	jbsr	c_text_out                        	| [call c_text_out] display "ROM OK"
+	jbsr	c_svc_updt_dsply                  	| [call c_svc_updt_dsply] prints remaining dsw configured options (upside down)
+
+* memset( rom_test_status,0,3)
+	lea	ds_rom_test_status(pc),a0          	| [ld   hl,#ds_rom_test_status] memset(...,0,3)...allows sub CPUs to resume.
+	move.b	#3,d1                           	| [ld   b,#3]
+l_35C3:
+	clr.b	(a0)                             	| [ld   (hl),#0]
+	addq.w	#1,a0                           	| [inc  hl]
+	subq.b	#1,d1                           	| [...]
+	jne	l_35C3                             	| [djnz l_35C3]
+
+* Initialize scheduler table before interrupts are enabled (otherwise task scheduler could infinite loop!)
+	move.b	#0x20,d0                        	| [ld   a,#0x20]
+	move.b	d0,ds_cpu0_task_actv+0          	| [ld   (ds_cpu0_task_actv + 0),a] $20 ... only task 0 (empty task) can be called
+
+* set IO controller state - $05 (go in "switch" mode)
+	lea	d_params_switch_mode(pc),a0        	| [ld   hl,#d_params_switch_mode] IO data (05,05,05,05)
+	lea	l_7000(pc),a1                      	| [ld   de,#0x7000] IO data xfer (write)
+	move.b	#0x00,d1                        	| [ld   bc,#0x0004] num IO params 4
+	move.b	#0x04,d2                        	| [ld   bc,#0x0004] num IO params 4
+	jbsr	exx                               	| [exx] swap args to shadow regs
+     ^^^^ TODO: review special instruction inputs
+	move.b	#0xA1,d0                        	| [ld   a,#0xA1]
+	*move.b	d0,0x7100                       	| [ld   (0x7100),a] IO cmd ( $A1 -> go into switch mode)
+          ^^^^^^ TODO: review absolute 16-bit address write
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	jbsr	c_io_cmd_wait                     	| [call c_io_cmd_wait]
+
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+
+* wait 02 frames to verify that CPU-sub1 is alive and updating the frame counter
+	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] 0
+*  while ( frame_cnt != 2 )
+l_35E9:
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	cmp.b	#2,d0                            	| [cp   #2]
+	jne	l_35E9                             	| [jr   nz,l_35E9]
+
+* setup IO command params
+	lea	d_params_snd_test(pc),a0           	| [ld   hl,#d_params_snd_test]
+	lea	l_7000(pc),a1                      	| [ld   de,#0x7000] IO data xfer (write)
+	move.b	#0x00,d1                        	| [ld   bc,#0x000C] num IO params 12
+	move.b	#0x0c,d2                        	| [ld   bc,#0x000C] num IO params 12
+	jbsr	exx                               	| [exx]
+     ^^^^ TODO: review special instruction inputs
+	move.b	#0xA8,d0                        	| [ld   a,#0xA8]
+	*move.b	d0,0x7100                       	| [ld   (0x7100),a] IO cmd ($A8 -> bang sound)
+          ^^^^^^ TODO: review absolute 16-bit address write
+
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	jbsr	c_io_cmd_wait                     	| [call c_io_cmd_wait]
+
+* setup interrupt mode and toggle the latch (enable cpu0_rst38)
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+im   1
+	lea	_sfr_6820(pc),a0                   	| [ld   hl,#_sfr_6820] maincpu irq acknowledge/enable
+	clr.b	(a0)                             	| [ld   (hl),#0]
+	move.b	#1,(a0)                         	| [ld   (hl),#1] enable IRQ1
+ei
+
+	jbsr	c_svc_test_sound_sel              	| [call c_svc_test_sound_sel]
+
+* wait 8 frames (while test sound??)
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] 0
+* while ( frame_cnt != 8 )
+l_3619:
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	and.b	#0x08,d0                         	| [and  #0x08]
+	jeq	l_3619                             	| [jr   z,l_3619]
+
+
+*=============================================================================
+* j_Test_menu_proc()
+*  Description:
+*   Process runner for test menu selection.
+*   If the svc switch is NOT set, it simply continues to Machine Init.
+* IN:
+*  ...
+* OUT:
+*  ...
+* TODO: put the PORT defintions from MAME in here somewhere as reference
+* e.g.
+*   PORT_SERVICE( 0x08, IP_ACTIVE_LOW )
+*
+* IO Input Registers for "switch" mode
+*   [0] test switch & credits in
+*       $7D fire 2
+*       $7E fire 1
+*       $7B 1 start
+*       $77 2 start
+*       $6F coin 1
+*       $5F coin 2
+*       $3F 'service 1' (99999999)
+*   [1] control panel 1
+*       $F7 (L)
+*       $FD (R)
+*   [2] control panel 2 (table-top cabinet cfg)
+*       $7F (L)
+*       $DF (R)
+*
+*-----------------------------------------------------------------------------
+j_Test_menu_proc:
+
+* synchronize with next frame transition.
+
+* prev_frame_cts[0] = frame_cts[0]
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)] Get t0.
+	move.b	d0,d2                           	| [ld   c,a]
+
+*  while ( frame_cts[0] == prev_frame_cts[0] )
+l_3624:
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)] Get t1.
+	cmp.b	d2,d0                            	| [cp   c]
+	jeq	l_3624                             	| [jr   z,l_3624]
+
+* 9110-9116 used as temp array to capture/debounce successive input states.
+	move.w	b_svc_test_inp_buf+0x06(pc),a0  	| [ld   hl,#(b_svc_test_inp_buf + 0x06)]
+                  ^^^^^^ TODO: review move.w into address register
+	move.w	b_svc_test_inp_buf+0x07(pc),a1  	| [ld   de,#(b_svc_test_inp_buf + 0x07)]
+                  ^^^^^^ TODO: review move.w into address register
+	move.b	#0x00,d1                        	| [ld   bc,#0x0007] 7
+	move.b	#0x07,d2                        	| [ld   bc,#0x0007] 7
+lddr                                       ; (9117):=(9116) etc. etc.
+                                                  * HL==910F, DE==9110
+	exg	a1,a0                              	| [ex   de,hl] HL:=9110  ( debounce[0] )
+* (3636)
+*  if ( IN0H_8 == INACTIVE ) goto Machine_init
+	move.w	ds3_99B5_io_input+0x00(pc),a1   	| [ld   de,#(ds3_99B5_io_input + 0x00)]
+                  ^^^^^^ TODO: review move.w into address register
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	btst.b	#7,d0                           	| [bit  7,a] ACTIVE_LOW i.e. if bit_7==1 switch is off
+	jne	j_36BA_Machine_init                	| [jp   nz,j_36BA_Machine_init]
+
+* Read IN0 (button conditions) into B
+	move.b	d0,(a0)                         	| [ld   (hl),a] save new input value to debounce[0]
+	addq.w	#1,a0                           	| [inc  hl]
+	or.b	(a0),d0                           	| [or   (hl)] Trigger on input received now t(0) or t(-1) ...
+	addq.w	#1,a0                           	| [inc  hl]
+	not.b	d0                               	| [cpl] A:=~A (1's compl.)
+	and.b	(a0),d0                          	| [and  (hl)] Input stimulus is new if not active at t(-2)
+	addq.w	#1,a0                           	| [inc  hl]
+	and.b	(a0),d0                          	| [and  (hl)] Checking against saved condition of last frame...
+	move.b	d0,(a0)                         	| [ld   (hl),a] ... and save the input condition this frame.
+	move.b	d0,d1                           	| [ld   b,a] stash the button condition in B for now...
+
+* Read IN1 (stick conditions) into B
+	addq.w	#1,a0                           	| [inc  hl] HL:=9114
+	addq.w	#1,a1                           	| [inc  de] DE:=99b6  (stick input from IN1)
+	move.b	(a1),d0                         	| [ld   a,(de)]
+	move.b	d0,(a0)                         	| [ld   (hl),a] save new input value to debounce[4]
+	addq.w	#1,a0                           	| [inc  hl]
+	or.b	(a0),d0                           	| [or   (hl)] or t(-1) value
+	addq.w	#1,a0                           	| [inc  hl]
+	not.b	d0                               	| [cpl]
+	and.b	(a0),d0                          	| [and  (hl)] not t(-2)
+	addq.w	#1,a0                           	| [inc  hl]
+	and.b	(a0),d0                          	| [and  (hl)] and t(-1) condition
+	move.b	d0,(a0)                         	| [ld   (hl),a] ... and save the input condition this frame.
+	move.b	d0,d6                           	| [ld   l,a] grab the stick condition
+
+	move.b	d1,d5                           	| [ld   h,b] grab button condition from B
+
+* active low input states are now inverted in HL.
+* Successive left shifts (into Cy) with the countdown in B indicate the active input.
+	move.b	#0x10,d1                        	| [ld   b,#0x10] counter...
+l_3659:
+*  for ( B==16; B>0; B-- ) { if (bit_set) call input_hdlr }
+	add.w	d5,a0                            	| [add  hl,hl] does left shift (into Cy)
+  ^^^^ TODO: review d5 computation above
+	bcc.b	0f                               	| [...]
+	jbsr	c_svc_test_input_hdlr             	| [call c,c_svc_test_input_hdlr]
+0:
+	subq.b	#1,d1                           	| [...]
+	jne	l_3659                             	| [djnz l_3659]
+
+	jbsr	c_svc_updt_dsply                  	| [call c_svc_updt_dsply] this also flips the screen back to "normal"
+
+* Check timer to erase Machine Totals info.
+* First time here, timer register contains stray data from tests and is
+* not specifically initialized. Resulting countdown time about 14 minutes...
+* Timer is reset to 15 seconds after data is displayed the first time..
+*  if ( 15sec_tmr == 0 ) goto 3672
+	move.w	w_svc_15sec_tmr(pc),a0          	| [ld   hl,(w_svc_15sec_tmr)] lsb first)
+                  ^^^^^^ TODO: review move.w into address register
+	move.b	d5,d0                           	| [ld   a,h]
+	or.b	d6,d0                             	| [or   l]
+	jeq	l_3672                             	| [jr   z,l_3672]
+
+*  else if ( --15sec_tmr == 0 ) clr_999999()
+	subq.w	#1,a0                           	| [dec  hl]
+	move.b	a0,w_svc_15sec_tmr              	| [ld   (w_svc_15sec_tmr),hl] timer--
+	move.b	d5,d0                           	| [ld   a,h]
+	or.b	d6,d0                             	| [or   l]
+	bne.b	0f                               	| [...]
+	jbsr	c_svc_machine_ttls_erase          	| [call z,c_svc_machine_ttls_erase]
+0:
+
+l_3672:
+	move.b	b_svc_test_inp_buf+0x00,d0      	| [ld   a,(b_svc_test_inp_buf + 0x00)] check fire button... (non-debounced)
+	roxr.b	#1,d0                           	| [rra] right-rotate IN0L_0 (into Cy) ...
+      ^^^^^^ TODO: review cpu X flag
+	jcc	l_367F                             	| [jr   nc,l_367F] active_low, Cy==0 if active (start new sound)
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_svc_eastregg_keyprs_cnt    	| [ld   (b_svc_eastregg_keyprs_cnt),a] 0 (reset count)
+	jra	j_Test_menu_proc                   	| [jp   j_Test_menu_proc]
+
+* Fire Button hit... start new sound (kills last one)
+l_367F:
+	move.b	b_svc_test_inp_buf+0x07,d0      	| [ld   a,(b_svc_test_inp_buf + 0x07)] check stick input conditions for left/right
+	and.b	#0x0F,d0                         	| [and  #0x0F] f7=left, fd=right (active low) (i.e. conditions are 8 left, 2 right)
+	jeq	j_Test_menu_proc                   	| [jp   z,j_Test_menu_proc]
+
+	move.b	d0,d2                           	| [ld   c,a] holding Fire button DOWN then pushing stick left or right. (pc=3687)
+	lea	d_easteregg_trigger(pc),a0         	| [ld   hl,#d_easteregg_trigger]
+	lea	b_svc_eastregg_keyprs_cnt(pc),a1   	| [ld   de,#b_svc_eastregg_keyprs_cnt]
+	move.b	(a1),d0                         	| [ld   a,(de)] always 0 ...?
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+	move.b	(a0),d0                         	| [ld   a,(hl)] d_easteregg_trigger[0]
+	cmp.b	d2,d0                            	| [cp   c]
+	jeq	l_3699                             	| [jr   z,l_3699]
+	clr.b	d0                               	| [xor  a] pushed stick left (always a==02 from table[0])
+	move.b	d0,(a1)                         	| [ld   (de),a] keyprs_cnt = 0
+	jra	j_Test_menu_proc                   	| [jp   j_Test_menu_proc]
+
+l_3699:
+	exg	a1,a0                              	| [ex   de,hl] pushed stick right
+	addq.b	#1,(a0)                         	| [inc  (hl)] (9271):=1
+	addq.w	#1,a1                           	| [inc  de] 3783
+	move.b	(a1),d0                         	| [ld   a,(de)] A = 2
+	addq.b	#1,d0                           	| [inc  a] A = 3
+	jne	j_Test_menu_proc                   	| [jp   nz,j_Test_menu_proc]
+
+* easter egg time: get here and it will put c1981 NAMCO LTD. in huge characters!
+	jbsr	c_tileram_regs_clr                	| [call c_tileram_regs_clr]
+	jbsr	c_spriteposn_regs_init            	| [call c_spriteposn_regs_init]
+
+	lea	d_easteregg_data(pc),a1            	| [ld   de,#d_easteregg_data]
+	lea	0x8000+0x0040+0x02(pc),a0      	| [ld   hl,#0x8000 + 0x0040 + 0x02]
+
+	move.b	#0x1C,d1                        	| [ld   b,#0x1C] each count is 1 column (28)
+*  while ( b-- != 0 ) call EasterEgg
+l_36AF:
+	jbsr	c_svc_easteregg_hdlr              	| [call c_svc_easteregg_hdlr]
+	subq.b	#1,d1                           	| [...]
+	jne	l_36AF                             	| [djnz l_36AF]
+
+* easter egg screen... checking IO input...
+*  while( test_switch_on ) {}
+l_36B4:
+	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] check for test switch
+	add.b	d0,d0                            	| [add  a,a] active low... $80+$80 sets carry if off.
+	jcc	l_36B4                             	| [jr   nc,l_36B4]
+
+* fall through to machine_init
+j_36BA_Machine_init:
+* wait 8 frame counts
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] 0
+*  while ( vtimer < 0x08 ) {}
+l_36BE:
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	cmp.b	#8,d0                            	| [cp   #8]
+	jcs	l_36BE                             	| [jr   c,l_36BE]
+
+*  Make sure Test-switch is Off before proceeding? (not sure how it could get
+*  out of Self-test mode if it were on.... ???)
+*  if ( test_switch_on ) { goto test_menu }
+	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] check for test switch
+	add.b	d0,d0                            	| [add  a,a] active low... $80+$80 sets carry if off.
+	jcc	j_Test_menu_proc                   	| [jp   nc,j_Test_menu_proc]
+
+	jbsr	c_spriteposn_regs_init            	| [call c_spriteposn_regs_init]
+
+* drawing the cross hatch pattern - tile ram layout is pretty clumsy!
+	lea	0x8000(pc),a0                  	| [ld   hl,#0x8000]
+
+	move.b	#0x10,d1                        	| [ld   b,#0x10]
+l_36D4:
+	move.b	#0x28,(a0)                      	| [ld   (hl),#0x28]
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	#0x27,(a0)                      	| [ld   (hl),#0x27]
+	addq.w	#1,a0                           	| [inc  hl]
+	subq.b	#1,d1                           	| [...]
+	jne	l_36D4                             	| [djnz l_36D4]
+
+	move.b	#0x10,d1                        	| [ld   b,#0x10]
+l_36DE:
+	move.b	#0x2D,(a0)                      	| [ld   (hl),#0x2D]
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	#0x2B,(a0)                      	| [ld   (hl),#0x2B]
+	addq.w	#1,a0                           	| [inc  hl]
+	subq.b	#1,d1                           	| [...]
+	jne	l_36DE                             	| [djnz l_36DE]
+
+	move.b	#0x10,d1                        	| [ld   b,#0x10]
+l_36E8:
+	move.b	#0x28,(a0)                      	| [ld   (hl),#0x28]
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	#0x2D,(a0)                      	| [ld   (hl),#0x2D]
+	addq.w	#1,a0                           	| [inc  hl]
+	subq.b	#1,d1                           	| [...]
+	jne	l_36E8                             	| [djnz l_36E8]
+
+	move.b	#0x10,d1                        	| [ld   b,#0x10]
+l_36F2:
+	move.b	#0x27,(a0)                      	| [ld   (hl),#0x27]
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	#0x2B,(a0)                      	| [ld   (hl),#0x2B]
+	addq.w	#1,a0                           	| [inc  hl]
+	subq.b	#1,d1                           	| [...]
+	jne	l_36F2                             	| [djnz l_36F2]
+
+* remainder of cross hatch pattern is copied, i.e.  *(0x8000 + DE) = *(0x8000 + HL)
+	exg	a1,a0                              	| [ex   de,hl]
+
+	lea	0x8000+0x0040(pc),a0           	| [ld   hl,#0x8000 + 0x0040] DE==$8080
+	move.b	#0x03,d1                        	| [ld   bc,#0x0340] 832
+	move.b	#0x40,d2                        	| [ld   bc,#0x0340] 832
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+
+	lea	0x8000(pc),a0                  	| [ld   hl,#0x8000] DE==$83C0
+	move.b	#0x00,d1                        	| [ld   bc,#0x0040] 64
+	move.b	#0x40,d2                        	| [ld   bc,#0x0040] 64
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+
+* wait about two seconds before checking Test-switch.
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] :=0
+*  while ( vtimer < 0x80 ) {}
+l_370F:
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	add.b	d0,d0                            	| [add  a,a] count $80
+	jcc	l_370F                             	| [jr   nc,l_370F]
+
+* if you wish to keep this test pattern on the monitor ...slide switch back to ON
+*  while( test_switch_on ) {}
+l_3715:
+	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] check for test switch
+	add.b	d0,d0                            	| [add  a,a] active low... $80+$80 sets carry if off.
+	jcc	l_3715                             	| [jr   nc,l_3715]
+
+di
+	jbsr	c_io_cmd_wait                     	| [call c_io_cmd_wait]
+
+*  timer = -2...  while ( timer != 0 ) {}
+	move.b	#-2,d0                          	| [ld   a,#-2]
+	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] :=$FE) (-2)
+l_3724:
+	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	                               	| [and  a]
+	jne	l_3724                             	| [jr   nz,l_3724]
+
+	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+
+*  do {
+l_372D:
+* setup for IO cmd $E1 - typical values might be:
+*        01 01 01 01 01 02 03 00 .....Mame interprets as follows:
+* 01 + 4 arguments: set coinage
+* 02: go in "credit" mode and enable start buttons
+* 03: disable joystick remapping (Galaga needs only L/R joy indications)
+* 00: nop
+	lea	ds8_9280_tmp_IO_parms(pc),a0       	| [ld   hl,#ds8_9280_tmp_IO_parms] writing default IO params for credit-mode (8 bytes)
+	lea	l_7000(pc),a1                      	| [ld   de,#0x7000] IO data xfer (write)
+	move.b	#0x00,d1                        	| [ld   bc,#0x0008] 8
+	move.b	#0x08,d2                        	| [ld   bc,#0x0008] 8
+	jbsr	exx                               	| [exx]
+     ^^^^ TODO: review special instruction inputs
+	move.b	#0xE1,d0                        	| [ld   a,#0xE1]
+	*move.b	d0,0x7100                       	| [ld   (0x7100),a] IO cmd ($E1 -> go into credit mode)
+          ^^^^^^ TODO: review absolute 16-bit address write
+	jbsr	c_io_cmd_wait                     	| [call c_io_cmd_wait]
+
+* Wait for valid status from IO controller?
+* Setup for IO cmd $B1 ...read 3 bytes (num credits, plyr 1, plyr 2)
+	lea	l_7000(pc),a0                      	| [ld   hl,#0x7000] IO data xfer (read)
+	lea	ds3_9288_tmp_IO_data(pc),a1        	| [ld   de,#ds3_9288_tmp_IO_data]
+	move.b	#0x00,d1                        	| [ld   bc,#0x0003] 3
+	move.b	#0x03,d2                        	| [ld   bc,#0x0003] 3
+	jbsr	exx                               	| [exx]
+     ^^^^ TODO: review special instruction inputs
+	move.b	#0xB1,d0                        	| [ld   a,#0xB1] IO command "only issued after $E1" (go into credit mode)
+	*move.b	d0,0x7100                       	| [ld   (0x7100),a] IO cmd ($B1 -> reading/polling data)
+          ^^^^^^ TODO: review absolute 16-bit address write
+	jbsr	c_io_cmd_wait                     	| [call c_io_cmd_wait]
+
+*  } while ( a > $a0                    	|| ( a & $0f > $09 ) )
+	move.b	ds3_9288_tmp_IO_data,d0         	| [ld   a,(ds3_9288_tmp_IO_data)] $FF if in test-mode when test switch off...
+	cmp.b	#0xA1,d0                         	| [cp   #0xA1] $A0 (100d) may be valid for credit mode? so compare to $A1
+	jcc	l_372D                             	| [jr   nc,l_372D] generate a Cy if A<$A1
+	and.b	#0x0F,d0                         	| [and  #0x0F]
+	cmp.b	#0x0A,d0                         	| [cp   #0x0A] in credit mode bcd digits should be less than 9
+	jcc	l_372D                             	| [jr   nc,l_372D]
+
+* svc switch off... let'er rip!
+ei
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,0x8000+0x0200+0x10       	| [ld   (0x8000 + 0x0200 + 0x10),a] 0 in middle of screen

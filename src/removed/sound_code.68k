@@ -1,0 +1,1519 @@
+*=============================================================================
+* c_nmi_proc()
+*  Description:
+*    Handler for NMI
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_nmi_proc:
+	rts
+	.ifdef		SOUNDCODE		| disabled!!
+	move.b	b_9AA0+0x18,d0                  	| [ld   a,(b_9AA0 + 0x18)] sound-fx count/enable registers, unused?
+	                               	| [and  a]
+	jne	l_067A_reset_sfrs                  	| [jp   nz,l_067A_reset_sfrs] doesn't appear that it is ever called
+
+* memset( b_freq_vol_sfr_bufr, 0, $10 )
+	lea	b_9A60+0x00(pc),a0                 	| [ld   hl,#b_9A60 + 0x00] clear frequency and volume SFRs
+	clr.b	(a0)                             	| [ld   (hl),#0]
+	lea	b_9A60+0x01(pc),a1                 	| [ld   de,#b_9A60 + 0x01]
+	move.w	#0x0f,d1                        	| [ld   bc,#0x000F] 15
+	jbsr	ldir                              	| [ldir]
+
+* if ( sound_mgr_reset )  ...
+	move.b	b_9AA0+0x17,d0                  	| [ld   a,(b_9AA0 + 0x17)] 0 ... enable sound mgr process
+	                               	| [and  a]
+	jne	l_033D_clear_all                   	| [jp   nz,l_033D_clear_all]
+* ... then ...
+
+* credit-in sound is triggered for all credits counted
+
+* if ( 0 != snd_add_credit_cnt )
+	move.b	b_9A70+0x09,d0                  	| [ld   a,(b_9A70 + 0x09)] count of credits-in since last update
+	                               	| [and  a]
+	jeq	l_00D3                             	| [jr   z,l_00D3]
+* then ...
+*  _fx[$08] += snd_add_credit_cnt
+	lea	b_9AA0+0x08(pc),a0                 	| [ld   hl,#b_9AA0 + 0x08] += b_9A70[9] ... sound-fx count/enable registers, credit-in sound
+	add.b	(a0),d0                          	| [add  a,(hl)]
+	move.b	d0,(a0)                         	| [ld   (hl),a]
+*  snd_add_credit_cnt = 0
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9A70+0x09                  	| [ld   (b_9A70 + 0x09),a] 0 ... additional credit-in count
+* ...
+
+l_00D3:
+* if ( 0 != register )  ...  count/enable register
+	move.b	b_9AA0+0x00,d0                  	| [ld   a,(b_9AA0 + 0x00)] sound-fx count/enable registers, pulsing formation sound effect
+	                               	| [and  a]
+	jeq	l_0148                             	| [jr   z,l_0148]
+* ... then ...
+	move.b	ds_9200_glbls+0x11,d0           	| [ld   a,(ds_9200_glbls + 0x11)] formatn_mv_signage ... cp with cpu2<b_9A80 + 0x00>
+	lea	b_9A80+0x00(pc),a0                 	| [ld   hl,#b_9A80 + 0x00]
+	cmp.b	(a0),d0                          	| [cp   (hl)]
+	jeq	l_0102                             	| [jr   z,l_0102]
+
+	move.b	d0,b_9A80+0x00                  	| [ld   (b_9A80 + 0x00),a] = ds_9200_glbls [0x11] ... formatn_mv_signage
+	addq.b	#1,d0                           	| [inc  a]
+	jeq	l_00F4                             	| [jr   z,l_00F4]
+
+* expanding formation
+	lea	d_06C3(pc),a0                      	| [ld   hl,#d_06C3]
+	move.b	a0,b_9A80+0x02                  	| [ld   (b_9A80 + 0x02),hl] ptmp = &d_06C3[0]
+
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9A00+0x00                  	| [ld   (b_9A00 + 0x00),a] 0 .. sound_fx_status
+	jra	l_00FD                             	| [jr   l_00FD]
+
+* contracting formation
+l_00F4:
+       * A == 0
+	lea	d_06C3+8*2(pc),a0                  	| [ld   hl,#d_06C3 + 8 * 2] offset 8 words
+	move.b	a0,b_9A80+0x02                  	| [ld   (b_9A80 + 0x02),hl] ptmp = &d_06D3[0]
+	move.b	d0,b_9A00+0x00                  	| [ld   (b_9A00 + 0x00),a] 0 ... sound_fx_status
+l_00FD:
+       * A == 0
+	move.b	d0,b_9A80+0x01                  	| [ld   (b_9A80 + 0x01),a] A == 0  or  A != 0 (only gets updated when b_9A80_00 == formatn_mv_signage
+	jra	l_0114                             	| [jr   l_0114]
+
+l_0102:
+	lea	b_9A00+0x00(pc),a0                 	| [ld   hl,#b_9A00 + 0x00] sound_fx_status[0]++ (check for limit of 34)
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+
+	cmp.b	#0x22,d0                         	| [cp   #0x22]
+	jne	l_0129                             	| [jr   nz,l_0129]
+	clr.b	(a0)                             	| [ld   (hl),#0] sound_fx_status[0] = 0
+	move.b	b_9A80+0x01,d0                  	| [ld   a,(b_9A80 + 0x01)] b_9A80[1]++
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,b_9A80+0x01                  	| [ld   (b_9A80 + 0x01),a] b_9A80[1]++
+
+l_0114:
+	move.l	b_9A80+0x02(pc),a0              	| [ld   hl,(b_9A80 + 0x02)] ptmp ... d_06C3 or d_06D3
+	jbsr	add_4_times_d0_to_a0_0008          	| [rst  0x08] HL += 2A
+	move.l	(a0),a1                         	| [ld   e,(hl)]
+	illegal                         	| [inc  hl]
+	                         	| [ld   d,(hl)]
+	move.l	a1,b_9A80+0x04                  	| [ld   (b_9A80 + 0x04),de]
+	move.b	#0x1F,d0                        	| [ld   a,#0x1F] $20 - $01 (1-byte increment to next word already done)
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+	move.b	(a0),d4                         	| [ld   e,(hl)]
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	(a0),d3                         	| [ld   d,(hl)]
+	move.l	a1,b_9A80+0x06                  	| [ld   (b_9A80 + 0x06),de]
+l_0129:
+	move.l	b_9A80+0x06(pc),a0              	| [ld   hl,(b_9A80 + 0x06)] b_9A80[6] += b_9A80[4]
+	move.l	b_9A80+0x04(pc),a1              	| [ld   de,(b_9A80 + 0x04)]
+	add.w	d3,a0                            	| [add  hl,de]
+	move.b	a0,b_9A80+0x06                  	| [ld   (b_9A80 + 0x06),hl]
+
+	move.b	d5,d0                           	| [ld   a,h]
+	move.b	d0,b_9A60+0x01                  	| [ld   (b_9A60 + 0x01),a] freq 0
+	ror.b	#4,d0                            	| [rrca] * 4
+	move.b	d0,b_9A60+0x01+1                	| [ld   (b_9A60 + 0x01 + 1),a]
+	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
+	move.b	d0,b_9A60+0x05                  	| [ld   (b_9A60 + 0x05),a] $0A ... voice 0 volume
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9A70+0x00+0                	| [ld   (b_9A70 + 0x00 + 0),a] 0 ... voice 0 wave select
+
+* bug dive attack sound
+l_0148:
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $13 ... bug dive attack sound
+	move.b	#0x13,(a0)                      	| [ld   (hl),#0x13]
+	move.b	b_9AA0+0x13,d0                  	| [ld   a,(b_9AA0 + 0x13)] sound-fx count/enable registers, bug dive attack sound
+	                               	| [and  a]
+	jeq	l_015C                             	| [jr   z,l_015C]
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9AA0+0x13                  	| [ld   (b_9AA0 + 0x13),a] 0 ... sound-fx count/enable registers, bug dive attack sound
+	jbsr	c_03F4                            	| [call c_03F4] initialize the sound
+	jra	l_0165                             	| [jr   l_0165]
+l_015C:
+	move.b	b_9AC0+0x13,d0                  	| [ld   a,(b_9AC0 + 0x13)] check if sound is active
+	                               	| [and  a]
+	jeq	l_0165                             	| [jr   z,l_0165]
+	jbsr	c_044A                            	| [call c_044A] update the sound
+
+* shot sound
+l_0165:
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $0F
+	move.b	#0x0F,(a0)                      	| [ld   (hl),#0x0F]
+	move.b	b_9AA0+0x0F,d0                  	| [ld   a,(b_9AA0 + 0x0F)] sound-fx count/enable registers, shot sound
+	                               	| [and  a]
+	jeq	l_0179                             	| [jr   z,l_0179]
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9AA0+0x0F                  	| [ld   (b_9AA0 + 0x0F),a] 0 ... sound-fx count/enable registers, shot sound
+	jbsr	c_03F4                            	| [call c_03F4]
+	jra	l_0182                             	| [jr   l_0182]
+l_0179:
+	move.b	b_9AC0+0x0F,d0                  	| [ld   a,(b_9AC0 + 0x0F)]
+	                               	| [and  a]
+	jeq	l_0182                             	| [jr   z,l_0182]
+	jbsr	c_044A                            	| [call c_044A]
+
+* yellow bug hit sound
+l_0182:
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $03
+	move.b	#3,(a0)                         	| [ld   (hl),#3]
+	move.b	b_9AA0+0x03,d0                  	| [ld   a,(b_9AA0 + 0x03)] sound-fx count/enable registers, yellow bug hit sound
+	                               	| [and  a]
+	jeq	l_0196                             	| [jr   z,l_0196]
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9AA0+0x03                  	| [ld   (b_9AA0 + 0x03),a] 0 ... sound-fx count/enable registers, yellow bug hit sound
+	jbsr	c_03F4                            	| [call c_03F4]
+	jra	l_019F                             	| [jr   l_019F]
+l_0196:
+	move.b	b_9AC0+0x03,d0                  	| [ld   a,(b_9AC0 + 0x03)]
+	                               	| [and  a]
+	jeq	l_019F                             	| [jr   z,l_019F]
+	jbsr	c_044A                            	| [call c_044A]
+
+* red bug hit sound
+l_019F:
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $02
+	move.b	#2,(a0)                         	| [ld   (hl),#2]
+	move.b	b_9AA0+0x02,d0                  	| [ld   a,(b_9AA0 + 0x02)] sound-fx count/enable registers, red bug hit sound
+	                               	| [and  a]
+	jeq	l_01B3                             	| [jr   z,l_01B3]
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9AA0+0x02                  	| [ld   (b_9AA0 + 0x02),a] 0 ... sound-fx count/enable registers, red bug hit sound
+	jbsr	c_03F4                            	| [call c_03F4]
+	jra	l_01BC                             	| [jr   l_01BC]
+l_01B3:
+	move.b	b_9AC0+0x02,d0                  	| [ld   a,(b_9AC0 + 0x02)]
+	                               	| [and  a]
+	jeq	l_01BC                             	| [jr   z,l_01BC]
+	jbsr	c_044A                            	| [call c_044A]
+
+* hit_green_boss
+l_01BC:
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $04
+	move.b	#4,(a0)                         	| [ld   (hl),#4]
+	move.b	b_9AA0+0x04,d0                  	| [ld   a,(b_9AA0 + 0x04)] sound-fx count/enable registers, hit_green_boss
+	                               	| [and  a]
+	jeq	l_01D0                             	| [jr   z,l_01D0]
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9AA0+0x04                  	| [ld   (b_9AA0 + 0x04),a] 0 ... sound-fx count/enable registers, hit_green_boss
+	jbsr	c_03F4                            	| [call c_03F4]
+	jra	l_01D9                             	| [jr   l_01D9]
+l_01D0:
+	move.b	b_9AC0+0x04,d0                  	| [ld   a,(b_9AC0 + 0x04)]
+	                               	| [and  a]
+	jeq	l_01D9                             	| [jr   z,l_01D9]
+	jbsr	c_044A                            	| [call c_044A]
+
+* hit_blue_boss
+l_01D9:
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $01
+	move.b	#1,(a0)                         	| [ld   (hl),#1]
+	move.b	b_9AA0+0x01,d0                  	| [ld   a,(b_9AA0 + 0x01)] sound-fx count/enable registers, blue-boss hit sound
+	                               	| [and  a]
+	jeq	l_01ED                             	| [jr   z,l_01ED]
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9AA0+0x01                  	| [ld   (b_9AA0 + 0x01),a] 0 ... sound-fx count/enable registers, blue-boss hit sound
+	jbsr	c_03F4                            	| [call c_03F4]
+	jra	l_01F6                             	| [jr   l_01F6]
+l_01ED:
+	move.b	b_9AC0+0x01,d0                  	| [ld   a,(b_9AC0 + 0x01)]
+	                               	| [and  a]
+	jeq	l_01F6                             	| [jr   z,l_01F6]
+	jbsr	c_044A                            	| [call c_044A]
+
+* bonus-bee sound
+l_01F6:
+	move.b	b_9AA0+0x12,d0                  	| [ld   a,(b_9AA0 + 0x12)] sound-fx count/enable registers, bonus-bee sound
+	                               	| [and  a]
+	jeq	l_0204                             	| [jr   z,l_0204]
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $12
+	move.b	#0x12,(a0)                      	| [ld   (hl),#0x12]
+	jbsr	c_04A2                            	| [call c_04A2]
+
+
+* sound mgr capture beam
+l_0204:
+* if ( !_fx[$05] )  {  }  else { goto l_0236 }
+	move.b	b_9AA0+0x05,d0                  	| [ld   a,(b_9AA0 + 0x05)] sound-fx count/enable registers, capture beam active uno
+	                               	| [and  a]
+	jeq	l_0236                             	| [jr   z,l_0236]
+
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $05 ... capture beam
+	move.b	#5,(a0)                         	| [ld   (hl),#5]
+	jbsr	c_0375                            	| [call c_0375]
+
+*  if ( ++b_9A70[0x0E] >= 6 )  { }  else  { goto l_022E }
+	lea	b_9A70+0x0E(pc),a0                 	| [ld   hl,#b_9A70 + 0x0E]
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+	move.b	b_9A70+0x0E,d0                  	| [ld   a,(b_9A70 + 0x0E)]
+	cmp.b	#6,d0                            	| [cp   #6]
+	jcs	l_022E                             	| [jr   c,l_022E]
+
+	clr.b	(a0)                             	| [ld   (hl),#0]
+
+*  if ( b_9A70[0x0C] < 4 )  b_9A70[0x0C] = 0x0C  else  b_9A70[0x0C]--
+	move.b	b_9A70+0x0C,d0                  	| [ld   a,(b_9A70 + 0x0C)]
+	cmp.b	#4,d0                            	| [cp   #4]
+	jcs	l_0229                             	| [jr   c,l_0229]
+	subq.b	#1,d0                           	| [dec  a]
+	jra	l_022B                             	| [jr   l_022B]
+l_0229:
+	move.b	#0x0C,d0                        	| [ld   a,#0x0C]
+l_022B:
+	move.b	d0,b_9A70+0x0C                  	| [ld   (b_9A70 + 0x0C),a]
+
+l_022E:
+	move.b	b_9A70+0x0C,d0                  	| [ld   a,(b_9A70 + 0x0C)] ->voice 2 volume
+	move.b	d0,b_9A60+0x0F                  	| [ld   (b_9A60 + 0x0F),a] voice 2 volume
+	jra	j_0239                             	| [jr   j_0239]
+
+l_0236:
+	move.b	d0,b_9AC0+0x05                  	| [ld   (b_9AC0 + 0x05),a] 0 ... capture beam count/enable uno == 0, so clear the active flag
+
+j_0239:
+* if ( sound_active )  { }  else  _fx[$06] = 0
+	move.b	b_9AA0+0x06,d0                  	| [ld   a,(b_9AA0 + 0x06)] sound-fx count/enable registers, capture beam active deux
+	                               	| [and  a]
+	jeq	l_0263                             	| [jr   z,l_0263]
+
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $06
+	move.b	#6,(a0)                         	| [ld   (hl),#6]
+	jbsr	c_0375                            	| [call c_0375]
+
+* if ( ++b_9A70[0x0F] == $1C )  b_9A70[0x0F] = 0, b_9A70[0x0D]++
+	lea	b_9A70+0x0F(pc),a0                 	| [ld   hl,#b_9A70 + 0x0F]
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	cmp.b	#0x1C,d0                         	| [cp   #0x1C]
+	jne	l_025B                             	| [jr   nz,l_025B]
+
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9A70+0x0F                  	| [ld   (b_9A70 + 0x0F),a] 0
+	move.b	b_9A70+0x0D,d0                  	| [ld   a,(b_9A70 + 0x0D)]
+	addq.b	#1,d0                           	| [inc  a]
+	move.b	d0,b_9A70+0x0D                  	| [ld   (b_9A70 + 0x0D),a] ++
+
+l_025B:
+	move.b	b_9A70+0x0D,d0                  	| [ld   a,(b_9A70 + 0x0D)]
+	move.b	d0,b_9A70+0x00+2                	| [ld   (b_9A70 + 0x00 + 2),a] 0 ... voice 2 wave select
+	jra	l_0266                             	| [jr   l_0266]
+
+l_0263:
+	move.b	d0,b_9AC0+0x06                  	| [ld   (b_9AC0 + 0x06),a] 0 ... deactivate capture beam part deux
+
+
+* $9 .. $7
+l_0266:
+	move.b	b_9AA0+0x09,d0                  	| [ld   a,(b_9AA0 + 0x09)] sound-fx count/enable registers
+	                               	| [and  a]
+	jeq	l_0276                             	| [jr   z,l_0276]
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $09
+	move.b	#9,(a0)                         	| [ld   (hl),#9]
+	jbsr	c_0375                            	| [call c_0375]
+	jra	l_0279                             	| [jr   l_0279]
+l_0276:
+	move.b	d0,b_9AC0+0x09                  	| [ld   (b_9AC0 + 0x09),a] 0 ... clear the active flag
+
+* shot your ship!
+l_0279:
+	move.b	b_9AA0+0x07,d0                  	| [ld   a,(b_9AA0 + 0x07)] sound-fx count/enable registers, shot your ship!
+	                               	| [and  a]
+	jeq	l_0287                             	| [jr   z,l_0287]
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $07
+	move.b	#7,(a0)                         	| [ld   (hl),#7]
+	jbsr	c_04A2                            	| [call c_04A2]
+
+* "rescued ship" theme
+l_0287:
+	move.b	b_9AA0+0x11,d0                  	| [ld   a,(b_9AA0 + 0x11)] sound-fx count/enable registers, "rescued ship" theme
+	                               	| [and  a]
+	jeq	l_0297                             	| [jr   z,l_0297]
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $11
+	move.b	#0x11,(a0)                      	| [ld   (hl),#0x11]
+	jbsr	c_0375                            	| [call c_0375]
+	jra	l_029A                             	| [jr   l_029A]
+l_0297:
+	move.b	d0,b_9AC0+0x11                  	| [ld   (b_9AC0 + 0x11),a] clear the active flag
+
+* challenge stage intro music
+l_029A:
+	move.b	b_9AA0+0x0D,d0                  	| [ld   a,(b_9AA0 + 0x0D)] sound-fx count/enable registers, start challenge stage music
+	                               	| [and  a]
+	jeq	l_02A8                             	| [jr   z,l_02A8]
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $0D
+	move.b	#0x0D,(a0)                      	| [ld   (hl),#0x0D]
+	jbsr	c_04A2                            	| [call c_04A2]
+
+* challenge stage default melody
+l_02A8:
+	move.b	b_9AA0+0x0E,d0                  	| [ld   a,(b_9AA0 + 0x0E)] sound-fx count/enable registers, challenge stage default melody
+	                               	| [and  a]
+	jeq	l_02B6                             	| [jr   z,l_02B6] well this seems like a waste of time
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $0E
+	move.b	#0x0E,(a0)                      	| [ld   (hl),#0x0E]
+	jbsr	c_04A2                            	| [call c_04A2]
+
+* challenge stage default melody
+l_02B6:
+	move.b	b_9AA0+0x0E,d0                  	| [ld   a,(b_9AA0 + 0x0E)] sound-fx count/enable registers, challenge stage default melody
+	                               	| [and  a]
+	jeq	l_02C6                             	| [jr   z,l_02C6]
+	move.b	#9,d0                           	| [ld   a,#9]
+	move.b	d0,b_9A60+0x0A                  	| [ld   (b_9A60 + 0x0A),a] 9 ... voice 1 volume
+	move.b	#6,d0                           	| [ld   a,#6]
+	move.b	d0,b_9A60+0x0F                  	| [ld   (b_9A60 + 0x0F),a] 6 ... voice 2 volume
+
+* challenge stage perfect melody
+l_02C6:
+	move.b	b_9AA0+0x14,d0                  	| [ld   a,(b_9AA0 + 0x14)] sound-fx count/enable registers, challenge stage perfect melody
+	                               	| [and  a]
+	jeq	l_02D4                             	| [jr   z,l_02D4]
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $14
+	move.b	#0x14,(a0)                      	| [ld   (hl),#0x14]
+	jbsr	c_04A2                            	| [call c_04A2]
+
+* stage tokens "clicks"
+l_02D4:
+	move.b	b_9AA0+0x15,d0                  	| [ld   a,(b_9AA0 + 0x15)] sound-fx count/enable registers, stage tokens "clicks"
+	                               	| [and  a]
+	jeq	l_02E2                             	| [jr   z,l_02E2]
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $15
+	move.b	#0x15,(a0)                      	| [ld   (hl),#0x15]
+	jbsr	c_04A2                            	| [call c_04A2]
+
+* new spare ship added
+l_02E2:
+	move.b	b_9AA0+0x0A,d0                  	| [ld   a,(b_9AA0 + 0x0A)] sound-fx count/enable registers, new spare ship added
+	                               	| [and  a]
+	jeq	l_02F0                             	| [jr   z,l_02F0]
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $0A
+	move.b	#0x0A,(a0)                      	| [ld   (hl),#0x0A]
+	jbsr	c_04A2                            	| [call c_04A2]
+
+* start of game theme
+l_02F0:
+	move.b	b_9AA0+0x0B,d0                  	| [ld   a,(b_9AA0 + 0x0B)] sound-fx count/enable registers, start of game theme
+	                               	| [and  a]
+	jeq	l_02FE                             	| [jr   z,l_02FE]
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $0B
+	move.b	#0x0B,(a0)                      	| [ld   (hl),#0x0B]
+	jbsr	c_04A2                            	| [call c_04A2]
+
+* $10
+l_02FE:
+	move.b	b_9AA0+0x10,d0                  	| [ld   a,(b_9AA0 + 0x10)] sound-fx count/enable registers, hi-score dialog?
+	                               	| [and  a]
+	jeq	l_030E                             	| [jr   z,l_030E]
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $10
+	move.b	#0x10,(a0)                      	| [ld   (hl),#0x10]
+	jbsr	c_0375                            	| [call c_0375]
+	jra	l_0311                             	| [jr   l_0311]
+l_030E:
+	move.b	d0,b_9AC0+0x10                  	| [ld   (b_9AC0 + 0x10),a] clear the active flag
+
+* hi-score dialog?
+l_0311:
+	move.b	b_9AA0+0x0C,d0                  	| [ld   a,(b_9AA0 + 0x0C)] sound-fx count/enable registers, hi-score dialog?
+	                               	| [and  a]
+	jeq	l_031F                             	| [jr   z,l_031F]
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $0C
+	move.b	#0x0C,(a0)                      	| [ld   (hl),#0x0C]
+	jbsr	c_04A2                            	| [call c_04A2]
+
+* hi-score dialog?
+l_031F:
+	move.b	b_9AA0+0x16,d0                  	| [ld   a,(b_9AA0 + 0x16)] sound-fx count/enable registers, hi-score dialog?
+	                               	| [and  a]
+	jeq	l_032D                             	| [jr   z,l_032D]
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] $16
+	move.b	#0x16,(a0)                      	| [ld   (hl),#0x16]
+	jbsr	c_04A2                            	| [call c_04A2]
+
+* coin sound
+l_032D:
+	move.b	b_9AA0+0x08,d0                  	| [ld   a,(b_9AA0 + 0x08)] sound-fx count/enable registers, coin sound
+	                               	| [and  a]
+	jeq	l_033B                             	| [jr   z,l_033B]
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] actv_snd_idx = $08
+	move.b	#0x08,(a0)                      	| [ld   (hl),#0x08] actv_snd_idx
+	jbsr	c_04A2                            	| [call c_04A2] _fx[$08] will be decremented
+
+l_033B:
+	jra	j_0357_set_SFRs                    	| [jr   j_0357_set_SFRs]
+	
+l_033D_clear_all:
+* memset( snd_cnt_enable, 0, $16 ) .. don't clear [$16], [$17], [$18]
+	lea	b_9AA0+0x00(pc),a0                 	| [ld   hl,#b_9AA0 + 0x00] sound-fx count/enable registers ... $16 bytes 0
+	clr.b	(a0)                             	| [ld   (hl),#0]
+	lea	b_9AA0+0x01(pc),a1                 	| [ld   de,#b_9AA0 + 0x01] sound-fx count/enable registers ... $16 bytes 0
+	move.b	#0x00,d1                        	| [ld   bc,#0x0015] 21
+	move.b	#0x15,d2                        	| [ld   bc,#0x0015] 21
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+
+* memset( snd_active_flag, 0, $17 ) ...  [$16] should be highest one used
+	lea	b_9AC0+0x00(pc),a0                 	| [ld   hl,#b_9AC0 + 0x00] $17 bytes 0
+	clr.b	(a0)                             	| [ld   (hl),#0]
+	lea	b_9AC0+0x01(pc),a1                 	| [ld   de,#b_9AC0 + 0x01]
+	move.b	#0x00,d1                        	| [ld   bc,#0x0016] 22
+	move.b	#0x16,d2                        	| [ld   bc,#0x0016] 22
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+
+j_0357_set_SFRs:
+	lea	b_9A60(pc),a0                      	| [ld   hl,#b_9A60] memcpy(&sfr_6810[0], buf, $10)
+	lea	_sfr_6810(pc),a1                   	| [ld   de,#_sfr_6810] base pointer to frequency and volume SFRs
+	move.b	#0x00,d1                        	| [ld   bc,#0x0010] 16
+	move.b	#0x10,d2                        	| [ld   bc,#0x0010] 16
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+
+* set the sound voice waveforms
+	move.b	b_9A70+0x00+0,d0                	| [ld   a,(b_9A70 + 0x00 + 0)]
+	move.b	d0,_sfr_6805                    	| [ld   (_sfr_6805),a] voice 0 wave
+	move.b	b_9A70+0x00+1,d0                	| [ld   a,(b_9A70 + 0x00 + 1)]
+	move.b	d0,_sfr_680A                    	| [ld   (_sfr_680A),a] voice 1 wave
+	move.b	b_9A70+0x00+2,d0                	| [ld   a,(b_9A70 + 0x00 + 2)]
+	move.b	d0,_sfr_680F                    	| [ld   (_sfr_680F),a] voice 2 wave
+	rts                                    	| [ret]
+
+*=============================================================================
+* c_0375()
+*  Description:
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_0375:
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] d_0703[ actv_snd_idx * 3 ]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	add.b	d0,d0                            	| [add  a,a]
+	add.b	(a0),d0                          	| [add  a,(hl)]
+	lea	d_0703_snd_parms(pc),a0            	| [ld   hl,#d_0703_snd_parms]
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+	lea	b_9A70+0x05(pc),a1                 	| [ld   de,#b_9A70 + 0x05] memcpy( snd_parms_set, d_0703[ actv_snd_idx * 3 ], 3 )
+	move.b	#0x00,d1                        	| [ld   bc,#0x0003] 3
+	move.b	#0x03,d2                        	| [ld   bc,#0x0003] 3
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+
+* if challenge stage default melody
+	move.b	b_9A70+0x04,d0                  	| [ld   a,(b_9A70 + 0x04)] if ( actv_snd_idx == $0E ) ...
+	cmp.b	#0x0E,d0                         	| [cp   #0x0E]
+	jne	l_03A6                             	| [jr   nz,l_03A6]
+* if 0 == data_index
+	move.b	b_9A30+0x1C,d0                  	| [ld   a,(b_9A30 + 0x1C)]
+	                               	| [and  a]
+	jeq	l_03A1                             	| [jr   z,l_03A1]
+* else if 1 == data_index
+	subq.b	#1,d0                           	| [dec  a]
+	jeq	l_039D                             	| [jr   z,l_039D]
+* or if
+	move.b	b_9A30+0x1D,d0                  	| [ld   a,(b_9A30 + 0x1D)]
+	                               	| [and  a]
+	jne	l_03A6                             	| [jr   nz,l_03A6]
+l_039D:
+	move.b	#2,d0                           	| [ld   a,#2]
+	jra	l_03A3                             	| [jr   l_03A3]
+l_03A1:
+	move.b	#1,d0                           	| [ld   a,#1]
+l_03A3:
+	move.b	d0,b_9A70+0x05+1                	| [ld   (b_9A70 + 0x05 + 1),a] 1 or 2 .. count: number of data pairs
+
+* now we are checking active flags for some reason,,,,
+l_03A6:
+	lea	b_9AC0(pc),a0                      	| [ld   hl,#b_9AC0] if ( 0 == b_9AC0[ actv_snd_idx ] )  b_9AC0[ actv_snd_idx ] = 1
+	move.b	b_9A70+0x04,d0                  	| [ld   a,(b_9A70 + 0x04)] b_9AC0[ actv_snd_idx ]
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	                               	| [and  a]
+	jne	j_03CD                             	| [jr   nz,j_03CD]
+
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+
+	lea	b_9A70+0x05+1(pc),a0               	| [ld   hl,#b_9A70 + 0x05 + 1] snd_parms_set.count
+	move.b	(a0),d1                         	| [ld   b,(hl)]
+
+* memset( &snd_fx_dat_idx[ snd_parms_set.idx ], 0, snd_parms_set.count )
+	move.b	d1,d2                           	| [ld   c,b]
+	lea	b_9A30(pc),a0                      	| [ld   hl,#b_9A30] snd_fx_dat_idx[ snd_parms_set.idx ]
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	clr.b	d0                               	| [xor  a]
+	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+
+* memset( &sound_fx_status[ snd_parms_set.idx ], 0, snd_parms_set.count )
+	move.b	d2,d1                           	| [ld   b,c]
+	lea	b_9A00(pc),a0                      	| [ld   hl,#b_9A00] sound_fx_status[ snd_parms_set.idx ]
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	clr.b	d0                               	| [xor  a]
+	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+
+j_03CD:
+l_03CD_while:
+	jbsr	c_0550                            	| [call c_0550]
+
+* while ( snd_parms_set.count > 0 ) ...
+	lea	b_9A70+0x05+1(pc),a0               	| [ld   hl,#b_9A70 + 0x05 + 1] if ( snd_parms_set.count-- > 0 ) ...
+	subq.b	#1,(a0)                         	| [dec  (hl)]
+	jeq	l_03E0                             	| [jr   z,l_03E0]
+
+	lea	b_9A70+0x05+0(pc),a0               	| [ld   hl,#b_9A70 + 0x05 + 0] snd_parms_set.idx++
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+	lea	b_9A70+0x05+2(pc),a0               	| [ld   hl,#b_9A70 + 0x05 + 2] voice_select++
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+	jra	l_03CD_while                       	| [jr l_03CD_while]
+
+l_03E0:
+	move.b	b_9A70+0x08,d0                  	| [ld   a,(b_9A70 + 0x08)] ret z
+	                               	| [and  a]
+	bne.b	0f                               	| [...]
+	rts                                    	| [ret  z] [...]
+0:
+
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9A70+0x08                  	| [ld   (b_9A70 + 0x08),a] 0
+
+* clear the sound_active flag for this one
+	lea	b_9AC0(pc),a0                      	| [ld   hl,#b_9AC0] b_9AC0[ actv_snd_idx ] = 0
+	move.b	b_9A70+0x04,d0                  	| [ld   a,(b_9A70 + 0x04)] b_9AC0[ actv_snd_idx ]
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	clr.b	(a0)                             	| [ld   (hl),#0]
+
+* exactly the same as c_04A2 until here
+	rts                                    	| [ret]
+* end 'call _0375'
+
+*=============================================================================
+* c_03F4()
+*  Description:
+*   Initialize a sound effect. After this one is called once, then c_044A is
+*   called to update the sound on subsequent frame updates.
+* IN:
+*   b_9A70[4]: index of sound to play
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_03F4:
+* on this one we increment the Active flag
+	lea	b_9AC0(pc),a0                      	| [ld   hl,#b_9AC0] b_9AC0[ actv_snd_idx ]++
+	move.b	b_9A70+0x04,d0                  	| [ld   a,(b_9A70 + 0x04)] b_9AC0[ actv_snd_idx ]
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+
+* same as c_04A2 here
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] d_0703[ actv_snd_idx * 3 ]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	add.b	d0,d0                            	| [add  a,a]
+	add.b	(a0),d0                          	| [add  a,(hl)]
+	lea	d_0703_snd_parms(pc),a0            	| [ld   hl,#d_0703_snd_parms]
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+	lea	b_9A70+0x05(pc),a1                 	| [ld   de,#b_9A70 + 0x05] memcpy( snd_parms_set, d_0703[ actv_snd_idx * 3 ], 3 )
+	move.b	#0x00,d1                        	| [ld   bc,#0x0003] 3
+	move.b	#0x03,d2                        	| [ld   bc,#0x0003] 3
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+
+* if challenge stage default melody
+	move.b	b_9A70+0x04,d0                  	| [ld   a,(b_9A70 + 0x04)] if (actv_snd_idx == $0E) ...
+	cmp.b	#0x0E,d0                         	| [cp   #0x0E]
+	jne	l_042E                             	| [jr   nz,l_042E]
+* if 0 == data_index
+	move.b	b_9A30+0x1C,d0                  	| [ld   a,(b_9A30 + 0x1C)] data_index, SOUND 09
+	                               	| [and  a]
+	jeq	l_0429                             	| [jr   z,l_0429]
+* else if 1 == data_index
+	subq.b	#1,d0                           	| [dec  a]
+	jeq	l_0425                             	| [jr   z,l_0425]
+* or if
+	move.b	b_9A30+0x1D,d0                  	| [ld   a,(b_9A30 + 0x1D)] SOUND 09
+	                               	| [and  a]
+	jne	l_042E                             	| [jr   nz,l_042E]
+l_0425:
+	move.b	#2,d0                           	| [ld   a,#2]
+	jra	l_042B                             	| [jr   l_042B]
+
+l_0429:
+	move.b	#0x01,d0                        	| [ld   a,#0x01]
+l_042B:
+	move.b	d0,b_9A70+0x05+1                	| [ld   (b_9A70 + 0x05 + 1),a] snd_parms_set.count = 1
+
+* here we don't check the flags...
+
+l_042E:
+	lea	b_9A70+0x05+1(pc),a0               	| [ld   hl,#b_9A70 + 0x05 + 1] snd_parms_set.count
+	move.b	(a0),d1                         	| [ld   b,(hl)]
+
+* memset( &snd_fx_dat_idx[ snd_parms_set.idx ], 0, snd_parms_set.count )
+	move.b	d1,d2                           	| [ld   c,b]
+	lea	b_9A30(pc),a0                      	| [ld   hl,#b_9A30] snd_fx_dat_idx[ snd_parms_set.idx ]
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	clr.b	d0                               	| [xor  a]
+	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+
+* memset( &sound_fx_status[ snd_parms_set.idx ], 0, snd_parms_set.count )
+	move.b	d2,d1                           	| [ld   b,c]
+	lea	b_9A00(pc),a0                      	| [ld   hl,#b_9A00] sound_fx_status[ snd_parms_set.idx ]
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	clr.b	d0                               	| [xor  a]
+	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+
+* here is where c_0550 is called....
+	jra	j_047B                             	| [jr   j_047B]
+
+*=============================================================================
+* c_044A()
+*  Description:
+*   After c_03F4 is called once to initialize the sound, then on subsequent
+*   frame updates this one is called.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_044A:
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] d_0703[ actv_snd_idx * 3 ]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	add.b	d0,d0                            	| [add  a,a]
+	add.b	(a0),d0                          	| [add  a,(hl)]
+	lea	d_0703_snd_parms(pc),a0            	| [ld   hl,#d_0703_snd_parms]
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+	lea	b_9A70+0x05(pc),a1                 	| [ld   de,#b_9A70 + 0x05] memcpy( snd_parms_set, d_0703[ actv_snd_idx * 3 ], 3 )
+	move.b	#0x00,d1                        	| [ld   bc,#0x0003] 3
+	move.b	#0x03,d2                        	| [ld   bc,#0x0003] 3
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+
+* if challenge stage default melody
+	move.b	b_9A70+0x04,d0                  	| [ld   a,(b_9A70 + 0x04)] if (actv_snd_idx == $0E) ...
+	cmp.b	#0x0E,d0                         	| [cp   #0x0E]
+	jne	j_047B                             	| [jr   nz,j_047B]
+* if 0 == data_index
+	move.b	b_9A30+0x1C,d0                  	| [ld   a,(b_9A30 + 0x1C)]
+	                               	| [and  a]
+	jeq	l_0476                             	| [jr   z,l_0476]
+* else if 1 == data_index
+	subq.b	#1,d0                           	| [dec  a]
+	jeq	l_0472                             	| [jr   z,l_0472]
+* or if
+	move.b	b_9A30+0x1D,d0                  	| [ld   a,(b_9A30 + 0x1D)]
+	                               	| [and  a]
+	jne	j_047B                             	| [jr   nz,j_047B]
+l_0472:
+	move.b	#2,d0                           	| [ld   a,#2]
+	jra	l_0478                             	| [jr   l_0478]
+
+l_0476:
+	move.b	#1,d0                           	| [ld   a,#1]
+l_0478:
+	move.b	d0,b_9A70+0x05+1                	| [ld   (b_9A70 + 0x05 + 1),a] snd_parms_set.count
+
+* doesn't do the other stuff here here....
+
+j_047B:
+l_047B:
+	jbsr	c_0550                            	| [call c_0550]
+	lea	b_9A70+0x05+1(pc),a0               	| [ld   hl,#b_9A70 + 0x05 + 1] if ( snd_parms_set.count-- > 0 ) ...
+	subq.b	#1,(a0)                         	| [dec  (hl)]
+	jeq	l_048E                             	| [jr   z,l_048E]
+
+	lea	b_9A70+0x05+0(pc),a0               	| [ld   hl,#b_9A70 + 0x05 + 0] snd_parms_set.idx++
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+	lea	b_9A70+0x05+2(pc),a0               	| [ld   hl,#b_9A70 + 0x05 + 2] voice_select++
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+	jra	l_047B                             	| [jr   l_047B]
+
+l_048E:
+	move.b	b_9A70+0x08,d0                  	| [ld   a,(b_9A70 + 0x08)] ret z
+	                               	| [and  a]
+	bne.b	0f                               	| [...]
+	rts                                    	| [ret  z] [...]
+0:
+
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9A70+0x08                  	| [ld   (b_9A70 + 0x08),a] 0
+
+* clear the sound_active flag for this one
+	lea	b_9AC0(pc),a0                      	| [ld   hl,#b_9AC0] b_9AC0[ actv_snd_idx ] = 0
+	move.b	b_9A70+0x04,d0                  	| [ld   a,(b_9A70 + 0x04)] b_9AC0[ actv_snd_idx ]
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	clr.b	(a0)                             	| [ld   (hl),#0]
+
+	rts                                    	| [ret]
+* 'end 'call _03F4, call _044A?'
+
+*=============================================================================
+* c_04A2()
+*  Description:
+* IN:
+*  b_9A70[4] == index of sound
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_04A2:
+	lea	b_9A70+0x04(pc),a0                 	| [ld   hl,#b_9A70 + 0x04] d_0703[ actv_snd_idx * 3 ]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	add.b	d0,d0                            	| [add  a,a]
+	add.b	(a0),d0                          	| [add  a,(hl)]
+	lea	d_0703_snd_parms(pc),a0            	| [ld   hl,#d_0703_snd_parms]
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+	lea	b_9A70+0x05(pc),a1                 	| [ld   de,#b_9A70 + 0x05] memcpy( snd_parms_set, d_0703[ actv_snd_idx * 3 ], 3 )
+	move.b	#0x00,d1                        	| [ld   bc,#0x0003] 3
+	move.b	#0x03,d2                        	| [ld   bc,#0x0003] 3
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+
+* if challenge stage default melody
+	move.b	b_9A70+0x04,d0                  	| [ld   a,(b_9A70 + 0x04)] if (actv_snd_idx == $0E) ...
+	cmp.b	#0x0E,d0                         	| [cp   #0x0E]
+	jne	l_04D3                             	| [jr   nz,l_04D3]
+* if 0 == data_index
+	move.b	b_9A30+0x1C,d0                  	| [ld   a,(b_9A30 + 0x1C)] data_index, SOUND 09
+	                               	| [and  a]
+	jeq	l_04CE                             	| [jr   z,l_04CE]
+* else if 1 == data_index
+	subq.b	#1,d0                           	| [dec  a]
+	jeq	l_04CA                             	| [jr   z,l_04CA]
+* or if
+	move.b	b_9A30+0x1D,d0                  	| [ld   a,(b_9A30 + 0x1D)] SOUND 09
+	                               	| [and  a]
+	jne	l_04D3                             	| [jr   nz,l_04D3]
+l_04CA:
+	move.b	#2,d0                           	| [ld   a,#2]
+	jra	l_04D0                             	| [jr   l_04D0]
+
+l_04CE:
+	move.b	#1,d0                           	| [ld   a,#1]
+l_04D0:
+	move.b	d0,b_9A70+0x05+1                	| [ld   (b_9A70 + 0x05 + 1),a] snd_parms_set.count
+
+* now we are checking active flags for some reason,,,,
+l_04D3:
+	lea	b_9AC0(pc),a0                      	| [ld   hl,#b_9AC0] b_9AC0[ actv_snd_idx ]
+	move.b	b_9A70+0x04,d0                  	| [ld   a,(b_9A70 + 0x04)] b_9AC0[ actv_snd_idx ]
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	                               	| [and  a]
+	jne	j_04FA                             	| [jr   nz,j_04FA]
+
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+
+	lea	b_9A70+0x05+1(pc),a0               	| [ld   hl,#b_9A70 + 0x05 + 1] snd_parms_set.count
+	move.b	(a0),d1                         	| [ld   b,(hl)]
+
+* memset( &snd_fx_dat_idx[ snd_parms_set.idx ], 0, snd_parms_set.count )
+	move.b	d1,d2                           	| [ld   c,b]
+	lea	b_9A30(pc),a0                      	| [ld   hl,#b_9A30] snd_fx_dat_idx[ snd_parms_set.idx ]
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	clr.b	d0                               	| [xor  a]
+	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+
+* memset( &sound_fx_status[ snd_parms_set.idx ], 0, snd_parms_set.count )
+	move.b	d2,d1                           	| [ld   b,c]
+	lea	b_9A00(pc),a0                      	| [ld   hl,#b_9A00] sound_fx_status[ snd_parms_set.idx ]
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	clr.b	d0                               	| [xor  a]
+	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+
+j_04FA:
+l_04FA_while:
+	jbsr	c_0550                            	| [call c_0550]
+
+* while ( snd_parms_set.count > 0 ) ...
+	lea	b_9A70+0x05+1(pc),a0               	| [ld   hl,#b_9A70 + 0x05 + 1] snd_parms_set.count--
+	subq.b	#1,(a0)                         	| [dec  (hl)]
+	jeq	l_050D                             	| [jr   z,l_050D]
+
+	lea	b_9A70+0x05+0(pc),a0               	| [ld   hl,#b_9A70 + 0x05 + 0] snd_parms_set.idx++
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+	lea	b_9A70+0x05+2(pc),a0               	| [ld   hl,#b_9A70 + 0x05 + 2] snd_parms_set.voice_select++
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+	jra	l_04FA_while                       	| [jr   l_04FA_while]
+
+l_050D:
+	move.b	b_9A70+0x08,d0                  	| [ld   a,(b_9A70 + 0x08)] ret z
+	                               	| [and  a]
+	bne.b	0f                               	| [...]
+	rts                                    	| [ret  z] [...]
+0:
+
+	clr.b	d0                               	| [xor  a]
+	move.b	d0,b_9A70+0x08                  	| [ld   (b_9A70 + 0x08),a] 0
+
+* clear the sound_active flag for this one
+	lea	b_9AC0(pc),a0                      	| [ld   hl,#b_9AC0] b_9AC0[ actv_snd_idx ] = 0
+	move.b	b_9A70+0x04,d0                  	| [ld   a,(b_9A70 + 0x04)] _fx[actv_snd_idx ]
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	clr.b	(a0)                             	| [ld   (hl),#0]
+
+* exactly the same as c_0375 until here ...  update the count/enable register for certain sound-effects
+
+	lea	ds_9AA0(pc),a0                     	| [ld   hl,#ds_9AA0] _fx[ actv_snd_idx ] ... count/enable register
+	move.b	b_9A70+0x04,d0                  	| [ld   a,(b_9A70 + 0x04)] _fx[actv_snd_idx ]
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+
+* switch( actv_snd_idx )
+* case $08:
+	move.b	b_9A70+0x04,d0                  	| [ld   a,(b_9A70 + 0x04)] if (actv_snd_idx == $08) ... count/enable register, coin sound
+	cmp.b	#8,d0                            	| [cp   #8]
+	jeq	l_053A_idx_8                       	| [jr   z,l_053A_idx_8]
+* case $0C:
+	cmp.b	#0x0C,d0                         	| [cp   #0x0C] ... && if ( actv_snd_idx != $0C )
+	jeq	l_053C_idx_C                       	| [jr   z,l_053C_idx_C]
+* case $14:
+	cmp.b	#0x14,d0                         	| [cp   #0x14] ... && if ( actv_snd_idx != $14 )  { b_9AA0[ actv_snd_idx ] = 0 ; return }
+	jeq	l_0548_idx_14                      	| [jr   z,l_0548_idx_14]
+* default:
+	clr.b	(a0)                             	| [ld   (hl),#0]
+	rts                                    	| [ret]
+
+l_053A_idx_8:
+	subq.b	#1,(a0)                         	| [dec  (hl)] _fx[idx]--
+	rts                                    	| [ret]
+
+l_053C_idx_C:
+* _fx[$0C] used as timer ... enable snd[$16] when 0 is reached
+* caller would not have called this with _9AA0[$0C] == 0 ?
+	subq.b	#1,(a0)                         	| [dec  (hl)]
+	jeq	l_0542_enable_16                   	| [jr   z,l_0542_enable_16]
+	btst.b	#0,(a0)                         	| [bit  0,(hl)] not sure significance of checking <:0>
+	bne.b	0f                               	| [...]
+	rts                                    	| [ret  z] [...]
+0:
+l_0542_enable_16:
+	move.b	#0x01,d0                        	| [ld   a,#0x01]
+	move.b	d0,b_9AA0+0x16                  	| [ld   (b_9AA0 + 0x16),a] 1 ... sound-fx count/enable registers, hi-score dialog?
+	rts                                    	| [ret]
+
+l_0548_idx_14:
+	clr.b	(a0)                             	| [ld   (hl),#0] _fx[ actv_snd_idx ] ... count/enable register
+	lea	b_9AA0+0x13(pc),a0                 	| [ld   hl,#b_9AA0 + 0x13] 1 ... sound-fx count/enable registers, bug dive attack sound
+	move.b	#1,(a0)                         	| [ld   (hl),#1]
+	rts                                    	| [ret]
+* end 'call _04A2'
+
+*=============================================================================
+* c_0550()
+*  Description:
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+c_0550:
+	lea	b_9A00(pc),a0                      	| [ld   hl,#b_9A00] sound_fx_status[ snd_parms_set.idx ]++
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	addq.b	#1,(a0)                         	| [inc  (hl)]
+
+* get a pointer to the sound effect data structure from the table
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] p_snd_fx[ 2 * snd_parms_set.idx ]
+	lea	d_0748_p_snd_fx(pc),a0             	| [ld   hl,#d_0748_p_snd_fx]
+	jbsr	rst_08                            	| [rst  0x08] HL += 2A
+	move.b	(a0),d4                         	| [ld   e,(hl)]
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	(a0),d3                         	| [ld   d,(hl)]
+	exg	a1,a0                              	| [ex   de,hl]
+* copy first 3 bytes from the sound effect data structure (header info)
+	lea	b_9A80+0x08(pc),a1                 	| [ld   de,#b_9A80 + 0x08] memcpy( sound_effect_hdr[0], p_sndfx_data[ idx ], 3 )
+	move.w	#0x03,d1                        	| [ld   bc,#0x0003] 3
+	jbsr	ldir                              	| [ldir]
+
+* 9A30[snd_parms_set.idx] holds the data offset i.e. snd_fx_data[ 3 + n ]
+	exg	a1,a0                              	| [ex   de,hl] DE = &snd_fx_data[ 3 ]
+
+	lea	b_9A30(pc),a0                      	| [ld   hl,#b_9A30] snd_fx_dat_idx[ snd_parms_set.idx ]
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	exg	a1,a0                              	| [ex   de,hl] HL = &snd_fx_data[ 3 ]
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+	move.b	a0,b_9A70+0x0A                  	| [ld   (b_9A70 + 0x0A),hl] save the pointer ... &snd_fx_data[ 3 + n ]
+
+* if ( $FF == *p_snd_fx_data )  ... close voice && exit
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	addq.b	#1,d0                           	| [inc  a]
+	jeq	j_068B_close_voice_and_exit        	| [jp   z,j_068B_close_voice_and_exit]
+
+* tmp_ptr = *( b_9A70[ $0A ] )
+* d_06A9_ndat[  *( tmp_ptr ) & 0x0F  * 2 ]  ... lo-nibble of sound-effect data is index into note-data
+	lea	d_06A9_ndat(pc),a1                 	| [ld   de,#d_06A9_ndat]
+	move.l	b_9A70+0x0A(pc),a0              	| [ld   hl,(b_9A70 + 0x0A)] reload the current pointer to sound-effect data
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	and.b	#0x0F,d0                         	| [and  #0x0F]
+	exg	a1,a0                              	| [ex   de,hl]
+	jbsr	rst_08                            	| [rst  0x08] HL += 2A ... word pointer into note-data
+	move.b	(a0),d2                         	| [ld   c,(hl)]
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	(a0),d1                         	| [ld   b,(hl)]
+
+* use the hi-nibble of sound-effect data ....
+	exg	a1,a0                              	| [ex   de,hl]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	ror.b	#4,d0                            	| [rrca] * 4
+	and.b	#0x0F,d0                         	| [and  #0x0F]
+
+* ... raised to power-of-two as divisor if non-zero:
+* while ( 0 != A ) ...
+	jeq	l_059F                             	| [jr   z,l_059F]
+l_0598:
+	lsr.b	#1,d1                            	| [srl  b]
+	roxr.b	#1,d2                           	| [rr   c]
+	subq.b	#1,d0                           	| [dec  a]
+	jne	l_0598                             	| [jr   nz,l_0598]
+
+l_059F:
+* switch( voice_select )
+	move.b	b_9A70+0x05+2,d0                	| [ld   a,(b_9A70 + 0x05 + 2)] snd_parms_set.voice_select
+	                               	| [and  a]
+	jeq	l_05B2                             	| [jr   z,l_05B2]
+	subq.b	#1,d0                           	| [dec  a]
+	jeq	l_05AD                             	| [jr   z,l_05AD]
+
+	lea	b_9A60+0x0B(pc),a0                 	| [ld   hl,#b_9A60 + 0x0B] freq 2
+	jra	l_05B5                             	| [jr   l_05B5]
+l_05AD:
+	lea	b_9A60+0x06(pc),a0                 	| [ld   hl,#b_9A60 + 0x06] freq 1
+	jra	l_05B5                             	| [jr   l_05B5]
+l_05B2:
+	lea	b_9A60+0x01(pc),a0                 	| [ld   hl,#b_9A60 + 0x01] freq 0
+
+* shift out 4 nibbles from lsn to msn (only low 4-bits of each register)
+l_05B5:
+	move.b	d2,(a0)                         	| [ld   (hl),c] lo-byte of dw_06A9_ndat divided by hi-nibble of sound-effect ^ 2
+	move.b	(a0),d0                         	| [ld   a,(hl)] why not ld from C?
+	ror.b	#4,d0                            	| [rrca] * 4
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	d0,(a0)                         	| [ld   (hl),a]
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	d1,(a0)                         	| [ld   (hl),b] hi-byte of dw_06A9_ndat divided by hi-nibble of sound-effect ^ 2
+	move.b	(a0),d0                         	| [ld   a,(hl)] why not ld from B?
+	ror.b	#4,d0                            	| [rrca] * 4
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	d0,(a0)                         	| [ld   (hl),a]
+
+* switch( voice_select )
+	move.b	b_9A70+0x05+2,d0                	| [ld   a,(b_9A70 + 0x05 + 2)] snd_parms_set.voice_select
+	                               	| [and  a]
+	jeq	l_05D9                             	| [jr   z,l_05D9]
+	subq.b	#1,d0                           	| [dec  a]
+	jeq	l_05D4                             	| [jr   z,l_05D4]
+
+	lea	b_9A60+0x0F(pc),a1                 	| [ld   de,#b_9A60 + 0x0F] vol 2
+	jra	l_05DC                             	| [jr   l_05DC]
+l_05D4:
+	lea	b_9A60+0x0A(pc),a1                 	| [ld   de,#b_9A60 + 0x0A] vol 1
+	jra	l_05DC                             	| [jr   l_05DC]
+l_05D9:
+	lea	b_9A60+0x05(pc),a1                 	| [ld   de,#b_9A60 + 0x05] vol 0
+
+l_05DC:
+* if ( $0C != *p_snd_fx_data ) ...
+	move.w	b_9A70+0x0A(pc),a0              	| [ld   hl,(b_9A70 + 0x0A)] reload the pointer ... p_snd_fx_data = b_9A70[ $0A ]
+                  ^^^^^^ TODO: review move.w into address register
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	sub.b	#0x0C,d0                         	| [sub  #0x0C]
+	jeq	l_0628                             	| [jr   z,l_0628]
+
+	move.b	b_9A80+0x08+0,d0                	| [ld   a,(b_9A80 + 0x08 + 0)] if ( sound_effect_hdr[0] == 0 ) .. else  if ( sound_effect_hdr[0] == 1 )
+	                               	| [and  a]
+	jeq	l_060D                             	| [jr   z,l_060D]
+	subq.b	#1,d0                           	| [dec  a]
+	jeq	l_05FD_                            	| [jr   z,l_05FD_]
+* 05ED
+	lea	b_9A00(pc),a0                      	| [ld   hl,#b_9A00] if ( sound_fx_status[ snd_parms_set.idx ] >= 6 )
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	cmp.b	#6,d0                            	| [cp   #6]
+	jcc	l_060D                             	| [jr   nc,l_060D]
+	not.b	d0                               	| [cpl]
+	jra	l_062D                             	| [jr   l_062D]
+
+l_05FD_:
+	lea	b_9A00(pc),a0                      	| [ld   hl,#b_9A00] if ( sound_fx_status[ snd_parms_set.idx ] >= 6 )
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	cmp.b	#6,d0                            	| [cp   #6]
+	jcc	l_060D                             	| [jr   nc,l_060D]
+	add.b	d0,d0                            	| [add  a,a] this is the only difference to the previous section!
+	jra	l_062D                             	| [jr   l_062D]
+
+l_060D:
+	move.b	b_9A80+0x08+1,d0                	| [ld   a,(b_9A80 + 0x08 + 1)] sound_effect_hdr[1]
+	                               	| [and  a]
+	jeq	l_062B                             	| [jr   z,l_062B]
+
+	move.b	d0,d1                           	| [ld   b,a] b_9A80_8[ 1 ]
+	lea	b_9A00(pc),a0                      	| [ld   hl,#b_9A00] sound_fx_status[ snd_parms_set.idx ]
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+	sub.b	d1,d0                            	| [sub  b]
+	jcs	l_062B                             	| [jr   c,l_062B]
+	sub.b	#0x0A,d0                         	| [sub  #0x0A]
+	jcc	l_0628                             	| [jr   nc,l_0628]
+	neg.b	d0                               	| [neg]
+	jra	l_062D                             	| [jr   l_062D]
+
+l_0628:
+	clr.b	d0                               	| [xor  a]
+	jra	l_062D                             	| [jr   l_062D]
+
+l_062B:
+	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
+
+
+l_062D:
+	move.b	d0,(a1)                         	| [ld   (de),a] volume ... (9A65 etc)
+
+	lea	b_9A70(pc),a0                      	| [ld   hl,#b_9A70] b_9A70_wave_select[ voice_select ] = b_9A80_sound_effect_parms.wave
+	move.b	b_9A70+0x05+2,d0                	| [ld   a,(b_9A70 + 0x05 + 2)] snd_parms_set.voice_select
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	move.b	b_9A80+0x08+2,d0                	| [ld   a,(b_9A80 + 0x08 + 2)] sound_effect_hdr.wave
+	move.b	d0,(a0)                         	| [ld   (hl),a]
+
+ * get base multiplier
+	lea	d_07A6(pc),a0                      	| [ld   hl,#d_07A6] base_multipliers[ actv_snd_idx  ]
+	move.b	b_9A70+0x04,d0                  	| [ld   a,(b_9A70 + 0x04)] A = d_07A6[ actv_snd_idx ]
+	jbsr	rst_10                            	| [rst  0x10] HL += A
+	move.b	(a0),d0                         	| [ld   a,(hl)]
+
+* Multiplier = second byte of sound fx data pair
+	move.w	b_9A70+0x0A(pc),a0              	| [ld   hl,(b_9A70 + 0x0A)] b_9A70[ $0A  ] + 1 ... reload pointer and increment
+                  ^^^^^^ TODO: review move.w into address register
+	addq.w	#1,a0                           	| [inc  hl]
+	move.b	(a0),d4                         	| [ld   e,(hl)]
+	clr.b	d3                               	| [ld   d,#0]
+	move.w	#0x0000,d5                      	| [ld   hl,#0x0000] 0
+
+* Multiply by weighting each bit of the base by the multiplier in E and adding.
+	move.b	#8,d1                           	| [ld   b,#8]
+l_064E_do_while:
+	lsr.b	#1,d0                            	| [srl  a]
+	jcc	l_0653                             	| [jr   nc,l_0653]
+	add.w	d3,a0                            	| [add  hl,de]
+  ^^^^ TODO: review d3 computation above
+l_0653:
+	asl.b	#1,d4                            	| [sla  e]
+	roxl.b	#1,d3                           	| [rl   d]
+	subq.b	#1,d1                           	| [...]
+	jne	l_064E_do_while                    	| [djnz l_064E_do_while]
+
+	move.b	d6,d1                           	| [ld   b,l]
+
+* return if count is elapsed
+	lea	b_9A00(pc),a0                      	| [ld   hl,#b_9A00] sound_fx_status[ snd_parms_set.idx ]
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	move.b	d1,d0                           	| [ld   a,b]
+	cmp.b	(a0),d0                          	| [cp   (hl)]
+	beq.b	0f                               	| [...]
+	rts                                    	| [ret  nz] [...]
+0:
+
+* update the data pointer and count registers
+	lea	b_9A30(pc),a0                      	| [ld   hl,#b_9A30] snd_fx_dat_idx[ snd_parms_set.idx ] += 2
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	addq.b	#2,(a0)                         	| [inc  (hl)] * 2
+
+	lea	b_9A00(pc),a0                      	| [ld   hl,#b_9A00] sound_fx_status[ snd_parms_set.idx ] = 0
+	move.b	b_9A70+0x05+0,d0                	| [ld   a,(b_9A70 + 0x05 + 0)] snd_parms_set.idx
+	add.b	d6,d0                            	| [add  a,l]
+	move.b	d0,d6                           	| [ld   l,a]
+	clr.b	(a0)                             	| [ld   (hl),#0]
+
+	rts                                    	| [ret]
+
+*=============================================================================
+* This is just sort of stuck here. It is called by the handler for NMI
+* Clears the special function registers for cpu-sub2.
+* It doesn't appear that it is ever called.
+*-----------------------------------------------------------------------------
+l_067A_reset_sfrs:
+	lea	b_9A00+0x00(pc),a0                 	| [ld   hl,#b_9A00 + 0x00] memset(b_9A00, 0, $0100)
+	clr.b	(a0)                             	| [ld   (hl),#0]
+	lea	b_9A00+0x01(pc),a1                 	| [ld   de,#b_9A00 + 0x01] memset(b_9A00, 0, $0100)
+	move.b	#0x00,d1                        	| [ld   bc,#0x00FF] 255
+	move.b	#0xff,d2                        	| [ld   bc,#0x00FF] 255
+	jbsr	ldir                              	| [ldir]
+     ^^^^ TODO: review special instruction inputs
+ld   sp,#_stack_cpu_sub2 + 0x20
+	rts                                    	| [ret]
+
+*=============================================================================
+*
+* set the selected voice volume to 0
+*
+j_068B_close_voice_and_exit:
+
+* switch( b_voice_select )
+	move.b	b_9A70+0x05+2,d0                	| [ld   a,(b_9A70 + 0x05 + 2)] snd_parms_set.voice_select
+	                               	| [and  a]
+	jeq	l_069E                             	| [jr   z,l_069E]
+	subq.b	#1,d0                           	| [dec  a]
+	jeq	l_0699                             	| [jr   z,l_0699]
+* case 2
+	lea	b_9A60+0x0F(pc),a0                 	| [ld   hl,#b_9A60 + 0x0F] vol 2
+	jra	l_06A1                             	| [jr   l_06A1]
+* case 1
+l_0699:
+	lea	b_9A60+0x0A(pc),a0                 	| [ld   hl,#b_9A60 + 0x0A] vol 1
+	jra	l_06A1                             	| [jr   l_06A1]
+* case 0
+l_069E:
+	lea	b_9A60+0x05(pc),a0                 	| [ld   hl,#b_9A60 + 0x05] vol 0
+l_06A1:
+	clr.b	(a0)                             	| [ld   (hl),#0]
+
+	move.b	#1,d0                           	| [ld   a,#1]
+	move.b	d0,b_9A70+0x08                  	| [ld   (b_9A70 + 0x08),a] 1 ... sound is finished
+
+	rts                                    	| [ret]
+
+
+*=============================================================================
+* Note frequency data:
+* Base frequency values are indexed by lower-nibble of sound effect data. The
+* hi-nibble of sound effect data gives the number of octaves below the base at
+* which the final frequency occurs.
+d_06A9_ndat:
+	.long 0x8150  | $00
+	.long 0x8900  | $01
+	.long 0x9126  | $02
+	.long 0x99C8  | $03
+	.long 0xA2EC  | $04
+	.long 0xAC9D  | $05
+	.long 0xB6E0  | $06
+	.long 0xC1C0  | $07
+	.long 0xCD45  | $08
+	.long 0xD97A  | $09
+	.long 0xE669  | $0A
+	.long 0xF41C  | $0B
+	.long 0x0000  | $0C
+
+
+d_06C3:
+	.long 0x0130, 0x0168, 0x0136, 0x01A8
+	.long 0x0168, 0x0200, 0x01AC, 0x0208
+*d_06D3:
+	.long 0xFE00, 0xFE58, 0xFE08, 0xFE98
+	.long 0xFE58, 0xFED0, 0xFE98, 0xFED6
+
+	.long 0x5B00, 0x6C00, 0x5B00, 0x7E00
+	.long 0x6C00, 0x9700, 0x8100, 0x9900
+	.long 0xD900, 0xB600, 0xD900, 0x9700
+	.long 0xB600, 0x7E00, 0x9900, 0x8100
+
+* snd_parms_dat[] : sound parameters
+*     [0] ptr_idx ... offset in words to data ptr in p_snd_fx[], and also b_9A00[], b_9A00[$30]
+*     [1] ... number of data pointers used by the sound effect data group (number of simultaneous voices) in that time slice
+*     [2] voice_select
+d_0703_snd_parms:
+	.byte 0x00,0x01,0x00
+	.byte 0x01,0x01,0x01
+	.byte 0x02,0x01,0x01
+	.byte 0x03,0x01,0x01
+	.byte 0x04,0x01,0x01
+	.byte 0x05,0x01,0x00
+	.byte 0x06,0x01,0x00
+	.byte 0x20,0x03,0x00
+	.byte 0x0A,0x03,0x00
+	.byte 0x0D,0x03,0x00
+	.byte 0x07,0x03,0x00
+	.byte 0x13,0x03,0x00
+	.byte 0x16,0x03,0x00
+	.byte 0x19,0x03,0x00
+	.byte 0x1C,0x03,0x00
+	.byte 0x1F,0x01,0x02
+	.byte 0x2C,0x03,0x00
+	.byte 0x10,0x03,0x00
+	.byte 0x23,0x01,0x00
+	.byte 0x24,0x01,0x00                        | $13
+	.byte 0x25,0x03,0x00
+	.byte 0x28,0x01,0x00
+	.byte 0x29,0x03,0x00
+
+* Pointers into sound effect data tables (d_07BD and beyond) loaded by c_0550
+* Pointer selection by b_9A70[5] ... snd_parms_set.idx
+* Ordering of these elements is used also to index byte tables at 9A00 and 9A30.
+d_0748_p_snd_fx:
+	.long d_07BD  | 0
+	.long d_0814  | 1
+	.long d_07F2  | 2
+	.long d_07BE  | 3
+	.long d_085E  | 4
+	.long d_0878  | 5
+	.long d_088C  | 6
+	.long d_09D2  | 7
+	.long d_09E2  | 8
+	.long d_09F2  | 9
+	.long d_099C  | 10
+	.long d_09AE  | 11
+	.long d_09C0  | 12
+	.long d_0A02  | 13
+	.long d_0A46  | 14
+	.long d_0A8A  | 15
+	.long d_0AB6  | 16
+	.long d_0AFA  | 17
+	.long d_0B3E  | 18
+	.long d_08A0  | 19
+	.long d_08EC  | 20
+	.long d_0936  | 21
+	.long d_0C5C  | 22
+	.long d_0CEA  | 23
+	.long d_0D38  | 24
+	.long d_0966  | 25
+	.long d_0978  | 26
+	.long d_098A  | 27
+	.long d_08A0  | 28
+	.long d_08A0  | 29
+	.long d_08A0  | 30
+	.long d_0C08  | 31
+	.long d_0B6A  | 32
+	.long d_0BA0  | 33
+	.long d_0BD6  | 34
+	.long d_0BF4  | 35
+	.long d_0C08  | 36
+	.long d_0D6C  | 37
+	.long d_0DE0  | 38
+	.long d_0E5C  | 39
+	.long d_0D5E  | 40
+	.long d_0CE0  | 41
+	.long d_0D2E  | 42
+	.long d_0D54  | 43
+	.long d_0E9E  | 44
+	.long d_0EDA  | 45
+	.long d_0F16  | 46
+
+* indexed by active sound index, multiply by second byte of sound data pair
+d_07A6:
+	.byte 0x04,0x02,0x02,0x02,0x02,0x04,0x04,0x0A,0x07,0x0C,0x0B,0x04,0x0A,0x0D,0x04,0x01
+	.byte 0x04,0x0C,0x02,0x06,0x05,0x02,0x0A
+
+
+* sound effect data:
+*  header-info, stored at 9A80_8[]
+*        [0]
+*        [1]
+*        [2]: wave table index
+*  byte_pairs * n
+*        [0]: lo-nibble is index into frequency tbl
+*             hi-nibble^2 = divisor to note frequency
+*        [1]
+*        [n] 0xFF
+
+d_07BD:
+	.byte 0xFF
+
+d_07BE:
+	.byte 0x00,0x00,0x06
+	.byte 0x71,0x01,0x72,0x01,0x73,0x01,0x75,0x01
+	.byte 0x74,0x01,0x73,0x01,0x72,0x01,0x71,0x01,0x70,0x01,0x8B,0x01,0x8A,0x01,0x0C,0x04
+	.byte 0x86,0x01,0x87,0x01,0x88,0x01,0x89,0x01,0x8A,0x01,0x89,0x01,0x88,0x01,0x87,0x01
+	.byte 0x86,0x01,0x85,0x01,0x84,0x01,0x83,0x01,0xFF
+d_07F2:
+	.byte 0x00,0x00,0x04,0x88,0x01,0x8A,0x01,0x70,0x01,0x71,0x01,0x73,0x01,0x75,0x01,0x77
+	.byte 0x01,0x78,0x01,0x0C,0x06,0x74,0x01,0x73,0x01,0x72,0x01,0x71,0x01,0x70,0x01,0x8B
+	.byte 0x01,0xFF
+d_0814:
+	.byte 0x00,0x00,0x07,0x89,0x01,0x8A,0x01,0x8B,0x01,0x0C,0x01,0x70,0x01,0x71,0x01,0x72,0x01,0x0C,0x01,0x73,0x01
+	.byte 0x74,0x01,0x75,0x01,0x0C,0x03,0x8B,0x01,0x70,0x01,0x71,0x01,0x0C,0x01,0x72,0x01
+	.byte 0x73,0x01,0x74,0x01,0x0C,0x01,0x75,0x01,0x76,0x01,0x77,0x01,0x0C,0x03,0x71,0x01
+	.byte 0x72,0x01,0x73,0x01,0x0C,0x01,0x74,0x01,0x75,0x01,0x76,0x01,0x0C,0x01,0x77,0x01
+	.byte 0x78,0x01,0x79,0x01,0xFF
+d_085E: ;,0x03
+	.byte 0x00,0x00,0x05,0x71,0x01,0x72,0x01,0x73,0x01,0x0C,0x01
+	.byte 0x74,0x01,0x75,0x01,0x76,0x01,0x0C,0x01,0x77,0x01,0x78,0x01,0x79,0x01,0xFF
+d_0878:
+	.byte 0x00,0x00,0x04,0x61,0x01,0x7A,0x01,0x60,0x01,0x78,0x01,0x7A,0x01,0x76,0x01,0x78
+	.byte 0x01,0x75,0x01,0xFF
+d_088C:
+	.byte 0x00,0x00,0x00,0x76,0x01,0x79,0x01,0x60,0x01,0x63,0x01,0x66,0x01
+	.byte 0x63,0x01,0x60,0x01,0x79,0x01,0xFF
+d_08A0:
+	.byte 0x00,0x00,0x07,0x81,0x08,0x81,0x01,0x86,0x03
+	.byte 0x88,0x09,0x8B,0x03,0x8A,0x09,0x86,0x03,0x88,0x09,0x73,0x03,0x71,0x09,0x86,0x03
+	.byte 0x88,0x09,0x8B,0x03,0x8A,0x09,0x86,0x03,0x71,0x09,0x75,0x03,0x76,0x09,0x74,0x03
+	.byte 0x72,0x09,0x71,0x03,0x8B,0x09,0x89,0x03,0x88,0x09,0x84,0x03,0x74,0x09,0x76,0x03
+	.byte 0x74,0x09,0x71,0x03,0x73,0x04,0x8B,0x04,0x88,0x04,0x71,0x04,0x8A,0x04,0x88,0x04
+	.byte 0x0C,0x10,0xFF
+d_08EC:
+	.byte 0x00,0x00,0x06,0x8A,0x09,0x81,0x03,0x88,0x09,0x83,0x03,0x86,0x09
+	.byte 0x81,0x03,0x83,0x09,0x85,0x03,0x8A,0x09,0x81,0x03,0x88,0x09,0x83,0x03,0x86,0x09
+	.byte 0x81,0x03,0x88,0x09,0x71,0x03,0x72,0x09,0x71,0x03,0x8B,0x09,0x89,0x03,0x88,0x09
+	.byte 0x86,0x03,0x84,0x09,0x88,0x03,0x89,0x09,0x8B,0x03,0x89,0x09,0x86,0x03,0x8B,0x04
+	.byte 0x88,0x04,0x83,0x04,0x88,0x04,0x85,0x04,0x83,0x04,0x0C,0x10,0xFF
+d_0936:
+	.byte 0x00,0x00,0x07,0x81,0x0C,0x83,0x09,0x86,0x03,0x85,0x0C,0x81,0x0C,0x86,0x0C,0x88,0x09,0x8B,0x03
+	.byte 0x8A,0x0C,0x88,0x0C,0x89,0x0C,0x88,0x09,0x86,0x03,0x84,0x0C,0x89,0x0C,0x74,0x0C
+	.byte 0x71,0x09,0x89,0x03,0x88,0x0C,0x71,0x09,0x8A,0x03,0x0C,0x10,0xFF
+d_0966:
+	.byte 0x02,0x00,0x03
+	.byte 0x78,0x02,0x0C,0x01,0x78,0x01,0x79,0x01,0x7B,0x01,0x61,0x03,0x0C,0x03,0xFF
+d_0978:
+	.byte 0x02,0x00,0x03,0x73,0x02,0x0C,0x01,0x73,0x01,0x74,0x01,0x76,0x01,0x78,0x03,0x0C,0x02
+	.byte 0xFF
+d_098A:
+	.byte 0x02,0x00,0x03,0x70,0x02,0x0C,0x01,0x70,0x01,0x71,0x01,0x73,0x01,0x75,0x03,0x0C,0x02,0xFF
+d_099C:
+	.byte 0x01,0x00,0x04,0x78,0x01,0x7A,0x01,0x63,0x01,0x78,0x01,0x7A,0x01,0x63,0x01,0x65,0x03,0xFF
+d_09AE:
+	.byte 0x01,0x00,0x05,0x73,0x01,0x78,0x01,0x7A,0x01,0x73,0x01,0x78,0x01,0x7A,0x01,0x60,0x03,0xFF
+d_09C0:
+	.byte 0x01,0x00,0x07,0x8A,0x01,0x73,0x01,0x78,0x01,0x8A,0x01,0x73,0x01,0x78,0x01,0x7A,0x03,0xFF
+d_09D2: ;,0x05
+	.byte 0x01,0x06,0x04,0x7A,0x01,0x78,0x01,0x7A,0x01,0x61,0x01,0x65,0x01,0x68,0x03,0xFF
+d_09E2:
+	.byte 0x01,0x06,0x04,0x78,0x01,0x75,0x01,0x78,0x01,0x7A,0x01,0x61,0x01,0x65,0x03,0xFF
+d_09F2:
+	.byte 0x01,0x06,0x04,0x75,0x01,0x71,0x01,0x75,0x01,0x78,0x01,0x7A,0x01,0x60,0x03,0xFF
+d_0A02:
+	.byte 0x02,0x04,0x03,0x7A,0x01,0x76,0x01,0x78,0x01,0x75,0x01,0x76,0x01,0x73,0x01,0x75,0x01,0x72,0x01,0x73,0x01,0x8A,0x01
+	.byte 0x8B,0x01,0x88,0x01,0x86,0x01,0x85,0x01,0x83,0x01,0x82,0x01,0x83,0x01,0x86,0x01
+	.byte 0x85,0x01,0x88,0x01,0x86,0x01,0x8A,0x01,0x88,0x01,0x8B,0x01,0x8A,0x01,0x73,0x01
+	.byte 0x72,0x01,0x73,0x01,0x75,0x01,0x8A,0x01,0x70,0x01,0x72,0x01,0xFF
+d_0A46:
+	.byte 0x02,0x04,0x03,0x76,0x01,0x73,0x01,0x75,0x01,0x72,0x01,0x73,0x01,0x70,0x01,0x72,0x01,0x8A,0x01
+	.byte 0x8B,0x01,0x86,0x01,0x88,0x01,0x85,0x01,0x83,0x01,0x82,0x01,0x80,0x01,0x9A,0x01
+	.byte 0x9A,0x01,0x83,0x01,0x82,0x01,0x85,0x01,0x83,0x01,0x86,0x01,0x85,0x01,0x88,0x01
+	.byte 0x86,0x01,0x8A,0x01,0x88,0x01,0x8B,0x01,0x8A,0x01,0x88,0x01,0x86,0x01,0x85,0x01
+	.byte 0xFF
+d_0A8A:
+	.byte 0x02,0x10,0x03,0x93,0x02,0x9A,0x02,0x83,0x03,0x9A,0x01,0x98,0x01,0x96,0x01
+	.byte 0x95,0x01,0x93,0x02,0x95,0x03,0x96,0x02,0x98,0x02,0x9A,0x02,0x9B,0x02,0x9A,0x02
+	.byte 0x98,0x01,0x96,0x01,0x95,0x01,0x92,0x01,0x93,0x01,0x95,0x01,0xFF
+d_0AB6:
+	.byte 0x02,0x04,0x03,0x7A,0x01,0x77,0x01,0x78,0x01,0x75,0x01,0x77,0x01,0x73,0x01,0x75,0x01,0x72,0x01
+	.byte 0x73,0x01,0x8A,0x01,0x80,0x01,0x88,0x01,0x87,0x01,0x85,0x01,0x83,0x01,0x82,0x01
+	.byte 0x83,0x01,0x87,0x01,0x85,0x01,0x88,0x01,0x87,0x01,0x8A,0x01,0x88,0x01,0x80,0x01
+	.byte 0x8A,0x01,0x73,0x01,0x72,0x01,0x73,0x01,0x75,0x01,0x8A,0x01,0x70,0x01,0x72,0x01
+	.byte 0xFF
+d_0AFA:
+	.byte 0x02,0x04,0x03,0x77,0x01,0x73,0x01,0x75,0x01,0x72,0x01,0x73,0x01,0x70,0x01
+	.byte 0x72,0x01,0x8A,0x01,0x80,0x01,0x87,0x01,0x88,0x01,0x85,0x01,0x83,0x01,0x82,0x01
+	.byte 0x80,0x01,0x9A,0x01,0x9A,0x01,0x83,0x01,0x82,0x01,0x85,0x01,0x83,0x01,0x87,0x01
+	.byte 0x85,0x01,0x88,0x01,0x87,0x01,0x8A,0x01,0x88,0x01,0x80,0x01,0x8A,0x01,0x88,0x01
+	.byte 0x87,0x01,0x85,0x01,0xFF
+d_0B3E:
+	.byte 0x02,0x10,0x03,0x93,0x02,0x9A,0x02,0x83,0x03,0x9A,0x01
+	.byte 0x98,0x01,0x97,0x01,0x95,0x01,0x93,0x02,0x95,0x03,0x97,0x02,0x98,0x02,0x9A,0x02
+	.byte 0x90,0x02,0x9A,0x02,0x98,0x01,0x97,0x01,0x95,0x01,0x92,0x01,0x93,0x01,0x95,0x01
+	.byte 0xFF
+d_0B6A:
+	.byte 0x02,0x04,0x03,0x7A,0x01,0x76,0x01,0x78,0x01,0x75,0x01,0x76,0x01,0x73,0x01
+	.byte 0x75,0x01,0x72,0x01,0x73,0x01,0x8A,0x01,0x8A,0x01,0x88,0x01,0x86,0x01,0x85,0x01
+	.byte 0x83,0x01,0x82,0x01,0x83,0x01,0x85,0x01,0x86,0x01,0x88,0x01,0x86,0x01,0x8A,0x01
+	.byte 0x70,0x01,0x72,0x01,0x73,0x04,0xFF
+d_0BA0:
+	.byte 0x02,0x04,0x03,0x76,0x01,0x73,0x01,0x75,0x01
+	.byte 0x72,0x01,0x73,0x01,0x70,0x01,0x72,0x01,0x8A,0x01,0x8A,0x01,0x86,0x01,0x86,0x01
+	.byte 0x85,0x01,0x83,0x01,0x82,0x01,0x80,0x01,0x9A,0x01,0x9A,0x01,0x8B,0x01,0x80,0x01
+	.byte 0x82,0x01,0x83,0x01,0x85,0x01,0x86,0x01,0x88,0x01,0x8A,0x04,0xFF
+d_0BD6:
+	.byte 0x02,0x10,0x03,0x73,0x02,0x75,0x02,0x76,0x02,0x75,0x02,0x73,0x02,0x72,0x02,0x70,0x02,0x72,0x02
+	.byte 0x73,0x02,0x8B,0x02,0x8A,0x02,0x86,0x02,0x83,0x04,0xFF
+d_0BF4:
+	.byte 0x00,0x00,0x04,0x71,0x04,0x73,0x04,0x71,0x04,0x73,0x04,0x76,0x04,0x78,0x04,0x76,0x04,0x78,0x04,0xFF
+d_0C08:
+	.byte 0x00,0x00,0x06,0x56,0x01,0x55,0x01,0x54,0x01,0x53,0x01,0x52,0x01,0x51,0x01,0x50,0x01
+	.byte 0x6B,0x01,0x6A,0x01,0x69,0x01,0x68,0x01,0x67,0x01,0x66,0x01,0x65,0x01,0x64,0x01
+	.byte 0x63,0x01,0x62,0x01,0x61,0x01,0x60,0x01,0x7B,0x01,0x7A,0x01,0x79,0x01,0x78,0x01
+	.byte 0x77,0x01,0x76,0x01,0x75,0x01,0x74,0x01,0x73,0x01,0x72,0x01,0x71,0x01,0x70,0x01
+	.byte 0x8B,0x01,0x8A,0x01,0x89,0x01,0x88,0x01,0x87,0x01,0x86,0x01,0x85,0x01,0x84,0x01
+	.byte 0x83,0x01,0xFF
+d_0C5C:
+	.byte 0x02,0x04,0x05,0x60,0x01,0x78,0x01,0x75,0x01,0x71,0x01,0x60,0x01
+	.byte 0x78,0x01,0x75,0x01,0x71,0x01,0x60,0x01,0x78,0x01,0x75,0x01,0x71,0x01,0x60,0x01
+	.byte 0x78,0x01,0x75,0x01,0x71,0x01,0x60,0x01,0x78,0x01,0x75,0x01,0x71,0x01,0x60,0x01
+	.byte 0x78,0x01,0x75,0x01,0x71,0x01,0x60,0x01,0x0C,0x01,0x78,0x01,0x7A,0x01,0x75,0x01
+	.byte 0x78,0x01,0x73,0x01,0x75,0x01,0x61,0x01,0x7A,0x01,0x76,0x01,0x73,0x01,0x61,0x01
+	.byte 0x7A,0x01,0x76,0x01,0x73,0x01,0x61,0x01,0x7A,0x01,0x76,0x01,0x73,0x01,0x61,0x01
+	.byte 0x7A,0x01,0x76,0x01,0x73,0x01,0x61,0x01,0x79,0x01,0x76,0x01,0x73,0x01,0x61,0x01
+	.byte 0x79,0x01,0x76,0x01,0x73,0x01,0x61,0x01,0x0C,0x01,0x79,0x01,0x61,0x01,0x78,0x01
+	.byte 0x79,0x01,0x75,0x01,0x78,0x01,0xFF
+d_0CE0:
+	.byte 0x02,0x02,0x05,0x60,0x01,0x60,0x01,0x60,0x01,0xFF
+d_0CEA:
+	.byte 0x02,0x04,0x05,0x61,0x02,0x78,0x02,0x78,0x02,0x61,0x02,0x78,0x02,0x78,0x02
+	.byte 0x61,0x02,0x78,0x02,0x78,0x02,0x61,0x02,0x78,0x02,0x78,0x02,0x61,0x02,0x78,0x02
+	.byte 0x7A,0x02,0x75,0x02,0x63,0x02,0x7A,0x02,0x7A,0x02,0x63,0x02,0x7A,0x02,0x7A,0x02
+	.byte 0x63,0x02,0x7A,0x02,0x79,0x02,0x63,0x02,0x79,0x02,0x79,0x02,0x63,0x02,0x79,0x02
+	.byte 0x76,0x02,0x73,0x02,0xFF
+d_0D2E:
+	.byte 0x02,0x02,0x05,0x78,0x01,0x78,0x01,0x78,0x01,0xFF
+d_0D38:
+	.byte 0x02,0x10,0x05,0x85,0x06,0x85,0x06,0x85,0x06,0x85,0x06,0x85,0x04,0x85,0x04,0x86,0x06
+	.byte 0x86,0x06,0x86,0x06,0x86,0x06,0x86,0x04,0x86,0x04,0xFF
+d_0D54:
+	.byte 0x02,0x04,0x05,0x81,0x01,0x81,0x01,0x81,0x01,0xFF
+d_0D5E: ;,0x15
+	.byte 0x02,0x00,0x07,0x65,0x01,0x0C,0x01,0x61,0x01,0x0C,0x01,0x63,0x01,0xFF
+d_0D6C:
+	.byte 0x02,0x00,0x05,0x7A,0x05,0x0C,0x01,0x7A,0x01,0x0C,0x01,0x7A,0x03
+	.byte 0x0C,0x01,0x78,0x07,0x0C,0x01,0x78,0x07,0x0C,0x01,0x78,0x03,0x0C,0x01,0x7B,0x05
+	.byte 0x0C,0x01,0x7B,0x01,0x0C,0x01,0x7B,0x03,0x0C,0x01,0x7A,0x07,0x0C,0x01,0x7A,0x07
+	.byte 0x0C,0x01,0x7A,0x03,0x0C,0x01,0x7B,0x01,0x0C,0x01,0x7B,0x01,0x0C,0x03,0x7B,0x01
+	.byte 0x0C,0x01,0x7B,0x03,0x0C,0x01,0x61,0x01,0x0C,0x01,0x61,0x01,0x0C,0x03,0x61,0x01
+	.byte 0x0C,0x01,0x61,0x03,0x0C,0x01,0x61,0x03,0x0C,0x01,0x61,0x03,0x0C,0x01,0x63,0x01
+	.byte 0x0C,0x01,0x63,0x01,0x0C,0x03,0x63,0x01,0x0C,0x01,0x63,0x03,0x0C,0x01,0x63,0x03
+	.byte 0x0C,0x01,0x63,0x03,0x0C,0x01,0xFF
+d_0DE0:
+	.byte 0x02,0x00,0x03,0x86,0x02,0x8A,0x02,0x71,0x02
+	.byte 0x76,0x02,0x86,0x02,0x8A,0x02,0x71,0x02,0x76,0x02,0x86,0x02,0x8A,0x02,0x71,0x02
+	.byte 0x76,0x02,0x86,0x02,0x8A,0x02,0x71,0x02,0x76,0x02,0x86,0x02,0x8A,0x02,0x71,0x02
+	.byte 0x76,0x02,0x86,0x02,0x8A,0x02,0x71,0x02,0x76,0x02,0x86,0x02,0x8A,0x02,0x71,0x02
+	.byte 0x76,0x02,0x86,0x02,0x8A,0x02,0x71,0x02,0x76,0x02,0x77,0x01,0x0C,0x01,0x77,0x01
+	.byte 0x0C,0x03,0x77,0x01,0x0C,0x01,0x77,0x03,0x0C,0x01,0x69,0x01,0x0C,0x01,0x69,0x01
+	.byte 0x0C,0x03,0x69,0x01,0x0C,0x01,0x69,0x03,0x0C,0x01,0x69,0x03,0x0C,0x01,0x69,0x03
+	.byte 0x0C,0x01,0x8B,0x02,0x73,0x02,0x76,0x02,0x7B,0x02,0x7B,0x02,0x76,0x02,0x73,0x02
+	.byte 0x8B,0x02,0xFF
+d_0E5C:
+	.byte 0x00,0x00,0x02,0x86,0x08,0x81,0x08,0x86,0x08,0x81,0x08,0x86,0x08
+	.byte 0x81,0x08,0x86,0x08,0x81,0x08,0x82,0x01,0x0C,0x01,0x82,0x01,0x0C,0x03,0x82,0x01
+	.byte 0x0C,0x01,0x82,0x03,0x0C,0x01,0x84,0x01,0x0C,0x01,0x84,0x01,0x0C,0x03,0x84,0x01
+	.byte 0x0C,0x01,0x84,0x03,0x0C,0x01,0x84,0x03,0x0C,0x01,0x84,0x03,0x0C,0x01,0x7B,0x08
+	.byte 0x76,0x04,0x8B,0x04,0xFF
+d_0E9E:
+	.byte 0x00,0x0C,0x05,0x75,0x0C,0x71,0x0C,0x8A,0x0C,0x86,0x0C
+	.byte 0x0C,0x09,0x75,0x03,0x71,0x09,0x8A,0x03,0x86,0x04,0x8A,0x04,0x71,0x04,0x89,0x04
+	.byte 0x70,0x04,0x73,0x04,0x8B,0x0C,0x73,0x0C,0x76,0x0C,0x78,0x0C,0x0C,0x09,0x79,0x03
+	.byte 0x76,0x09,0x72,0x03,0x8B,0x04,0x89,0x04,0x86,0x04,0x72,0x04,0x89,0x04,0x76,0x04,0xFF
+d_0EDA:
+	.byte 0x00,0x0C,0x05,0x71,0x0C,0x8A,0x0C,0x86,0x0C,0x85,0x0C,0x0C,0x09,0x81,0x03
+	.byte 0x8A,0x09,0x86,0x03,0x85,0x04,0x86,0x04,0x8A,0x04,0x86,0x04,0x89,0x04,0x8B,0x04
+	.byte 0x88,0x0C,0x8B,0x0C,0x73,0x0C,0x76,0x0C,0x0C,0x09,0x76,0x03,0x72,0x09,0x8B,0x03
+	.byte 0x8A,0x04,0x86,0x04,0x82,0x04,0x8B,0x04,0x89,0x04,0x82,0x04,0xFF
+d_0F16:
+	.byte 0x00,0x00,0x03,0x75,0x18,0x75,0x18,0x75,0x18,0x71,0x0C,0x75,0x0C,0x73,0x18,0x73,0x18,0x72,0x18
+	.byte 0x76,0x0C,0x78,0x0C,0xFF
+
+* not sure this one
+	.byte 0xFA
