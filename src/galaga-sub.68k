@@ -5,14 +5,12 @@
 * gg1-5.s
 *  gg1-5.3f, CPU 'sub' (Z80)
 *
-.module cpu_sub
+*.module cpu_sub
 
-.include "sfrs.inc"
-.include "structs.inc"
-.include "gg1-5.dep"
-
-.BANK cpu_sub (BASE=0x000000, FSFX=_sub)
-.area ROM (ABS,OVR,BANK=cpu_sub)
+	.include "structs.inc"
+	.include	"m68k_macros.inc"
+	
+	.global	p_flv_base
 
 
 *.org 0x0000
@@ -35,11 +33,11 @@ rst_00_cpu1:
 
 db_flv_001d:
 	.byte  0x23,0x06,0x16,0x23,0x00,0x19,0xF7
-	.long  p_flv_004b
+	.word  p_flv_004b-p_flv_base
 	.byte  0x23,0xF0,0x02,0xF0
-	.long  p_flv_005e
+	.word  p_flv_005e-p_flv_base
 	.byte  0x23,0xF0,0x24,0xFB,0x23,0x00,0xFF,0xFF
-
+	.align	2
 
 *.org 0x0034
 
@@ -98,9 +96,9 @@ p_flv_005e:
 
 db_flv_0067:
 	.byte 0x23,0x08,0x08,0x23,0x03,0x1b,0x23,0x08,0x0f,0x23,0x16,0x15,0xf7
-	.long p_flv_0084
+	.word p_flv_0084-p_flv_base
 	.byte 0x23,0x16,0x03,0xf0
-	.long p_flv_0097
+	.word p_flv_0097-p_flv_base
 	.byte 0x23,0x16,0x19,0xfb,0x23,0x00,0xff,0xff
 p_flv_0084:
 	.byte 0x23,0x16,0x01,0xfe
@@ -112,9 +110,9 @@ p_flv_0097:
 
 db_flv_009f:
 	.byte 0x33,0x06,0x18,0x23,0x00,0x18,0xf7
-	.long p_flv_00b6
+	.word p_flv_00b6-p_flv_base
 	.byte 0x23,0xf0,0x08,0xf0
-	.long p_flv_00cc
+	.word p_flv_00cc-p_flv_base
 	.byte 0x23,0xf0,0x20,0xfb,0x23,0x00,0xff,0xff
 p_flv_00b6:
 	.byte 0x23,0xf0,0x20,0x23,0x10,0x0d,0xfe
@@ -126,9 +124,9 @@ p_flv_00cc:
 
 db_flv_00d4:
 	.byte 0x23,0x03,0x18,0x33,0x04,0x10,0x23,0x08,0x0a,0x44,0x16,0x12,0xf7
-	.long p_flv_0160
+	.word p_flv_0160-p_flv_base
 	.byte 0x44,0x16,0x03,0xf0
-	.long p_flv_0173 | stg 13
+	.word p_flv_0173-p_flv_base | stg 13
 	.byte 0x44,0x16,0x1d,0xfb,0x23,0x00,0xff,0xff
 
 db_flv_00f1:
@@ -145,6 +143,8 @@ sprt_fmtn_hpos:
 	.byte 0x18,0x02,0x18,0x10,0x1a,0x02,0x1a,0x10,0x18,0x04,0x18,0x0e,0x1a,0x04,0x1a,0x0e
 	.byte 0x18,0x06,0x18,0x0c,0x1a,0x06,0x1a,0x0c,0x18,0x08,0x18,0x0a,0x1a,0x08,0x1a,0x0a
 
+p_flv_base:
+
 p_flv_0160:
 	.byte 0x44,0x16,0x06,0xfe
 	.byte 0x0c,0x0b,0x0a,0x08,0x06,0x04,0x02,0x01,0x23,0xfe
@@ -155,9 +155,9 @@ p_flv_0173:
 
 db_flv_017b:
 	.byte 0x23,0x06,0x18,0x23,0x00,0x18,0xf7
-	.long p_flv_0192
+	.word p_flv_0192-p_flv_base
 	.byte 0x44,0xf0,0x08,0xf0
-	.long p_flv_01a8
+	.word p_flv_01a8-p_flv_base
 	.byte 0x44,0xf0,0x20,0xfb,0x23,0x00,0xff,0xff
 p_flv_0192:
 	.byte 0x44,0xf0,0x26,0x23,0x10,0x0b,0xfe
@@ -169,9 +169,9 @@ p_flv_01a8:
 
 db_flv_01b0:
 	.byte 0x23,0x03,0x20,0x23,0x08,0x0f,0x23,0x16,0x12,0xf7
-	.long p_flv_01ca
+	.word p_flv_01ca-p_flv_base
 	.byte 0x23,0x16,0x03,0xf0
-	.long p_flv_01e0
+	.word p_flv_01e0-p_flv_base
 	.byte 0x23,0x16,0x1d,0xfb,0x23,0x00,0xff,0xff
 p_flv_01ca:
 	.byte 0x23,0x16,0x01,0xfe
@@ -244,22 +244,22 @@ p_flv_0352:
 p_flv_0358:
 	.byte 0x12,0x00,0x02,0xfc
 	.byte 0x2e,0x12,0xfa,0x3c,0xfa
-	.long p_flv_039e
+	.word p_flv_039e-p_flv_base
 p_flv_0363:
 	.byte 0x12,0xf8,0x10,0x12,0xfa,0x5c,0x12,0x00,0x23
 p_flv_036c:
 	.byte 0xf8,0xf9,0xef
-	.long p_flv_037c
+	.word p_flv_037c-p_flv_base
 	.byte 0xf6,0xab
 	.byte 0x12,0x01,0x28,0x12,0x0a,0x18,0xfd
-	.long p_flv_0352
+	.word p_flv_0352-p_flv_base-p_flv_base
 p_flv_037c:
 	.byte 0xf6,0xb0
 	.byte 0x23,0x08,0x1e,0x23,0x00,0x19,0x23,0xf8,0x16,0x23,0x00,0x02,0xfc
 	.byte 0x30,0x23,0xf7,0x26,0xfa
-	.long p_flv_039e
+	.word p_flv_039e-p_flv_base
 	.byte 0x23,0xf0,0x0a,0x23,0xf5,0x31,0x23,0x00,0x10,0xfd
-	.long p_flv_036c | oops shot captured fighter
+	.word p_flv_036c-p_flv_base | oops shot captured fighter
 p_flv_039e:
 	.byte 0x12,0xf8,0x10,0x12,0x00,0x40,0xfb,0x12,0x00,0xff,0xff
 
@@ -271,22 +271,22 @@ p_flv_03ac:
 	.byte 0x3f,0x3b,0x36,0x32,0x28,0x26,0x24,0x22
   * $03BB
 	.byte 0x12,0x04,0x30,0x12,0xfc,0x30,0x12,0x00,0x18,0xf8,0xf9,0xfa
-	.long p_flv_040c
+	.word p_flv_040c-p_flv_base
 	.byte 0xef
-	.long p_flv_03d7
+	.word p_flv_03d7-p_flv_base
 p_flv_03cc:
 	.byte 0xf6,0xb0
 	.byte 0x12,0x01,0x28,0x12,0x0a,0x15,0xfd
-	.long p_flv_03ac
+	.word p_flv_03ac-p_flv_base
 p_flv_03d7:
 	.byte 0xf6,0xc0
 	.byte 0x23,0x08,0x10,0x23,0x00,0x23,0x23,0xf8,0x0f,0x23,0x00,0x48,0xf8,0xf9,0xfa
-	.long p_flv_040c
+	.word p_flv_040c-p_flv_base
 	.byte 0xf6,0xb0
 	.byte 0x23,0x08,0x20,0x23,0x00,0x08,0x23,0xf8,0x02,0xf3
 	.byte 0x34,0x31,0x2d,0x29,0x22,0x26,0x1f,0x18
 	.byte 0x23,0x08,0x18,0x23,0xf8,0x18,0x23,0x00,0x10,0xf8,0xf9,0xfd
-	.long p_flv_03cc
+	.word p_flv_03cc-p_flv_base
 p_flv_040c:
 	.byte 0xfb
 	.byte 0x12,0x00,0xff,0xff
@@ -296,60 +296,60 @@ p_flv_0414:
 	.byte 0x12,0x03,0x2a,0x12,0x10,0x40,0x12,0x01,0x20,0x12,0xfe,0x71
 p_flv_0420:
 	.byte 0xf9,0xf1,0xfa
-	.long p_flv_040c
+	.word p_flv_040c-p_flv_base
 p_flv_0425:
 	.byte 0xef
-	.long p_flv_0430
+	.word p_flv_0430-p_flv_base
 	.byte 0xf6,0xab
 	.byte 0x12,0x02,0x20,0xfd
-	.long p_flv_0414
+	.word p_flv_0414-p_flv_base
 p_flv_0430:
 	.byte 0xf6,0xb0
 	.byte 0x23,0x04,0x1a,0x23,0x03,0x1d,0x23,0x1a,0x25,0x23,0x03,0x10,0x23,0xfd,0x48,0xfd
-	.long p_flv_0420
+	.word p_flv_0420-p_flv_base
 
 db_fltv_rogefgter:
 	.byte 0x12,0x18,0x14,0x12,0x03,0x2a,0x12,0x10,0x40,0x12,0x01,0x20,0x12,0xfe,0x78,0xff
 
-db_0454: ; capture mode boss
+db_0454: | capture mode boss
 	.byte 0x12,0x18,0x14,0xf4
 	.byte 0x12,0x00,0x04,0xfc
 	.byte 0x48,0x00,0xfc,0xff
 	.byte 0x23,0x00,0x30,0xf8,0xf9,0xfa
-	.long p_flv_040c
+	.word p_flv_040c-p_flv_base
 	.byte 0xfd
-	.long p_flv_0425
+	.word p_flv_0425-p_flv_base
 db_flv_cboss:
 	.byte 0x12,0x18,0x14,0xfb
 	.byte 0x12,0x00,0xff,0xff
 db_0473:
 	.byte 0x12,0x18,0x1e,0x12,0x00,0x08,0xf2
-	.long p_flv_0499
+	.word p_flv_0499-p_flv_base
 	.byte 0x00,0x00,0x0a,0xf2
-	.long p_flv_0499
+	.word p_flv_0499-p_flv_base
 	.byte 0x00,0x00,0x0a
 	.byte 0x12,0x00,0x2c,0x12,0xfb,0x26,0x12,0x00,0x02,0xfc
 	.byte 0x2e
 	.byte 0x12,0xfa,0x3c,0xfa
-	.long p_flv_039e
+	.word p_flv_039e-p_flv_base
 	.byte 0xfd
-	.long p_flv_0363
+	.word p_flv_0363-p_flv_base
 p_flv_0499:
 	.byte 0x12,0x00,0x2c,0x12,0xfb,0x26,0x12,0x00,0x02,0xfc
 	.byte 0x2e
 	.byte 0x12,0xfa,0x18,0x12,0x00,0x10,0xff
 db_04AB:
 	.byte 0x12,0x18,0x13,0xf2
-	.long p_flv_04c6
+	.word p_flv_04c6-p_flv_base
 	.byte 0x00,0x00,0x08,0xf2
-	.long p_flv_04cf
+	.word p_flv_04cf-p_flv_base
 	.byte 0x00,0x00,0x08,0x12,0x18,0x0b,0x12,0x00,0x34,0x12,0xfb,0x26,0xfd
-	.long p_flv_0358
+	.word p_flv_0358-p_flv_base
 
 db_flv_04c6:
 p_flv_04c6:
 	.byte 0x12,0x00,0x10,0x12,0x18,0x0b,0xfd
-	.long p_flv_04d8
+	.word p_flv_04d8-p_flv_base
 
 db_flv_04cf:
 p_flv_04cf:
@@ -362,11 +362,11 @@ p_flv_04d8:
 	.byte 0x12,0xfa,0x18,0x12,0x00,0x20,0xff
 db_04EA:
 	.byte 0x12,0x18,0x1e,0x12,0x00,0x14,0xf2
-	.long p_flv_0502
+	.word p_flv_0502-p_flv_base
 	.byte 0x12,0x00,0x08,0xf2
-	.long p_flv_0502
+	.word p_flv_0502-p_flv_base
 	.byte 0x12,0x00,0x18,0x12,0xfb,0x26,0xfd
-	.long p_flv_0358
+	.word p_flv_0358-p_flv_base
 
 db_flv_0502:
 p_flv_0502:
@@ -991,7 +991,7 @@ l_0729:
 * determines the sign, toggle position.sy:8 on overflow/carry. simple idea, complicated explanation.
 	roxr.b	#1,d0                           	| [rra] Cy from the addition rotated into b7
 	eor.b	d2,d0                            	| [xor  c] sign bit of addend/subtrahend
-	COMPUTE_LSB_A0_D6	sprite_posn
+	COMPUTE_LSB_A0_D6	ds_sprite_posn
 	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl] sy.bit-8 (SPR[n].CTRL.b1:0)
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -1011,11 +1011,10 @@ l_0738:
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)] rocket.sy<7:0>
-	ror.b	#1,d2                            	| [rrc  c] rotate bit-8 into Cy
+	CLEAR_XC_FLAGS
+	roxr.b	#1,d2                            	| [rrc  c] rotate bit-8 into Cy
 	roxr.b	#1,d0                           	| [rra] rotate bit-8 from Cy into A
-      ^^^^^^ TODO: review cpu X flag
 	move.b	#ixh,a		| ld   ixh,a                                 ; stash sy<8:1> for hit-detection parameter
 
 * if ( rocket.sY < 40                   	|| rocket.sY >= 312 ) then _disable_rocket
@@ -1062,11 +1061,11 @@ l_0760_disable_rocket_wposn:
 
 * when testing X limits, &sprite_posn[0] already in H so skip loading it
 l_0763_disable_rocket:
+	COMPUTE_LSB_A0_D6	ds_sprite_posn
 	clr.b	(a0)                             	| [ld   (hl),#0] x
 	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	clr.b	(a0)                             	| [ld   (hl),#0] attribute bits
 
 	rts                                    	| [ret]
@@ -1094,15 +1093,14 @@ l_076A_while_object:
 * obj_collsn_notif[L].b0 ... $81 = hit notification already in progress
 
 * if (0x80 != ( obj_status[L].state & _obj_collsn_notif[L] ))
+	COMPUTE_LSB_A0_D6	ds_sprite_posn
 	lea	b_9200_obj_collsn_notif(pc),a0     	| [ld   h,#>b_9200_obj_collsn_notif] is hit notification already in progress
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	or.b	(a0),d0                           	| [or   (hl)]
 	rol.b	#1,d0                            	| [rlca]
 	jcs	l_07B4_next_object                 	| [jr   c,l_07B4_next_object]
@@ -1119,19 +1117,17 @@ l_076A_while_object:
 
 * check Y coordinate ... sY<8:1> in A
 	addq.w	#1,a0                           	| [inc  l]
+	addq.b	#1,d6                           	| [inc  l] follow index
 	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl] sprite.sy<8>
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0),d3                         	| [ld   d,(hl)]
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn] sprite.sy<7:0>
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	ror.b	#1,d3                            	| [rrc  d]
 	roxr.b	#1,d0                           	| [rra]
-      ^^^^^^ TODO: review cpu X flag
 	subq.w	#1,a0                           	| [dec  l]
 
 	sub.b	ixh,d0                           	| [sub  ixh] sprite.sy<1:8> -= rocket.sy<1:8>
@@ -1143,16 +1139,13 @@ l_076A_while_object:
 	move.b	d2,d0                           	| [ld   a,c] reload object status e.g. 8800[L]
 	subq.b	#1,d0                           	| [dec  a]
 	and.b	#0xFE,d0                         	| [and  #0xFE]
-	scs	d7                              	| [ex   af,af'] object status to hitd_dspchr
-         ^^^ TODO review: wrong if carry is needed or D7 used in between!
-
-	move.b	ds_plyr_actv+_b_2ship,d0        	| [ld   a,(ds_plyr_actv +_b_2ship)]
+	exg		d0,d7                              	| [ex   af,af'] object status to hitd_dspchr
 	                               	| [and  a]
 
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprite.sX
+	tst.b	ds_plyr_actv+_b_2ship        	| [ld   a,(ds_plyr_actv +_b_2ship)]
 
 	jne	l_07A4                             	| [jr   nz,l_07A4] and  a
-      ^^^^^^ TODO: review cpu flags (move.b,jne)
 
 	sub.b	ixl,d0                           	| [sub  ixl] sprite.sX -= rocket.sX
 	subq.b	#6,d0                           	| [sub  #6]
@@ -1195,10 +1188,9 @@ l_07B4_next_object:
 hitd_dspchr_rckt:
 
 	move.b	d6,d0                           	| [ld   a,l] stash L, use HL for 16-bits math
-	move.w	ds_plyr_actv+_w_hit_ct(pc),a0   	| [ld   hl,(ds_plyr_actv +_w_hit_ct)]
-                  ^^^^^^ TODO: review move.w into address register
+	move.l	ds_plyr_actv+_w_hit_ct(pc),a0   	| [ld   hl,(ds_plyr_actv +_w_hit_ct)]
 	addq.w	#1,a0                           	| [inc  hl]
-	move.b	a0,ds_plyr_actv+_w_hit_ct       	| [ld   (ds_plyr_actv +_w_hit_ct),hl]
+	move.l	a0,ds_plyr_actv+_w_hit_ct       	| [ld   (ds_plyr_actv +_w_hit_ct),hl]
 	move.b	d0,d6                           	| [ld   l,a] restore L
 
 * hitd_dspchr
@@ -1224,20 +1216,18 @@ hitd_dspchr:
 	lea	ds_sprite_posn(pc),a1              	| [ld   d,#>ds_sprite_posn] _sprite_posn[E].b0 = 0 ... sX
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	      ^^^^ TODO: review XX value
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,(a1)                         	| [ld   (de),a]
 	lea	ds_sprite_ctrl(pc),a1              	| [ld   d,#>ds_sprite_ctrl] _sprite_ctrl[E].b0 = 0 ... attributes
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	      ^^^^ TODO: review XX value
 	move.b	d0,(a1)                         	| [ld   (de),a]
 
 	addq.w	#1,a0                           	| [inc  l]
+	addq.b	#1,d6                           	| [inc  l]
 	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code] sprite.cclr.b1 ...
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	move.b	d0,d2                           	| [ld   c,a] ... for later ....
 	tst.b	d0                               	| [and  a]
@@ -1248,19 +1238,17 @@ hitd_dspchr:
 
 * if rocket or ship collided with bug
 	tst.b	d7                              	| [ex   af,af'] un-stash parameter ... 1 if moving bug (hit by rocket or fighter)
-         ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	jne	l_081E_hdl_flyng_bug               	| [jr   nz,l_081E_hdl_flyng_bug] will come back to $07DB or l_07DF
 
 * else if rocket hit stationary bug
 	                              	| [ex   af,af'] re-stash parameter
-         ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 l_07DB:
+	COMPUTE_LSB_A0_D6	ds_sprite_code
 * set it up for elimination
 	lea	b_9200_obj_collsn_notif(pc),a0     	| [ld   h,#>b_9200_obj_collsn_notif] = $81
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	#0x81,(a0)                      	| [ld   (hl),#0x81]
 
 l_07DF:
@@ -1303,7 +1291,7 @@ l_07F8_:
 
 l_0808:
 * _bug_collsn[ color ] += 1
-	lea	ds_bug_collsn_hit_mult+0x00(pc),a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x00] rocket/bug or ship/bug collision
+	lea	ds_bug_collsn_hit_mult(pc),a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x00] rocket/bug or ship/bug collision
 	jbsr	rst_10                            	| [rst  0x10] HL += A ... _collsn_hit_mult[sprite.cclr.b1]
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 
@@ -1316,35 +1304,33 @@ l_0811:
 
 * this invalidates the bomb object... but what about the ship?
 l_0815_bomb_hit:
+	COMPUTE_LSB_A0_D6	ds_sprite_code
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn] sprite[L].sx = 0 ... bomb colliding with fighter
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	clr.b	(a0)                             	| [ld   (hl),#0]
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800] sprt_mctl_objs[L].state
-	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] disposition = INACTIVE
 
 	rts                                    	| [ret]
 
 * Handle flying bug collision (bullet or ship). Not stationary bugs.
 l_081E_hdl_flyng_bug:
-	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
+	COMPUTE_LSB_A0_D6	ds_sprite_code
+	lea	b_8800,a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 
-	move.l	a0,-(sp)                        	| [push hl]
+	movem.l	a0/d6,-(sp)                        	| [push hl]
 	exg		d0,d7                              	| [ex   af,af'] re-stash parameter
 	addq.w	#1,a0                           	| [inc  l]
+	addq.b	#1,d6                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprt_mctl_objs[L].mctl_idx
 
 	lea	ds_bug_motion_que(pc),a0           	| [ld   h,#>ds_bug_motion_que] bug_motion_que[A].b13 = 0 (release this slot)
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	add.b	#0x13,d0                         	| [add  a,#0x13]
 	move.b	d0,d6                           	| [ld   l,a]
 	clr.b	(a0)                             	| [ld   (hl),#0]
@@ -1356,7 +1342,7 @@ l_081E_hdl_flyng_bug:
 * rounds it is simply intiialized to 0 at start of round.
 	lea	w_bug_flying_hit_cnt(pc),a0        	| [ld   hl,#w_bug_flying_hit_cnt] hit_cnt -= 1 ... reset 8 each challenge_wave
 	subq.b	#1,(a0)                         	| [dec  (hl)]
-	movem.l	(sp)+,a0                        	| [pop  hl] &sprt_mctl_objs[L].mctl_idx
+	movem.l	(sp)+,a0/d6                        	| [pop  hl] &sprt_mctl_objs[L].mctl_idx
 
 	jne	l_0849                             	| [jr   nz,l_0849]
 
@@ -1364,7 +1350,6 @@ l_081E_hdl_flyng_bug:
 	lea	b_9200_obj_collsn_notif(pc),a0     	| [ld   h,#>b_9200_obj_collsn_notif] = b_9280[4 + 1]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	ds2_stg_chllg_rnd_attrib+1,d0   	| [ld   a,(ds2_stg_chllg_rnd_attrib + 1)] sprite code + flag
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 
@@ -1413,13 +1398,12 @@ l_0852:
 	lea	b_8800(pc),a1                      	| [ld   d,#>b_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	      ^^^^ TODO: review XX value
 	move.b	(a1),d0                         	| [ld   a,(de)]
 	cmp.b	#9,d0                            	| [cp   #9] is this a valid capture ship status ...i.e. diving? ...status may still...
 	jne	l_0899                             	| [jr   nz,l_0899] ...be $80 meaning I have killed the boss before he pulls the ship all in!
 * captured ship is diving
 
-	move.l	a0,-(sp)                        	| [push hl] stash the boss object locator e.g. b_8830
+	movem.l	a0/d6,-(sp)                        	| [push hl] stash the boss object locator e.g. b_8830
 	exg	a1,a0                              	| [ex   de,hl] HL := &sprt_mctl_objs[ ].b0
 	addq.w	#1,a0                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprt_mctl_objs[ HL ].mctl_idx
@@ -1428,22 +1412,20 @@ l_0852:
 	lea	ds_bug_motion_que(pc),a1           	| [ld   d,#>ds_bug_motion_que] mctl_mpool[n].b13 == 0 ... make slot inactive
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	      ^^^^ TODO: review XX value
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,(a1)                         	| [ld   (de),a]
+	COMPUTE_LSB_A0_D6	sprt_mctl_objs
 	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	#9,(a0)                         	| [ld   (hl),#9] color map 9 for white ship
 	subq.w	#1,a0                           	| [dec  l]
-	COMPUTE_LSB_A0_D6	FUCK
+	subq.b	#1,d6                           	| [dec  l] follow
 	move.b	d6,d0                           	| [ld   a,l]
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] updated object locator token of rescued ship   (token was 1)
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800] the captured ship object becomes inactive (0)
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 0
@@ -1451,7 +1433,7 @@ l_0852:
 	move.b	d0,ds_cpu0_task_actv+0x1D       	| [ld   (ds_cpu0_task_actv + 0x1D),a] 1 ... shot the boss that captured the ship
 	move.b	d0,ds5_928A_captr_status+0x03   	| [ld   (ds5_928A_captr_status + 0x03),a] 1
 	move.b	d0,b_9AA0+0x11                  	| [ld   (b_9AA0 + 0x11),a] 1 ... sound-fx count/enable registers, "rescued ship" music
-	move.l	(sp)+,a0                        	| [pop  hl] restore boss object locator e.g. b_883x
+	movem.l	(sp)+,a0/d6                        	| [pop  hl] restore boss object locator e.g. b_883x
 
 l_0899:
 * lone blue boss killed, or boss killed before pulling the beam all in
@@ -1479,7 +1461,7 @@ l_08B0_set_bonus_sprite_code:
 	lea	b_9200_obj_collsn_notif(pc),a0     	| [ld   h,#>b_9200_obj_collsn_notif]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
+	ILLEGAL		| check D6 value when shooting captured ship
 	move.b	d3,(a0)                         	| [ld   (hl),d] shot boss ... (9230):=BA B5. B7?   B8 if hit captured ship
 	jra	l_07DF                             	| [jp   l_07DF]
 
@@ -1488,9 +1470,8 @@ l_08B6:
 	move.l	a0,-(sp)                        	| [push hl]
 	lea	b8_99B0_X3attackcfg_ct(pc),a0      	| [ld   hl,#b8_99B0_X3attackcfg_ct] decrement (HL) (counter for triple attack?)
 	subq.b	#1,(a0)                         	| [dec  (hl)]
-	move.l	(sp)+,a0                        	| [pop  hl]
+	movem.l	(sp)+,a0                        	| [pop  hl]
 	jne	l_07DB                             	| [jp   nz,l_07DB]
-      ^^^^^^ TODO: review cpu flags (move.l,jne)
 	move.b	b8_99B2_X3attackcfg_parm1,d0    	| [ld   a,(b8_99B2_X3attackcfg_parm1)] 99B0==0 ... destroyed all 3 of triple-attack
 	move.b	d0,d3                           	| [ld   d,a]
 	move.b	b8_99B1_X3attackcfg_parm0,d0    	| [ld   a,(b8_99B1_X3attackcfg_parm0)]
@@ -1527,8 +1508,8 @@ f_08D3:
 
 	lea	b_bugs_flying_cnt(pc),a0           	| [ld   hl,#b_bugs_flying_cnt] capture the (previous) count and zero the current count
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	clr.b	(a0)                             	| [ld   (hl),#0]
-	addq.w	#1,a0                           	| [inc  hl] b_bugs_flying_nbr
+	clr.b	(a0)+                             	| [ld   (hl),#0]
+	                           	| [inc  hl] b_bugs_flying_nbr
 	move.b	d0,(a0)                         	| [ld   (hl),a] = bugs_flying_cnt
 
 * traverse the object-motion queue
@@ -1543,7 +1524,6 @@ for__pool_idx:
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 
 * 9 is diving, 7 is spawning, 3 (and 6) bomb?
 * if (!(A == 3                          	|| A == 7|| A == 9)) ...
@@ -1567,7 +1547,11 @@ mctl_fltpn_dspchr:
 * flight-path vector has expired... setup HL as pointer to next data token
 	move.b	(0x08,a2),d6                    	| [ld   l,0x08(ix)]
 	move.b	(0x09,a2),d5                    	| [ld   h,0x09(ix)]
-
+	LOAD_D5_16_FROM_D5D6
+	illegal
+	nop
+	nop
+	nop
 
 * this label allows reading the next token after doing state-selection
 j_090E_flite_path_init:
@@ -1615,25 +1599,24 @@ d_0920_jp_tbl:
 	.long case_094E   | one red moth left in "free flight mode"
 
 * when ... no idea
-case_0942:  ; $0A
+case_0942:  | 0x0A
 	move.b	(0x10,a2),d4                    	| [ld   e,0x10(ix)] offset of object ...8800[E]
 	lea	b_8800(pc),a1                      	| [ld   d,#>b_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	      ^^^^ TODO: review XX value
 	move.b	#0x03,d0                        	| [ld   a,#0x03] set to state 3
 	move.b	d0,(a1)                         	| [ld   (de),a]
 	addq.w	#1,a0                           	| [inc  hl] ptr to data table
 	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
 
 * continuous-bombing mode
-case_094E:  ; $10 (0xEF)
+case_094E:  | 0X10 (0xEF)
 	move.b	ds_new_stage_parms+0x09,d0      	| [ld   a,(ds_new_stage_parms + 0x09)] jumps the pointer on/after stage 8
 	                               	| [and  a]
 	jra	l_0959                             	| [jp   l_0959]
 
 * attack wave
-case_0955:  ; $0F
+case_0955:  | 0x0F
 	move.b	ds_new_stage_parms+0x08,d0      	| [ld   a,(ds_new_stage_parms + 0x08)] jumps the pointer on/after stage 8
 	                               	| [and  a]
 
@@ -1654,18 +1637,16 @@ l_0963:
 	jra	l_0B8B                             	| [jp   l_0B8B] inc hl and finalize
 
 * diving attacks stop and bugs go home
-case_0968:  ; $0E
+case_0968:  | 0x0E
 	move.b	(0x10,a2),d4                    	| [ld   e,0x10(ix)] home_posn_rc[ obj_id ]
 	lea	sprt_fmtn_hpos(pc),a1              	| [ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	      ^^^^ TODO: review XX value
 	move.b	(a1),d0                         	| [ld   a,(de)] row position index
 	move.b	d0,d4                           	| [ld   e,a]
 	lea	ds_hpos_loc_orig(pc),a1            	| [ld   d,#>ds_hpos_loc_orig] b1: copy of origin data
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	      ^^^^ TODO: review XX value
 	addq.w	#1,a1                           	| [inc  e]
 	move.b	(a1),d0                         	| [ld   a,(de)] copy of origin data
 	add.b	#0x20,d0                         	| [add  a,#0x20]
@@ -1673,7 +1654,7 @@ case_0968:  ; $0E
 	jra	l_0B8B                             	| [jp   l_0B8B] inc hl and finalize
 
 * yellow alien special attack leader started dive ready to replicate
-case_097B:  ; $0D
+case_097B:  | 0x0D
 
 	move.l	a0,-(sp)                        	| [push hl] ptr to data table
 	move.b	(0x10,a2),d4                    	| [ld   e,0x10(ix)] object offset of bee that is to be split
@@ -1684,17 +1665,20 @@ l_0984:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	rol.b	#1,d0                            	| [rlca] test bit 7 (0x80 if disposition == inactive)
 	jcs	l_098F_do_split_off_bonus_bee      	| [jr   c,l_098F_do_split_off_bonus_bee]
-	addq.b	#2,d6                           	| [inc  l] * 2
+	addq.w	#2,a0                           	| [inc  l] * 2
 	subq.b	#1,d1                           	| [...]
 	jne	l_0984                             	| [djnz l_0984]
 	jra	l_09FA_bonusbee_creat_fail         	| [jp   l_09FA_bonusbee_creat_fail]
 
 l_098F_do_split_off_bonus_bee:
+	COMPUTE_LSB_A0_D6	b_8800
 	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
-	move.b	d5,d3                           	| [ld   d,h]
+	* game transfers msb to a1... get original d4 value first
+	COMPUTE_LSB_A1_D4
+	move.l	a0,a1
+	add.w	d4,a1                           	| [ld   d,h]
 	move.b	(a1),d0                         	| [ld   a,(de)] _sprite_code[index attack leader]
 	move.b	d0,(a0)+                         	| [ld   (hl),a]
 	                           	| [inc  l] .b1
@@ -1702,7 +1686,7 @@ l_098F_do_split_off_bonus_bee:
 	move.b	(a1),d0                         	| [ld   a,(de)] _sprite_cclr[index attack leader]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	subq.w	#1,a0                           	| [dec  l] .b0
-	COMPUTE_LSB_A0_D6		FUCK
+	COMPUTE_LSB_A0_D6		ds_sprite_code
 	move.b	d6,d0                           	| [ld   a,l]
 	exg		d0,d7                              	| [ex   af,af'] stash index of spawning yellow alien
 
@@ -1722,55 +1706,49 @@ l_09A3:
 
 l_09AE_doit:
 	add.w	d3,a0                            	| [add  hl,de]
-  ^^^^ TODO: review d3 computation above
 	addq.w	#1,a0                           	| [inc  hl]
-	move.b	(0x00,a2),d0                    	| [ld   a,0x00(ix)] coordinate of parent alien
-	move.b	#ixl,d4                         	| [ld   e,ixl]
-	move.b	#ixh,d3                         	| [ld   d,ixh]
+	move.b	(a2),d0                    	| [ld   a,0x00(ix)] coordinate of parent alien
+	move.l	a2,a1
+											| [ld   e,ixl]
+											| [ld   d,ixh]
 	exg	a1,a0                              	| [ex   de,hl]
-ld   iyl,e
-ld   iyh,d
-	move.b	#0x00,d1                        	| [ld   bc,#0x0006] 6
-	move.b	#0x06,d2                        	| [ld   bc,#0x0006] 6
+	move.l	a1,a2
+	| ld   iyl,e
+	| ld   iyh,d
+	move.w	#0x06,d1                        	| [ld   bc,#0x0006] 6
 	jbsr	ldir                              	| [ldir]
-     ^^^^ TODO: review special instruction inputs
-	move.b	#6,d2                           	| [ld   c,#6]
+	move.w	#6,d1                           	| [ld   c,#6]
 	add.w	d1,a0                            	| [add  hl,bc]
-  ^^^^ TODO: review d1 computation above
 	exg	a1,a0                              	| [ex   de,hl]
 	add.w	d3,a0                            	| [add  hl,de]
-  ^^^^ TODO: review d3 computation above
 	exg	a1,a0                              	| [ex   de,hl]
-	move.b	#4,d2                           	| [ld   c,#4]
+	move.w	#4,d1                           	| [ld   c,#4]
 	jbsr	ldir                              	| [ldir]
-     ^^^^ TODO: review special instruction inputs
 	move.b	(0x13,a2),d0                    	| [ld   a,0x13(ix)] 0x13(iy)
 	move.b	d0,(0x13,a3)                    	| [ld   0x13(iy),a]
 
 * load new data pointer from data and store in flite q object
 	move.l	(sp)+,a0                        	| [pop  hl] special attack, pushes hl right away
 	addq.w	#1,a0                           	| [inc  hl]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
+	move.b	(a0)+,d0                         	| [ld   a,(hl)]
 	move.b	d0,(0x08,a3)                    	| [ld   0x08(iy),a]
-	addq.w	#1,a0                           	| [inc  hl]
+	                           	| [inc  hl]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	move.b	d0,(0x09,a3)                    	| [ld   0x09(iy),a]
 
 	move.b	#0x01,(0x0A,a3)                 	| [ld   0x0A(iy),#0x01]
 	move.b	#0x02,(0x0B,a3)                 	| [ld   0x0B(iy),#0x02]
 	move.b	#0x01,(0x0D,a3)                 	| [ld   0x0D(iy),#0x01]
-	scs	d7                              	| [ex   af,af'] index of spawning yellow alien
-         ^^^ TODO review: wrong if carry is needed or D7 used in between!
+	exg		d0,d7                              	| [ex   af,af'] index of spawning yellow alien
 	move.b	d0,(0x10,a3)                    	| [ld   0x10(iy),a]
 	move.b	d0,d4                           	| [ld   e,a]
 	lea	b_8800(pc),a1                      	| [ld   d,#>b_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	      ^^^^ TODO: review XX value
 	move.b	#9,d0                           	| [ld   a,#9] 09: diving -> 8800[i]
 	move.b	d0,(a1)+                         	| [ld   (de),a]
 	                           	| [inc  e]
-	move.b	#iyl,d0                         	| [ld   a,iyl]
+	move.b	iyl,d0                         	| [ld   a,iyl]
 	move.b	d0,(a1)                         	| [ld   (de),a]
 	addq.w	#1,a0                           	| [inc  hl] new ptr loaded to b08/b09, but HL is advanced, still in same data series
 	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
@@ -1821,8 +1799,7 @@ l_0A1E:
 
 l_0A2C_:
 * test if offset'ed result still out of range negative (overflow if addition to negative delta is greater than 0)
-	add.b	0x30>>1,d0                       	| [add  a,#0x30>>1] offset to positive range for selection of index
-       ^^^^^^ TODO: review absolute 16-bit address read
+	add.b	#0x30>>1,d0                       	| [add  a,#0x30>>1] offset to positive range for selection of index
 	jpl	l_0A32                             	| [jp   p,l_0A32]
 	clr.b	d0                               	| [xor  a] result still negative (S is set )
 l_0A32:
@@ -1858,13 +1835,12 @@ case_0A53:  ; $0B
 	addq.b	#3,d0                           	| [add  a,#3]
 	and.b	#0xF8,d0                         	| [and  #0xF8]
 	addq.b	#1,d0                           	| [inc  a]
-cp   #82 >> 1                              ; $29
+	cmp.b	#82>>1,d0		| cp   #82 >> 1                              ; $29
 	jcc	l_0A66                             	| [jr   nc,l_0A66]
 	move.b	#0x29,d0                        	| [ld   a,#0x29]
 l_0A66:
-cp   #404 >> 1                             ; $CA
+	cmp.b	#404>>1,d0			| cp   #404 >> 1                             ; $CA
 	jcs	l_0A6C                             	| [jr   c,l_0A6C]
-      ^^^^^^ TODO: review cpu flags (move.b,jcs)
 	move.b	#402>>1,d0                      	| [ld   a,#402 >> 1] $C9
 l_0A6C:
 	btst.b	#0,d2                           	| [bit  0,c] check flip screen
@@ -1903,13 +1879,11 @@ case_0AA0:  ; $04
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	#9,(a0)                         	| [ld   (hl),#9] disposition = 9: diving/homing (currently 3)
 
 	lea	sprt_fmtn_hpos(pc),a0              	| [ld   h,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0)+,d2                         	| [ld   c,(hl)] row index
 	                           	| [inc  l]
 	move.b	(a0),d6                         	| [ld   l,(hl)] column index
@@ -1922,6 +1896,11 @@ case_0AA0:  ; $04
 	move.b	(a0),d4                         	| [ld   e,(hl)] x coordinate (ds_hpos_loc_orig)
 
 	move.b	d2,d6                           	| [ld   l,c] row position index
+
+	lea	ds_hpos_loc_t(pc),a0               	| [ld   h,#>ds_hpos_loc_t]
+	and.w	#0xFF,d6
+	add.w	d6,a0
+
 	move.b	(a0)+,d2                         	| [ld   c,(hl)] y offset
 	                           	| [inc  l]
 	move.b	(a0),d3                         	| [ld   d,(hl)] y coordinate (ds_hpos_loc_orig)
@@ -1947,12 +1926,16 @@ l_0ACD:
 * add y-offset to .b00/.b01 (sra/rr -> 9.7 fixed-point scaling)
 	move.b	(0x00,a2),d6                    	| [ld   l,0x00(ix)] .b00
 	move.b	(0x01,a2),d5                    	| [ld   h,0x01(ix)] .b01 ... sY<8:1>
+	illegal
+	nop
 	move.b	d2,d3                           	| [ld   d,c] step y coord, y offset
 	clr.b	d4                               	| [ld   e,#0]
 	asr.b	#1,d3                            	| [sra  d]
 	roxr.b	#1,d4                           	| [rr   e]
+	LOAD_D3_16_FROM_D3D4
 	add.w	d3,a0                            	| [add  hl,de]
-  ^^^^ TODO: review d3 computation above
+	* store 16 bit pointer in struct
+	illegal
 	move.b	d6,(0x00,a2)                    	| [ld   0x00(ix),l] .b00
 	move.b	d5,(0x01,a2)                    	| [ld   0x01(ix),h] .b01
 	move.b	d5,d4                           	| [ld   e,h] y, .b01 (bits<1:8> of integer portion)
@@ -1960,11 +1943,13 @@ l_0ACD:
 * add x-offset to .b02/.b03 (sra/rr -> 9.7 fixed-point scaling)
 	move.b	(0x02,a2),d6                    	| [ld   l,0x02(ix)] .b00
 	move.b	(0x03,a2),d5                    	| [ld   h,0x03(ix)] .b01
+	LOAD_D5_16_FROM_D5D6
 	clr.b	d2                               	| [ld   c,#0]
 	asr.b	#1,d1                            	| [sra  b] step x coord, x offset
 	roxr.b	#1,d2                           	| [rr   c]
+	LOAD_D1_16_TO_D1D2
 	sub.w	d1,d5                            	| [sbc  hl,bc]
-     ^^^^ TODO: review compared/subbed registers
+	LOAD_D5D6_FROM_D5_16
 	move.b	d6,(0x02,a2)                    	| [ld   0x02(ix),l] .b00
 	move.b	d5,(0x03,a2)                    	| [ld   0x03(ix),h] .b01
 	move.b	d5,d6                           	| [ld   l,h] x, .b01 (bits<8:1> of integer portion)
@@ -2001,11 +1986,12 @@ case_0B16:  ; $01
 	move.b	sfr_sprite_posn+0x62,d0         	| [ld   a,(sfr_sprite_posn + 0x62)] ship1
 	addq.b	#1,d0                           	| [inc  a]
 	subq.b	#1,d0                           	| [dec  a]
+	scs	d7
 	jne	l_0B2A                             	| [jr   nz,l_0B2A]
 	move.b	#0x80,d0                        	| [ld   a,#0x80]
 l_0B2A:
-	jcs	l_0B30                             	| [jr   c,l_0B30]
-      ^^^^^^ TODO: review cpu flags (move.b,jcs)
+	tst.b	d7
+	jne	l_0B30                             	| [jr   c,l_0B30]
 	neg.b	d0                               	| [neg]
 	add.b	#0xF2,d0                         	| [add  a,#0xF2]
 l_0B30:
@@ -2238,15 +2224,17 @@ l_0C46:
 	move.b	#-1,d6                          	| [ld   l,#-1]
 
 l_0C5C:
+	CLEAR_XC_FLAGS
 * check for overflow out of LSB from addition (subtraction) result, sneaky ... xor sets S flag if bit-7 is toggled hi
 	roxr.b	#1,d0                           	| [rra]
-      ^^^^^^ TODO: review cpu X flag
 	eor.b	d1,d0                            	| [xor  b] b from (ix)0x0C
-	move.b	d3,d0                           	| [ld   a,d] from (ix)0x05
 	jpl	l_0C63                             	| [jp   p,l_0C63]
-      ^^^^^^ TODO: review cpu flags (move.b,jpl)
+	move.b	d3,d0                           	| [ld   a,d] from (ix)0x05
 	add.b	d6,d0                            	| [add  a,l]
+	jra		0f
 l_0C63:
+	move.b	d3,d0                           	| [ld   a,d] from (ix)0x05
+0:
 	move.b	d0,(0x05,a2)                    	| [ld   0x05(ix),a] bits <8:9>
 
 * determine_sprite_code
@@ -2274,10 +2262,9 @@ l_0C75:
 
 l_0C81:
 	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
-	and.w	#0xFF,d6
-	add.w	d6,a0
-	      ^^^^ TODO: review XX value
+	moveq	#0,d6
 	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] mrw_sprite[L].cclr.b0
+	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	and.b	#0xF8,d0                         	| [and  #0xF8] base sprite code (multiple of 8)
 	or.b	d1,d0                             	| [or   b]
@@ -2289,14 +2276,13 @@ l_0C81:
 	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	d2,d0                           	| [ld   a,c] d saved from (ix)0x05 above
 	ror.b	#1,d2                            	| [rrc  c]
 	eor.b	d2,d0                            	| [xor  c] bit0 xor with bit1 ...
 	addq.b	#1,d0                           	| [inc  a] ... add 1 ... now have bit1
-	ror.b	#1,d2                            	| [rrc  c] bit <1> ...
+	CLEAR_XC_FLAGS
+	roxr.b	#1,d2                            	| [rrc  c] bit <1> ...
 	roxl.b	#1,d0                           	| [rla] ... into <0>
-      ^^^^^^ TODO: review cpu X flag
 	and.b	#0x03,d0                         	| [and  #0x03] <0> flip up/down  <1> flip l/r, double-x/double-y bits not used
 	move.b	d0,(a0)                         	| [ld   (hl),a] mrw_sprite[L].ctrl.b0 = A & 0x03
 
@@ -2317,8 +2303,8 @@ l_0CA7:
 
 	move.l	a0,-(sp)                        	| [push hl] &mrw_sprite[L].ctrl.b0
 
-	move.l	a2,-(sp)                        	| [push ix]
-	move.l	(sp)+,a0                        	| [pop  hl] &bug_motion_que[n].b00
+	move.l	a2,a0                        	| [push ix]
+										| [pop  hl] &bug_motion_que[n].b00
 
 	move.b	d0,d1                           	| [ld   b,a] (ix)0x0A or (ix)0x0B
 
@@ -2333,11 +2319,10 @@ l_0CA7:
 *         270
 * xor bit-7 with bit-8 ... test for orientation near 0 or 180
 * i.e. < xx80 in quadrant 0 & 2, and >= xx80 in quadrant 1 & 3
-	rol.b	#1,d4                            	| [rlc  e] e saved from (ix)0x04   ( from C46 )
+	CLEAR_XC_FLAGS
+	roxl.b	#1,d4                            	| [rlc  e] e saved from (ix)0x04   ( from C46 )
 	roxl.b	#1,d3                           	| [rl   d]
-      ^^^^^^ TODO: review cpu X flag
 	movem.w	d3/d4,-(sp)                    	| [push de] adjusted rotation angle, restores to HL below .....
-	move.l	a1,-(sp)                        	| [push de] adjusted rotation angle, restores to HL below .....
 	eor.b	d3,d0                            	| [xor  d]
 	ror.b	#1,d0                            	| [rrca] xor result in A<0>
 	jcs	l_0CBF                             	| [jr   c,l_0CBF] check for Cy shifted into bit7 from rrca
@@ -2351,10 +2336,9 @@ l_0CBF:
 * 1 0  1 - 5   .b04<7> (degree 0-89) and the upper 2 bits were .b05<1:0> (quadrant)
 * 1 1  0 - 6   Taking the quadrant and angle together, the range is 135-304 degrees.
 	addq.b	#1,d3                           	| [inc  d]
-	btst.b	#2,d3                           	| [bit  2,d]
 	move.b	d1,d0                           	| [ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix)
+	btst.b	#2,d3                           	| [bit  2,d]
 	jeq	l_0CC7                             	| [jr   z,l_0CC7]
-      ^^^^^^ TODO: review cpu flags (move.b,jeq)
 	neg.b	d0                               	| [neg] negate primary component for 135-305 degrees
 l_0CC7:
 * A is actually bits<15:7> of addend (.b00/.b02 in fixed point, 9.7)
@@ -2364,22 +2348,21 @@ l_0CC7:
 	move.b	(a0),d0                         	| [ld   a,(hl)] b00 or b02, depends on "jr   c,l_0CBF"
 	add.b	#0x80,d0                         	| [add  a,#0x80] add carry-out from sra
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-l_0CD0:
-	addq.w	#1,a0                           	| [inc  l]
+l_0CD0:                         	
+	move.b	(a0)+,d0    					| [inc  l] which doesn't change X
 	move.b	(a0),d0                         	| [ld   a,(hl)] b01 or b03, depends on "jr   c,l_0CBF"
-adc  a,c                                   ; add with carry-out from addition into lsb
+	addx.b	d2,d0					| [adc  a,c]                                   ; add with carry-out from addition into lsb
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 
 * stash the pointer to .b0/.b2 in DE (previous DE into HL but no longer used)
 	subq.w	#1,a0                           	| [dec  l]
-	exg	a1,a0                              	| [ex   de,hl]
+	exg	a1,a0                              	| [ex   de,hl] save a0 in a1
 	move.b	d4,d0                           	| [ld   a,e]
 	eor.b	#0x02,d0                         	| [xor  #0x02] toggle x/y pointer, .b00 or .b02
 	move.b	d0,d4                           	| [ld   e,a]
 
 * test L<0> (pushed/popped from left-shifted DE above .. but this would be .b04<7> before left-shift?)
-	move.l	(sp)+,a0                        	| [pop  hl] ..... adjusted rotation angle from push DE above
-	FUCK TODO
+	movem.w	(sp)+,d5/d6                        	| [pop  hl] ..... adjusted rotation angle from push DE above
 	lsr.b	#1,d6                            	| [srl  l] revert to unshifted, but did not retain bit-7
 	jcc	l_0CE3                             	| [jr   nc,l_0CE3] bit<0> into Cy (which was actually bit<7>
 	move.b	d6,d0                           	| [ld   a,l]
@@ -2389,7 +2372,7 @@ l_0CE3:
 	move.b	d1,d0                           	| [ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix)
 	move.b	d5,d1                           	| [ld   b,h] msb of adjusted angle
 	clr.b	d5                               	| [ld   h,#0]
-	jbsr	c_0E97                            	| [call c_0E97] HL = L * A
+	jbsr	mul_16_0E97                            	| [call mul_16_0E97] HL = L * A
 
 *             . 90          - angle in degrees
 *             1                         	| 0        - quadrant derived from 10-bit angle
@@ -2418,13 +2401,13 @@ l_0CE3:
 	neg.w	d1                            	| [sbc  hl,bc] negate BC ... can't use "neg" since it is 16-bit
 l_0CFA:
 	exg	a1,a0                              	| [ex   de,hl] reload the pointer from DE
-* *HL += *DE
-	move.b	d4,d0                           	| [ld   a,e] lsb of mul result
+* *HL += *DE (D5/D6 still holds mul result, exg doesn't affect that)
+	move.b	d6,d0                           	| [ld   a,e] lsb of mul result
 	add.b	(a0),d0                          	| [add  a,(hl)]
 	move.b	d0,(a0)+                         	| [ld   (hl),a]  .b00 or .b02
 	                           	| [inc  l]
 	move.b	d3,d0                           	| [ld   a,d] msb of mul result
-adc  a,(hl)                                ;  .b01 or .b03
+	addx.b	(a0),d0				| 	adc  a,(hl)                                ;  .b01 or .b03
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 
 	move.l	(sp)+,a0                        	| [pop  hl] &mrw_sprite.ctrl[L].b1
@@ -2436,10 +2419,11 @@ l_0D03_flite_pth_posn_set:
 
 * extract x-coord and adjust for homing if needed
 * fixed point 9.7 in .b02.b03 - left shift integer portion into A ... carry in to <0> from .b02<7>
+	COMPUTE_LSB_A0_D6 ds_sprite_ctrl
+
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(0x03,a2),d3                    	| [ld   d,0x03(ix)] bits<1:6> of x pixel ... could load directly to A
 * set Cy from .b02<7>
 	move.b	#0x7F,d0                        	| [ld   a,#0x7F]
@@ -2471,12 +2455,18 @@ l_0D23:
 
 	btst.b	#0,d2                           	| [bit  0,c] test flip screen
 	jne	l_0D38                             	| [jr   nz,l_0D38]
-	add.b	(<(-0x0160-0x02))>>1,d0          	| [add  a,#(<(-0x0160 - 0x02))>>1] not flipped ... lsb of result, right-shift 1
+	add.b	#0x4F,d0          			| [add  a,#(<(-0x0160 - 0x02))>>1] not flipped ... lsb of result, right-shift 1
+	scs		d7
 	not.b	d0                               	| [cpl]
 	subq.b	#1,d4                           	| [dec  e] compliment bit-0 of 9-bit integer portion
-
+	* reapply X flag from add operation
+	CLEAR_XC_FLAGS
+	tst.b	d7
+	beq.b	l_0D38
+	SET_XC_FLAGS
 l_0D38:
 * E<0> <- Cy <- 7 6 5 4 3 2 1 0 <- Cy <- E<0>
+	
 	roxr.b	#1,d4                           	| [rr   e] bit-0 of 9-bit integer portion into Cy
 	roxl.b	#1,d0                           	| [rla] Cy (bit0) into lsb, bit8 into Cy
 	roxl.b	#1,d4                           	| [rl   e] bit8 from Cy into E<0> (bit8 of sprite_y)
@@ -2490,21 +2480,21 @@ l_0D38:
 	move.b	(0x12,a2),d7
 	eor.b	d7,d0                            	| [xor  0x12(ix)]
 	rol.b	#1,d0                            	| [rlca]
-	move.b	d3,d0                           	| [ld   a,d]
 	jcc	l_0D50                             	| [jr   nc,l_0D50]
-      ^^^^^^ TODO: review cpu flags (move.b,jcc)
 	addq.b	#1,d4                           	| [inc  e]
-
 l_0D50:
+	move.b	d3,d0                           	| [ld   a,d]
 	move.b	d0,(a0)                         	| [ld   (hl),a] sprite[n].posn.sy<7:0>
+	COMPUTE_LSB_A0_D6	ds_sprite_posn
 	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl] sprite[n].posn.sy<8>
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
-	ror.b	#1,(a0)                          	| [rrc  (hl)]
-	ror.b	#1,d4                            	| [rrc  e]
-	roxl.b	#1,(a0)                         	| [rl   (hl)] sprite[n].posn.sy<8>
-      ^^^^^^ TODO: review cpu X flag
+	move.b	(a0),d7
+	ror.b	#1,d7                          	| [rrc  (hl)]
+	CLEAR_XC_FLAGS
+	roxr.b	#1,d4                            	| [rrc  e]
+	roxl.b	#1,d7                         	| [rl   (hl)] sprite[n].posn.sy<8>
+    move.b	d7,(a0)
 
 
 * Once the timer in $0E is reached, then check conditions to enable bomb drop.
@@ -2516,9 +2506,8 @@ l_0D50:
 	jcc	l_0DF5_next_superloop_and_reload_0E	| [jp   nc,l_0DF5_next_superloop_and_reload_0E]
 
 	move.b	(0x01,a2),d0                    	| [ld   a,0x01(ix)] if .cy.pair.b1 > $4C
-cp   #152>>1                               ; 0x4C
+	cmp.b	#152>>1,d0			| cp   #152>>1                               ; 0x4C
 	jcs	l_0DF5_next_superloop_and_reload_0E	| [jp   c,l_0DF5_next_superloop_and_reload_0E]
-      ^^^^^^ TODO: review cpu flags (move.b,jcs)
 
 	move.b	ds_cpu0_task_actv+0x15,d0       	| [ld   a,(ds_cpu0_task_actv + 0x15)] f_1F04 ...fire button input
 	                               	| [and  a]
@@ -2545,12 +2534,16 @@ l_0D82:
 l_0D8D_got_a_bullet:
 	move.b	#6,(a0)                         	| [ld   (hl),#6] _objs[BOMB0].state = BOMB
 
+	COMPUTE_LSB_A0_D6	b_8800
 	move.l	a0,-(sp)                        	| [push hl] &_objs[BOMB0 + n]
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
-	move.b	d5,d3                           	| [ld   d,h]  TODO !!! msb change
+
+	COMPUTE_LSB_A1_D4	ds_sprite_ctrl
+	lea	ds_sprite_posn(pc),a1              	| [ld   h,#>ds_sprite_posn]
+	and.w	#0xFF,d4
+	add.w	d4,a1                          	| [ld   d,h] weird msb change
 	subq.w	#1,a1                           	| [dec  e] ... E from &sprite.ctrl[L].b1
 * sprite.posn[BOMB0 + n].b0 = sprite.posn[e].b0
 	move.b	(a1)+,d0                         	| [ld   a,(de)] bomber.x
@@ -2563,35 +2556,35 @@ l_0D8D_got_a_bullet:
 	move.b	d0,d1                           	| [ld   b,a]
 	move.b	d0,(a0)                         	| [ld   (hl),a] bomb.y<7:0>
 * sprite.ctrl[BOMB0 + n].b1 = sprite.ctrl[e].b1
+	COMPUTE_LSB_A0_D6	ds_sprite_posn
 	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	d5,d3                           	| [ld   d,h]
 	move.b	(a1),d0                         	| [ld   a,(de)] bomber.y<8> (in :0 ... ctrl in :1)
-	ror.b	#1,(a0)                          	| [rrc  (hl)] bomb.ctrl.b1<0> to Cy
-	ror.b	#1,d0                            	| [rrca] bomber.y<8> from A<0> to Cy
-	roxl.b	#1,(a0)                         	| [rl   (hl)] sY<8> from Cy to bomb.ctrl.b1<0>
-      ^^^^^^ TODO: review cpu X flag
+	move.b	(a0),d7
+	ror.b	#1,d7                          	| [rrc  (hl)] bomb.ctrl.b1<0> to Cy
+	CLEAR_XC_FLAGS
+	roxr.b	#1,d0                            	| [rrca] bomber.y<8> from A<0> to Cy
+	roxl.b	#1,d7                         	| [rl   (hl)] sY<8> from Cy to bomb.ctrl.b1<0>
+    move.b	d7,(a0)
 	rol.b	#1,d0                            	| [rlca] restore A with sY<8> left in Cy
 	roxr.b	#1,d1                           	| [rr   b] bomber.y<8:1>
-      ^^^^^^ TODO: review cpu X flag
 * if (mrw_sprite.posn[bomber_idx].b0 > sprite.posn[FGHTR].b0)
 	move.b	ds_sprite_posn+0x62,d0          	| [ld   a,(ds_sprite_posn + 0x62)] fighter.x
 	sub.b	d2,d0                            	| [sub  c] bomb.x
-	move.w	d0,-(sp)                        	| [push af] stash fighter.x - bomber.x
+	scs		d7
+	movem.w	d0,-(sp)                        	| [push af] stash fighter.x - bomber.x
 	jcc	l_0DB1                             	| [jr   nc,l_0DB1] if bomber.x > fighter.x ...
-      ^^^^^^ TODO: review cpu flags (move.w,jcc)
 	neg.b	d0                               	| [neg] ... then dX = -dX
 l_0DB1:
 * dX passed to c_0EAA()in hl16 ... lsb of &bomb.ctrl.b1 remaining in L is insignificant
 	move.b	d0,d5                           	| [ld   h,a]
 
-	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
 	                               	| [and  a]
 	move.b	#298>>1,d0                      	| [ld   a,#298 >> 1] 0x95 ... 354-56
+	tst.b	b_9215_flip_screen           	| [ld   a,(b_9215_flip_screen)]
 	jeq	l_0DBC                             	| [jr   z,l_0DBC]
-      ^^^^^^ TODO: review cpu flags (move.b,jeq)
 	move.b	#56>>1,d0                       	| [ld   a,#56 >> 1] 0x1C ... inverted
 l_0DBC:
 	sub.b	d1,d0                            	| [sub  b] bomber.y<8:1>
@@ -2605,8 +2598,10 @@ l_0DC1:
 	roxr.b	#1,d6                           	| [rr   l]
 	lsr.b	#1,d5                            	| [srl  h]
 	roxr.b	#1,d6                           	| [rr   l]
-	add.w	d1,a0                            	| [add  hl,bc]
-  ^^^^ TODO: review d1 computation above
+	LOAD_D1_16_FROM_D1D2
+	LOAD_D5_16_FROM_D5D6
+	add.w	d1,d5                            	| [add  hl,bc]
+	LOAD_D5D6_FROM_D5_16
 	lsr.b	#1,d5                            	| [srl  h]
 	roxr.b	#1,d6                           	| [rr   l]
 	lsr.b	#1,d5                            	| [srl  h]
@@ -2624,17 +2619,21 @@ l_0DE2:
 	move.b	d0,d1                           	| [ld   b,a]
 
 	move.w	(sp)+,d0                        	| [pop  af] Cy from (fighter.x - bomber.x)
+	CLEAR_XC_FLAGS
+	tst.b	d7
+	beq.b	0f
+	SET_XC_FLAGS
+0:
 	roxr.b	#1,d1                           	| [rr   b]
-      ^^^^^^ TODO: review cpu X flag
-	move.l	(sp)+,a0                        	| [pop  hl] sprt_mctl_objs[bomb]
+ 	move.l	(sp)+,a0                        	| [pop  hl] sprt_mctl_objs[bomb]
 	move.b	d6,d0                           	| [ld   a,l]
 	add.b	#8,d0                            	| [add  a,#8] IDX_BOMB will be index 0 thanks to and $0F
-	and.b	#0x0F,d0                         	| [and  #0x0F]
-	lea	b_92B0+0x00(pc),a0                 	| [ld   hl,#b_92B0 + 0x00] bomb x-coordinate structure ( 8 * 2 )
-	add.b	d6,d0                            	| [add  a,l]
-	move.b	d0,d6                           	| [ld   l,a]
-	move.b	d1,(a0)                         	| [ld   (hl),b]
-	addq.w	#1,a0                           	| [inc  hl]
+	and.w	#0x0F,d0                         	| [and  #0x0F]
+	lea	b_92B0(pc),a0                 	| [ld   hl,#b_92B0 + 0x00] bomb x-coordinate structure ( 8 * 2 )
+	add.w	d0,a0                            	| [add  a,l]
+	                           	| [ld   l,a]
+	move.b	d1,(a0)+                         	| [ld   (hl),b]
+	                           	| [inc  hl]
 	clr.b	(a0)                             	| [ld   (hl),#0]
 
 l_0DF5_next_superloop_and_reload_0E:
@@ -2650,7 +2649,6 @@ next__pool_idx:
 * mctl_pool_idx += 1
 	move.w	#0x0014,d3                      	| [ld   de,#0x0014] size of object-movement structure 20
 	add.w	d3,a2                            	| [add  ix,de]
-  ^^^^ TODO: review d3 computation above
 
 	jra	for__pool_idx                      	| [jp   for__pool_idx]
 
@@ -2661,18 +2659,16 @@ l_0E08_imhome:
 	move.b	d0,(0x00,a2)                    	| [ld   0x00(ix),a] 0
 	move.b	d0,(0x02,a2)                    	| [ld   0x02(ix),a] 0
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
+	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] offset of object ...8800[L]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
-	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] offset of object ...8800[L]
 	move.b	#2,(a0)                         	| [ld   (hl),#2] disposition = 02: rotating back into position in the collective
 	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
-	addq.w	#1,a0                           	| [inc  l]
-	move.b	(a0),d0                         	| [ld   a,(hl)] sprite color code
-	subq.w	#1,a0                           	| [dec  l]
+	                           	| [inc  l]
+	move.b	(1,a0),d0                         	| [ld   a,(hl)] sprite color code
+	                           	| [dec  l]
 	addq.b	#1,d0                           	| [inc  a]
 	and.b	#0x07,d0                         	| [and  #0x07]
 	cmp.b	#5,d0                            	| [cp   #5]
@@ -2706,15 +2702,13 @@ l_0E3A:
 * also, if status==4 (capturing boss shot while in home-position, freeing a rogue ship)
 case_0E49_make_object_inactive: ; 0x0
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
+	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] object offset ...8800[L]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
-	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] object offset ...8800[L]
 	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] make inactive
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	clr.b	(a0)                             	| [ld   (hl),#0]
 	clr.b	(0x13,a2)                        	| [ld   0x13(ix),#0x00] make inactive
 
@@ -2743,10 +2737,9 @@ c_0E5B:
 
 * dx
 	move.b	d4,d0                           	| [ld   a,e]
-	sub.b	d6,d0                            	| [sub  l]
 	clr.b	d1                               	| [ld   b,#0]
+	sub.b	d6,d0                            	| [sub  l]
 	jcc	l_0E67                             	| [jr   nc,l_0E67]
-      ^^^^^^ TODO: review cpu flags (clr.b,jcc)
 	bset.b	#0,d1                           	| [set  0,b]
 	neg.b	d0                               	| [neg]
 l_0E67:
@@ -2766,25 +2759,15 @@ l_0E67:
 
 l_0E76:
 	cmp.b	d2,d0                            	| [cp   c]
+	SET_X_FROM_C
 	move.w	d0,-(sp)                        	| [push af]
 	roxl.b	#1,d0                           	| [rla]
-      ^^^^^^ TODO: review cpu X flag
 	eor.b	d1,d0                            	| [xor  b]
 	roxr.b	#1,d0                           	| [rra]
-      ^^^^^^ TODO: review cpu X flag
-
-	bcs.b	0f
-	clr.b	d7
-	bra.b	1f
-0:
-	st.b	d7
-1:
-	cmp.b	#1,d7                            	| [ccf] complement Cy
+	INVERT_XC_FLAGS                            	| [ccf] complement Cy
 	roxl.b	#1,d1                           	| [rl   b]
-      ^^^^^^ TODO: review cpu X flag, cmp doesn't affect it!
-	move.w	(sp)+,d0                        	| [pop  af]
+	movem.w	(sp)+,d0                        	| [pop  af]
 	jcc	l_0E84                             	| [jr   nc,l_0E84]
-      ^^^^^^ TODO: review cpu flags (move.w,jcc)
 	move.b	d2,d3                           	| [ld   d,c]
 	move.b	d0,d2                           	| [ld   c,a]
 	move.b	d3,d0                           	| [ld   a,d]
@@ -2815,7 +2798,7 @@ l_0E93:
 	rts                                    	| [ret]
 
 *=============================================================================
-* c_0E97()
+* mul_16_0E97()
 *  Description:
 *    for f_08D3
 *    HL = HL * A
@@ -2828,26 +2811,14 @@ l_0E93:
 * PRESERVES:
 *  DE
 *-----------------------------------------------------------------------------
-c_0E97:
-	movem.w	d3/d4,-(sp)                    	| [push de]
-	move.l	a1,-(sp)                        	| [push de]
-	exg	a1,a0                              	| [ex   de,hl]
-	move.w	#0x0000,d5                      	| [ld   hl,#0x0000] 0
-
-l_0E9C:
-	lsr.b	#1,d0                            	| [srl  a]
-	jcc	l_0EA1                             	| [jr   nc,l_0EA1]
-	add.w	d3,a0                            	| [add  hl,de]
-  ^^^^ TODO: review d3 computation above
-l_0EA1:
-	asl.b	#1,d4                            	| [sla  e]
-	roxl.b	#1,d3                           	| [rl   d]
-	tst.b	d0                               	| [and  a]
-	jne	l_0E9C                             	| [jr   nz,l_0E9C]
-
-	move.l	(sp)+,a1                        	| [pop  de]
-	movem.w	(sp)+,d3/d4                    	| [pop  de]
+mul_16_0E97:
+	* completely replaced by MULU
+	LOAD_D5_16_FROM_D5D6
+	and.w	#0xFF,D0
+	mulu	d0,d5
+	LOAD_D5D6_FROM_D5_16
 	rts                                    	| [ret]
+
 
 *=============================================================================
 * c_0EAA()
@@ -2861,35 +2832,29 @@ l_0EA1:
 *  BC
 *-----------------------------------------------------------------------------
 c_0EAA:
+	LOAD_D5_16_FROM_D5D6
 	movem.w	d1/d2,-(sp)                    	| [push bc]
 	move.b	d0,d2                           	| [ld   c,a]
-	clr.b	d0                               	| [xor  a] clears Cy
+	CLEAR_XC_FLAGS                               	| [xor  a] clears Cy
 	move.b	#0x11,d1                        	| [ld   b,#0x11]
 l_0EAF:
-adc  a,a
+	addx.b	d0,d0					| [adc  a,a]
 	jcs	l_0EBD                             	| [jr   c,l_0EBD]
-      ^^^^^^ TODO: review cpu flags (move.b,jcs)
 	cmp.b	d2,d0                            	| [cp   c]
 	jcs	l_0EB6                             	| [jr   c,l_0EB6]
 	sub.b	d2,d0                            	| [sub  c]
 l_0EB6:
 * flip the Cy: i.e. set it if the "sub c" was done, otherwise clear it.
-
-	bcs.b	0f
-	clr.b	d7
-	bra.b	1f
-0:
-	st.b	d7
-1:
-	cmp.b	#1,d7                            	| [ccf]
+	INVERT_XC_FLAGS                            	| [ccf]
 
 l_0EB7:
-adc  hl,hl
+	addx.w	d5,d5			| adc  hl,hl
 	subq.b	#1,d1                           	| [...]
 	jne	l_0EAF                             	| [djnz l_0EAF]
 
 
 	movem.w	(sp)+,d1/d2                    	| [pop  bc]
+	LOAD_D5D6_FROM_D5_16
 	rts                                    	| [ret]
 
 l_0EBD:
@@ -2985,13 +2950,11 @@ l_0F26:
 	lsr.b	#1,d0                            	| [srl  a]
 	move.b	d0,d4                           	| [ld   e,a]
 	roxl.b	#1,d2                           	| [rl   c]
-      ^^^^^^ TODO: review cpu X flag
 	add.b	#0xE1,d0                         	| [add  a,#0xE1]
 	move.b	d0,d6                           	| [ld   l,a]
-	lea	ds_89E0(pc),a0                     	| [ld   h,#>ds_89E0]
+	lea	ds_89E0,a0                     	| [ld   h,#>ds_89E0]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	btst.b	#0,d2                           	| [bit  0,c]
 	jeq	l_0F3C                             	| [jr   z,l_0F3C]
@@ -3015,20 +2978,18 @@ l_0F50:
 	                               	| [and  a]
 	jeq	l_0F61                             	| [jr   z,l_0F61]
 l_0F58:
-	move.w	ds_89E0+0x02(pc),a0             	| [ld   hl,(ds_89E0 + 0x02)]
-                  ^^^^^^ TODO: review move.w into address register
+	move.l	ds_89E0+0x20,a0             	| [ld   hl,(ds_89E0 + 0x02)]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	move.b	d0,ds_89E0+0x01                 	| [ld   (ds_89E0 + 0x01),a]
 	jra	l_0FA3                             	| [jr   l_0FA3]
 l_0F61:
-	move.w	ds_89E0+0x02(pc),a0             	| [ld   hl,(ds_89E0 + 0x02)]
-                  ^^^^^^ TODO: review move.w into address register
+	move.l	ds_89E0+0x20,a0             	| [ld   hl,(ds_89E0 + 0x02)]
 	move.b	ds_89E0+0x01,d0                 	| [ld   a,(ds_89E0 + 0x01)]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	jra	l_0FA3                             	| [jr   l_0FA3]
 l_0F6A:
 	move.b	d0,d2                           	| [ld   c,a]
-	lea	ds_89E0(pc),a0                     	| [ld   hl,#ds_89E0]
+	lea	ds_89E0,a0                     	| [ld   hl,#ds_89E0]
 	btst.b	#0,d2                           	| [bit  0,c]
 	jne	l_0F9F                             	| [jr   nz,l_0F9F]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -3048,8 +3009,7 @@ l_0F87:
 	subq.b	#1,(a0)                         	| [dec  (hl)]
 	jra	l_0F58                             	| [jr   l_0F58]
 l_0F8A:
-	move.w	ds_89E0+0x02(pc),a0             	| [ld   hl,(ds_89E0 + 0x02)]
-                  ^^^^^^ TODO: review move.w into address register
+	move.l	ds_89E0+0x20(pc),a0             	| [ld   hl,(ds_89E0 + 0x02)]
 	btst.b	#3,d2                           	| [bit  3,c]
 	jne	l_0F94                             	| [jr   nz,l_0F94]
 	subq.w	#1,a0                           	| [dec  hl]
@@ -3057,7 +3017,7 @@ l_0F8A:
 l_0F94:
 	addq.w	#1,a0                           	| [inc  hl]
 l_0F95:
-	move.b	a0,ds_89E0+0x02                 	| [ld   (ds_89E0 + 0x02),hl]
+	move.l	a0,ds_89E0+0x20                 	| [ld   (ds_89E0 + 0x02),hl]
 	move.b	#0x01,d0                        	| [ld   a,#0x01]
 	move.b	d0,ds_89E0                      	| [ld   (ds_89E0),a]
 	jra	l_0F58                             	| [jr   l_0F58]
@@ -3079,10 +3039,9 @@ l_0FAB:
 	move.b	ds_89E0,d0                      	| [ld   a,(ds_89E0)]
 	move.b	#6,d1                           	| [ld   b,#6]
 l_0FBA:
-	tst.b	d0                               	| [and  a]
+	                               	| [and  a]
 	move.b	d0,d2                           	| [ld   c,a]
 	jeq	l_0FC0                             	| [jr   z,l_0FC0]
-      ^^^^^^ TODO: review cpu flags (move.b,jeq)
 	move.b	#1,d2                           	| [ld   c,#1]
 l_0FC0:
 	move.b	d2,(a0)+                         	| [ld   (hl),c]
@@ -3136,13 +3095,9 @@ db_flv_0ff0:
 * gg1-7.s
 *  gg1-7.2c, CPU 'sub2' (Z80)
 *
-.module cpu_sub2
+*.module cpu_sub2
 
-.include "sfrs.inc"
-.include "gg1-7.dep"
 
-.BANK cpu_sub2 (BASE=0x000000, FSFX=_sub2)
-.area ROM2 (ABS,OVR,BANK=cpu_sub2)
 
 *.org 0x0000
 
@@ -3188,7 +3143,6 @@ _RST_10:
 	add.b	d6,d0                            	| [add  a,l]
 	move.b	d0,d6                           	| [ld   l,a]
 	bcs.b	0f                               	| [...]
-      ^^^^^^ TODO: review cpu flags (move.b,bcs.b)
 	rts                                    	| [ret  nc] [...]
 0:
 	addq.b	#1,d5                           	| [inc  h]

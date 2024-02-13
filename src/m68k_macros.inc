@@ -11,7 +11,25 @@
 0:
 	cmp.w	#0x100,d6
 	jcs		0f
-	lea		\base,a1
+	lea		\base,a2
+	jbsr	osd_break
+	illegal
+0:
+	.endif
+	.endm
+
+	.macro	COMPUTE_LSB_A1_D4	base
+	move.l	a1,d4
+	sub.l	#\base,d4
+	.ifndef		RELEASE
+	jpl		0f
+	lea		\base,a2
+	jbsr	osd_break
+	illegal
+0:
+	cmp.w	#0x100,d4
+	jcs		0f
+	lea		\base,a2
 	jbsr	osd_break
 	illegal
 0:
@@ -61,12 +79,7 @@
 	CLEAR_XC_FLAGS
 1:
 	.endm
-	.macro	SET_C_FROM_X
-	move.w	d7,-(a7)
-	roxl.b	#1,d7
-	roxr.b	#1,d7
-	movem.w	(a7)+,d7
-	.endm
+
 	
 	.macro	SET_C_FROM_X
 	move.w	d7,-(a7)

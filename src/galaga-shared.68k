@@ -15,8 +15,11 @@
 	.global		ldi
 	.global		ldd
 	.global		ldir
+	.global		lddr
 	.global		rrd
 	.global		rld
+
+	.include	"m68k_macros.inc"
 	
 *
 * < A0 (HL)
