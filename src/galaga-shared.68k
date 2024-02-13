@@ -4,10 +4,12 @@
 	.global		write_videoram_to_a0
 	.global		read_videoram_from_a0
 
+	.global		rst_18
 	.global		rst_18_color
 	.global		rst_18_video
 	.global		add_2_times_d0_to_a0_0008
 	.global		add_4_times_d0_to_a0_0008
+	.global		rst_20
 	
 	.global		cpi
 	.global		ldi
@@ -228,11 +230,10 @@ _RST_10:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-_RST_18:
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	addq.w	#1,a0                           	| [inc  hl]
+rst_18:
+	move.b	d0,(a0)+                         	| [ld   (hl),a]                           	| [inc  hl]
 	subq.b	#1,d1                           	| [...]
-	jne	_RST_18                            	| [djnz _RST_18]
+	jne	rst_18                            	| [djnz _RST_18]
 	rts                                    	| [ret]
 
 
@@ -258,3 +259,7 @@ rst_18_color:
 	exg		a0,d7
 	rts
 
+rst_20:
+	sub.w	#0x20,a1
+	rts
+	

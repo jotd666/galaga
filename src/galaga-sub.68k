@@ -26,7 +26,7 @@
 *  ...
 *-----------------------------------------------------------------------------
 rst_00_cpu1:
-ld   sp,#ds_stk_cpu1_init
+	lea		ds_stk_cpu1_init,a7    | ld   sp,#ds_stk_cpu1_init
 	jra	CPU1_RESET                         	| [jp   CPU1_RESET]
 
 *.org 0x0008
@@ -502,40 +502,40 @@ ei
 *  ...
 *-----------------------------------------------------------------------------
 CPU1_RESET:
-	lea	ds_rom_test_status+0x00(pc),a1     	| [ld   de,#ds_rom_test_status + 0x00] pause/resume flag
+	lea	ds_rom_test_status,a1     	| [ld   de,#ds_rom_test_status + 0x00] pause/resume flag
 
 * wait for master CPU to acknowledge/resume (0)
 l_057F:
-	move.b	(a1),d0                         	| [ld   a,(de)]
+	tst.b	(a1)                         	| [ld   a,(de)]
 	                               	| [and  a]
 	jne	l_057F                             	| [jr   nz,l_057F]
 
-* compute ROM checksum
-	move.b	d0,d5                           	| [ld   h,a]
-	move.b	d0,d6                           	| [ld   l,a]
-	move.b	#0x00,d1                        	| [ld   bc,#0x0010] Sets B as inner loop count ($100) and C as outer ($10) 16
-	move.b	#0x10,d2                        	| [ld   bc,#0x0010] Sets B as inner loop count ($100) and C as outer ($10) 16
-l_0588:
-	add.b	(a0),d0                          	| [add  a,(hl)]
-	addq.w	#1,a0                           	| [inc  hl]
-	subq.b	#1,d1                           	| [...]
-	jne	l_0588                             	| [djnz l_0588]
-	subq.b	#1,d2                           	| [dec  c]
-	jne	l_0588                             	| [jr   nz,l_0588]
-	cmp.b	#0xFF,d0                         	| [cp   #0xFF]
-	jeq	l_0595                             	| [jr   z,l_0595]
-	move.b	#0x11,d0                        	| [ld   a,#0x11] set error code
+** compute ROM checksum
+*	move.b	d0,d5                           	| [ld   h,a]
+*	move.b	d0,d6                           	| [ld   l,a]
+*	move.b	#0x00,d1                        	| [ld   bc,#0x0010] Sets B as inner loop count ($100) and C as outer ($10) 16
+*	move.b	#0x10,d2                        	| [ld   bc,#0x0010] Sets B as inner loop count ($100) and C as outer ($10) 16
+*l_0588:
+*	add.b	(a0)+,d0                          	| [add  a,(hl)]
+*	                           	| [inc  hl]
+*	subq.b	#1,d1                           	| [...]
+*	jne	l_0588                             	| [djnz l_0588]
+*	subq.b	#1,d2                           	| [dec  c]
+*	jne	l_0588                             	| [jr   nz,l_0588]
+*	cmp.b	#0xFF,d0                         	| [cp   #0xFF]
+*	jeq	l_0595                             	| [jr   z,l_0595]
+*	move.b	#0x11,d0                        	| [ld   a,#0x11] set error code
+*
+*l_0595:
+*	move.b	d0,(a1)                         	| [ld   (de),a] copy checksum result to the global variable
+*
+** wait for master to acknowledge/resume (0)
+*l_0596:
+*	move.b	(a1),d0                         	| [ld   a,(de)]
+*	                               	| [and  a]
+*	jne	l_0596                             	| [jr   nz,l_0596]
 
-l_0595:
-	move.b	d0,(a1)                         	| [ld   (de),a] copy checksum result to the global variable
-
-* wait for master to acknowledge/resume (0)
-l_0596:
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	                               	| [and  a]
-	jne	l_0596                             	| [jr   nz,l_0596]
-
-im   1
+	*im   1
 
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_89E0                      	| [ld   (ds_89E0),a] 0
@@ -543,17 +543,15 @@ im   1
 * set task-enable defaults
 	lea	d_05B7(pc),a0                      	| [ld   hl,#d_05B7]
 	lea	ds_cpu1_task_actv+1(pc),a1         	| [ld   de,#ds_cpu1_task_actv + 1] cp $07 bytes (d_05B7)
-	move.b	#0x00,d1                        	| [ld   bc,#0x0007] 7
-	move.b	#0x07,d2                        	| [ld   bc,#0x0007] 7
+	move.w	#0x07,d1                        	| [ld   bc,#0x0007] 7
 	jbsr	ldir                              	| [ldir]
-     ^^^^ TODO: review special instruction inputs
 
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,_sfr_6821                    	| [ld   (_sfr_6821),a] 1 ... IRQ acknowledge/enable
-ei
+	jbsr	osd_enable_interrupts               | [ei]
 
 l_05B1:
-ld   sp,#ds_stk_cpu1_init
+	lea		ds_stk_cpu1_init,a7    | ld   sp,#ds_stk_cpu1_init
 	jra	l_05B1                             	| [jp   l_05B1] loop forever
 
 *=============================================================================
@@ -583,25 +581,24 @@ f_05BE:
 *  ...
 *-----------------------------------------------------------------------------
 f_05BF:
+	* not needed ATM, cpu0 does that already
+	rts
+	
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,b_CPU2_in_progress           	| [ld   (b_CPU2_in_progress),a] 1
 
 	lea	mrw_sprite_code(pc),a0             	| [ld   hl,#mrw_sprite_code]
 	lea	sfr_sprite_code(pc),a1             	| [ld   de,#sfr_sprite_code]
-	move.b	#0x00,d1                        	| [ld   bc,#0x0040] 64
-	move.b	#0x40,d2                        	| [ld   bc,#0x0040] 64
+	move.w	#0x40,d1                        	| [ld   bc,#0x0040] 64
 	jbsr	ldir                              	| [ldir]
-     ^^^^ TODO: review special instruction inputs
 	lea	mrw_sprite_posn(pc),a0             	| [ld   hl,#mrw_sprite_posn]
 	lea	sfr_sprite_posn(pc),a1             	| [ld   de,#sfr_sprite_posn]
-	move.b	#0x40,d2                        	| [ld   c,#0x40]
+	move.w	#0x40,d1                        	| [ld   c,#0x40]
 	jbsr	ldir                              	| [ldir]
-     ^^^^ TODO: review special instruction inputs
 	lea	mrw_sprite_ctrl(pc),a0             	| [ld   hl,#mrw_sprite_ctrl]
 	lea	sfr_sprite_ctrl(pc),a1             	| [ld   de,#sfr_sprite_ctrl]
-	move.b	#0x40,d2                        	| [ld   c,#0x40]
+	move.w	#0x40,d1                        	| [ld   c,#0x40]
 	jbsr	ldir                              	| [ldir]
-     ^^^^ TODO: review special instruction inputs
 
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,b_CPU2_in_progress           	| [ld   (b_CPU2_in_progress),a] 0
@@ -705,43 +702,43 @@ l_0639_not_two_ship:
 *  ...
 *-----------------------------------------------------------------------------
 hitd_fghtr_hit:
+	COMPUTE_LSB_A0_D6	ds_sprite_posn
+
 	exg	a1,a0                              	| [ex   de,hl]
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn] read directly from SFRs (not buffer RAM) ... already 0'd by hitd_dspchr
 	and.w	#0xFF,d6
-	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	bset.b	#7,d6                           	| [set  7,l]
+	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 
 l_064F:
 	sub.b	#8,d0                            	| [sub  #8]
-	bclr.b	#7,d6                           	| [res  7,l]
-	^^^^^ WTF TODO
+	sub.w	#0x80,A0                           	| [res  7,l]
 	move.b	d0,(a0)+                         	| [ld   (hl),a]
 	                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	sub.b	#8,d0                            	| [sub  #8]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
+	COMPUTE_LSB_A0_D6	ds_sprite_posn
+	lea	ds_sprite_code,a0              	| [ld   h,#>ds_sprite_code]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	#0x0B,(a0)                      	| [ld   (hl),#0x0B] color
 	                           	| [dec  l]
 	move.b	#0x20,-(a0)                      	| [ld   (hl),#0x20] explosion tile
+	COMPUTE_LSB_A0_D6	ds_sprite_code
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	#8,(a0)+                         	| [ld   (hl),#8] .state, disposition from $80 to "exploding"
 	                           	| [inc  l]
 	move.b	#0x0F,(a0)                      	| [ld   (hl),#0x0F] mctrl_q index used for explosion counter
 	subq.w	#1,a0                           	| [dec  l]
+	COMPUTE_LSB_A0_D6	b_8800
 	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
-	move.b	0x08                            	|0x04,(a0)| [ld   (hl),#0x08| 0x04] dblh, dblw
+	move.b	#0x08+0x04,(a0)                            	|0x04,(a0)| [ld   (hl),#0x08| 0x04] dblh, dblw
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_plyr_actv+_b_2ship        	| [ld   (ds_plyr_actv +_b_2ship),a] 0
 
@@ -770,18 +767,17 @@ l_064F:
 *  E == preserved offset passed as argument in L
 *-----------------------------------------------------------------------------
 hitd_fghtr_notif:
+	COMPUTE_LSB_A0_D6	ds_sprite_posn
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,b8_ship_collsn_detectd_status	| [ld   (b8_ship_collsn_detectd_status),a] 0 ... fighter hit notif
 
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	cmp.b	#8,d0                            	| [cp   #8] fighter disposition 08 if already dooomed ...
 	bne.b	0f                               	| [...]
 	rts                                    	| [ret  z] ... so gtf out! [...]
@@ -791,17 +787,18 @@ hitd_fghtr_notif:
 	move.b	d0,ixl
 	                           	| [inc  l]
 	move.b	(a0),d1                         	| [ld   b,(hl)] get row bits 0:7
+	COMPUTE_LSB_A0_D6	ds_sprite_posn
 	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl] get row bit-8
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	CLEAR_XC_FLAGS
 	roxr.b	#1,d0                            	| [rrca] y<8> -> Cy
 	roxr.b	#1,d1                           	| [rr   b] Cy -> b<7>
 	move.b	d1,ixh			| ld   ixh,b                                 ; y<15:8> of fixed-point
 	subq.w	#1,a0                           	| [dec  l]
-	TODO FUCK
+	COMPUTE_LSB_A0_D6	ds_sprite_ctrl
+
 	move.b	d6,d4                           	| [ld   e,l] preserved object/index of fighter passed as argument in L
 
 * if ( cpu0:f_2916  active ) ...
@@ -833,7 +830,7 @@ l_06AC_:
 *  Description:
 *   Do ship collision detection.
 * IN:
-*  L==starting object/index of alien or bomb
+*  L/D6==starting object/index of alien or bomb
 *  B==repeat count ($08 or $30)
 *  ixl == fighter x<7:0>
 *  ixh == fighter y<15:8> of fixed-point
@@ -842,15 +839,12 @@ l_06AC_:
 *-----------------------------------------------------------------------------
 hitd_det_fghtr:
 while_06B7:
-	lea	b_9200_obj_collsn_notif(pc),a0     	| [ld   h,#>b_9200_obj_collsn_notif] sprt_hit_notif
+	lea	b_9200_obj_collsn_notif,a0     	| [ld   h,#>b_9200_obj_collsn_notif] sprt_hit_notif
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
-	and.w	#0xFF,d6
+	lea	b_8800,a0                      	| [ld   h,#>b_8800]
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	or.b	(a0),d0                           	| [or   (hl)]
 	rol.b	#1,d0                            	| [rlca]
 	jcs	l_06F0                             	| [jr   c,l_06F0]
@@ -863,7 +857,6 @@ while_06B7:
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	                               	| [and  a]
 	jeq	l_06F0                             	| [jr   z,l_06F0]
@@ -875,12 +868,14 @@ while_06B7:
 
 	addq.w	#1,a0                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
+	COMPUTE_LSB_A0_D6	ds_sprite_posn
+	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
+
 	move.b	(a0),d2                         	| [ld   c,(hl)]
 	subq.w	#1,a0                           	| [dec  l]
+	subq.b	#1,d6                           	| [dec  l]
 	CLEAR_XC_FLAGS
 	roxr.b	#1,d2                            	| [rrc  c]
 	roxr.b	#1,d0                           	| [rra]
@@ -892,9 +887,8 @@ while_06B7:
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,b8_ship_collsn_detectd_status	| [ld   (b8_ship_collsn_detectd_status),a] 1 ... fighter hit notif
 
-	or.b	d0,d0                             	| [or   a] nz if fighter hit
-	scs	d7                              	| [ex   af,af']
-         ^^^ TODO review: wrong if carry is needed or D7 used in between!
+	tst.b	d0                             	| [or   a] nz if fighter hit
+	sne	d7                              	| [ex   af,af']
 	jra	hitd_dspchr                        	| [jp   hitd_dspchr] return to 'call hitd_det_fghtr'
 l_06F0:
 	addq.b	#2,d6                           	| [inc  l] * 2
@@ -947,8 +941,7 @@ rckt_man:
 
 * if horizontal orientation, dY = A' ... dY is variable ...
 	and.b	#0x07,d0                         	| [and  #0x07] I thought it was only bits 1:2 ?
-	scs	d7                              	| [ex   af,af']
-         ^^^ TODO review: wrong if carry is needed or D7 used in between!
+	exg		d0,d7                              	| [ex   af,af']
 
 * ... and dX == A ... maximum displacement in X
 	move.b	#6,d0                           	| [ld   a,#6]
@@ -997,26 +990,20 @@ l_0729:
 
 * determines the sign, toggle position.sy:8 on overflow/carry. simple idea, complicated explanation.
 	roxr.b	#1,d0                           	| [rra] Cy from the addition rotated into b7
-      ^^^^^^ TODO: review cpu X flag
 	eor.b	d2,d0                            	| [xor  c] sign bit of addend/subtrahend
+	COMPUTE_LSB_A0_D6	sprite_posn
 	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl] sy.bit-8 (SPR[n].CTRL.b1:0)
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	      ^^^^ TODO: review XX value
 	rol.b	#1,d0                            	| [rlca]
 	jcc	l_0738                             	| [jr   nc,l_0738]
 * compliment sy:8  (handles both overflow and underflow situation)
-	ror.b	#1,(a0)                          	| [rrc  (hl)]
-
-	bcs.b	0f
-	clr.b	d7
-	bra.b	1f
-0:
-	st.b	d7
-1:
-	cmp.b	#1,d7                            	| [ccf]
-	roxl.b	#1,(a0)                         	| [rl   (hl)]
-      ^^^^^^ TODO: review cpu X flag, cmp doesn't affect it!
+	CLEAR_XC_FLAGS
+	move.b	(a0),d7
+	roxr.b	#1,d7                          	| [rrc  (hl)]
+	INVERT_XC_FLAGS                      	| [ccf]
+	roxl.b	#1,d7                         	| [rl   (hl)]
+    move.b	d7,(a0)
 
 * rocket.sy<8:1>, passed to hitd_det_rckt in IXH
 l_0738:
@@ -1029,7 +1016,7 @@ l_0738:
 	ror.b	#1,d2                            	| [rrc  c] rotate bit-8 into Cy
 	roxr.b	#1,d0                           	| [rra] rotate bit-8 from Cy into A
       ^^^^^^ TODO: review cpu X flag
-ld   ixh,a                                 ; stash sy<8:1> for hit-detection parameter
+	move.b	#ixh,a		| ld   ixh,a                                 ; stash sy<8:1> for hit-detection parameter
 
 * if ( rocket.sY < 40                   	|| rocket.sY >= 312 ) then _disable_rocket
 	cmp.b	#20,d0                           	| [cp   #20] 0x14  0x28 >> 1
@@ -1227,7 +1214,7 @@ hitd_dspchr_rckt:
 *   E == offset/index of rocket[n].b1 ... sprite.posn[RCKTn].y must
 *        be set to zero as required for correct handling in rckt_sprite_init
 *   E == offset/index of fighter[n].b0 ... sprite.ctrl[FGHTRn].b0 is set to 0 ... does it matter?
-*   A' == object status
+*   A'/D7 == object status
 * OUT:
 *  ...
 * RETURN:
@@ -1260,12 +1247,12 @@ hitd_dspchr:
 	jeq	l_0815_bomb_hit                    	| [jr   z,l_0815_bomb_hit]
 
 * if rocket or ship collided with bug
-	scs	d7                              	| [ex   af,af'] un-stash parameter ... 1 if moving bug (hit by rocket or fighter)
+	tst.b	d7                              	| [ex   af,af'] un-stash parameter ... 1 if moving bug (hit by rocket or fighter)
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 	jne	l_081E_hdl_flyng_bug               	| [jr   nz,l_081E_hdl_flyng_bug] will come back to $07DB or l_07DF
 
 * else if rocket hit stationary bug
-	scs	d7                              	| [ex   af,af'] re-stash parameter
+	                              	| [ex   af,af'] re-stash parameter
          ^^^ TODO review: wrong if carry is needed or D7 used in between!
 
 l_07DB:
@@ -1320,8 +1307,7 @@ l_0808:
 	jbsr	rst_10                            	| [rst  0x10] HL += A ... _collsn_hit_mult[sprite.cclr.b1]
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 
-	scs	d7                              	| [ex   af,af'] un-stash parameter/flag
-         ^^^ TODO review: wrong if carry is needed or D7 used in between!
+	tst.b	d7                              	| [ex   af,af'] un-stash parameter/flag
 	jeq	l_0811                             	| [jr   z,l_0811]
 	addq.b	#1,(a0)                         	| [inc  (hl)] shot blue boss
 l_0811:
