@@ -61,7 +61,7 @@ j_Game_init_02d3:
 
 * galaga_interrupt_enable_1_w  seems to already be set, but we make sure anyway.
 	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,_sfr_6820                    	| [ld   (_sfr_6820),a] 1 ,,,enable IRQ1
+	jbsr	osd_interrupt_control                    	| [ld   (_sfr_6820),a] 1 ,,,enable IRQ1
 
 * The test grid is now cleared from screen. Due to odd organization of tile ram
 * it is done in 3 steps. 1 grid row is cleared from top and bottom (each grid
@@ -4036,7 +4036,8 @@ d_1887:
 	.byte 0x02,0x8A,0x04,0x82,0x07,0xAA,0x28,0x88,0x10,0xAA,0x38,0x82,0x12,0xAA,0x20,0x88
 	.byte 0x14,0xAA,0x20,0x82,0x06,0xA8,0x0E,0xA2,0x17,0x88,0x12,0xA2,0x14,0x18,0x88,0x1B
 	.byte 0x81,0x2A,0x5F,0x4C,0xC0
-
+	.align	2
+	
 * 05: synchronize copyright text with completion of explosion of last boss
 case_18AC:
 * tmr[2] always 0 at transition to this case (was reloaded at last of 5 texts in case_1984)
@@ -8202,6 +8203,7 @@ l_2A29_attack_waves_complete:
 	rts                                    	| [ret]
 
 
+
 *=============================================================================
 
 * bits 0:12  - pointer to data tables for flying pattern control.
@@ -8784,16 +8786,16 @@ l_3191:
 * is organized).
 *
 d_3197_hiscore_line_ptrs:
-	.long m_color_ram + 0x0374
-	.long m_color_ram + 0x0376
-	.long m_color_ram + 0x0378
-	.long m_color_ram + 0x037A
-	.long m_color_ram + 0x037C
+	.long 0x8400 + 0x0374
+	.long 0x8400 + 0x0376
+	.long 0x8400 + 0x0378
+	.long 0x8400 + 0x037A
+	.long 0x8400 + 0x037C
 
 *=============================================================================
 d_31A1:
 	.byte 0x0C,0x09,0x06,0x03,0x00
-
+	.align	2
 
 *=============================================================================
 *  Description:
@@ -9270,7 +9272,7 @@ str_3345:
 	.byte 0x0C
 	.byte 0x04
 	.byte 0x26,0x26,0x24,0x0B,0x0E,0x1C,0x1D,0x24,0x05,0x24,0x26,0x26
-
+	.align	2
 
 *=============================================================================
 * jp_RAM_test()
@@ -11708,10 +11710,10 @@ l_0261:
 	subq.b	#1,d1                           	| [...]
 	jne	l_0261                             	| [djnz l_0261]
 
-	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
+	*move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
 
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,_sfr_6820                    	| [ld   (_sfr_6820),a] 0 ... disable IRQ1
+	jbsr	osd_interrupt_control                    	| [ld   (_sfr_6820),a] 0 ... disable IRQ1
 
 *  if ( freezed )  exit
 	btst.b	#1,d3                           	| [bit  1,d]
@@ -11778,7 +11780,7 @@ l_0280_nonzero_tbl_entry:
 
 l_02A8_pop_regs_and_exit:
 	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,_sfr_6820                    	| [ld   (_sfr_6820),a] 1 ... enable IRQ1
+	jbsr	osd_interrupt_control                    	| [ld   (_sfr_6820),a] 1 ... enable IRQ1
 
 	move.l	(sp)+,a3                        	| [pop  iy]
 	move.l	(sp)+,a2                        	| [pop  ix]
@@ -11798,7 +11800,7 @@ d_str20000:
 	.byte 0x00,0x00,0x00,0x00,0x02,0x24  || "20000" (reversed)
 d_strScore:
 	.byte 0x17,0x0A,0x16,0x0C,0x18       || "SCORE" (reversed)
-
+	.align	2
 *=============================================================================
 * RESET()
 *  Description:

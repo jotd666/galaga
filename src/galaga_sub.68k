@@ -12,6 +12,34 @@
 	
 	.global	p_flv_base
 
+	.global	db_flv_001d
+	.global	db_flv_017b
+	.global	db_flv_020b
+	.global	db_flv_025d
+	.global	db_flv_02d9
+	.global	db_flv_0fda
+	.global	db_flv_0067
+	.global	db_flv_01b0
+	.global	db_flv_021b
+	.global	db_flv_0279
+	.global	db_flv_02fb
+	.global	db_flv_0ff0
+	.global	db_flv_009f
+	.global	db_flv_01e8
+	.global	db_flv_022b
+	.global	db_flv_029e
+	.global	db_flv_031d
+	.global	db_flv_022b
+	.global	db_flv_00d4
+	.global	db_flv_01f5
+	.global	db_flv_0241
+	.global	db_flv_02ba
+	.global	db_flv_0333
+	.global	db_flv_025d
+	
+	.global db_04EA
+	.global db_0473
+	.global db_04AB
 
 *.org 0x0000
 
@@ -132,7 +160,7 @@ db_flv_00d4:
 db_flv_00f1:
 	.byte 0x12,0x18,0x17,0x12,0x00,0x80,0xff
 * this is probably fill
-.ds 8
+
 
 * Copy of home position LUT from task_man
 sprt_fmtn_hpos:
@@ -373,7 +401,7 @@ p_flv_0502:
 	.byte 0x12,0xe2,0x01,0xf3
 	.byte 0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01,0xf5
 	.byte 0x23,0x00,0x48,0xff
-
+	.align	2
 *=============================================================================
 * jp_0513_rst38()
 *  Description:
@@ -487,8 +515,8 @@ l_055C:
 
 l_0575:
 	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,_sfr_6821                    	| [ld   (_sfr_6821),a] 1 ...CPU-sub1 IRQ acknowledge/enable
-ei
+	*move.b	d0,_sfr_6821                    	| [ld   (_sfr_6821),a] 1 ...CPU-sub1 IRQ acknowledge/enable
+	jbsr	osd_enable_interrupts
 	rts                                    	| [ret]
 
 *=============================================================================
@@ -558,7 +586,7 @@ l_05B1:
 * init data for (ds_cpu1_task_actvbl + 0x01)
 d_05B7:
 	.byte 0x01,0x01,0x00,0x01,0x01,0x00,0x0A
-
+	.align	2
 *=============================================================================
 * f_05BE()
 *  Description:
@@ -1675,14 +1703,15 @@ l_098F_do_split_off_bonus_bee:
 	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	* game transfers msb to a1... get original d4 value first
-	COMPUTE_LSB_A1_D4
-	move.l	a0,a1
+	* game transfers msb to a1
+
+	lea	ds_sprite_code(pc),a1              	| [ld   h,#>ds_sprite_code]
+	and.w	#0xFF,d4
 	add.w	d4,a1                           	| [ld   d,h]
-	move.b	(a1),d0                         	| [ld   a,(de)] _sprite_code[index attack leader]
-	move.b	d0,(a0)+                         	| [ld   (hl),a]
+	move.b	(a1)+,(a0)+                         	| [ld   a,(de)] _sprite_code[index attack leader]
+	                         	| [ld   (hl),a]
 	                           	| [inc  l] .b1
-	addq.w	#1,a1                           	| [inc  e] .b1
+	                           	| [inc  e] .b1
 	move.b	(a1),d0                         	| [ld   a,(de)] _sprite_cclr[index attack leader]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	subq.w	#1,a0                           	| [dec  l] .b0
@@ -1762,7 +1791,7 @@ l_09FA_bonusbee_creat_fail:
 * Red alien element has left formation - use deltaX to fighter to select flight
 * plan. This occurs when approximately mid-screen, after initial jump from
 * formation.
-case_0A01:  ; $0C
+case_0A01:  | 0x0C
 * stash 2 copies of hl
 
 	move.l	a0,-(sp)                        	| [push hl] ptr to data table
@@ -1826,7 +1855,7 @@ l_0A38:
 	jra	l_0BFF_flite_pth_skip_load         	| [jp   l_0BFF_flite_pth_skip_load] save pointer and goto _flite_pth_cont
 
 * capturing boss starts dive
-case_0A53:  ; $0B
+case_0A53:  | 0x0B
 
 	move.l	a0,-(sp)                        	| [push hl]
 	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
@@ -1835,11 +1864,11 @@ case_0A53:  ; $0B
 	addq.b	#3,d0                           	| [add  a,#3]
 	and.b	#0xF8,d0                         	| [and  #0xF8]
 	addq.b	#1,d0                           	| [inc  a]
-	cmp.b	#82>>1,d0		| cp   #82 >> 1                              ; $29
+	cmp.b	#82>>1,d0		| cp   #82 >> 1                              | 0x29
 	jcc	l_0A66                             	| [jr   nc,l_0A66]
 	move.b	#0x29,d0                        	| [ld   a,#0x29]
 l_0A66:
-	cmp.b	#404>>1,d0			| cp   #404 >> 1                             ; $CA
+	cmp.b	#404>>1,d0			| cp   #404 >> 1                             | 0xCA
 	jcs	l_0A6C                             	| [jr   c,l_0A6C]
 	move.b	#402>>1,d0                      	| [ld   a,#402 >> 1] $C9
 l_0A6C:
@@ -1871,7 +1900,7 @@ l_0A73:
 	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
 
 * attack wave element hits turning point and heads to home
-case_0AA0:  ; $04
+case_0AA0:  | 0x04
 
 	move.l	a0,-(sp)                        	| [push hl] ptr to data table
 
@@ -1947,7 +1976,7 @@ l_0ACD:
 	clr.b	d2                               	| [ld   c,#0]
 	asr.b	#1,d1                            	| [sra  b] step x coord, x offset
 	roxr.b	#1,d2                           	| [rr   c]
-	LOAD_D1_16_TO_D1D2
+	LOAD_D1_16_FROM_D1D2
 	sub.w	d1,d5                            	| [sbc  hl,bc]
 	LOAD_D5D6_FROM_D5_16
 	move.b	d6,(0x02,a2)                    	| [ld   0x02(ix),l] .b00
@@ -1974,7 +2003,7 @@ l_0ACD:
 	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
 
 * attack elements that break formation to attack ship (level 3+)
-case_0B16:  ; $01
+case_0B16:  | 0x01
 
 	move.l	a0,-(sp)                        	| [push hl] ptr to data table
 	exg	a1,a0                              	| [ex   de,hl]
@@ -2013,7 +2042,7 @@ l_0B30:
 
 * creatures that are returning to base: moths or bosses from top of screen,
 * bees from bottom of loop-around, and "transients"
-case_0B46: ; $02
+case_0B46: | 0x02
 l_0B46:
 * ld new data ptr into de and ex into hl ... resultant de not used
 	addq.w	#1,a0                           	| [inc  hl] ptr to data table
@@ -2024,7 +2053,7 @@ l_0B46:
 	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
 
 * bee dive and starting loopback, or boss left position and starting dive down
-case_0B4E:  ; $03
+case_0B4E:  | 0x03
 	addq.w	#1,a0                           	| [inc  hl] ptr to data table
 	move.b	(a0),d4                         	| [ld   e,(hl)]
 	addq.w	#1,a0                           	| [inc  hl]
@@ -2035,7 +2064,7 @@ case_0B4E:  ; $03
 
 * red alien flew through bottom of screen to top, heading for home
 * yellow alien flew under bottom of screen and now turns for home
-case_0B5F:  ; $06
+case_0B5F:  | 0x06
 	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
 	move.b	d0,d2                           	| [ld   c,a]
 
@@ -2069,7 +2098,7 @@ l_0B76:
 
 * red alien flew through bottom of screen to top, heading for home
 * yellow alien flew under bottom of screen and now turns for home
-case_0B87:  ; $07
+case_0B87:  | 0x07
 	move.b	0x0138>>1,(0x01,a2)             	| [ld   0x01(ix),#0x0138>>1] sY<15:8> ... $0138==312 ... $0138/2=$9C
 l_0B8B:
 	addq.w	#1,a0                           	| [inc  hl] data pointer
@@ -2081,7 +2110,7 @@ l_0B8C:
 	jra	next__pool_idx                     	| [jp   next__pool_idx]
 
 * in an attack convoy ... changing direction
-case_0B98:  ; $08
+case_0B98:  | 0x08
 * if (0x38 != (0x38 & ds_bug_motion_que[b_bug_que_idx].b10))  hl += 3 ...
 	move.b	(0x10,a2),d0                    	| [ld   a,0x10(ix)] offset of object ...8800[L]
 	and.b	#0x38,d0                         	| [and  #0x38]
@@ -2095,7 +2124,7 @@ l_0B9F:
 	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
 
 * one red moth left in "free flight mode"
-case_0BA8:  ; $09
+case_0BA8:  | 0x09
 	addq.w	#1,a0                           	| [inc  hl] ptr to data table
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	btst.b	#7,(0x13,a2)                    	| [bit  7,0x13(ix)]
@@ -2116,7 +2145,7 @@ l_0BB4:
 	jra	l_0B8B                             	| [jp   l_0B8B] inc hl and finalize
 
 * homing, red transit to top, yellow from off-screen at bottom or skip if in continuous mode
-case_0BD1:  ; $05
+case_0BD1:  | 0x05
 * if (1 == cont_bmb_flag && 0 == task_actv[0x1D]) then pD += 3 else pD = *(pHL)
 	move.b	b_92A0+0x0A,d0                  	| [ld   a,(b_92A0 + 0x0A)] continuous bombing flag, test for reload data pointer
 	move.b	d0,d2                           	| [ld   c,a]
@@ -2407,7 +2436,8 @@ l_0CFA:
 	move.b	d0,(a0)+                         	| [ld   (hl),a]  .b00 or .b02
 	                           	| [inc  l]
 	move.b	d3,d0                           	| [ld   a,d] msb of mul result
-	addx.b	(a0),d0				| 	adc  a,(hl)                                ;  .b01 or .b03
+	move.b	(a0),d7
+	addx.b	d7,d0				| 	adc  a,(hl)                                ;  .b01 or .b03
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 
 	move.l	(sp)+,a0                        	| [pop  hl] &mrw_sprite.ctrl[L].b1
@@ -2501,10 +2531,13 @@ l_0D50:
 * If bomb is disabled for any reason, the timer is restarted.
 	subq.b	#1,(0x0E,a2)                    	| [dec  0x0E(ix)] countdown to enable a bomb
 	jne	next__pool_idx                     	| [jp   nz,next__pool_idx]
-
-	lsr.b	#1,(0x0F,a2)                     	| [srl  0x0F(ix)] these bits enable bombing
-	jcc	l_0DF5_next_superloop_and_reload_0E	| [jp   nc,l_0DF5_next_superloop_and_reload_0E]
-
+	move.b	(0x0F,a2),d0
+	lsr.b	#1,d0                     	| [srl  0x0F(ix)] these bits enable bombing
+	scs		d7
+	move.b	d0,(0x0F,a2)
+	tst.b	d7
+	jne	l_0DF5_next_superloop_and_reload_0E	| [jp   nc,l_0DF5_next_superloop_and_reload_0E]
+	
 	move.b	(0x01,a2),d0                    	| [ld   a,0x01(ix)] if .cy.pair.b1 > $4C
 	cmp.b	#152>>1,d0			| cp   #152>>1                               ; 0x4C
 	jcs	l_0DF5_next_superloop_and_reload_0E	| [jp   c,l_0DF5_next_superloop_and_reload_0E]
@@ -2700,7 +2733,7 @@ l_0E3A:
 * training mode, make previous diving boss disabled
 * a bonus bee (e.g. 883A) flying off screen. Sprite-Code 5B (scorpion), color 05, object status==9
 * also, if status==4 (capturing boss shot while in home-position, freeing a rogue ship)
-case_0E49_make_object_inactive: ; 0x0
+case_0E49_make_object_inactive: | 0x0
 	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
 	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] object offset ...8800[L]
 	and.w	#0xFF,d6
@@ -2863,7 +2896,6 @@ l_0EBD:
 	jra	l_0EB7                             	| [jp   l_0EB7]
 
 
-.ds 0x08    ; no code at 0EC0.
 
 *=============================================================================
 * f_0ECA()
@@ -2877,180 +2909,12 @@ l_0EBD:
 *  ...
 *-----------------------------------------------------------------------------
 f_0ECA:
-	move.b	_sfr_dsw3,d0                    	| [ld   a,(_sfr_dsw3)] DSWA ( 0x04, 0x04, "SW1:3" ) /* Listed as "Unused" */
-	and.b	#0x02,d0                         	| [and  #0x02]
-	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
-0:
+	* jotd: completely removed that unused stuff that reads in 0x1000 of sub-cpu
+	* (maybe old debug/development stuff)
+	rts
+	
+	
 
-	lea	l_10FF(pc),a0                      	| [ld   hl,#0x10FF]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	move.b	#0xDF,d6                        	| [ld   l,#0xDF] $10DF
-	move.b	(a0),d2                         	| [ld   c,(hl)]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	eor.b	d2,d0                            	| [xor  c]
-	btst.b	#4,d0                           	| [bit  4,a]
-	jne	l_0EDE                             	| [jr   nz,l_0EDE]
-	jbsr	rst_00                            	| [rst  0x00]
-
-l_0EDE:
-	lea	ds_89E0+0x16+0x01(pc),a1           	| [ld   de,#ds_89E0 + 0x16 + 0x01]
-	lea	ds_89E0+0x16(pc),a0                	| [ld   hl,#ds_89E0 + 0x16] implements a $14 byte FIFO
-	move.b	#0x00,d1                        	| [ld   bc,#0x0013] 19
-	move.b	#0x13,d2                        	| [ld   bc,#0x0013] 19
-lddr
-	lea	d_0FD5(pc),a2                      	| [ld   ix,#d_0FD5]
-	move.b	#0xE0,d4                        	| [ld   e,#0xE0]
-	move.b	#0x0500+0x0004_msb,d1           	| [ld   bc,#0x0500 + 0x0004] B = loop ct (5 bytes) None
-	move.b	#0x0500+0x0004_lsb,d2           	| [ld   bc,#0x0500 + 0x0004] B = loop ct (5 bytes) None
-l_0EF2:
-	move.b	(0x00,a2),d0                    	| [ld   a,0x00(ix)]
-	addq.w	#1,a2                           	| [inc  ix]
-	move.b	d0,d6                           	| [ld   l,a]
-	move.b	#0x10,d5                        	| [ld   h,#0x10]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	move.b	d4,d0                           	| [ld   a,e] huh?
-	add.b	d2,d0                            	| [add  a,c]
-	move.b	d0,d4                           	| [ld   e,a]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	move.b	d0,(a1)                         	| [ld   (de),a]
-	subq.b	#1,d1                           	| [...]
-	jne	l_0EF2                             	| [djnz l_0EF2]
-
-	move.b	#5,d1                           	| [ld   b,#5]
-	lea	ds_89E0+0x04(pc),a0                	| [ld   hl,#ds_89E0 + 0x04]
-l_0F07:
-	move.b	(a0)+,d0                         	| [ld   a,(hl)]
-	                           	| [inc  l]
-	or.b	(a0)+,d0                           	| [or   (hl)]
-	                           	| [inc  l]
-	not.b	d0                               	| [cpl]
-	and.b	(a0)+,d0                          	| [and  (hl)]
-	                           	| [inc  l]
-	and.b	(a0)+,d0                          	| [and  (hl)]
-	                           	| [inc  l]
-	and.b	#0x0F,d0                         	| [and  #0x0F]
-	jne	l_0F18                             	| [jr   nz,l_0F18]
-	subq.b	#1,d1                           	| [...]
-	jne	l_0F07                             	| [djnz l_0F07]
-
-	jra	l_0F58                             	| [jr   l_0F58]
-l_0F18:
-	subq.b	#1,d1                           	| [dec  b]
-	jeq	l_0F6A                             	| [jr   z,l_0F6A]
-	subq.b	#1,d1                           	| [dec  b]
-	asl.b	#2,d1                            	| [sla  b] * 2
-l_0F20:
-	ror.b	#1,d0                            	| [rrca]
-	jcs	l_0F26                             	| [jr   c,l_0F26]
-	addq.b	#1,d1                           	| [inc  b]
-	jra	l_0F20                             	| [jr   l_0F20]
-l_0F26:
-	move.b	ds_89E0,d0                      	| [ld   a,(ds_89E0)]
-	lsr.b	#1,d0                            	| [srl  a]
-	move.b	d0,d4                           	| [ld   e,a]
-	roxl.b	#1,d2                           	| [rl   c]
-	add.b	#0xE1,d0                         	| [add  a,#0xE1]
-	move.b	d0,d6                           	| [ld   l,a]
-	lea	ds_89E0,a0                     	| [ld   h,#>ds_89E0]
-	and.w	#0xFF,d6
-	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	btst.b	#0,d2                           	| [bit  0,c]
-	jeq	l_0F3C                             	| [jr   z,l_0F3C]
-	rol.b	#4,d0                            	| [rlca] * 4
-l_0F3C:
-	and.b	#0xF0,d0                         	| [and  #0xF0]
-	or.b	d1,d0                             	| [or   b]
-	btst.b	#0,d2                           	| [bit  0,c]
-	jeq	l_0F47                             	| [jr   z,l_0F47]
-	rol.b	#4,d0                            	| [rlca] * 4
-l_0F47:
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	move.b	ds_89E0,d0                      	| [ld   a,(ds_89E0)]
-	                               	| [and  a]
-	jne	l_0F50                             	| [jr   nz,l_0F50]
-	move.b	#2,d0                           	| [ld   a,#2]
-l_0F50:
-	subq.b	#1,d0                           	| [dec  a]
-	move.b	d0,ds_89E0                      	| [ld   (ds_89E0),a]
-	move.b	d4,d0                           	| [ld   a,e]
-	                               	| [and  a]
-	jeq	l_0F61                             	| [jr   z,l_0F61]
-l_0F58:
-	move.l	ds_89E0+0x20,a0             	| [ld   hl,(ds_89E0 + 0x02)]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	move.b	d0,ds_89E0+0x01                 	| [ld   (ds_89E0 + 0x01),a]
-	jra	l_0FA3                             	| [jr   l_0FA3]
-l_0F61:
-	move.l	ds_89E0+0x20,a0             	| [ld   hl,(ds_89E0 + 0x02)]
-	move.b	ds_89E0+0x01,d0                 	| [ld   a,(ds_89E0 + 0x01)]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	jra	l_0FA3                             	| [jr   l_0FA3]
-l_0F6A:
-	move.b	d0,d2                           	| [ld   c,a]
-	lea	ds_89E0,a0                     	| [ld   hl,#ds_89E0]
-	btst.b	#0,d2                           	| [bit  0,c]
-	jne	l_0F9F                             	| [jr   nz,l_0F9F]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	lsr.b	#1,d0                            	| [srl  a]
-	jeq	l_0F8A                             	| [jr   z,l_0F8A]
-	btst.b	#3,d2                           	| [bit  3,c]
-	jne	l_0F87                             	| [jr   nz,l_0F87]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	cmp.b	#5,d0                            	| [cp   #5]
-	jcc	l_0F83                             	| [jr   nc,l_0F83]
-	addq.b	#1,(a0)                         	| [inc  (hl)]
-	jra	l_0F58                             	| [jr   l_0F58]
-l_0F83:
-	move.b	#0x05,(a0)                      	| [ld   (hl),#0x05]
-	jra	l_0F58                             	| [jr   l_0F58]
-l_0F87:
-	subq.b	#1,(a0)                         	| [dec  (hl)]
-	jra	l_0F58                             	| [jr   l_0F58]
-l_0F8A:
-	move.l	ds_89E0+0x20(pc),a0             	| [ld   hl,(ds_89E0 + 0x02)]
-	btst.b	#3,d2                           	| [bit  3,c]
-	jne	l_0F94                             	| [jr   nz,l_0F94]
-	subq.w	#1,a0                           	| [dec  hl]
-	jra	l_0F95                             	| [jr   l_0F95]
-l_0F94:
-	addq.w	#1,a0                           	| [inc  hl]
-l_0F95:
-	move.l	a0,ds_89E0+0x20                 	| [ld   (ds_89E0 + 0x02),hl]
-	move.b	#0x01,d0                        	| [ld   a,#0x01]
-	move.b	d0,ds_89E0                      	| [ld   (ds_89E0),a]
-	jra	l_0F58                             	| [jr   l_0F58]
-l_0F9F:
-	move.b	#0x05,(a0)                      	| [ld   (hl),#0x05]
-	jra	l_0F58                             	| [jr   l_0F58]
-l_0FA3:
-	lea	0x8000+0x03C0+0x0A(pc),a0      	| [ld   hl,#0x8000 + 0x03C0 + 0x0A]
-	lea	ds_89E0+0x01(pc),a1                	| [ld   de,#ds_89E0 + 0x01]
-	move.b	#3,d1                           	| [ld   b,#3]
-l_0FAB:
-	move.b	(a1)+,d0                         	| [ld   a,(de)]
-	                           	| [inc  e]
-	jbsr	c_0FC6                            	| [call c_0FC6]
-	subq.b	#1,d1                           	| [...]
-	jne	l_0FAB                             	| [djnz l_0FAB]
-
-	lea	m_color_ram+0x03CA(pc),a0          	| [ld   hl,#m_color_ram + 0x03CA]
-	move.b	ds_89E0,d0                      	| [ld   a,(ds_89E0)]
-	move.b	#6,d1                           	| [ld   b,#6]
-l_0FBA:
-	                               	| [and  a]
-	move.b	d0,d2                           	| [ld   c,a]
-	jeq	l_0FC0                             	| [jr   z,l_0FC0]
-	move.b	#1,d2                           	| [ld   c,#1]
-l_0FC0:
-	move.b	d2,(a0)+                         	| [ld   (hl),c]
-	                           	| [inc  l]
-	subq.b	#1,d0                           	| [dec  a]
-	subq.b	#1,d1                           	| [...]
-	jne	l_0FBA                             	| [djnz l_0FBA]
-
-	rts                                    	| [ret]
 
 *=============================================================================
 * c_0FC6()
@@ -3062,15 +2926,17 @@ l_0FC0:
 *  ...
 *-----------------------------------------------------------------------------
 c_0FC6:
+	exg		a0,d7
 	move.b	d0,d2                           	| [ld   c,a]
 	and.b	#0x0F,d0                         	| [and  #0x0F]
-	move.b	d0,(a0)+                         	| [ld   (hl),a]
-	                           	| [inc  l]
+	jbsr	osd_w_colorram                         	| [ld   (hl),a]
+	addq.w	#1,d7                           	| [inc  l]
 	move.b	d2,d0                           	| [ld   a,c]
 	rol.b	#4,d0                            	| [rlca] * 4
 	and.b	#0x0F,d0                         	| [and  #0x0F]
-	move.b	d0,(a0)+                         	| [ld   (hl),a]
-	                           	| [inc  l]
+	jbsr	osd_w_colorram                         	| [ld   (hl),a]
+	addq.w	#1,d7                           	| [inc  l]
+	exg		a0,d7
 	rts                                    	| [ret]
 
 *=============================================================================
@@ -3087,7 +2953,8 @@ db_flv_0ff0:
 	.byte 0x23,0x10,0x3C,0x23,0x00,0xFF,0xFF
 
 	.byte 0x32 | junk ??
-
+	.align	2
+	
 * end of ROM
 
 * input file gg1-7.s
@@ -3109,7 +2976,7 @@ db_flv_0ff0:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-ld   sp,#_stack_cpu_sub2 + 0x20
+	lea		_stack_cpu_sub2+0x20,a7   | ld   sp,#_stack_cpu_sub2+0x20
 	jra	RESET                              	| [jp   RESET]
 
 *.org 0x0008

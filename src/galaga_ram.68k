@@ -6,6 +6,7 @@
 	.global vb_ticks_count
 	.global break_at_startup_flag
 	.global	ixh
+	.global	ixl
 	
 	.ifdef   __amiga__
 	.ascii	"RAM_STRT"
@@ -76,6 +77,8 @@ break_at_startup_flag:
 	.byte	0
 * fake IXH register
 ixh:
+	.byte	0
+ixl:
 	.byte	0
 start_level:
 	.byte	0
