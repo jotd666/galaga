@@ -169,6 +169,7 @@ start:
 		.global osd_w_colorram
 		.global osd_r_videoram
 		.global osd_update_sprites
+		.global osd_get_random
 		.global osd_read_dsw_1
 		.global osd_read_dsw_2
 		.global osd_read_in_2
@@ -2499,6 +2500,10 @@ osd_read_dsw_1:
 
 	rts
 
+osd_read_dsw_2:
+	moveq	#0,d0
+	rts
+	
 
 		
 osd_read_high_scores:

@@ -12,6 +12,7 @@
 	
 	.global	p_flv_base
 
+	.global	db_flv_atk_red
 	.global	db_flv_001d
 	.global	db_flv_017b
 	.global	db_flv_020b
@@ -36,7 +37,11 @@
 	.global	db_flv_02ba
 	.global	db_flv_0333
 	.global	db_flv_025d
+	.global db_flv_0411
 	.global	db_flv_cboss
+	.global db_fltv_rogefgter
+	.global db_flv_atk_yllw
+	.global db_flv_00f1
 	
 	.global db_04EA
 	.global db_0473
@@ -765,7 +770,7 @@ l_064F:
 	move.b	#0x0F,(a0)                      	| [ld   (hl),#0x0F] mctrl_q index used for explosion counter
 	subq.w	#1,a0                           	| [dec  l]
 	COMPUTE_LSB_A0_D6	b_8800
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#0x08+0x04,(a0)                            	|0x04,(a0)| [ld   (hl),#0x08| 0x04] dblh, dblw
@@ -818,7 +823,7 @@ hitd_fghtr_notif:
 	                           	| [inc  l]
 	move.b	(a0),d1                         	| [ld   b,(hl)] get row bits 0:7
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl] get row bit-8
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] get row bit-8
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -827,7 +832,7 @@ hitd_fghtr_notif:
 	roxr.b	#1,d1                           	| [rr   b] Cy -> b<7>
 	move.b	d1,ixh			| ld   ixh,b                                 ; y<15:8> of fixed-point
 	subq.w	#1,a0                           	| [dec  l]
-	COMPUTE_LSB_A0_D6	ds_sprite_ctrl
+	COMPUTE_LSB_A0_D6	ds_sprite_ctrl_9B00
 
 	move.b	d6,d4                           	| [ld   e,l] preserved object/index of fighter passed as argument in L
 
@@ -899,7 +904,7 @@ while_06B7:
 	addq.w	#1,a0                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 
@@ -1022,7 +1027,7 @@ l_0729:
 	roxr.b	#1,d0                           	| [rra] Cy from the addition rotated into b7
 	eor.b	d2,d0                            	| [xor  c] sign bit of addend/subtrahend
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl] sy.bit-8 (SPR[n].CTRL.b1:0)
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sy.bit-8 (SPR[n].CTRL.b1:0)
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	rol.b	#1,d0                            	| [rlca]
@@ -1093,7 +1098,7 @@ l_0760_disable_rocket_wposn:
 l_0763_disable_rocket:
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
 	clr.b	(a0)                             	| [ld   (hl),#0] x
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [ld   (hl),#0] attribute bits
@@ -1148,7 +1153,7 @@ l_076A_while_object:
 * check Y coordinate ... sY<8:1> in A
 	addq.w	#1,a0                           	| [inc  l]
 	addq.b	#1,d6                           	| [inc  l] follow index
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl] sprite.sy<8>
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sprite.sy<8>
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d3                         	| [ld   d,(hl)]
@@ -1248,7 +1253,7 @@ hitd_dspchr:
 	add.w	d4,a1
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,(a1)                         	| [ld   (de),a]
-	lea	ds_sprite_ctrl_9B00,a1              	| [ld   d,#>ds_sprite_ctrl] _sprite_ctrl[E].b0 = 0 ... attributes
+	lea	ds_sprite_ctrl_9B00,a1              	| [ld   d,#>ds_sprite_ctrl_9B00] _sprite_ctrl[E].b0 = 0 ... attributes
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	move.b	d0,(a1)                         	| [ld   (de),a]
@@ -1309,7 +1314,7 @@ l_07F5:
 
 l_07F8_:
 	lea	b_9AA0+0x01(pc),a0                 	| [ld   hl,#b_9AA0 + 0x01] b_9AA0[1 + A] = 1 ... sound-fx count/enable registers
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	move.b	#1,(a0)                         	| [ld   (hl),#1]
 
 * if sprite color == 7
@@ -1322,7 +1327,7 @@ l_07F8_:
 l_0808:
 * _bug_collsn[ color ] += 1
 	lea	ds_bug_collsn_hit_mult(pc),a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x00] rocket/bug or ship/bug collision
-	jbsr	rst_10                            	| [rst  0x10] HL += A ... _collsn_hit_mult[sprite.cclr.b1]
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A ... _collsn_hit_mult[sprite.cclr.b1]
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 
 	tst.b	d7                              	| [ex   af,af'] un-stash parameter/flag
@@ -1420,8 +1425,8 @@ l_0852:
 
 * ... else ... handle blue boss
 * check for captured-fighter
-	movem.w	d3/d4,-(sp)                    	| [push de] &ds_sprite_ctrl[E]
-	move.l	a1,-(sp)                        	| [push de] &ds_sprite_ctrl[E]
+	movem.w	d3/d4,-(sp)                    	| [push de] &ds_sprite_ctrl_9B00[E]
+	move.l	a1,-(sp)                        	| [push de] &ds_sprite_ctrl_9B00[E]
 	move.b	d6,d0                           	| [ld   a,l]
 	and.b	#0x07,d0                         	| [and  #0x07] mask off to reference the captured ship
 	move.b	d0,d4                           	| [ld   e,a]
@@ -1444,7 +1449,7 @@ l_0852:
 	add.w	d4,a1
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,(a1)                         	| [ld   (de),a]
-	COMPUTE_LSB_A0_D6	sprt_mctl_objs
+	COMPUTE_LSB_A0_D6	b_8800
 	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -1467,8 +1472,8 @@ l_0852:
 
 l_0899:
 * lone blue boss killed, or boss killed before pulling the beam all in
-	move.l	(sp)+,a1                        	| [pop  de] ds_sprite_ctrl[n].b1
-	movem.w	(sp)+,d3/d4                    	| [pop  de] ds_sprite_ctrl[n].b1
+	move.l	(sp)+,a1                        	| [pop  de] ds_sprite_ctrl_9B00[n].b1
+	movem.w	(sp)+,d3/d4                    	| [pop  de] ds_sprite_ctrl_9B00[n].b1
 
 	move.l	a0,-(sp)                        	| [push hl] sprt_mctl_objs[L] (boss) e.g. b_8830
 	move.b	#6,d0                           	| [ld   a,#6]
@@ -1476,7 +1481,7 @@ l_0899:
 	move.b	d6,d0                           	| [ld   a,l]
 	and.b	#7,d0                            	| [and  #7] gets offset of object from $30
 	lea	ds_plyr_actv+_ds_bmbr_boss_scode(pc),a0	| [ld   hl,#ds_plyr_actv +_ds_bmbr_boss_scode] bonus code/scoring attributes for 1 of 4 flying bosses
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	move.b	(a0)+,d0                         	| [ld   a,(hl)] .b0 ... add to bug_collsn[$0F] (adjusted scoring increment)
 												| [inc  l]
 	move.b	(a0),d3                         	| [ld   d,(hl)] .b1 -> obj_collsn_notif[L] ... sprite code + 0x80
@@ -1773,13 +1778,14 @@ l_09AE_doit:
 	exg		d0,d7                              	| [ex   af,af'] index of spawning yellow alien
 	move.b	d0,(0x10,a3)                    	| [ld   0x10(iy),a]
 	move.b	d0,d4                           	| [ld   e,a]
-	lea	b_8800(pc),a1                      	| [ld   d,#>b_8800]
+	lea	b_8800,a1                      	| [ld   d,#>b_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	move.b	#9,d0                           	| [ld   a,#9] 09: diving -> 8800[i]
 	move.b	d0,(a1)+                         	| [ld   (de),a]
 	                           	| [inc  e]
-	move.b	iyl,d0                         	| [ld   a,iyl]
+	* TODO debug here a3 value????
+	*move.b	iyl,d0                         	| [ld   a,iyl]
 	move.b	d0,(a1)                         	| [ld   (de),a]
 	addq.w	#1,a0                           	| [inc  hl] new ptr loaded to b08/b09, but HL is advanced, still in same data series
 	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
@@ -1844,13 +1850,13 @@ l_0A38:
 	move.b	d5,d0                           	| [ld   a,h]
 	addq.b	#1,d0                           	| [inc  a]
 	exg	a1,a0                              	| [ex   de,hl] restore hl
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	move.b	d0,(0x0D,a2)                    	| [ld   0x0D(ix),a]
 
 	move.l	(sp)+,a0                        	| [pop  hl] restore hl again
 	move.b	#9,d0                           	| [ld   a,#9]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 * don't actually need to load from l and h here ;)
 	move.b	d6,(0x08,a2)                    	| [ld   0x08(ix),l] pointer.b0
 	move.b	d5,(0x09,a2)                    	| [ld   0x09(ix),h] pointer.b1
@@ -2033,13 +2039,13 @@ l_0B30:
 	jbsr	c_0EAA                            	| [call c_0EAA] HL = HL / A
 	move.b	d5,d0                           	| [ld   a,h]
 	exg	a1,a0                              	| [ex   de,hl]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	move.b	d0,(0x0D,a2)                    	| [ld   0x0D(ix),a]
 
 	move.l	(sp)+,a0                        	| [pop  hl]
 	move.b	#9,d0                           	| [ld   a,#9]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	jra	l_0BFF_flite_pth_skip_load         	| [jp   l_0BFF_flite_pth_skip_load] save pointer and goto _flite_pth_cont
 
 * creatures that are returning to base: moths or bosses from top of screen,
@@ -2304,7 +2310,7 @@ l_0C81:
 * determine_sprite_ctrl( C )
 * 0: flipx - flip about the X axis, i.e. "up/down"
 * 1: flipy - flip about the Y axis, i.e. "left/right"
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	d2,d0                           	| [ld   a,c] d saved from (ix)0x05 above
@@ -2451,7 +2457,7 @@ l_0D03_flite_pth_posn_set:
 
 * extract x-coord and adjust for homing if needed
 * fixed point 9.7 in .b02.b03 - left shift integer portion into A ... carry in to <0> from .b02<7>
-	COMPUTE_LSB_A0_D6 ds_sprite_ctrl
+	COMPUTE_LSB_A0_D6 ds_sprite_ctrl_9B00
 
 	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
@@ -2518,7 +2524,7 @@ l_0D50:
 	move.b	d3,d0                           	| [ld   a,d]
 	move.b	d0,(a0)                         	| [ld   (hl),a] sprite[n].posn.sy<7:0>
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl] sprite[n].posn.sy<8>
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sprite[n].posn.sy<8>
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d7
@@ -2575,7 +2581,7 @@ l_0D8D_got_a_bullet:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 
-	COMPUTE_LSB_A1_D4	ds_sprite_ctrl
+	COMPUTE_LSB_A1_D4	ds_sprite_ctrl_9B00
 	lea	ds_sprite_posn(pc),a1              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d4
 	add.w	d4,a1                          	| [ld   d,h] weird msb change
@@ -2592,7 +2598,7 @@ l_0D8D_got_a_bullet:
 	move.b	d0,(a0)                         	| [ld   (hl),a] bomb.y<7:0>
 * sprite.ctrl[BOMB0 + n].b1 = sprite.ctrl[e].b1
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	d5,d3                           	| [ld   d,h]

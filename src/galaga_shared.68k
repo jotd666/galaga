@@ -5,6 +5,7 @@
 	.global		write_videoram_to_a0
 	.global		read_videoram_from_a0
 
+	.global		rst_08_d5d6
 	.global		rst_18
 	.global		rst_18_color
 	.global		rst_18_video
@@ -12,6 +13,7 @@
 	.global		add_2_times_d0_to_a0_0008
 	.global		add_4_times_d0_to_a0_0008
 	.global		rst_20
+	.global		rst_28
 	
 	.global		cpi
 	.global		ldi
@@ -108,6 +110,19 @@ ldir:
     dbf        d1,0b
     clr.w    d1
     rts
+	
+* < A0: source (HL)
+* < A1: destination (DE)
+* < D1: length (16 bit)
+lddr:
+    subq.w    #1,d1
+0:
+    move.b    (a0),(a1)
+    subq.w  #1,a0
+    subq.w  #1,a1
+    dbf        d1,0b
+    clr.w    d1
+    rts
 
 * < A0: source (HL)
 * < D1: decremented
@@ -199,11 +214,11 @@ add_2_times_d0_to_a0_0008:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-rst_08:
+rst_08_d5d6:
 	add.b	d0,d0                            	| [add  a,a]
-	jcc	_RST_10                            	| [jr   nc,_RST_10]
+	jcc	rst_10_d5d6                            	| [jr   nc,_RST_10]
 	addq.b	#1,d5                           	| [inc  h] when?
-	jra	_RST_10                            	| [jp   _RST_10]
+	jra	rst_10_d5d6                            	| [jp   _RST_10]
 
 *.org 0x0010
 
@@ -211,6 +226,7 @@ add_d0_to_a0_0010:
 	and.w	#0xFF,d0
 	add.w	d0,a0
 	rts
+
 	
 *=============================================================================
 * RST_10()
@@ -221,7 +237,7 @@ add_d0_to_a0_0010:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-_RST_10:
+rst_10_d5d6:
 	LOAD_D5_16_FROM_D5D6
 	and.w	#0xFF,d0
 	add.w	d0,d5
@@ -250,6 +266,12 @@ rst_18:
 	jne	rst_18                            	| [djnz _RST_18]
 	rts                                    	| [ret]
 
+rst_28:
+	lea	ds_bug_motion_que,a0           	| [ld   hl,#ds_bug_motion_que] memset(..., 0, $F0)
+	move.b	#0xF0,d1                        	| [ld   b,#0xF0]
+	clr.b	d0                               	| [xor  a] A==00
+	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	rts                                    	| [ret]
 
 rst_18_video:
 * memset((HL), A=fill, B=ct)

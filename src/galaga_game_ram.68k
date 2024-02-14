@@ -164,7 +164,7 @@
 	.global		mrw_sprite_posn
 	.global		sfr_sprite_posn
 	.global		ds_9800_RAM2
-	.global		ds_hpos_spcoords
+	.global		ds_hpos_spcoords_9800
 	.global		ds_plyr_data
 	.global		ds_plyr_actv
 	.global		ds_plyr_susp
@@ -562,7 +562,7 @@ ds_9800_RAM2:
 
 
 * Pixel coordinates for object origin positions in the cylon fleet.
-ds_hpos_spcoords:
+ds_hpos_spcoords_9800:
 
 * 10 column coordinates, 6 row coordinates, 16-bits per coordinate.
        ds.b     0x20

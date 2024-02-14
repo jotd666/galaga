@@ -21,8 +21,12 @@
 *    ATTRACT, READY-TO-PLAY, PLAY, HIGH SCORE INITIAL, and SELF-TEST."
 *
 *
+	.global		galaga_reset
+	.global		galaga_irq
+galaga_reset:
 
-
+galaga_irq:
+	rts
 
 *=============================================================================
 * por_inits()
@@ -1016,7 +1020,8 @@ l_06BA:
 g_halt:
 	
 *	illegal		 | halt                                       | screen is now cleared at end of game
-	jbsr	osd_disable_interrupts
+	moveq	#0,d0
+	jbsr	osd_interrupt_control
 *
 *l_06E0_while_wait_io_ackrdy:
 *	*move.b	0x7100,d0                       	| [ld   a,(0x7100)] read IO status
@@ -1512,7 +1517,7 @@ c_08BE:
 * of creatures is 40, the selected byte would be at $0929, so d_0909 and
 * d_0929 should be one contiguous table.
 	asl.b	#1,d0                            	| [sla  a]
-	jbsr	rst_08                            	| [rst  0x08] HL += 2A
+	jbsr	rst_08_d5d6                            	| [rst  0x08] HL += 2A
 	movem.w	d5/d6,-(a7)                              	| [ex   de,hl]
 	move.b	d2,d5                           	| [ld   h,c]
 	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
@@ -2467,7 +2472,7 @@ l_10A0_got_one:
 	move.b	(a0)+,d2                         	| [ld   c,(hl)] sprite_x
 	                           	| [inc  l]
 	move.b	(a0),d1                         	| [ld   b,(hl)] sprite_y<7:0>
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprite_y<8>
@@ -3004,7 +3009,7 @@ l_1273_while:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [ld   (hl),#0]
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
 	move.b	d2,(a0)                         	| [ld   (hl),c]
 	lea	ds_sprite_code,a0              	| [ld   h,#>ds_sprite_code]
@@ -3097,7 +3102,7 @@ l_12A6:
 * and sprite.posn<8> is handled here, i.e. ctrl[n + 1]<0>
 	clr.b	d0                               	| [ld   a,#0] set the sprite with no additional control attributes
 	roxl.b	#1,d0                           	| [rla]
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 
@@ -3313,7 +3318,7 @@ l_135A:
 	move.b	d0,(a0)                         	| [ld   (hl),a] SPRPOSN.1[$62] ... sy<0:7>
 	COMPUTE_LSB_A0_D6		ds_sprite_posn+0x62
 
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
 	move.b	d2,(a0)                         	| [ld   (hl),c] SPRCTRL.1[n]:0 ... sy<8>
 	                           	| [dec  l]
@@ -4123,9 +4128,10 @@ l_18DB_while:
 	move.b	d0,ds_cpu0_task_actv+0x0B       	| [ld   (ds_cpu0_task_actv + 0x0B),a] 1: f_1DB3 ... check enemy status at 9200
 	move.b	d0,ds_cpu0_task_actv+0x03       	| [ld   (ds_cpu0_task_actv + 0x03),a] 1: f_1700 ... fighter control in training/demo mode
 
-	move.b	_sfr_dsw4,d0                    	| [ld   a,(_sfr_dsw4)] DSWA ... SOUND IN ATTRACT MODE: _fx[0x17]
-	ror.b	#1,d0                            	| [rrca]
-	and.b	#0x01,d0                         	| [and  #0x01]
+	*move.b	_sfr_dsw4,d0                    	| [ld   a,(_sfr_dsw4)] DSWA ... SOUND IN ATTRACT MODE: _fx[0x17]
+	*ror.b	#1,d0                            	| [rrca]
+	*and.b	#0x01,d0                         	| [and  #0x01]
+	moveq	#1,d0			| force sound in attract mode
 	move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] from DSWA "sound in attract mode" ... 0 == enable CPU-sub2 process
 
 	jbsr	c_game_or_demo_init               	| [call c_game_or_demo_init]
@@ -4304,7 +4310,7 @@ l_19D2_fighter_captured:
 	move.b	d0,(a1)                         	| [ld   (de),a]
 * odd byte of sprite ctrl...
 * jotd: msb + reusing L plus 1 because inc a0
-	lea	ds_sprite_ctrl+0x62+1,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00+0x62+1,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	ILLEGAL
 	move.b	d5,d3                           	| [ld   d,h]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -4370,7 +4376,7 @@ l_1A31:
 	rol.b	#1,d0                            	| [rlca]
 	and.b	#0x01,d0                         	| [and  #0x01]
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl] .b1
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] .b1
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	ILLEGAL		| d5,d3 shit to debug
@@ -4420,7 +4426,7 @@ l_1A58:
 	bcs.b	0f                               	| [...]
 	rts                                    	| [ret  nc] [...]
 0:
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -5149,7 +5155,7 @@ l_1D16:
 	move.b	d0,(a0)+                         	| [ld   (hl),a] &boss_wing_slots[n + 0]
 
 	move.l	a3,d5
-	sub.l	#db_0454,d5
+	sub.l	#p_flv_base,d5		| TODO check which base???
 	LOAD_D5D6_FROM_D5_16
 	                           	| [inc  l]
 	                         	| [ld   a,iyl]
@@ -5685,7 +5691,7 @@ l_1EE4:
 
 * update "bit-8" of Y coordinate ... should only overflow the Y coordinate once.
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl] sY<8>
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sY<8>
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d7
@@ -5774,7 +5780,7 @@ l_1F1E:
 	move.l	a1,-(sp)                        	| [push de] &rockt_attribute[n].posn.b0
 	exg	a1,a0                              	| [ex   de,hl]
 
-	lea	ds_sprite_ctrl+0x62+1,a0       	| [ld   hl,#ds_sprite_ctrl + 0x62 + 1] sprite.ctrl[FIGHTR].b1
+	lea	ds_sprite_ctrl_9B00+0x62+1,a0       	| [ld   hl,#ds_sprite_ctrl_9B00 + 0x62 + 1] sprite.ctrl[FIGHTR].b1
 	move.b	d5,d3                           	| [ld   d,h]
 	addq.w	#1,a1                           	| [inc  e] sprite[RCKT_X].ctrl.b1
     illegal |        ^^^^ check inc register d4 or a1
@@ -5791,7 +5797,7 @@ l_1F2B:
 * sprite.ctrl[RCKT+n].b1 = sprite.ctrl[SHIP].b1 ... ship.sY, bit-8
 	jbsr	ldd                               	| [ldd] e.g. *(9B65--) = *(9B63--)
 
-	COMPUTE_LSB_A0_D6	ds_sprite_ctrl
+	COMPUTE_LSB_A0_D6	ds_sprite_ctrl_9B00
 	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -5804,7 +5810,7 @@ l_1F2B:
 
 
 * B = sprite.ctrl[SHIP].b0
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	illegal		| check d5/d3...
@@ -5902,7 +5908,7 @@ l_1F71:
 	movem.w	(sp)+,d3/d4                    	| [pop  de] pointer to rocket attribute
 	move.b	d0,(a1)                         	| [ld   (de),a]
 
-	COMPUTE_LSB_A0_D6	ds_sprite_ctrl
+	COMPUTE_LSB_A0_D6	ds_sprite_ctrl_9B00
 	lea	b_8800,a0                      	| [ld   h,#>b_8800] disposition = 6 ... active rocket object
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -6134,7 +6140,7 @@ l_2026:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	cmp.b	#0x29,d0                         	| [cp   #0x29]
 	jne	l_2041                             	| [jr   nz,l_2041]
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -6152,7 +6158,7 @@ l_2041:
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 	jne	l_205E                             	| [jr   nz,l_205E]
 l_2044:
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl] rescued ship is "landing"
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] rescued ship is "landing"
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -6163,7 +6169,7 @@ l_204C:
 	move.b	(a0),d0                         	| [ld   a,(hl)] when?
 	cmp.b	#0x37,d0                         	| [cp   #0x37]
 	jne	l_2059                             	| [jr   nz,l_2059]
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -6232,28 +6238,28 @@ l_2097:
 	move.b	d0,(a1)                         	| [ld   (de),a] e.g. DE==9363 sprite_posn
 	* recompute lsb offset (maybe not useful)
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
-	lea	ds_sprite_ctrl+0x61,a1              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00+0x61,a1              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	                           	| [ld   d,h]
 	move.b	(a0),d0                         	| [ld   a,(hl)] e.g. HL==9B01.. ctrl_2:bit0==enable and ctrl2_bit7==sx_bit8
 	move.b	d0,(a1)                         	| [ld   (de),a]
 	subq.w	#1,a0                           	| [dec  l]
 
-	COMPUTE_LSB_A0_D6	ds_sprite_ctrl
+	COMPUTE_LSB_A0_D6	ds_sprite_ctrl_9B00
 	lea	b_8800,a0                      	| [ld   h,#>b_8800]
 	add.w	d6,a0
 	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] set captured ship object state inactive
 	lea	ds_sprite_code,a0              	| [ld   h,#>ds_sprite_code]
 	
-	COMPUTE_LSB_A1_D4	ds_sprite_ctrl
+	COMPUTE_LSB_A1_D4	ds_sprite_ctrl_9B00
 	move.b	d4,d6                           	| [ld   l,e]
 	subq.w	#1,d6                           	| [dec  l]
 	add.w	d6,a0
 
 	move.b	#6,(a0)+                         	| [ld   (hl),#6] sprite code 6
 	move.b	#9,(a0)+                         	| [ld   (hl),#9] color map 9 for white ship
-	COMPUTE_LSB_A0_D6	ds_sprite_ctrl
+	COMPUTE_LSB_A0_D6	ds_sprite_ctrl_9B00
 	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn]
 	add.w	d6,a0
 	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] put in center
@@ -6278,7 +6284,7 @@ l_20C7:                                           | *( ds5_928A_captr_status + 0
 
 l_20D1_update_ship_spin:
 	COMPUTE_LSB_A0_D6	b_8800
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl] base address for c_2188
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] base address for c_2188
 	add.w	d6,a0
 	move.b	ds4_game_tmrs+1,d0              	| [ld   a,(ds4_game_tmrs + 1)]
 	move.b	d0,d4                           	| [ld   e,a]
@@ -6309,7 +6315,7 @@ l_20D1_update_ship_spin:
 *  ...
 *-----------------------------------------------------------------------------
 f_20F2:
-	lea	ds_sprite_ctrl+0x62,a0         	| [ld   hl,#ds_sprite_ctrl + 0x62] ship (1) position ...base address for c_2188
+	lea	ds_sprite_ctrl_9B00+0x62,a0         	| [ld   hl,#ds_sprite_ctrl_9B00 + 0x62] ship (1) position ...base address for c_2188
 	jbsr	c_2188_ship_spin                  	| [call c_2188_ship_spin] Base address in HL, retval in B
 	btst.b	#0,d1                           	| [bit  0,b]
 	jne	l_2151                             	| [jr   nz,l_2151]
@@ -6358,7 +6364,7 @@ l_212C_not_flipped_screen:
 	jne	l_2139                             	| [jr   nz,l_2139]
 * handle overflow by toggling bit-0 (off)
 	* jotd: adding +0x62 seems the proper thing to do since they only load msb
-	lea	ds_sprite_ctrl+0x62,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00+0x62,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	eor.b	#0x01,d0                         	| [xor  #0x01]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
@@ -6419,7 +6425,7 @@ l_216D:                                           | when?
 	rts                                    	| [ret  nz] [...]
 0:
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	eor.b	#0x01,d0                         	| [xor  #0x01]
@@ -6445,7 +6451,7 @@ l_217F_finished:
 *  Description:
 *   Spins the ship, either when being captured, or being released.
 * IN:
-*   Base address in HL (from ds_sprite_ctrl)
+*   Base address in HL (from ds_sprite_ctrl_9B00)
 * OUT:
 *   B==
 *-----------------------------------------------------------------------------
@@ -6455,7 +6461,7 @@ c_2188_ship_spin:
 	lsr.b	#1,d0                            	| [srl  a]
 	eor.b	d2,d0                            	| [xor  c]
 	move.b	d0,d2                           	| [ld   c,a]
-	COMPUTE_LSB_A0_D6	ds_sprite_ctrl
+	COMPUTE_LSB_A0_D6	ds_sprite_ctrl_9B00
 	lea	ds_sprite_code,a0              	| [ld   h,#>ds_sprite_code]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -6500,7 +6506,7 @@ l_21C0:
 	eor.b	#0x01,d0                         	| [xor  #0x01]
 l_21C7:
 	COMPUTE_LSB_A0_D6	ds_sprite_code
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	rts                                    	| [ret]
@@ -7046,7 +7052,7 @@ l_2451:
 	add.w	d6,a0
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	d0,(a0)                         	| [ld   (hl),a]
@@ -7058,7 +7064,7 @@ l_2451:
 * 02: reached home and rotating into resting position
 case_245F:
 	move.b	d4,d6                           	| [ld   l,e]
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -7078,7 +7084,7 @@ l_2473:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	and.b	#0x07,d0                         	| [and  #0x07]
 	jne	l_2480                             	| [jr   nz,l_2480]
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	bclr.b	#0,(a0)                         	| [res  0,(hl)]
@@ -7136,7 +7142,7 @@ l_249B:
 	COMPUTE_LSB_A0_D6	ds_hpos_spcoords_9800
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	move.b	d0,(a1)                         	| [ld   (de),a] Y pix coordinate
-	lea	ds_sprite_ctrl,a1              	| [ld   d,#>ds_sprite_ctrl] sprite.ctrl[n].sY (bit 8 into MSB)
+	lea	ds_sprite_ctrl_9B00,a1              	| [ld   d,#>ds_sprite_ctrl_9B00] sprite.ctrl[n].sY (bit 8 into MSB)
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	addq.w	#1,a0                           	| [inc  l]
@@ -7182,7 +7188,7 @@ l_24C2:
 	sub.b	#8,(a0)                            	| [sub  #8]
 	                         	| [ld   (hl),a]
 	jcc	l_24DA                             	| [jr   nc,l_24DA]
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl] killed boss that had the ship in the demo (not in game?)
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] killed boss that had the ship in the demo (not in game?)
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -7192,7 +7198,7 @@ l_24C2:
 l_24DA:
 	subq.w	#1,a0                           	| [dec  l] .b0
 	subq.b	#1,d6                           	| [dec  l] .b0
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#0x0C,(a0)                      	| [ld   (hl),#0x0C]
@@ -7219,7 +7225,7 @@ l_24E6_i_am_at_45:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [ld   (hl),#0]
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [ld   (hl),#0]
@@ -7269,7 +7275,7 @@ l_251C:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	add.b	#0x08,d0                         	| [add  a,#0x08]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 * mrw_sprite.cclr[ L ].b1 ^= (0 != AF.pair.b1)|
@@ -7293,12 +7299,12 @@ l_2529:
 case_2535:
 * pointer to b8800_obj_status[ L ] from DE
 * b8800_obj_status[ L ].obj_idx-- ... count for score bitmap
-	lea		b8800_obj_status,a0
+	lea		b_8800,a0
 	moveq	#0,d6
 	move.b	d4,d6                           	| [ld   l,e]
 	addq.w	#1,d6                           	| [inc  l]
 	add.w	d6,a0
-	move.b	d3,d5                           	| [ld   h,d]
+												| [ld   h,d]
 	subq.b	#1,(a0)                         	| [dec  (hl)] down counter for score bitmap
 	jne	l_2416                             	| [jp   nz,l_2416]
 
@@ -7308,7 +7314,7 @@ case_2535:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [ld   (hl),#0]
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [ld   (hl),#0]
@@ -7331,7 +7337,7 @@ case_254D:
 	addq.w	#1,a0                           	| [inc  l]
 	addq.b	#1,d6                           	| [inc  l]
 	move.b	(a0),d2                         	| [ld   c,(hl)] sprite_posn.y<0:7>
-	lea	ds_sprite_ctrl,a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprite_posn.y<8>
@@ -9322,8 +9328,9 @@ c_svc_easteregg_hdlr:
 	jbsr	c_3774                            	| [call c_3774]
 	jbsr	c_3774                            	| [call c_3774]
 	jbsr	c_3774                            	| [call c_3774]
-	move.b	#0x05,d0                        	| [ld   a,#0x05]
-	jra	rst_HLplusA                        	| [jp   rst_HLplusA] returns to caller from HLplusA
+	move.w	#0x05,d0                        	| [ld   a,#0x05]
+	add.w	d0,a0
+	rts                        	| [jp   rst_HLplusA] returns to caller from HLplusA
 
 *=============================================================================
 * c_3774()
@@ -9430,11 +9437,12 @@ c_svc_updt_dsply:
 * 0x80 -> UPRIGHT
 * 0x00 -> TABLE
 
-	move.b	_sfr_dsw8,d0                    	| [ld   a,(_sfr_dsw8)] cabinet type
-	roxr.b	#1,d0                           	| [rra] get DSWA#8 (sfr_dsw8:1)
-* inverting the bit provides the index
-	addq.b	#1,d0                           	| [inc  a] invert bit in bit-0
-	and.b	#0x01,d0                         	| [and  #0x01]
+*	move.b	_sfr_dsw8,d0                    	| [ld   a,(_sfr_dsw8)] cabinet type
+*	roxr.b	#1,d0                           	| [rra] get DSWA#8 (sfr_dsw8:1)
+** inverting the bit provides the index
+*	addq.b	#1,d0                           	| [inc  a] invert bit in bit-0
+*	and.b	#0x01,d0                         	| [and  #0x01]
+	moveq	#0,d0
 	move.b	d0,b_mchn_cfg_cab_type          	| [ld   (b_mchn_cfg_cab_type),a]
 *  svc_cab_type( a )
 	lea	str_3ACC,a0                    	| [ld   hl,#str_3ACC] 0-"UPRIGHT", 1-"TABLE"
@@ -9460,14 +9468,14 @@ l_380F:
 *    0x02  = 2 -> D (HARDEST)
 *    0x03  = 3 -> A (EASY)
 
-	lea	_sfr_dsw1,a0                   	| [ld   hl,#_sfr_dsw1] difficulty level
-	move.b	(a0),d0                         	| [ld   a,(hl)]
+	                   	| [ld   hl,#_sfr_dsw1] difficulty level
+	jbsr	osd_read_dsw_1                         	| [ld   a,(hl)]
 	ror.b	#1,d0                           	| [rra] get DSWA#1 (sfr_dsw1:1)
 	and.b	#0x01,d0                         	| [and  #0x01]
 	move.b	d0,d2                           	| [ld   c,a]
 
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
+	                           	| [inc  hl]
+	jbsr	osd_read_dsw_2                         	| [ld   a,(hl)]
 	and.b	#0x02,d0                         	| [and  #0x02] get DSWA#2 (sfr_dsw2:1)
 	or.b	d2,d0                             	| [or   c] lo-bit in C
 	move.b	d0,b_mchn_cfg_rank              	| [ld   (b_mchn_cfg_rank),a]
@@ -9488,8 +9496,9 @@ l_380F:
 *     0xC0 -> 5
 
 * configuration setting is "number of fighters - 1"
-	lea	_sfr_dsw7,a0                   	| [ld   hl,#_sfr_dsw7] get DSWB#7 (sfr_dsw7:0)
-	move.b	(a0)+,d0                         	| [ld   a,(hl)] hi-bit
+	*lea	_sfr_dsw7,a0                   	| [ld   hl,#_sfr_dsw7] get DSWB#7 (sfr_dsw7:0)
+	*move.b	(a0)+,d0                         	| [ld   a,(hl)] hi-bit
+	moveq	#3,d0
 										| [inc  hl] get DSWB#8 (sfr_dsw8:0)
 	move.b	(a0),d2                         	| [ld   c,(hl)] lo-bit
 	roxr.b	#1,d2                           	| [rr   c] "right-shift" lo-bit into Cy flag.
@@ -9526,19 +9535,19 @@ l_380F:
 *  0x03   OFF  OFF  ON  - 1-coin/2-credit
 *  0x07   OFF  OFF  OFF - 1-coin/1-credit
 
-	lea	_sfr_dsw1,a0                   	| [ld   hl,#_sfr_dsw1] coins per credit
-	move.b	#3,d1                           	| [ld   b,#3] 3 bits
-	clr.b	d0                               	| [xor  a]
-l_385C:
-	move.b	(a0),d2                         	| [ld   c,(hl)]
-	roxr.b	#1,d2                           	| [rr   c] "right-shift" lo-bit into Cy flag.
-	addx.b	d0,d0								| adc  a,a                                   | "left-shift" the hi-bit and add the lo-bit from Cy flag.
-	addq.w	#1,a0                           	| [inc  hl]
-	subq.b	#1,d1                           	| [...]
-	jne	l_385C                             	| [djnz l_385C]
-
-	and.b	#0x07,d0                         	| [and  #0x07] 3-bits only please
-
+*	lea	_sfr_dsw1,a0                   	| [ld   hl,#_sfr_dsw1] coins per credit
+*	move.b	#3,d1                           	| [ld   b,#3] 3 bits
+*	clr.b	d0                               	| [xor  a]
+*l_385C:
+*	move.b	(a0),d2                         	| [ld   c,(hl)]
+*	roxr.b	#1,d2                           	| [rr   c] "right-shift" lo-bit into Cy flag.
+*	addx.b	d0,d0								| adc  a,a                                   | "left-shift" the hi-bit and add the lo-bit from Cy flag.
+*	addq.w	#1,a0                           	| [inc  hl]
+*	subq.b	#1,d1                           	| [...]
+*	jne	l_385C                             	| [djnz l_385C]
+*
+*	and.b	#0x07,d0                         	| [and  #0x07] 3-bits only please
+	moveq	#1,d0
 * if ( free_play )
 	jeq	l_389B                             	| [jr   z,l_389B]
 * else  TableOffset=(Index-1)*8 ... resulting offsets are $00,$08,$10,$18,$20,$28,$30)
@@ -9604,7 +9613,8 @@ l_38A0:
 * AND EVERY XX0000 PTS
 
 l_38AB:
-	lea	_sfr_dsw4,a0                   	| [ld   hl,#_sfr_dsw4] bonus levels
+	* TODO point on something valid
+	**lea	_sfr_dsw4,a0                   	| [ld   hl,#_sfr_dsw4] bonus levels
 
 	move.b	#3,d1                           	| [ld   b,#3] 3 positions to read
 	clr.b	d0                               	| [xor  a]
@@ -9989,86 +9999,6 @@ l_39C9_call397D:
 	movem.w	(sp)+,d1/d2                    	| [pop  bc]
 	rts                                    	| [ret]
 
-c_svc_test_input_hdlr:
-	movem.w	d1/d2,-(sp)                    	| [push bc]
-	move.b	d1,d0                           	| [ld   a,b] b==$10?  (_3657)
-	cmp.b	#0xF,d0                          	| [cp   #0xF] IPT_SERVICE1 (MAME key_9)
-	jeq	l_39C9_call397D                    	| [jr   z,l_39C9_call397D]
-	cmp.b	#2,d0                            	| [cp   #2] If stick pushed right... 0x10 - 0x0E
-	jeq	l_39F5                             	| [jr   z,l_39F5] ... then....
-	cmp.b	#0x4,d0                          	| [cp   #0x4] else if stick pushed left...
-	jne	l_3A21                             	| [jr   nz,l_3A21] ...else
-	move.b	b_svc_test_snd_slctn,d0         	| [ld   a,(b_svc_test_snd_slctn)] ... then load the current sound selection...
-	subq.b	#0x01,d0                        	| [sub  #0x01] ... and decrement.
-	jcc	l_39ED                             	| [jr   nc,l_39ED] If no carry (negative wrap-around)...
-	move.b	#0x11,d0                        	| [ld   a,#0x11] else wrap around to highest sound #17...
-l_39ED:
-	move.b	d0,b_svc_test_snd_slctn         	| [ld   (b_svc_test_snd_slctn),a]
-	jra	j_39FC                             	| [jr   j_39FC]
-
-*=============================================================================
-* c_svc_test_sound_sel()
-*  Description:
-*   sound check
-* IN:
-*  ...
-* OUT:
-*  ...
-*-----------------------------------------------------------------------------
-c_svc_test_sound_sel:
-	movem.w	d1/d2,-(sp)                    	| [push bc]
-	jra	j_39FC                             	| [jr   j_39FC]
-
-l_39F5:
-	move.b	b_svc_test_snd_slctn,d0         	| [ld   a,(b_svc_test_snd_slctn)] stick was pushed right...
-	addq.b	#1,d0                           	| [inc a] ... go to next higher sound selection.
-	move.b	d0,b_svc_test_snd_slctn         	| [ld   (b_svc_test_snd_slctn),a] (save update sound selection)
-
-j_39FC:
-	move.b	b_svc_test_snd_slctn,d0         	| [ld   a,(b_svc_test_snd_slctn)] ... and get sound selection (in case jp'd here from decrement case).
-	cmp.b	#0x12,d0                         	| [cp   #0x12] if incremented sound selection != $17...
-	jcs	l_3A04                             	| [jr   c,#l_3A04] ... then ...
-	clr.b	d0                               	| [xor  a] else let sound selection equal 0...
-l_3A04:
-	move.b	d0,b_svc_test_snd_slctn         	| [ld   (b_svc_test_snd_slctn),a]
-
-	move.l	a0,-(sp)                        	| [push hl]
-	clr.b	d2                               	| [ld   c,#0] character "0"
-	cmp.b	#0x0A,d0                         	| [cp   #0x0A]
-	jcs	l_3A11                             	| [jr   c,#l_3A11]
-	addq.b	#1,d2                           	| [inc  c] when is that jr taken?
-	sub.b	#0x0A,d0                         	| [sub  #0x0A]
-l_3A11:
-	lea	0x8000+0x0220+0x0E,a0      	| [ld   hl,#0x8000 + 0x0220 + 0x0E] dest address of "0"
-	move.b	d2,(a0)                         	| [ld   (hl),c] displayed "0" of "SOUND 00"
-	move.b	#0x0E,d6                        	| [ld   l,#0x0E]
-	move.b	d0,(a0)                         	| [ld   (hl),a] displayed (2nd) "0" of "SOUND 00"
-	lea	str_3A47,a0                    	| [ld   hl,#str_3A47]
-	jbsr	c_text_out                        	| [call c_text_out] display "SOUND" of "SOUND 00"
-	move.l	(sp)+,a0                        	| [pop  hl]
-
-	movem.w	(sp)+,d1/d2                    	| [pop  bc]
-	rts                                    	| [ret] end 'call _39F2' (sound check)
-l_3A21:                                         | ... else (stick not left or right)
-	move.b	b_svc_test_snd_slctn,d0         	| [ld   a,(b_svc_test_snd_slctn)]
-	cmp.b	#0x12,d0                         	| [cp   #0x12]
-	jcs	l_3A29                             	| [jr   c,l_3A29]
-	clr.b	d0                               	| [xor  a] (selection is never >$11 so the jr is always taken)
-l_3A29:
-	move.b	d0,b_svc_test_snd_slctn         	| [ld   (b_svc_test_snd_slctn),a]
-	exg	a1,a0                              	| [ex   de,hl]
-	jbsr	c_svc_clr_snd_regs                	| [call c_svc_clr_snd_regs]
-	lea	d_3A4F,a0                      	| [ld   hl,#d_3A4F] d_3A4F[ test_snd_slctn ]
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
-	move.b	(a0),d6                         	| [ld   l,(hl)]
-	lea	b_9A00,a0                      	| [ld   h,#>b_9A00] sound_fx_status[ d_3A4F[ test_snd_slctn ] ] = 1
-	and.w	#0xFF,d6
-	add.w	d6,a0
-	move.b	#1,(a0)                         	| [ld   (hl),#1]
-	exg	a1,a0                              	| [ex   de,hl]
-
-	movem.w	(sp)+,d1/d2                    	| [pop  bc]
-	rts                                    	| [ret]
 
 *=============================================================================
 * c_svc_clr_snd_regs()
@@ -10358,7 +10288,7 @@ c_sctrl_sprite_ram_clr:
 	clr.b	d0                               	| [xor  a]
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 * memset($9b00, 0, $80)
-	lea	ds_sprite_ctrl,a0              	| [ld   hl,#ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   hl,#ds_sprite_ctrl_9B00]
 	move.b	#0x80,d1                        	| [ld   b,#0x80]
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 * memset($8800, $80, $80)
@@ -11078,7 +11008,7 @@ b_9AC0:
 
 
 * sprite control buffer and SFRs
-ds_sprite_ctrl:
+ds_sprite_ctrl_9B00:
 
 mrw_sprite_ctrl:
      ds.b     0x40       | sprite control l (buffer)
@@ -11624,9 +11554,9 @@ l_0220:
 	jne	l_0220                             	| [djnz l_0220]
 
 *  if ( !RackAdvance ) return (active low)
-	move.b	_sfr_dsw6,d0                    	| [ld   a,(_sfr_dsw6)] DSWA rack advance operation
-	btst.b	#1,d0                           	| [bit  1,a]
-	beq.b	0f                               	| [...]
+*	move.b	_sfr_dsw6,d0                    	| [ld   a,(_sfr_dsw6)] DSWA rack advance operation
+*	btst.b	#1,d0                           	| [bit  1,a]
+*	beq.b	0f                               	| [...]
 	rts                                    	| [ret  nz] _plyr_startup [...]
 0:
 *  else handle rack advance operation
@@ -11676,36 +11606,36 @@ jp_Task_man:
 
 * determine star_ctrl param bits based on some modulus of frame timer?
 * $A000-$A005 starfield scroll speed (only bit 0 is significant)
-	move.b	_sfr_dsw5,d0                    	| [ld   a,(_sfr_dsw5)] DSWA: freeze video
-	move.b	d0,d3                           	| [ld   d,a]
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
-	and.b	#0x1C,d0                         	| [and  #0x1C] 0000XXX0
-	move.b	d0,d2                           	| [ld   c,a]
-	ror.b	#1,d0                            	| [rrca] 00000XXX
-	eor.b	d2,d0                            	| [xor  c] A ^ C
-	and.b	#0x18,d0                         	| [and  #0x18] 000XX000
-	move.b	d0,d2                           	| [ld   c,a]
-
-*  if ( ! freezed_dsw set )
-	move.b	ds_99B9_star_ctrl+0x05,d0       	| [ld   a,(ds_99B9_star_ctrl + 0x05)]
-	btst.b	#1,d3                           	| [bit  1,d] freeze_ctrl_dsw
-	jne	l_0259                             	| [jr   nz,l_0259]
-*  else
-	move.b	#7,d0                           	| [ld   a,#7] 7==star_ctrl_bits=freezed
-
+*	move.b	_sfr_dsw5,d0                    	| [ld   a,(_sfr_dsw5)] DSWA: freeze video
+*	move.b	d0,d3                           	| [ld   d,a]
+*	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+*	and.b	#0x1C,d0                         	| [and  #0x1C] 0000XXX0
+*	move.b	d0,d2                           	| [ld   c,a]
+*	ror.b	#1,d0                            	| [rrca] 00000XXX
+*	eor.b	d2,d0                            	| [xor  c] A ^ C
+*	and.b	#0x18,d0                         	| [and  #0x18] 000XX000
+*	move.b	d0,d2                           	| [ld   c,a]
+*
+**  if ( ! freezed_dsw set )
+*	move.b	ds_99B9_star_ctrl+0x05,d0       	| [ld   a,(ds_99B9_star_ctrl + 0x05)]
+*	btst.b	#1,d3                           	| [bit  1,d] freeze_ctrl_dsw
+*	jne	l_0259                             	| [jr   nz,l_0259]
+**  else
+*	move.b	#7,d0                           	| [ld   a,#7] 7==star_ctrl_bits=freezed
+*
 l_0259:
 	and.b	#0x07,d0                         	| [and  #0x07]
 	or.b	d2,d0                             	| [or   c]
 
-	move.b	#5,d1                           	| [ld   b,#5]
-	lea	l_A000,a0                      	| [ld   hl,#0xA000] star_ctrl_port
-
-l_0261:
-	move.b	d0,(a0)+                         	| [ld   (hl),a] A==star_ctrl_bits
-	                           	| [inc  l]
-	ror.b	#1,d0                            	| [rrca] star_ctrl_bits >>= 1
-	subq.b	#1,d1                           	| [...]
-	jne	l_0261                             	| [djnz l_0261]
+*	move.b	#5,d1                           	| [ld   b,#5]
+*	lea	l_A000,a0                      	| [ld   hl,#0xA000] star_ctrl_port
+*
+*l_0261:
+*	move.b	d0,(a0)+                         	| [ld   (hl),a] A==star_ctrl_bits
+*	                           	| [inc  l]
+*	ror.b	#1,d0                            	| [rrca] star_ctrl_bits >>= 1
+*	subq.b	#1,d1                           	| [...]
+*	jne	l_0261                             	| [djnz l_0261]
 
 	*move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
 

@@ -69,8 +69,6 @@ ReadJoyPad.o: $(AMIGASRC)/ReadJoyPad.68k amiga/ReadJoyPad.i
 	$(ASM) -I$(AMIGASRC) $(AMIGASRC)/ReadJoyPad.68k -o ReadJoyPad.o
 graphics.o: $(AMIGASRC)/graphics.68k $(PROGNAME).inc
 	$(ASM) $(AMIGASRC)/graphics.68k -o graphics.o
-$(PROGNAME)_ram.o: $(PROGNAME)_ram.68k
-	$(ASM) $(PROGNAME)_ram.68k -o $(PROGNAME)_ram.o
 
 
 $(WHDLOADER) : $(SOURCE)
