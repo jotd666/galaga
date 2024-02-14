@@ -36,10 +36,12 @@
 	.global	db_flv_02ba
 	.global	db_flv_0333
 	.global	db_flv_025d
+	.global	db_flv_cboss
 	
 	.global db_04EA
 	.global db_0473
 	.global db_04AB
+	.global db_0454
 
 *.org 0x0000
 
@@ -280,7 +282,7 @@ p_flv_036c:
 	.word p_flv_037c-p_flv_base
 	.byte 0xf6,0xab
 	.byte 0x12,0x01,0x28,0x12,0x0a,0x18,0xfd
-	.word p_flv_0352-p_flv_base-p_flv_base
+	.word p_flv_0352-p_flv_base
 p_flv_037c:
 	.byte 0xf6,0xb0
 	.byte 0x23,0x08,0x1e,0x23,0x00,0x19,0x23,0xf8,0x16,0x23,0x00,0x02,0xfc
@@ -425,10 +427,10 @@ p_flv_0502:
 *-----------------------------------------------------------------------------
 jp_0513_rst38:
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,_sfr_6821                    	| [ld   (_sfr_6821),a] 0 ...CPU-sub1 IRQ acknowledge/enable
-	move.b	_sfr_dsw5,d0                    	| [ld   a,(_sfr_dsw5)] DSWA: freeze video
-	and.b	#0x02,d0                         	| [and  #0x02] freeze_ctrl_dsw (6j)
-	jeq	l_0575                             	| [jp   z,l_0575] if paused, goto 0575 // done
+	jbsr	osd_interrupt_control                    	| [ld   (_sfr_6821),a] 0 ...CPU-sub1 IRQ acknowledge/enable
+	*move.b	_sfr_dsw5,d0                    	| [ld   a,(_sfr_dsw5)] DSWA: freeze video
+	*and.b	#0x02,d0                         	| [and  #0x02] freeze_ctrl_dsw (6j)
+	*jeq	l_0575                             	| [jp   z,l_0575] if paused, goto 0575 // done
 
 * frame_cntr++
 	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
@@ -516,7 +518,7 @@ l_055C:
 l_0575:
 	move.b	#1,d0                           	| [ld   a,#1]
 	*move.b	d0,_sfr_6821                    	| [ld   (_sfr_6821),a] 1 ...CPU-sub1 IRQ acknowledge/enable
-	jbsr	osd_enable_interrupts
+	jbsr	osd_interrupt_control
 	rts                                    	| [ret]
 
 *=============================================================================
@@ -575,8 +577,8 @@ l_057F:
 	jbsr	ldir                              	| [ldir]
 
 	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,_sfr_6821                    	| [ld   (_sfr_6821),a] 1 ... IRQ acknowledge/enable
-	jbsr	osd_enable_interrupts               | [ei]
+	*move.b	d0,_sfr_6821                    	| [ld   (_sfr_6821),a] 1 ... IRQ acknowledge/enable
+	jbsr	osd_interrupt_control               | [ei]
 
 l_05B1:
 	lea		ds_stk_cpu1_init,a7    | ld   sp,#ds_stk_cpu1_init
@@ -763,7 +765,7 @@ l_064F:
 	move.b	#0x0F,(a0)                      	| [ld   (hl),#0x0F] mctrl_q index used for explosion counter
 	subq.w	#1,a0                           	| [dec  l]
 	COMPUTE_LSB_A0_D6	b_8800
-	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#0x08+0x04,(a0)                            	|0x04,(a0)| [ld   (hl),#0x08| 0x04] dblh, dblw
@@ -816,7 +818,7 @@ hitd_fghtr_notif:
 	                           	| [inc  l]
 	move.b	(a0),d1                         	| [ld   b,(hl)] get row bits 0:7
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl] get row bit-8
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl] get row bit-8
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -1020,7 +1022,7 @@ l_0729:
 	roxr.b	#1,d0                           	| [rra] Cy from the addition rotated into b7
 	eor.b	d2,d0                            	| [xor  c] sign bit of addend/subtrahend
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl] sy.bit-8 (SPR[n].CTRL.b1:0)
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl] sy.bit-8 (SPR[n].CTRL.b1:0)
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	rol.b	#1,d0                            	| [rlca]
@@ -1043,7 +1045,7 @@ l_0738:
 	CLEAR_XC_FLAGS
 	roxr.b	#1,d2                            	| [rrc  c] rotate bit-8 into Cy
 	roxr.b	#1,d0                           	| [rra] rotate bit-8 from Cy into A
-	move.b	#ixh,a		| ld   ixh,a                                 ; stash sy<8:1> for hit-detection parameter
+	jbsr	read_ixh_into_d0		| ld   ixh,a                                 ; stash sy<8:1> for hit-detection parameter
 
 * if ( rocket.sY < 40                   	|| rocket.sY >= 312 ) then _disable_rocket
 	cmp.b	#20,d0                           	| [cp   #20] 0x14  0x28 >> 1
@@ -1091,7 +1093,7 @@ l_0760_disable_rocket_wposn:
 l_0763_disable_rocket:
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
 	clr.b	(a0)                             	| [ld   (hl),#0] x
-	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [ld   (hl),#0] attribute bits
@@ -1146,7 +1148,7 @@ l_076A_while_object:
 * check Y coordinate ... sY<8:1> in A
 	addq.w	#1,a0                           	| [inc  l]
 	addq.b	#1,d6                           	| [inc  l] follow index
-	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl] sprite.sy<8>
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl] sprite.sy<8>
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d3                         	| [ld   d,(hl)]
@@ -1246,7 +1248,7 @@ hitd_dspchr:
 	add.w	d4,a1
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,(a1)                         	| [ld   (de),a]
-	lea	ds_sprite_ctrl(pc),a1              	| [ld   d,#>ds_sprite_ctrl] _sprite_ctrl[E].b0 = 0 ... attributes
+	lea	ds_sprite_ctrl_9B00,a1              	| [ld   d,#>ds_sprite_ctrl] _sprite_ctrl[E].b0 = 0 ... attributes
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	move.b	d0,(a1)                         	| [ld   (de),a]
@@ -2302,7 +2304,7 @@ l_0C81:
 * determine_sprite_ctrl( C )
 * 0: flipx - flip about the X axis, i.e. "up/down"
 * 1: flipy - flip about the Y axis, i.e. "left/right"
-	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	d2,d0                           	| [ld   a,c] d saved from (ix)0x05 above
@@ -2516,7 +2518,7 @@ l_0D50:
 	move.b	d3,d0                           	| [ld   a,d]
 	move.b	d0,(a0)                         	| [ld   (hl),a] sprite[n].posn.sy<7:0>
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl] sprite[n].posn.sy<8>
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl] sprite[n].posn.sy<8>
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d7
@@ -2590,7 +2592,7 @@ l_0D8D_got_a_bullet:
 	move.b	d0,(a0)                         	| [ld   (hl),a] bomb.y<7:0>
 * sprite.ctrl[BOMB0 + n].b1 = sprite.ctrl[e].b1
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_ctrl(pc),a0              	| [ld   h,#>ds_sprite_ctrl]
+	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	d5,d3                           	| [ld   d,h]
@@ -2956,164 +2958,6 @@ db_flv_0ff0:
 	.align	2
 	
 * end of ROM
-
-* input file gg1-7.s
-*
-* gg1-7.s
-*  gg1-7.2c, CPU 'sub2' (Z80)
-*
-*.module cpu_sub2
-
-
-
-*.org 0x0000
-
-*=============================================================================
-* RST_00()
-*  Description:
-* IN:
-*  ...
-* OUT:
-*  ...
-*-----------------------------------------------------------------------------
-	lea		_stack_cpu_sub2+0x20,a7   | ld   sp,#_stack_cpu_sub2+0x20
-	jra	RESET                              	| [jp   RESET]
-
-*.org 0x0008
-
-*=============================================================================
-* RST_08()
-*  Description:
-*
-* IN:
-*  ...
-* OUT:
-*  ...
-*-----------------------------------------------------------------------------
-	add.b	d0,d0                            	| [add  a,a]
-	jcc	_RST_10                            	| [jr   nc,_RST_10]
-	addq.b	#1,d5                           	| [inc  h]
-	jra	_RST_10                            	| [jr   _RST_10]
-
-*.org 0x0010
-
-*=============================================================================
-* RST_10()
-*  Description:
-*   HL = HL + A
-* IN:
-*
-* OUT:
-*  ...
-*-----------------------------------------------------------------------------
-_RST_10:
-	add.b	d6,d0                            	| [add  a,l]
-	move.b	d0,d6                           	| [ld   l,a]
-	bcs.b	0f                               	| [...]
-	rts                                    	| [ret  nc] [...]
-0:
-	addq.b	#1,d5                           	| [inc  h]
-	rts                                    	| [ret]
-
-*.org 0x0018
-
-*=============================================================================
-* RST_18()
-*  Description:
-*   memset((HL), A, B)
-* IN:
-*   HL: pointer
-*   A: fill character
-*   B: count
-* OUT:
-*  ...
-*-----------------------------------------------------------------------------
-_RST_18:
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	addq.w	#1,a0                           	| [inc  hl]
-	subq.b	#1,d1                           	| [...]
-	jne	_RST_18                            	| [djnz _RST_18]
-	rts                                    	| [ret]
-
-*.org  0x0066
-
-*=============================================================================
-* RST_66()
-*  Description:
-*   NMI
-* IN:
-*  ...
-* OUT:
-*  ...
-*-----------------------------------------------------------------------------
-	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,_sfr_6822                    	| [ld   (_sfr_6822),a] 1 ...cpu #2 nmi acknowledge/enable
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,_sfr_6822                    	| [ld   (_sfr_6822),a] 0 ...cpu #2 nmi acknowledge/enable
-	jbsr	c_nmi_proc                        	| [call c_nmi_proc]
-	rts                                    	| [ret]
-
-*=============================================================================
-* RESET
-*  Description:
-*   entry point from RST 00
-*   Tests the ROM space (length $1000)
-* IN:
-*  ...
-* OUT:
-*  ...
-*-----------------------------------------------------------------------------
-RESET:
-	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,_sfr_6822                    	| [ld   (_sfr_6822),a] 1 ...cpu #2 nmi acknowledge/enable
-
-	lea	ds_rom_test_status+0x01(pc),a1     	| [ld   de,#ds_rom_test_status + 0x01] pause/resume flag
-
-* wait for master CPU to acknowledge/resume (0)
-l_007B:
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	                               	| [and  a]
-	jne	l_007B                             	| [jr   nz,l_007B]
-
-* compute ROM checksum
-	move.b	d0,d5                           	| [ld   h,a]
-	move.b	d0,d6                           	| [ld   l,a]
-	move.b	#0x00,d1                        	| [ld   bc,#0x0010] Sets B as inner loop count ($100) and C as outer ($10) 16
-	move.b	#0x10,d2                        	| [ld   bc,#0x0010] Sets B as inner loop count ($100) and C as outer ($10) 16
-l_0084:
-	add.b	(a0),d0                          	| [add  a,(hl)]
-	addq.w	#1,a0                           	| [inc  hl]
-	subq.b	#1,d1                           	| [...]
-	jne	l_0084                             	| [djnz l_0084]
-
-	subq.b	#1,d2                           	| [dec  c]
-	jne	l_0084                             	| [jr   nz,l_0084]
-
-	cmp.b	#0xFF,d0                         	| [cp   #0xFF]
-	jeq	l_0091                             	| [jr   z,l_0091]
-	move.b	#0x11,d0                        	| [ld   a,#0x11] set error code
-
-l_0091:
-	move.b	d0,(a1)                         	| [ld   (de),a] copy checksum result to the global variable
-
-* wait for master to acknowledge/resume (0)
-l_0092:
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	                               	| [and  a]
-	jne	l_0092                             	| [jr   nz,l_0092]
-
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,_sfr_6822                    	| [ld   (_sfr_6822),a] 0 ...cpu #2 nmi acknowledge/enable (Z80_NMI_INT)
-
-* clear all registers
-	lea	b_9A00(pc),a0                      	| [ld   hl,#b_9A00] memset(b_9A00, 0, $0100)
-	clr.b	(a0)                             	| [ld   (hl),#0]
-	lea	b_9A00+0x01(pc),a1                 	| [ld   de,#b_9A00 + 0x01] memset(b_9A00, 0, $0100)
-	move.w	#0xff,d1                        	| [ld   bc,#0x00FF] 255
-	jbsr	ldir                              	| [ldir]
-
-l_00A7:
-	jra	l_00A7                             	| [jr   l_00A7] loop forever
 
 * < all registers d1-d4/a0/a1/a4
 * > all registers swapped

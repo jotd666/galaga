@@ -1,4 +1,5 @@
 	.global		read_ixl_into_d0
+	.global		read_ixh_into_d0
 	.global		write_videoram_to_a1
 	.global		read_videoram_from_a1
 	.global		write_videoram_to_a0
@@ -7,6 +8,7 @@
 	.global		rst_18
 	.global		rst_18_color
 	.global		rst_18_video
+	.global		add_d0_to_a0_0010
 	.global		add_2_times_d0_to_a0_0008
 	.global		add_4_times_d0_to_a0_0008
 	.global		rst_20
@@ -124,6 +126,10 @@ read_ixl_into_d0:
 	moveq	#0,d0
 	move.b	ixl,d0
 	rts
+read_ixh_into_d0:
+	moveq	#0,d0
+	move.b	ixh,d0
+	rts
 
 write_videoram_to_a1:
 	exg	d7,a1
@@ -201,6 +207,11 @@ rst_08:
 
 *.org 0x0010
 
+add_d0_to_a0_0010:
+	and.w	#0xFF,d0
+	add.w	d0,a0
+	rts
+	
 *=============================================================================
 * RST_10()
 *  Description:

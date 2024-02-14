@@ -7,6 +7,8 @@
 	.global break_at_startup_flag
 	.global	ixh
 	.global	ixl
+	.global	regscopy_cpu0
+	.global	regscopy_cpu1
 	
 	.ifdef   __amiga__
 	.ascii	"RAM_STRT"
@@ -43,7 +45,10 @@ ATTRIBUTE_RAM:						| $8400
 *VARIABLES_END:
 
 	.align	2
-	
+regscopy_cpu0:	
+	ds.b	64
+regscopy_cpu1:	
+	ds.b	64
 	
 
 	ds.b	2

@@ -166,6 +166,7 @@ start:
 		.global osd_blitz		| for debug
 		.global osd_w_videoram_no_update
 		.global osd_w_videoram
+		.global osd_w_colorram
 		.global osd_r_videoram
 		.global osd_update_sprites
 		.global osd_read_dsw_1
@@ -2066,6 +2067,46 @@ osd_w_videoram:
 	
 1:
 	lea		bg_videoram,a1
+	add.w	d7,a1
+	
+	cmp.b	(a1),d0
+	beq.b	0f		| already the proper value
+3:
+
+	move.b	d0,(a1)	| update logical grid
+
+
+	jbsr		update_bg_tile
+0:
+	movem.l	(a7)+,d0-d7/a0-a3
+    .endif | OPT_DISABLE_BG_LAYER
+	rts
+
+* d7=screen address (preserved), d0=tile (preserved)
+* should preserve all registers
+
+osd_w_colorram:
+    .ifeq OPT_DISABLE_BG_LAYER
+	movem.l	d0-d7/a0-a3,-(a7)
+	
+
+	
+	sub.w	#SCREEN_ADDRESS+0x400,d7
+	bcs.b	0f
+	cmp.w	#0x400,d7
+	bcs.b	1f
+0:
+	.ifndef		RELEASE
+
+	* should not happen
+	lea		write_colorram_out_of_range_error(pc),a0
+	jbsr	osd_break
+	nop	
+	.endif
+	bra.b	0f
+	
+1:
+	lea		bg_colorram,a1
 	add.w	d7,a1
 	
 	cmp.b	(a1),d0

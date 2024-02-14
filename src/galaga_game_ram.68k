@@ -208,7 +208,7 @@
 	.global		ds_sprite_ctrl_9B00
 	.global		mrw_sprite_ctrl
 	.global		sfr_sprite_ctrl
-
+	.global		ds2_stg_chllg_rnd_attrib
 
 *=============================================================================
 * RAM0

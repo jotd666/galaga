@@ -1037,8 +1037,8 @@ g_halt:
 * game recycles (Player1 text shown anyway)
 	clr.b	d0                               	| [xor  a]
 	jbsr	c_093C                            	| [call c_093C] A == 0 ... blinking off
-
-	jbsr	osd_enable_interrupts
+	moveq	#1,d0
+	jbsr	osd_interrupt_control
 
 *  memset($9AA0,0,$20)
 	clr.b	d0                               	| [xor  a]
@@ -1102,7 +1102,7 @@ l_0739_while_B:
 	exg	a1,a0                              	| [ex   de,hl] DE := &bug_collsn[hl]
 	lea	d_scoreman_inc_lut-1,a0        	| [ld   hl,#d_scoreman_inc_lut - 1] effective start index is $10 - 1
 	move.b	d1,d0                           	| [ld   a,b]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	move.b	(a0),d2                         	| [ld   c,(hl)] scoreman_inc_lut[B-1]
 * bug_collsn[hl] * scoreman_inc_lut[B-1]
 l_0740:
@@ -1478,7 +1478,7 @@ c_08AD:
 	move.b	d0,d4                           	| [ld   e,a]
 	asl.b	#1,d0                            	| [sla  a]
 	add.b	d4,d0                            	| [add  a,e]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 
 	move.b	d1,d0                           	| [ld   a,b] ds4_game_tmrs[2] from f_0857
 	cmp.b	#0x28,d0                         	| [cp   #0x28]
@@ -1520,7 +1520,7 @@ c_08BE:
 	move.b	d5,d3
 	movem.w	(a7)+,d5/d6                              	| [ex   de,hl] 8-bit quotient into d ...
 	move.b	d3,d0                           	| [ld   a,d] ... quotient into a
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	* read ROM at d5
 	LOAD_D5_16_FROM_D5D6
 	illegal
@@ -2072,7 +2072,7 @@ l_0AAD:
 	bsr		exg_sp_d5d6                            	| [ex   (sp),hl] 2nd product to HL, 1st product to (SP)
 	jbsr	c_0B06                            	| [call c_0B06] HL *= 10 ... MSB->A
 	bsr		exg_sp_d5d6                            	| [ex   (sp),hl] 1st product to HL, 2nd product to (SP)
-	jbsr	rst_10                            	| [rst  0x10] HL += A ... 1st product + 2nd product (msb)
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A ... 1st product + 2nd product (msb)
 	exg		d0,d7                              	| [ex   af,af'] 1st product msb -> A, stash sum lsb
 	add.b	d5,d0                            	| [add  a,h] 1st product msb + sum msb
 	clr.b	d5                               	| [ld   h,#0] done with this byte
@@ -2712,7 +2712,7 @@ l_11B1_add_total:
 	move.b	#2,d0                           	| [ld   a,#2]
 l_11B9:
 	add.b	d2,d0                            	| [add  a,c] nbr of additional tile columns
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 
 * B == count of 50's markers, if any
 	addq.b	#1,d1                           	| [inc  b] pre-increment for djnz ... B is at least 1
@@ -4877,7 +4877,7 @@ l_1C44:
 
 	move.b	#0,ixl                               | flag for 1st and 2nd loop?
 	move.b	#4,d1                           	| [ld   b,#4]
-	move.b	d2,ihx					| [ld   ixh,c] stash C ... bits set for each boss available in standby state
+	move.b	d2,ixh					| [ld   ixh,c] stash C ... bits set for each boss available in standby state
 
 * first pass: look for 2 adjoining escorts available occuring in 3 adjacent spaces
 l_1C4F_while:
@@ -5016,7 +5016,7 @@ j_1CAE:
 	move.b	d4,d0                           	| [ld   a,e] object/index of bomber
 	and.b	#0x07,d0                         	| [and  #0x07]
 	lea	ds_plyr_actv+_ds_bmbr_boss_scode,a0	| [ld   hl,#ds_plyr_actv +_ds_bmbr_boss_scode]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 * d_1CFD[ixl]
 	jbsr	read_ixl_into_d0                         	| [ld   a,ixl]
 	exg	a1,a0                              	| [ex   de,hl] stash hl (&plyr_actv.code)
@@ -5116,7 +5116,7 @@ l_1D0D:
 	move.b	d1,d0                           	| [ld   a,b]
 	subq.b	#1,d1                           	| [dec  b]
 	lea	d_1D2C_wingmen,a0              	| [ld   hl,#d_1D2C_wingmen]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 
 * setup parameters (IY, pointer to flight vector data, already loaded)
 	                              	| [ex   af,af'] unstash rotation flag
@@ -7457,7 +7457,7 @@ l_25B4:
 	jbsr	c_104E_mul_16_8                   	| [call c_104E_mul_16_8] L = rank * 17
 	move.b	d6,d0                           	| [ld   a,l]
 	lea	d_combat_stg_dat_idx,a0        	| [ld   hl,#d_combat_stg_dat_idx]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 
 	lea	d_combat_stg_dat,a1            	| [ld   de,#d_combat_stg_dat] base data ptr
 
@@ -7485,10 +7485,10 @@ l_25E0_set_data_ptr:
 * DE == &_stg_dat[0]
 
 * p_data_tabl_row = &data_tbl[ data_row_offset ]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	move.b	(a0),d0                         	| [ld   a,(hl)] A = data_row_offset = idx_tbl[ A ]
 	exg	a1,a0                              	| [ex   de,hl] HL = _stg_dat[0]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 
 * First, load bomb-control params from the 2 byte header (once per stage).
 
@@ -7845,7 +7845,7 @@ l_28D0:
 	move.b	#1,ixl							| [ld  ixl,#1]                                 | start count for bit shifting
 
 	move.b	#20,d1                          	| [ld   b,#20] 20 bees ... $08-$2E
-	move.b	d3,ihx					| [ld   ixh,d]                                 | D == moth == $18	| $03
+	move.b	d3,ixh					| [ld   ixh,d]                                 | D == moth == $18	| $03
 	jbsr	c_28E9                            	| [call c_28E9]
 
 	move.b	#8,d1                           	| [ld   b,#8] 8 bosses and bonus-bees ... $30-$3E
@@ -8153,7 +8153,7 @@ l_29DC:
 	rol.b	#1,d0                            	| [rlca]
 	add.b	d1,d0                            	| [add  a,b]
 	lea	db_2A6C,a0                     	| [ld   hl,#db_2A6C]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 
 * D is b0 of byte-pair (left shifted 1, so in _stg_dat it is 0x40)
 * if ( D & 0x80 )
@@ -8444,7 +8444,7 @@ l_304A:
 	move.b	b_8A00+0x11,d0                  	| [ld   a,(b_8A00 + 0x11)] 1==1ST place etc. ... d_31A1 [ A - 1 ]
 	lea	d_31A1,a0                      	| [ld   hl,#d_31A1] ld the table address
 	subq.b	#1,d0                           	| [dec  a]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	lea	b_best5_name4+0x02,a0          	| [ld   hl,#b_best5_name4 + 0x02] 3rd letter of 4th place name
 	lea	b_best5_name5+0x02,a1          	| [ld   de,#b_best5_name5 + 0x02] 3rd letter of 5th place name
@@ -9304,7 +9304,8 @@ jp_RAM_test:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-	jbsr	osd_enable_interrupts
+	moveq	#1,d0
+	jbsr	osd_interrupt_control
 	jra	j_Game_init_02d3                        	| [jp   j_Game_init_02d3]
 
 
@@ -9472,7 +9473,7 @@ l_380F:
 	move.b	d0,b_mchn_cfg_rank              	| [ld   (b_mchn_cfg_rank),a]
 
 	lea	str_3A68,a0                    	| [ld   hl,#str_3A68] base_address of rank-characters (B/C/D/A)
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	lea	0x8000+0x0220+0x0C,a1      	| [ld   de,#0x8000 + 0x0220 + 0x0C] rank-character ("B", "C", "D", or "A")
 	move.b	(a0),d0                               	| [ldi] (DE)<-(HL) ..."X" of "RANK X" displayed
 	jbsr	write_videoram_to_a1
@@ -9548,7 +9549,7 @@ l_385C:
 
 * Update 4 arguments to "set coinage" command from the table.
 	lea	str_3A6C,a0                    	| [ld   hl,#str_3A6C]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	lea	ds8_9280_tmp_IO_parms+1,a1     	| [ld   de,#ds8_9280_tmp_IO_parms + 1]
 	move.w	#0x04,d1                        	| [ld   bc,#0x0004] 4
 	jbsr	ldir                              	| [ldir]
@@ -9626,7 +9627,7 @@ l_38B1:
 	add.b	d2,d0                            	| [add  a,c] add dsw value
 	add.b	d0,d0                            	| [add  a,a] a:=a*2 ... use as offset into table
 	lea	str_3AA4,a0                    	| [ld   hl,#str_3AA4] bonus config data
-	jbsr	rst_10                            	| [rst  0x10] HL += A...A==2,C,4,6,E,8,A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A...A==2,C,4,6,E,8,A
 	lea	w_mchn_cfg_bonus,a1            	| [ld   de,#w_mchn_cfg_bonus] ld two-bytes (str_3AA4)
 	jbsr	ldi                               	| [ldi]
 	jbsr	ldi                               	| [ldi]
@@ -9653,7 +9654,7 @@ c_38DA:
 
 	move.l	a0,-(sp)                        	| [push hl] save address of table-entry
 	lea	str_3B1A,a0                    	| [ld   hl,#str_3B1A] i.e., 1E 3B "1ST BONUS ", 36 3B "2ND BONUS"
-	jbsr	rst_10                            	| [rst  0x10] HL += A                                  | HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A                                  | HL += A
 	move.b	(a0),d0                         	| [ld   a,(hl)] get LSB of src address
 	addq.w	#1,a0                           	| [inc  hl]
 	move.b	(a0),d5                         	| [ld   h,(hl)] get MSB of src address
@@ -9740,7 +9741,7 @@ l_3941:
 	jbsr	osd_w_videoram
 	move.b	#0xE0,d0                        	| [ld   a,#0xE0]
 	sub.w	#0x100,d7                           	| [dec  h] effectively, HL:-=$100
-	jbsr	rst_10                            	| [rst  0x10] HL += A, which adds back $E0, effectively we've done HL:-=$20
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A, which adds back $E0, effectively we've done HL:-=$20
 	subq.b	#1,d1                           	| [...]
 	jne	l_3941                             	| [djnz l_3941]
 
@@ -9753,7 +9754,7 @@ l_394E:
 	jbsr	osd_w_videoram
 	move.b	#0xE0,d0                        	| [ld   a,#0xE0]
 	sub.w	#0x100,d7                           	| [dec  h]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	subq.b	#1,d1                           	| [...]
 	jne	l_394E                             	| [djnz l_394E]
 	exg	a1,a0                              	| [ex   de,hl] see 393b
@@ -10058,7 +10059,7 @@ l_3A29:
 	exg	a1,a0                              	| [ex   de,hl]
 	jbsr	c_svc_clr_snd_regs                	| [call c_svc_clr_snd_regs]
 	lea	d_3A4F,a0                      	| [ld   hl,#d_3A4F] d_3A4F[ test_snd_slctn ]
-	jbsr	rst_10                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	move.b	(a0),d6                         	| [ld   l,(hl)]
 	lea	b_9A00,a0                      	| [ld   h,#>b_9A00] sound_fx_status[ d_3A4F[ test_snd_slctn ] ] = 1
 	and.w	#0xFF,d6
@@ -11075,10 +11076,6 @@ b_9AC0:
      ds.b     0x20       | Active flags of each sound effect
 
 
-_stack_cpu_sub2:
-     ds.b     0x20       | 9AE0
-*_stack_cpu_sub2_init:
-
 
 * sprite control buffer and SFRs
 ds_sprite_ctrl:
@@ -11146,7 +11143,7 @@ l_2C0B:
 
 * pTbl[E]|
 	move.b	d4,d0                           	| [ld   a,e] adj_stg_cnt * 5
-	jbsr	rst_10                            	| [rst  0x10] HL += A ... offset into lut
+	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A ... offset into lut
 
 	lea	ds_new_stage_parms,a1          	| [ld   de,#ds_new_stage_parms]
 	move.b	#5,d1                           	| [ld   b,#5]
@@ -11791,7 +11788,6 @@ l_02A8_pop_regs_and_exit:
 	movem.w	(sp)+,d1/d2                    	| [pop  bc]
 	move.w	(sp)+,d0                        	| [pop  af]
 	move.w	(sp)+,d7                        	| [pop  af]
-	jbsr	osd_enable_interrupts
 	rts                                    	| [ret]
 * } end 'rst  $0038' handler
 
@@ -11828,8 +11824,6 @@ l_02CC:
 	jra	jp_RAM_test                        	| [jp   jp_RAM_test]
 
 
-_l_02D3:
-*           000002D3  j_Game_init_02d3                        game_ctrl
 
 
 
