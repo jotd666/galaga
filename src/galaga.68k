@@ -10311,6 +10311,10 @@ c_sctrl_sprite_ram_clr:
 * IN:
 * OUT:
 *  ...
+* without that routine (retn at start) game runs but inputs
+* (insert coin, joystick...) don't work. It also seems to handle
+* ship hit sound or whatnot...
+* I think we can live without that in the port...
 *-----------------------------------------------------------------------------
 *	jbsr	exx                               	| [exx] Load function params from aux regs
 *	jbsr	ldi                               	| [ldi] each nmi will move one byte, so BC--, DE++, HL++
@@ -10352,8 +10356,8 @@ c_sctrl_sprite_ram_clr:
 *
 * data for NMI sub
 *
-d_IO_ChipParms:
-	.byte 0x10,0x10,0x20,0x20
+*d_IO_ChipParms:
+*	.byte 0x10,0x10,0x20,0x20
 
 
 _l_0096:
