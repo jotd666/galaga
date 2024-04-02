@@ -22,11 +22,9 @@
 *
 *
 	.global		galaga_reset
-	.global		galaga_irq
-galaga_reset:
-
-galaga_irq:
-	rts
+	.global		galaga0_irq
+galaga0_reset:
+	bra		CPU0_RESET
 
 *=============================================================================
 * por_inits()
@@ -9290,6 +9288,17 @@ str_3345:
 *  ...
 *-----------------------------------------------------------------------------
 jp_RAM_test:
+	lea	str_3B7E(pc),a0                    	| [ld   hl,#str_3B7E] load start address of src string "RAM  OK"
+	jbsr	c_text_out                        	| [call c_text_out] display "RAM  OK"
+
+											| [ld   (_sfr_watchdog),a]
+											| [call c_svc_clr_snd_regs] $9AA0, $40 bytes
+
+* enable f_05BE in CPU-sub1 (empty task) ... disabled in game_ctrl start
+	move.b	#7,d0                           	| [ld   a,#7]
+	move.b	d0,ds_cpu1_task_actv+0x00       	| [ld   (ds_cpu1_task_actv + 0x00),a] 7 ... skips to f_05BE in CPU-sub task-table
+
+	jbsr	c_spriteposn_regs_init            	| [call c_spriteposn_regs_init]
 
 
 *=============================================================================
@@ -9310,8 +9319,75 @@ jp_RAM_test:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
+* drawing the cross hatch pattern - tile ram layout is pretty clumsy!
+	move.w	#0x8000,d7                  	| [ld   hl,#0x8000]
+
+	move.b	#0x10,d1                        	| [ld   b,#0x10]
+l_36D4:
+	move.b	#0x28,d0
+	jbsr	osd_w_videoram                      	| [ld   (hl),#0x28]
+	addq.w	#1,d7                           	| [inc  hl]
+	move.b	#0x27,d0
+	jbsr	osd_w_videoram                      	| [ld   (hl),#0x27]
+	addq.w	#1,d7                           	| [inc  hl]
+	subq.b	#1,d1                           	| [...]
+	jne	l_36D4                             	| [djnz l_36D4]
+
+	move.b	#0x10,d1                        	| [ld   b,#0x10]
+l_36DE:
+	move.b	#0x2D,d0
+	jbsr	osd_w_videoram                      	| [ld   (hl),#0x2D]
+	addq.w	#1,d7                           	| [inc  hl]
+	move.b	#0x2B,d0
+	jbsr	osd_w_videoram                      	| [ld   (hl),#0x2B]
+	addq.w	#1,d7                           	| [inc  hl]
+	subq.b	#1,d1                           	| [...]
+	jne	l_36DE                             	| [djnz l_36DE]
+
+	move.b	#0x10,d1                        	| [ld   b,#0x10]
+l_36E8:
+	move.b	#0x28,d0
+	jbsr	osd_w_videoram                      	| [ld   (hl),#0x28]
+	addq.w	#1,d7                           	| [inc  hl]
+	move.b	#0x2D,d0
+	jbsr	osd_w_videoram                      	| [ld   (hl),#0x2D]
+	addq.w	#1,d7                           	| [inc  hl]
+	subq.b	#1,d1                           	| [...]
+	jne	l_36E8                             	| [djnz l_36E8]
+
+	move.b	#0x10,d1                        	| [ld   b,#0x10]
+l_36F2:
+	move.b	#0x27,d0
+	jbsr	osd_w_videoram                      	| [ld   (hl),#0x27]
+	addq.w	#1,d7                           	| [inc  hl]
+	move.b	#0x2B,d0
+	jbsr	osd_w_videoram                      	| [ld   (hl),#0x2B]
+	addq.w	#1,d7                           	| [inc  hl]
+	subq.b	#1,d1                           	| [...]
+	jne	l_36F2                             	| [djnz l_36F2]
+
+* remainder of cross hatch pattern is copied, i.e.  *(0x8000 + DE) = *(0x8000 + HL)
+*	exg	a1,a0                              	| [ex   de,hl]
+*
+*	move.w	0x8000+0x0040,d7           	| [ld   hl,#0x8000 + 0x0040] DE==$8080
+*	move.b	#0x03,d1                        	| [ld   bc,#0x0340] 832
+*	move.b	#0x40,d2                        	| [ld   bc,#0x0340] 832
+*	jbsr	ldir                              	| [ldir]
+*
+*	lea	0x8000(pc),a0                  	| [ld   hl,#0x8000] DE==$83C0
+*	move.b	#0x00,d1                        	| [ld   bc,#0x0040] 64
+*	move.b	#0x40,d2                        	| [ld   bc,#0x0040] 64
+*	jbsr	ldir                              	| [ldir]
+
+
+
 	moveq	#1,d0
 	jbsr	osd_interrupt_control
+	
+	* JOTD: now init CPU1 from here
+	
+	jbsr	CPU1_RESET
+	
 	jra	j_Game_init_02d3                        	| [jp   j_Game_init_02d3]
 
 
@@ -10245,7 +10321,7 @@ rst_30:
 *
 
 *.org 0x0038
-
+galaga0_irq:
 *=============================================================================
 *  Description:
 *   RST $38 handler.

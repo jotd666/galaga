@@ -48,6 +48,8 @@
 	.global db_04AB
 	.global db_0454
 
+	.global	CPU1_RESET
+	
 *.org 0x0000
 
 *=============================================================================
@@ -58,9 +60,9 @@
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-rst_00_cpu1:
-	lea		ds_stk_cpu1_init,a7    | ld   sp,#ds_stk_cpu1_init
-	jra	CPU1_RESET                         	| [jp   CPU1_RESET]
+*rst_00_cpu1:
+*	lea		ds_stk_cpu1_init,a7    | ld   sp,#ds_stk_cpu1_init
+*	jra	CPU1_RESET                         	| [jp   CPU1_RESET]
 
 *.org 0x0008
 
@@ -581,6 +583,12 @@ l_057F:
 	move.w	#0x07,d1                        	| [ld   bc,#0x0007] 7
 	jbsr	ldir                              	| [ldir]
 
+	* JOTD: called from cpu0, just return
+	rts
+	
+	* code should loop forever, which means that cpu1 is actually just used
+	* to perform IRQs, so let's just chain both irqs from cpu0 and cpu1
+	* no need to parallelize anything (I hope so!)
 	move.b	#1,d0                           	| [ld   a,#1]
 	*move.b	d0,_sfr_6821                    	| [ld   (_sfr_6821),a] 1 ... IRQ acknowledge/enable
 	jbsr	osd_interrupt_control               | [ei]

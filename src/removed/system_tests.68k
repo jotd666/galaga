@@ -173,6 +173,7 @@ ld   sp,#ds_8800_RAM0 + 0x0300             ; tmp stack for function calls
 
 	jbsr	c_tileram_regs_clr                	| [call c_tileram_regs_clr]
 
+	* JFF: code should be in the cpu0 init, should not be skipped!!
 	lea	str_3B7E(pc),a0                    	| [ld   hl,#str_3B7E] load start address of src string "RAM  OK"
 	jbsr	c_text_out                        	| [call c_text_out] display "RAM  OK"
 
@@ -409,6 +410,7 @@ j_romtest_ng:
 	jbsr	rld                               	| [rld] rld  (hl)
      ^^^^ TODO: review special instruction inputs
 	move.b	d0,(a1)                         	| [ld   (de),a]
+	* JFF: stuck here if CPU1 disabled
 l_romtest_ng_4ever:
 	move.b	d0,_sfr_watchdog                	| [ld   (_sfr_watchdog),a]
 	jra	l_romtest_ng_4ever                 	| [jp   l_romtest_ng_4ever]
