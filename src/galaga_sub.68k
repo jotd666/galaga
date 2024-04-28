@@ -48,7 +48,8 @@
 	.global db_04AB
 	.global db_0454
 
-	.global	CPU1_RESET
+	.global galaga1_reset
+	.global galaga1_irq
 	
 *.org 0x0000
 
@@ -432,6 +433,7 @@ p_flv_0502:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
+galaga1_irq:
 jp_0513_rst38:
 	clr.b	d0                               	| [xor  a]
 	jbsr	osd_interrupt_control                    	| [ld   (_sfr_6821),a] 0 ...CPU-sub1 IRQ acknowledge/enable
@@ -538,7 +540,7 @@ l_0575:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-CPU1_RESET:
+galaga1_reset:
 	lea	ds_rom_test_status,a1     	| [ld   de,#ds_rom_test_status + 0x00] pause/resume flag
 
 * wait for master CPU to acknowledge/resume (0)
@@ -770,7 +772,7 @@ l_064F:
 	                           	| [dec  l]
 	move.b	#0x20,-(a0)                      	| [ld   (hl),#0x20] explosion tile
 	COMPUTE_LSB_A0_D6	ds_sprite_code
-	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#8,(a0)+                         	| [ld   (hl),#8] .state, disposition from $80 to "exploding"
@@ -814,7 +816,7 @@ hitd_fghtr_notif:
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,b8_ship_collsn_detectd_status	| [ld   (b8_ship_collsn_detectd_status),a] 0 ... fighter hit notif
 
-	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -1141,7 +1143,7 @@ l_076A_while_object:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	or.b	(a0),d0                           	| [or   (hl)]
@@ -1268,7 +1270,7 @@ hitd_dspchr:
 
 	addq.w	#1,a0                           	| [inc  l]
 	addq.b	#1,d6                           	| [inc  l]
-	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code] sprite.cclr.b1 ...
+	lea	ds_sprite_code,a0              	| [ld   h,#>ds_sprite_code] sprite.cclr.b1 ...
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -1352,7 +1354,7 @@ l_0815_bomb_hit:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [ld   (hl),#0]
-	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800] sprt_mctl_objs[L].state
+	lea	b_8800,a0                      	| [ld   h,#>b_8800] sprt_mctl_objs[L].state
 	add.w	d6,a0
 	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] disposition = INACTIVE
 
@@ -1438,7 +1440,7 @@ l_0852:
 	move.b	d6,d0                           	| [ld   a,l]
 	and.b	#0x07,d0                         	| [and  #0x07] mask off to reference the captured ship
 	move.b	d0,d4                           	| [ld   e,a]
-	lea	b_8800(pc),a1                      	| [ld   d,#>b_8800]
+	lea	b_8800,a1                      	| [ld   d,#>b_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	move.b	(a1),d0                         	| [ld   a,(de)]
@@ -1458,7 +1460,7 @@ l_0852:
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,(a1)                         	| [ld   (de),a]
 	COMPUTE_LSB_A0_D6	b_8800
-	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
+	lea	ds_sprite_code,a0              	| [ld   h,#>ds_sprite_code]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#9,(a0)                         	| [ld   (hl),#9] color map 9 for white ship
@@ -1466,7 +1468,7 @@ l_0852:
 	subq.b	#1,d6                           	| [dec  l] follow
 	move.b	d6,d0                           	| [ld   a,l]
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] updated object locator token of rescued ship   (token was 1)
-	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800] the captured ship object becomes inactive (0)
+	lea	b_8800,a0                      	| [ld   h,#>b_8800] the captured ship object becomes inactive (0)
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	d0                               	| [xor  a]
@@ -1564,7 +1566,7 @@ for__pool_idx:
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 
 	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] object identifier...8800[L]
-	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 
@@ -1644,7 +1646,7 @@ d_0920_jp_tbl:
 * when ... no idea
 case_0942:  | 0x0A
 	move.b	(0x10,a2),d4                    	| [ld   e,0x10(ix)] offset of object ...8800[E]
-	lea	b_8800(pc),a1                      	| [ld   d,#>b_8800]
+	lea	b_8800,a1                      	| [ld   d,#>b_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	move.b	#0x03,d0                        	| [ld   a,#0x03] set to state 3
@@ -1715,12 +1717,12 @@ l_0984:
 
 l_098F_do_split_off_bonus_bee:
 	COMPUTE_LSB_A0_D6	b_8800
-	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
+	lea	ds_sprite_code,a0              	| [ld   h,#>ds_sprite_code]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	* game transfers msb to a1
 
-	lea	ds_sprite_code(pc),a1              	| [ld   h,#>ds_sprite_code]
+	lea	ds_sprite_code,a1              	| [ld   h,#>ds_sprite_code]
 	and.w	#0xFF,d4
 	add.w	d4,a1                           	| [ld   d,h]
 	move.b	(a1)+,(a0)+                         	| [ld   a,(de)] _sprite_code[index attack leader]
@@ -1921,7 +1923,7 @@ case_0AA0:  | 0x04
 	move.l	a0,-(sp)                        	| [push hl] ptr to data table
 
 	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] update object disposition ... i.e. 8800[L]
-	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#9,(a0)                         	| [ld   (hl),#9] disposition = 9: diving/homing (currently 3)
@@ -2306,7 +2308,7 @@ l_0C75:
 	move.b	d0,d1                           	| [ld   b,a]
 
 l_0C81:
-	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
+	lea	ds_sprite_code,a0              	| [ld   h,#>ds_sprite_code]
 	moveq	#0,d6
 	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] mrw_sprite[L].cclr.b0
 	add.w	d6,a0
@@ -2707,12 +2709,12 @@ l_0E08_imhome:
 	bclr.b	#0,(0x13,a2)                    	| [res  0,0x13(ix)] mark the flying structure as inactive
 	move.b	d0,(0x00,a2)                    	| [ld   0x00(ix),a] 0
 	move.b	d0,(0x02,a2)                    	| [ld   0x02(ix),a] 0
-	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                      	| [ld   h,#>b_8800]
 	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] offset of object ...8800[L]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#2,(a0)                         	| [ld   (hl),#2] disposition = 02: rotating back into position in the collective
-	lea	ds_sprite_code(pc),a0              	| [ld   h,#>ds_sprite_code]
+	lea	ds_sprite_code,a0              	| [ld   h,#>ds_sprite_code]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	                           	| [inc  l]
@@ -2750,7 +2752,7 @@ l_0E3A:
 * a bonus bee (e.g. 883A) flying off screen. Sprite-Code 5B (scorpion), color 05, object status==9
 * also, if status==4 (capturing boss shot while in home-position, freeing a rogue ship)
 case_0E49_make_object_inactive: | 0x0
-	lea	b_8800(pc),a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                      	| [ld   h,#>b_8800]
 	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] object offset ...8800[L]
 	and.w	#0xFF,d6
 	add.w	d6,a0

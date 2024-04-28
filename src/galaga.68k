@@ -22,9 +22,8 @@
 *
 *
 	.global		galaga_reset
-	.global		galaga0_irq
-galaga0_reset:
-	bra		CPU0_RESET
+	.global		galaga_irq
+
 
 *=============================================================================
 * por_inits()
@@ -7889,7 +7888,7 @@ l_28E9:
 l_28F5:
 	CLEAR_XC_FLAGS
 	roxl.b	#1,d2                            	| [rlc  c]
-	move.b	#ixh,d0                         	| [ld   a,ixh] base sprite-code parameter
+	move.b	ixh,d0                         	| [ld   a,ixh] base sprite-code parameter
 	roxr.b	#1,d0                           	| [rra]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	addq.w	#2,a0                           	| [inc  l] * 2
@@ -8055,7 +8054,7 @@ l_2980:
 
 * store the slot index (offset) for this object
 	                           	| [inc  l]
-	move.b	#ixl,d4                         	| [ld   e,ixl]
+	move.b	ixl,d4                         	| [ld   e,ixl]
 	move.b	d4,(a0)                         	| [ld   (hl),e] 8800[L].h ... offset of slot (n*$14)
 
 	addq.w	#1,d6		| follow lsb offset
@@ -9386,7 +9385,7 @@ l_36F2:
 	
 	* JOTD: now init CPU1 from here
 	
-	jbsr	CPU1_RESET
+	jbsr	galaga1_reset
 	
 	jra	j_Game_init_02d3                        	| [jp   j_Game_init_02d3]
 
@@ -10321,7 +10320,7 @@ rst_30:
 *
 
 *.org 0x0038
-galaga0_irq:
+galaga_irq:
 *=============================================================================
 *  Description:
 *   RST $38 handler.
@@ -10331,6 +10330,7 @@ galaga0_irq:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
+	jbsr	galaga1_irq
 	jra	jp_Task_man                        	| [jp   jp_Task_man]
 
 
@@ -11816,6 +11816,7 @@ d_strScore:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
+galaga_reset:
 CPU0_RESET:
 * set interrupt mode
 	*im   1

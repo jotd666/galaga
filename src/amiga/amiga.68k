@@ -570,7 +570,7 @@ demo_game:
 		
 0:
 	* resets both CPUs
-		jmp			galaga_reset					| pass control to the galaga core
+	jbra		galaga_reset	| pass control to the galaga core
 		
 	
 * just in case some hardware calls nmi
@@ -652,12 +652,10 @@ _vblank:
 	* declare that we're in interrupt mode so osd_disable_interrupts/osd_enable_interrupts
 	* also set SR accordingly
 	st.b	interrupt_mode
-	jbsr		galaga0_irq
-	jbsr		galaga1_irq
+	jbsr		galaga_irq
 	cmp.b	#ONE_TICK*2,vb_ticks_count
 	bne.b	0f
-	jbsr		galaga0_irq	
-	jbsr		galaga1_irq	
+	jbsr		galaga_irq	
 0:
 	clr.b	interrupt_mode
 	
