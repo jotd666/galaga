@@ -35,10 +35,10 @@
 
 bg_videoram:
 CHARACTER_RAM:						| $8000
-	ds.b	0x800
+	ds.b	0x400
 bg_colorram:
 ATTRIBUTE_RAM:						| $8400
-	ds.b	0x800
+	ds.b	0x400
 	
 *VARIABLES_START:
 	.include	"galaga_game_ram.68k"

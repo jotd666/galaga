@@ -9319,6 +9319,7 @@ jp_RAM_test:
 *  ...
 *-----------------------------------------------------------------------------
 * drawing the cross hatch pattern - tile ram layout is pretty clumsy!
+
 	move.w	#0x8000,d7                  	| [ld   hl,#0x8000]
 
 	move.b	#0x10,d1                        	| [ld   b,#0x10]
@@ -9332,6 +9333,7 @@ l_36D4:
 	subq.b	#1,d1                           	| [...]
 	jne	l_36D4                             	| [djnz l_36D4]
 
+	
 	move.b	#0x10,d1                        	| [ld   b,#0x10]
 l_36DE:
 	move.b	#0x2D,d0
@@ -9384,6 +9386,8 @@ l_36F2:
 	jbsr	osd_interrupt_control
 	
 	* JOTD: now init CPU1 from here
+	
+	jbsr	osd_break
 	
 	jbsr	galaga1_reset
 	
@@ -9891,8 +9895,8 @@ c_spriteposn_regs_init:
 	lea	sfr_sprite_posn,a0             	| [ld   hl,##sfr_sprite_posn] $80 bytes
 	move.b	#0x80,d1                        	| [ld   b,#0x80] length of sprite position regs
 l_3977:
-	move.b	#0xF1,(a0)                      	| [ld   (hl),#0xF1]
-	addq.w	#1,a0                           	| [inc  hl]
+	move.b	#0xF1,(a0)+                      	| [ld   (hl),#0xF1]
+	                           	| [inc  hl]
 	subq.b	#1,d1                           	| [...]
 	jne	l_3977                             	| [djnz l_3977]
 	rts                                    	| [ret] extra garbage on screen gone with RAM OK showing
@@ -11816,6 +11820,28 @@ d_strScore:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
+	.include	"galaga_tiles.s"
+	
+galaga_mock:
+	* temp
+	lea		galaga_tiles,a0
+	move.w	#0x3FF,d1
+	move.w	#0x8000,d7
+0:
+	move.b	(a0)+,d0
+	jbsr	osd_w_videoram
+	addq.w	#1,d7
+	dbf		d1,0b
+	move.w	#0x3FF,d1
+	
+0:
+	move.b	(a0)+,d0
+	jbsr	osd_w_colorram
+	addq.w	#1,d7
+	dbf		d1,0b
+	
+	dc.w	0x60FE
+	
 galaga_reset:
 CPU0_RESET:
 * set interrupt mode

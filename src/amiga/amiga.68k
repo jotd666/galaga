@@ -21,7 +21,7 @@ SPRITE_Y_CORRECTION = 0
 SPRITE_X_CORRECTION = 1
 
 BASE_BPLCON2_VALUE = 0x0024
-SCREEN_ADDRESS = 0x7400
+SCREEN_ADDRESS = 0x8000
 
 
 BORDERBLANK = 0
@@ -569,6 +569,14 @@ demo_game:
 		bsr			platform_init					| amiga-specific init
 		
 0:
+	* init video ram with improbable crap so "0" is written properly
+	move.w	#0xFF,d1
+	move.l	#-1,d0
+	lea		bg_videoram,a0
+0:
+	move.l	d0,(a0)+
+	dbf		d1,0b
+
 	* resets both CPUs
 	jbra		galaga_reset	| pass control to the galaga core
 		
@@ -1002,7 +1010,7 @@ update_bobs:
 	
 	move.l		bob_previous_drawed_sprites(pc),a4
 	lea			sprite_buffer(pc),a3
-	lea		sprconf_codes,a3		| mockup!!
+	*lea		sprconf_codes,a3		| mockup!!
 	move.l	a3,a0
 	* clear previous positions
 	moveq	#NB_TARGET_SPRITES-1,d7
@@ -1023,7 +1031,7 @@ update_bobs:
 	move.b	(PREVIOUS_SPRITE_CODE,a4),d2
 	tst.b	(a2,d2.w)					| is this sprite a HW sprite?
 	bne.b	11f		| hardware sprite: no need to restore background either!
-	move.b	(TARGET_SPRITE_CODE,a0),d0
+	move.b	(TARGET_SPRITE_CODE,a3),d0
 	and.b	#0x7F,d0
 	cmp.b	d0,d2
 	beq.b	11f			| same X,Y and code: skip erase 
@@ -1051,7 +1059,7 @@ update_bobs:
 	* we gathered the tables so they can be accessed with only one address register
 	* each table is 128 bytes long (64*2)
 	
-	lea		sprconf_codes,a0		| mockup!!
+	*lea		sprconf_codes,a0		| mockup!!
 	
 	lea		bob_table,a4
 	move.l	bob_previous_drawed_sprites(pc),a6
@@ -2140,18 +2148,7 @@ update_bg_tile:
 	not.w	d7
 	add.w	#0x21,d7
 
-	cmp.b	#0xF0,d0
-	jne		0f
-	cmp.b	#4,d3
-	jne		0f
-	* remove extra girders at X = (4,11), (4,13) replace by blank
-	* (original game used to put black sprites there, which is not that good
-	* to save blitter bandwidth). I suppose that game reads video memory
-	* to check if those girders are there when Kong climbs the ladder so we
-	* can't just remove them in the code
-	*
-	move.b	#0x10,d0		| draw blank instead of girders
-0:
+
 
 	lea		mulNB_BYTES_PER_ROW_table(pc),a0
 
@@ -2183,7 +2180,7 @@ update_bg_tile:
 
 	* optimization when a well-known
 	* empty character is passed (standard charset)
-	cmp.b	#0x10,d0
+	cmp.b	#0x24,d0
 	jeq	11f
 
 	lea		character_table,a0
