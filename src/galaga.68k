@@ -38,6 +38,7 @@
 j_Game_init_02d3:
 	lea	ds_stk_cpu0_init,a7  | [ld   sp,#ds_stk_cpu0_init]
 
+	
 *  memset(ds4_game_tmrs,0,4)
 	clr.b	d0                               	| [xor  a]
 	lea	ds4_game_tmrs,a0             	| [ld   hl,#ds4_game_tmrs + 0] memset(...,0,4)
@@ -86,24 +87,26 @@ j_Game_init_02d3:
 	move.b	#0x03,d0                        	| [ld   a,#0x03]
 	jbsr	rst_18_color                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
+
 	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr] clear remainder of grid pattern from the playfield tiles (14x16)
 * all tile ram is now wiped
 
 * Sets up "Heroes" screen
-	lea	b_best5_score,a1               	| [ld   de,#b_best5_score] 1st score (100000's)
+	lea	b_best5_score,a1               	| $0313 [ld   de,#b_best5_score] 1st score (100000's)
 	move.b	#5,d0                           	| [ld   a,#5]
-	clr.b	d1                               	| [ld   b,#0]
+	                              	| [ld   b,#0]
 l_0317:
 	lea	d_str20000,a0                  	| [ld   hl,#d_str20000] "00002 " (20000 reversed)
-	move.w	#0x0600,d1                        	| [ld   c,#0x06]
+	move.w	#0x06,d1                        	| [ld   c,#0x06]
 	jbsr	ldir                              	| [ldir]
  	subq.b	#1,d0                           	| [dec  a]
 	jne	l_0317                             	| [jr   nz,l_0317]
 
+
 	lea	d_strScore,a0                  	| [ld   hl,#d_strScore] "SCORE" (reversed)
 	move.b	#0x2A,d0                        	| [ld   a,#0x2A] period character '.'
 	move.w	#0x05FF,d1                        	| [ld   b,#0x05]
-												| [ld   c,#0xFF]
+	move.w	#5-1,d2											| [ld   c,#0xFF]
 * de==8a3e
 l_032A:
 	jbsr	ldi                               	| [ldi]
@@ -111,11 +114,13 @@ l_032A:
 	move.b	d0,(a1)+                         	| [ld   (de),a]
 												| [inc  e]
 	jbsr	ldi                               	| [ldi]
-	subq.b	#1,d1                           	| [...]
-	jne	l_032A                             	| [djnz l_032A]
+	                           	| [...]
+	dbf		d2,l_032A                             	| [djnz l_032A]
 
+	jbsr	osd_break
+	
 * initialize game state
-	move.b	#0x01,d0                        	| [ld   a,#0x01]
+	move.b	#0x01,d0                        	| [$0333: ld   a,#0x01]
 	move.b	d0,b8_9201_game_state           	| [ld   (b8_9201_game_state),a] 1 == ATTRACT_MODE
 
 	*lea	l_A005,a0                      	| [ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
@@ -131,6 +136,7 @@ l_032A:
 
 * data structures for 12 objects
 	jbsr	rst_28                            	| [rst  0x28] memset(mctl_mpool,0,$$14 * 12)
+
 
 * Not sure here...
 * this would have the effect of disabling/skipping the task at 0x1F (f_0977)
@@ -218,12 +224,14 @@ l_0380:
 
 * while (game_state == ATTRACT_MODE) { | }
 l_038D_while:
-	move.b	b8_9201_game_state,d0           	| [ld   a,(b8_9201_game_state)] while (ATTRACT_MODE)
+	move.b	b8_9201_game_state,d0           	| [$038D: ld   a,(b8_9201_game_state)] while (ATTRACT_MODE)
 	subq.b	#1,d0                           	| [dec  a]
 	jeq	l_038D_while                       	| [jr   z,l_038D_while]
 
+* JOTD: game start!!
+
 * GameState == Ready ... reinitialize everthing
-	jbsr	c_1230_init_taskman_structs       	| [call c_1230_init_taskman_structs]
+	jbsr	c_1230_init_taskman_structs       	| [$0393: call c_1230_init_taskman_structs]
 	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr]
 	jbsr	rst_28                            	| [rst  0x28] memset(mctl_mpool,0,$$14 * 12)
 	jbsr	c_sctrl_sprite_ram_clr            	| [call c_sctrl_sprite_ram_clr]
@@ -1500,11 +1508,11 @@ l_08BC:
 *  Description:
 *   for f_0857
 * IN:
-*  A==ds_new_stage_parms + 0x00 or ds_new_stage_parms + 0x01
-*  C==bugs_actv_nbr
-*  HL== pointer _0909, _0929
+*  D0==ds_new_stage_parms + 0x00 or ds_new_stage_parms + 0x01
+*  D2==bugs_actv_nbr
+*  A0== pointer _0909, _0929
 * OUT:
-*  A==(hl)
+*  D0==(A0)
 *-----------------------------------------------------------------------------
 c_08BE:
 * A used as index into sets of 4
@@ -1514,7 +1522,7 @@ c_08BE:
 * of creatures is 40, the selected byte would be at $0929, so d_0909 and
 * d_0929 should be one contiguous table.
 	asl.b	#1,d0                            	| [sla  a]
-	jbsr	rst_08_d5d6                            	| [rst  0x08] HL += 2A
+	jbsr	add_2_times_d0_to_a0_0008                	| [rst  0x08] HL += 2A
 	movem.w	d5/d6,-(a7)                              	| [ex   de,hl]
 	move.b	d2,d5                           	| [ld   h,c]
 	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
@@ -1523,9 +1531,7 @@ c_08BE:
 	movem.w	(a7)+,d5/d6                              	| [ex   de,hl] 8-bit quotient into d ...
 	move.b	d3,d0                           	| [ld   a,d] ... quotient into a
 	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
-	* read ROM at d5
-	LOAD_D5_16_FROM_D5D6
-	illegal
+
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	rts                                    	| [ret]
 
@@ -4341,8 +4347,8 @@ l_1A10:
 	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d0	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)]
 	move.b	d0,d6                           	| [ld   l,a]
 	and.b	#0x07,d0                         	| [and  #0x07] ships are in same order as bosses, from 8800-8807
+	moveq	#0,d4
 	move.b	d0,d4                           	| [ld   e,a]
-	illegal		| a1 value???
 	lea	b_8800,a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -4353,10 +4359,10 @@ l_1A10:
 	jne	l_1A3F_join_ship_to_group          	| [jr   nz,l_1A3F_join_ship_to_group] status changes to 2 (rotating) when boss reaches home positn
 	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn]
 	add.w	d6,a0
-	move.b	d5,d3                           	| [ld   d,h] DE == captd ship sprite posn
-	illegal
+	lea	ds_sprite_posn,a1			| [ld   d,h] DE == captd ship sprite posn
+	add.w	D4,a1
 	move.b	(a0)+,d0                         	| [ld   a,(hl)] HL == boss posn, horizontal
-	move.b	d0,(a1)+                         	| [ld   (de),a]
+	move.b	d0,(a1)+                         	| [$1A26: ld   (de),a]
 	                           	| [inc  l]
                            	| [inc  e]
 	move.b	#0x10,d0                        	| [ld   a,#0x10] offset captured-ship vertically from flying boss
@@ -4376,8 +4382,8 @@ l_1A31:
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] .b1
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	ILLEGAL		| d5,d3 shit to debug
-	move.b	d5,d3                           	| [ld   d,h]
+	lea	ds_sprite_ctrl_9B00,a1              	
+	add.w	d4,a1                           	| [ld   d,h]
 	* change A1 MSB with A0 msb
 	move.b	(a0),d7
 	eor.b	d7,d0                            	| [xor  (hl)]
@@ -9387,9 +9393,9 @@ l_36F2:
 	
 	* JOTD: now init CPU1 from here
 	
-	jbsr	osd_break
-	
+	st.b	ds_rom_test_status
 	jbsr	galaga1_reset
+
 	
 	jra	j_Game_init_02d3                        	| [jp   j_Game_init_02d3]
 
@@ -11663,7 +11669,7 @@ l_0220:
 *   entry in the table. The increment value is actually obtained from the
 *   task_enable table entry itself, which is normally 1, but other values are
 *   also used, such as $20. The "while" logic exits at >$20, so this is used
-*   to exit the task loop without iterating through all $20 entries. Tthe
+*   to exit the task loop without iterating through all $20 entries. The
 *   possible enable values are:
 *     $00 - disables task
 *     $01 - enables task_man
@@ -11727,21 +11733,22 @@ l_0259:
 	jbsr	osd_interrupt_control                    	| [ld   (_sfr_6820),a] 0 ... disable IRQ1
 
 *  if ( freezed )  exit
-	btst.b	#1,d3                           	| [bit  1,d]
-	jeq	l_02A8_pop_regs_and_exit           	| [jp   z,l_02A8_pop_regs_and_exit]
+	*btst.b	#1,d3                           	| [bit  1,d]
+	*jeq	l_02A8_pop_regs_and_exit           	| [jp   z,l_02A8_pop_regs_and_exit]
 
 *
 * Execute the Scheduler
 *
+	moveq	#0,d2
 	move.b	d0,d2                           	| [ld   c,a] A == 0 ... initialize index into Task Enable Table
 
 l_while_index:
 l_while_zero:
 * while ( 0 == A = *(task_activ_tbl + C) )  C++   ... loop until non-zero: assumes we will find a valid entry in the table!
 	lea	ds_cpu0_task_actv,a0           	| [ld   hl,#ds_cpu0_task_actv]
-	move.b	d2,d0                           	| [ld   a,c]
-	add.b	d6,d0                            	| [add  a,l]
-	move.b	d0,d6                           	| [ld   l,a]
+	                           	| [ld   a,c]
+	add.w	d2,a0                            	| [add  a,l]
+	                           	| [ld   l,a]
 	move.b	(a0),d0                         	| [ld   a,(hl)] task_activ_tbl[index]
 	                               	| [and  a]
 	jne	l_0280_nonzero_tbl_entry           	| [jr   nz,l_0280_nonzero_tbl_entry]
