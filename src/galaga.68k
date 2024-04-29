@@ -139,7 +139,7 @@ l_032A:
 
 
 * Not sure here...
-* this would have the effect of disabling/skipping the task at 0x1F (f_0977)
+* this would have the effect of disabling/skipping the task at 0x1F (f_credit_game_state_management_0977)
 * which happens to relate to updating the credit count (although, there is no
 * RST 38 to actually trigger the task from now until setting this to 0 below.)
 
@@ -177,9 +177,9 @@ g_main:
 	*move.b	d0,0xA007                       	| [ld   (0xA007),a] 0 (not_flipped)
 	move.b	d0,b_9215_flip_screen           	| [ld   (b_9215_flip_screen),a] 0 (not_flipped)
 
-* disable f_1D76 - star control ... why? ... should be taken care of by init_taskman_structs ...below
+* disable f_star_control_1d76 - star control ... why? ... should be taken care of by init_taskman_structs ...below
 * task_activ_tbl[0x12] = 0
-	move.b	d0,ds_cpu0_task_actv+0x12       	| [ld   (ds_cpu0_task_actv + 0x12),a] 0 ... f_1D76
+	move.b	d0,ds_cpu0_task_actv+0x12       	| [ld   (ds_cpu0_task_actv + 0x12),a] 0 ... f_star_control_1d76
 
 * The object-collision notification structures are cleared
 * at every beginning of round (and demo), so I am guessing the intent here is to
@@ -220,7 +220,7 @@ l_0380:
 
 * task_activ_tbl[F_ATTRMODECTRL] = 1
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv+0x02       	| [ld   (ds_cpu0_task_actv + 0x02),a] 1 ... f_17B2 (attract-mode control)
+	move.b	d0,ds_cpu0_task_actv+0x02       	| [ld   (ds_cpu0_task_actv + 0x02),a] 1 ... f_manage_attract_mode_17B2 (attract-mode control)
 
 * while (game_state == ATTRACT_MODE) { | }
 l_038D_while:
@@ -315,8 +315,8 @@ l_0003D8:
 	*addq.b	#1,d0                           	| [inc  a]
 	*move.b	d0,b_9AA0+0x0B                  	| [ld   (b_9AA0 + 0x0B),a] 1 ... sound-fx count/enable registers, start of game theme
 
-	move.b	d0,ds_cpu0_task_actv+0x12       	| [ld   (ds_cpu0_task_actv + 0x12),a] 1 ... f_1D76, star ctrl
-	move.b	d0,ds_cpu0_task_resrv+0x12      	| [ld   (ds_cpu0_task_resrv + 0x12),a] 1 ... f_1D76, star ctrl
+	move.b	d0,ds_cpu0_task_actv+0x12       	| [ld   (ds_cpu0_task_actv + 0x12),a] 1 ... f_star_control_1d76, star ctrl
+	move.b	d0,ds_cpu0_task_resrv+0x12      	| [ld   (ds_cpu0_task_resrv + 0x12),a] 1 ... f_star_control_1d76, star ctrl
 
 * do one-time inits
 	jbsr	gctl_game_init                    	| [call gctl_game_init] setup number of lives and show player score(s) '00'
@@ -522,7 +522,7 @@ gctl_stg_restart_hdlr:
 l_04A4_wait:
 
 *  if ( captured_ship_landing_task_en ) ...
-	move.b	ds_cpu0_task_actv+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv + 0x1D)] f_2000 (destroyed boss that captured ship)
+	move.b	ds_cpu0_task_actv+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv + 0x1D)] f_boss_capturing_ship_killed_2000 (destroyed boss that captured ship)
 	                               	| [and  a]
 	jeq	l_04C1_while                       	| [jr   z,l_04C1_while]
 *  ... then ...
@@ -542,7 +542,7 @@ l_04A4_wait:
 
 l_04B9_while:
 * while ( task active )
-	move.b	ds_cpu0_task_actv+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv + 0x1D)] f_2000 (destroyed boss that captured ship)
+	move.b	ds_cpu0_task_actv+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv + 0x1D)] f_boss_capturing_ship_killed_2000 (destroyed boss that captured ship)
 	                               	| [and  a]
 	jne	l_04B9_while                       	| [jr   nz,l_04B9_while]
 
@@ -615,7 +615,7 @@ l_04FD_end_of_game:
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 
 *  while (0 != task_actv_tbl_0[0x18]){|} ... block if tractor beam completing
-	lea	ds_cpu0_task_actv+0x18,a0      	| [ld   hl,#ds_cpu0_task_actv + 0x18] f_2222 (Boss starts tractor beam) wait for task inactive
+	lea	ds_cpu0_task_actv+0x18,a0      	| [ld   hl,#ds_cpu0_task_actv + 0x18] f_boss_starts_tractor_beam_2222 (Boss starts tractor beam) wait for task inactive
 l_0509_while:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	                               	| [and  a]
@@ -743,10 +743,10 @@ l_059A_prep:
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,b8_99B4_bugnest_onoff_scrn_tmr	| [ld   (b8_99B4_bugnest_onoff_scrn_tmr),a] 0 ( timer/counter while nest retreating)
 	addq.b	#1,d0                           	| [inc  a]
-	lea	ds_cpu0_task_actv+0x0E,a0      	| [ld   hl,#ds_cpu0_task_actv + 0x0E] 1 ... f_1D32
+	lea	ds_cpu0_task_actv+0x0E,a0      	| [ld   hl,#ds_cpu0_task_actv + 0x0E] 1 ... f_move_swarm_when_player_changes_1d32
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 
-* wait for formation to exit ... completion of f_1D32 (status actv_task_tbl[$0E])
+* wait for formation to exit ... completion of f_move_swarm_when_player_changes_1d32 (status actv_task_tbl[$0E])
 l_05A3_while:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	                               	| [and  a]
@@ -800,13 +800,13 @@ l_05D1:
 	move.b	#3,d2                           	| [ld   c,#3] C=string_out_pe_index
 	jbsr	rst_30                            	| [rst  0x30] string_out_pe "READY"
 
-* set wait-time for bug nest retreat. The count is masked with $7F in f_1D32, so I
+* set wait-time for bug nest retreat. The count is masked with $7F in f_move_swarm_when_player_changes_1d32, so I
 * don't see why it starts at $80 here instead of 0. Shouldn't make any difference tho'...
 	move.b	#0x80,d0                        	| [ld   a,#0x80]
 	move.b	d0,b8_99B4_bugnest_onoff_scrn_tmr	| [ld   (b8_99B4_bugnest_onoff_scrn_tmr),a] $80
 
 * wait for bug nest to reappear.
-	lea	ds_cpu0_task_actv+0x0E,a0      	| [ld   hl,#ds_cpu0_task_actv + 0x0E] 1 ... f_1D32
+	lea	ds_cpu0_task_actv+0x0E,a0      	| [ld   hl,#ds_cpu0_task_actv + 0x0E] 1 ... f_move_swarm_when_player_changes_1d32
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 
@@ -876,7 +876,7 @@ l_062C:
 * new round starting or round re-starting after active player switch.
 plyr_respawn_rdy:
 	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 1 ... f_1F04 (fire button input)
+	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 1 ... f_read_fire_button_1f04 (fire button input)
 	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 1 ... cpu1:f_05EE (hit-detection)
 	move.b	d0,ds_plyr_actv+_b_atk_wv_enbl  	| [ld   (ds_plyr_actv +_b_atk_wv_enbl),a] 1  (0 when respawning player ship)
 
@@ -1330,8 +1330,8 @@ d_scoreman_inc_lut:
 *-----------------------------------------------------------------------------
 gctl_supv_stage:
 
-*  if ( num_bugs == 0  &&  !f_2916 active ) ...
-	move.b	ds_cpu0_task_actv+0x08,d0       	| [ld   a,(ds_cpu0_task_actv + 0x08)] f_2916 (supervises attack waves)
+*  if ( num_bugs == 0  &&  !f_insert_attackers_2916 active ) ...
+	move.b	ds_cpu0_task_actv+0x08,d0       	| [ld   a,(ds_cpu0_task_actv + 0x08)] f_insert_attackers_2916 (supervises attack waves)
 	move.b	d0,d1                           	| [ld   b,a]
 	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
 	or.b	d1,d0                             	| [or   b]
@@ -1339,7 +1339,7 @@ gctl_supv_stage:
 * then ...
 	move.b	d0,b_9AA0+0x00                  	| [ld   (b_9AA0 + 0x00),a] 0 ... sound-fx count/enable registers, pulsing formation sound effect
 
-	jra	gctl_stg_restart_hdlr              	| [jp   gctl_stg_restart_hdlr] cleared the round ... num_bugs_on_screen ==0|| !f_2916_active
+	jra	gctl_stg_restart_hdlr              	| [jp   gctl_stg_restart_hdlr] cleared the round ... num_bugs_on_screen ==0|| !f_insert_attackers_2916_active
 
 l_081B:
 * else if ( rst_stage_flag ) ...
@@ -1356,7 +1356,7 @@ l_081B:
 
 
 *=============================================================================
-* f_0827()
+* f_rts_0827()
 *  Description:
 *   empty task
 * IN:
@@ -1364,11 +1364,11 @@ l_081B:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_0827:
+f_rts_0827:
 	rts                                    	| [ret]
 
 *=============================================================================
-* f_0828()
+* f_update_sprites_0828()
 *  Description:
 *   Copies from sprite "buffer" to sprite RAM...
 *   works in conjunction with CPU-sub1:_05BF to update sprite RAM
@@ -1377,7 +1377,7 @@ f_0827:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_0828:
+f_update_sprites_0828:
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,b_CPU1_in_progress           	| [ld   (b_CPU1_in_progress),a] 1
 	
@@ -1410,7 +1410,7 @@ l_0850:
 * end task $0828
 
 *=============================================================================
-* f_0857()
+* f_misc_gameplay_events_0857()
 *  Description:
 *    triggers various parts of gameplay based on parameters
 * IN:
@@ -1418,7 +1418,7 @@ l_0850:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_0857:
+f_misc_gameplay_events_0857:
 	move.b	ds4_game_tmrs+2,d0              	| [ld   a,(ds4_game_tmrs + 2)]
 	move.b	d0,d1                           	| [ld   b,a] parameter to c_08AD
 	cmp.b	#0x3C,d0                         	| [cp   #0x3C]
@@ -1475,7 +1475,7 @@ l_0888:
 *=============================================================================
 * c_08AD()
 *  Description:
-*  for f_0857
+*  for f_misc_gameplay_events_0857
 * IN:
 *  A == ds_new_stage_parms[2] or [3]
 *  B == ds4_game_tmrs[2]
@@ -1490,7 +1490,7 @@ c_08AD:
 	add.b	d4,d0                            	| [add  a,e]
 	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 
-	move.b	d1,d0                           	| [ld   a,b] ds4_game_tmrs[2] from f_0857
+	move.b	d1,d0                           	| [ld   a,b] ds4_game_tmrs[2] from f_misc_gameplay_events_0857
 	cmp.b	#0x28,d0                         	| [cp   #0x28]
 	jcc	l_08B8                             	| [jr   nc,l_08B8]
 	addq.w	#1,a0                           	| [inc  hl]
@@ -1506,7 +1506,7 @@ l_08BC:
 *=============================================================================
 * c_08BE()
 *  Description:
-*   for f_0857
+*   for f_misc_gameplay_events_0857
 * IN:
 *  D0==ds_new_stage_parms + 0x00 or ds_new_stage_parms + 0x01
 *  D2==bugs_actv_nbr
@@ -1576,7 +1576,7 @@ d_0909:
 	.byte 0x04,0x06,0x0A,0x0A
 
 *=============================================================================
-* f_0935()
+* f_blink_players_text_0935()
 *  Description:
 *    handle "blink" of Player1/Player2 texts.
 *    Toggles the "UP" text on multiples of 16 frame counts.
@@ -1587,7 +1587,7 @@ d_0909:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_0935:
+f_blink_players_text_0935:
 *  A = ds3_92A0_frame_cts[0] / 16
 	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
 	rol.b	#4,d0                            	| [rlca] * 4
@@ -1598,7 +1598,7 @@ f_0935:
 *   Blink 1UP/2UP
 * IN:
 *   A==0 ... called by game_halt()
-*   A==frame_cnts/16 ...continued from f_0935()
+*   A==frame_cnts/16 ...continued from f_blink_players_text_0935()
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
@@ -1677,7 +1677,7 @@ str_0974:
 	.align	2
 	
 *=============================================================================
-* f_0977()
+* f_credit_game_state_management_0977()
 *  Description:
 *   Polls the test switch, updates game-time counter, updates credit count.
 *   Handles coinage and changes in game-state.
@@ -1714,7 +1714,7 @@ str_0974:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_0977:
+f_credit_game_state_management_0977:
 * if ( io_input[0] == $bb )
 	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] check for bb ... Service Switch On indication in credit mode
 	cmp.b	#0xBB,d0                         	| [cp   #0xBB]
@@ -1931,7 +1931,7 @@ l_0A3A:
 	lea	ds_9100_tmp+0x03,a0                           	| [ld   l,#3] HL:=9103
 	lea	b32_99E2_sum_score_bcd+3,a1    	| [ld   de,#b32_99E2_sum_score_bcd + 3]
 	move.b	#0x04,d1                        	| [ld   b,#0x04]
-	tst.b	d0                               	| [and  a] clear the carry flag?
+	CLEAR_XC_FLAGS	                            	| [and  a] clear the carry flag?
 l_0A4A:
 	move.b	(a1),d0                         	| [ld   a,(de)]
 	move.b	(a0),d7
@@ -2951,46 +2951,46 @@ c_1230_init_taskman_structs:
 
 task_enable_tbl_def:
 
-	.byte  0x1F | f_0827
-	.byte  0x01 | f_0828  | Copies from sprite "buffer" to sprite RAM
-	.byte  0x00 | f_17B2
-	.byte  0x00 | f_1700  | Ship-update in training/demo mode.
-	.byte  0x00 | f_1A80
-	.byte  0x01 | f_0857  | triggers various parts of gameplay based on parameters
-	.byte  0x00 | f_0827
-	.byte  0x00 | f_0827
+	.byte  0x1F | f_rts_0827
+	.byte  0x01 | f_update_sprites_0828  | Copies from sprite "buffer" to sprite RAM
+	.byte  0x00 | f_manage_attract_mode_17B2
+	.byte  0x00 | f_ship_demo_controls_1700  | Ship-update in training/demo mode.
+	.byte  0x00 | f_clone_attack_manager_1A80
+	.byte  0x01 | f_misc_gameplay_events_0857  | triggers various parts of gameplay based on parameters
+	.byte  0x00 | f_rts_0827
+	.byte  0x00 | f_rts_0827
 
-	.byte  0x00 | f_2916
-	.byte  0x00 | f_1DE6
-	.byte  0x00 | f_2A90
-	.byte  0x00 | f_1DB3
-	.byte  0x01 | f_23DD  | Updates each object in the table at 8800
-	.byte  0x01 | f_1EA4  | Bomb position updater
-	.byte  0x00 | f_1D32
-	.byte  0x01 | f_0935  | handle "blink" of Player1/Player2 texts
+	.byte  0x00 | f_insert_attackers_2916
+	.byte  0x00 | f_pulsating_swarm_movement_1de6
+	.byte  0x00 | f_lateral_movement_at_round_start_2a90
+	.byte  0x00 | f_update_enemy_status_1db3
+	.byte  0x01 | f_update_objects_23dd  | Updates each object in the table at 8800
+	.byte  0x01 | f_bomb_position_updater_1ea4  | Bomb position updater
+	.byte  0x00 | f_move_swarm_when_player_changes_1d32
+	.byte  0x01 | f_blink_players_text_0935  | handle "blink" of Player1/Player2 texts
 
-	.byte  0x00 | f_1B65
-	.byte  0x00 | f_19B2
-	.byte  0x00 | f_1D76  | star control
-	.byte  0x00 | f_0827
-	.byte  0x00 | f_1F85
-	.byte  0x00 | f_1F04
-	.byte  0x00 | f_0827
-	.byte  0x01 | f_1DD2  | Updates array of 4 timers
+	.byte  0x00 | f_manage_bomber_attacks_1b65
+	.byte  0x00 | f_manage_ship_capture_movement_19b2
+	.byte  0x00 | f_star_control_1d76  | star control
+	.byte  0x00 | f_rts_0827
+	.byte  0x00 | f_controller_io_and_ship_movement_1f85
+	.byte  0x00 | f_read_fire_button_1f04
+	.byte  0x00 | f_rts_0827
+	.byte  0x01 | f_update_timers_1dd2  | Updates array of 4 timers
 
-	.byte  0x00 | f_2222
-	.byte  0x00 | f_21CB
-	.byte  0x00 | f_0827
-	.byte  0x00 | f_0827
-	.byte  0x00 | f_20F2
-	.byte  0x00 | f_2000
-	.byte  0x00 | f_0827
-	.byte  0x0A | f_0977  | Handles coinage and changes in game-state
+	.byte  0x00 | f_boss_starts_tractor_beam_2222
+	.byte  0x00 | f_boss_diving_down_to_capture_ship_21cb
+	.byte  0x00 | f_rts_0827
+	.byte  0x00 | f_rts_0827
+	.byte  0x00 | f_tractor_beam_captures_ship_20f2
+	.byte  0x00 | f_boss_capturing_ship_killed_2000
+	.byte  0x00 | f_rts_0827
+	.byte  0x0A | f_credit_game_state_management_0977  | Handles coinage and changes in game-state
 
 *=============================================================================
 * g_mssl_init()
 *  Description:
-*   For game or "demo-mode" (f_17B2) setup
+*   For game or "demo-mode" (f_manage_attract_mode_17B2) setup
 *   Initialize "missile" objects (bombs and/or rockets).
 *   One-time init for codes, colors and tiles.
 * IN:
@@ -3266,7 +3266,7 @@ l_1325:
 *-----------------------------------------------------------------------------
 c_player_respawn:
 	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,ds_cpu0_task_actv+0x14       	| [ld   (ds_cpu0_task_actv + 0x14),a] 1  (f_1F85 ... control stick input)
+	move.b	d0,ds_cpu0_task_actv+0x14       	| [ld   (ds_cpu0_task_actv + 0x14),a] 1  (f_controller_io_and_ship_movement_1f85 ... control stick input)
 
 * check if "STAGE X" text shown and if so skip showing "READY"
 *  if ( *(8270) ) == ' ' ) ...
@@ -3282,7 +3282,7 @@ l_133A:
 *=============================================================================
 * c_133A()
 *  Description:
-*   Demo mode (f_17B2) ...
+*   Demo mode (f_manage_attract_mode_17B2) ...
 *   ...while (bug/bee flys home) ...ship hit, waiting for flying bug to re-nest
 *   Label provided for code reuse (jr from c_player_respawn)
 * IN:
@@ -3713,7 +3713,7 @@ s_15E7:
 
 
 _l_15f1: | end area
-*           00001700  f_1700
+*           00001700  f_ship_demo_controls_1700
 	.align	2
 *
 * input file gg1-2_fx.s
@@ -3736,7 +3736,7 @@ _l_15f1: | end area
 
 
 *=============================================================================
-* f_1700()
+* f_ship_demo_controls_1700()
 *  Description:
 *   Fighter control, only called in training/demo mode.
 * IN:
@@ -3744,7 +3744,7 @@ _l_15f1: | end area
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_1700:
+f_ship_demo_controls_1700:
 * labels for "case" blocks in _1713
 * switch( *_demo_fghtrvctrs >> 5) & 0x07 )
 	move.l	pdb_demo_fghtrvctrs,a1      	| [ld   de,(pdb_demo_fghtrvctrs)] cases for switch
@@ -3875,7 +3875,7 @@ case_1794:
 * $C0: last token, shot-and-hit far-left boss in training mode (second hit)
 case_179C:
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv+0x03       	| [ld   (ds_cpu0_task_actv + 0x03),a] 0 ... f_1700() end of fighter control sequence
+	move.b	d0,ds_cpu0_task_actv+0x03       	| [ld   (ds_cpu0_task_actv + 0x03),a] 0 ... f_ship_demo_controls_1700() end of fighter control sequence
 	rts                                    	| [ret]
 
 * $4x: shoot-and-hit far-right or far-left boss (once) in training mode
@@ -3901,7 +3901,7 @@ case_17AE:
 	jra	l_17A4                             	| [jr   l_17A4]
 
 *=============================================================================
-* f_17B2()
+* f_manage_attract_mode_17B2()
 *  Description:
 *   Manage attract mode, control sequence for training and demo screens.
 *   The state progression is always the same, ordered by the state-index
@@ -3912,7 +3912,7 @@ case_17AE:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_17B2:
+f_manage_attract_mode_17B2:
 * if ( game_state != ATTRACT_MODE ) return
 	move.b	b8_9201_game_state,d0           	| [ld   a,(b8_9201_game_state)]
 	subq.b	#1,d0                           	| [dec  a]
@@ -3975,7 +3975,7 @@ case_17F5:
 0:
 * then ...
 	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,ds_cpu0_task_actv+0x05       	| [ld   (ds_cpu0_task_actv + 0x05),a] 1 ... f_0857
+	move.b	d0,ds_cpu0_task_actv+0x05       	| [ld   (ds_cpu0_task_actv + 0x05),a] 1 ... f_misc_gameplay_events_0857
 	move.b	#2,d2                           	| [ld   c,#2] index of string
 	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("GAME OVER")
 	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
@@ -3988,8 +3988,8 @@ case_1808:
 	move.l	a0,pdb_demo_fghtrvctrs          	| [ld   (pdb_demo_fghtrvctrs),hl] &d_181F[0]
 
 	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,ds_cpu0_task_actv+0x03       	| [ld   (ds_cpu0_task_actv + 0x03),a] 1  (f_1700 ... fighter control in training/demo mode)
-	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 1  (f_1F04 ... fire button input))
+	move.b	d0,ds_cpu0_task_actv+0x03       	| [ld   (ds_cpu0_task_actv + 0x03),a] 1  (f_ship_demo_controls_1700 ... fighter control in training/demo mode)
+	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 1  (f_read_fire_button_1f04 ... fire button input))
 	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 1  (cpu1:f_05EE ... fighter collision detection)
 	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
 
@@ -4005,12 +4005,12 @@ case_1840:
 	jbsr	c_1230_init_taskman_structs       	| [call c_1230_init_taskman_structs]
 
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv+0x10       	| [ld   (ds_cpu0_task_actv + 0x10),a] 0 (f_1B65 ... manage bomber attack )
+	move.b	d0,ds_cpu0_task_actv+0x10       	| [ld   (ds_cpu0_task_actv + 0x10),a] 0 (f_manage_bomber_attacks_1b65 ... manage bomber attack )
 	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 0 ... glbl_enemy_enbl, end of demo
 
 * have to re-set enable bit for this flag after init_structs
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv+0x02       	| [ld   (ds_cpu0_task_actv + 0x02),a] 1 ... f_17B2 (attract-mode control)
+	move.b	d0,ds_cpu0_task_actv+0x02       	| [ld   (ds_cpu0_task_actv + 0x02),a] 1 ... f_manage_attract_mode_17B2 (attract-mode control)
 
 	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
 
@@ -4021,8 +4021,8 @@ case_1852:
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] 1 ... sound_mgr_reset: non-zero causes re-initialization of sound mgr
 	move.b	d0,ds_plyr_actv+_b_stgctr       	| [ld   (ds_plyr_actv +_b_stgctr),a] 1
-	move.b	d0,ds_cpu0_task_actv+0x03       	| [ld   (ds_cpu0_task_actv + 0x03),a] 1  (f_1700 ... fighter control in training/demo mode)
-	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 1  (f_1F04 ... fire button input)
+	move.b	d0,ds_cpu0_task_actv+0x03       	| [ld   (ds_cpu0_task_actv + 0x03),a] 1  (f_ship_demo_controls_1700 ... fighter control in training/demo mode)
+	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 1  (f_read_fire_button_1f04 ... fire button input)
 	move.b	d0,ds_plyr_actv+_b_not_chllg_stg	| [ld   (ds_plyr_actv +_b_not_chllg_stg),a] 1  (0 if challenge stage ...see new_stg_game_only)
 
 	lea	d_1887,a0                      	| [ld   hl,#d_1887]
@@ -4082,7 +4082,7 @@ l_18C6:
 * 04, 09, 11: wait for fighter control task to disable itself
 case_18D1:
 * if (0 == task_actv_tbl_0[0x03])  attmode_state_step()
-	move.b	ds_cpu0_task_actv+0x03,d0       	| [ld   a,(ds_cpu0_task_actv + 0x03)] wait for task[f_1700 fighter ctrl ]==0 before advance state
+	move.b	ds_cpu0_task_actv+0x03,d0       	| [ld   a,(ds_cpu0_task_actv + 0x03)] wait for task[f_ship_demo_controls_1700 fighter ctrl ]==0 before advance state
 	                               	| [and  a]
 	jeq	l_attmode_state_step               	| [jp   z,l_attmode_state_step]
 	rts                                    	| [ret]
@@ -4097,10 +4097,10 @@ l_18DB_while:
 
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_plyr_actv+_b_nships       	| [ld   (ds_plyr_actv +_b_nships),a] 0
-	move.b	d0,ds_cpu0_task_actv+0x05       	| [ld   (ds_cpu0_task_actv + 0x05),a] 0 ... f_0857 uses tmr[2]
+	move.b	d0,ds_cpu0_task_actv+0x05       	| [ld   (ds_cpu0_task_actv + 0x05),a] 0 ... f_misc_gameplay_events_0857 uses tmr[2]
 	jbsr	c_133A                            	| [call c_133A] fghtr_onscreen()
 
-* set inits and override defaults of bomber timers (note f_0857 disabled above)
+* set inits and override defaults of bomber timers (note f_misc_gameplay_events_0857 disabled above)
 	move.w	#0xFF0D,d5                      	| [ld   hl,#0xFF0D]
 	LOAD_D5D6_FROM_D5_16
        * tmrs_init[0x06] = 0xFF
@@ -4127,9 +4127,9 @@ l_18DB_while:
 	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 0: glbl_enemy_enbl (demo)
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 1 ... force bomber-boss wingman for training mode
-	move.b	d0,ds_cpu0_task_actv+0x10       	| [ld   (ds_cpu0_task_actv + 0x10),a] 1: f_1B65 ... manage bomber attack
-	move.b	d0,ds_cpu0_task_actv+0x0B       	| [ld   (ds_cpu0_task_actv + 0x0B),a] 1: f_1DB3 ... check enemy status at 9200
-	move.b	d0,ds_cpu0_task_actv+0x03       	| [ld   (ds_cpu0_task_actv + 0x03),a] 1: f_1700 ... fighter control in training/demo mode
+	move.b	d0,ds_cpu0_task_actv+0x10       	| [ld   (ds_cpu0_task_actv + 0x10),a] 1: f_manage_bomber_attacks_1b65 ... manage bomber attack
+	move.b	d0,ds_cpu0_task_actv+0x0B       	| [ld   (ds_cpu0_task_actv + 0x0B),a] 1: f_update_enemy_status_1db3 ... check enemy status at 9200
+	move.b	d0,ds_cpu0_task_actv+0x03       	| [ld   (ds_cpu0_task_actv + 0x03),a] 1: f_ship_demo_controls_1700 ... fighter control in training/demo mode
 
 	*move.b	_sfr_dsw4,d0                    	| [ld   a,(_sfr_dsw4)] DSWA ... SOUND IN ATTRACT MODE: _fx[0x17]
 	*ror.b	#1,d0                            	| [rrca]
@@ -4236,14 +4236,14 @@ l_attmode_state_step:
 	rts                                    	| [ret]
 
 *=============================================================================
-* f_19B2()
+* f_manage_ship_capture_movement_19b2()
 *  Description:
 *   Manage ship movement during capturing phase. There are two segments - in
-*   the first, the  ship movement simply tracks that of the capturing boss.
+*   the first, the ship movement simply tracks that of the capturing boss.
 *   Second, once the boss reaches position in the collective, the ship is
 *   moved vertically an additional 24 steps toward the top of the screen so
 *   that the final position is above the boss.
-*   Enabled by f_2222 tractor beam task when it terminates with the ship captured.
+*   Enabled by f_boss_starts_tractor_beam_2222 tractor beam task when it terminates with the ship captured.
 *   When first called 928E==1 (show text flag), which will show the text and
 *   clear the flag.
 *   Noticed that once the ship is positioned in the collective, it may
@@ -4254,7 +4254,7 @@ l_attmode_state_step:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_19B2:
+f_manage_ship_capture_movement_19b2:
 *  if ( flag  != 0 )  goto show_text
 	move.b	ds5_928A_captr_status+0x04,d0   	| [ld   a,(ds5_928A_captr_status + 0x04)] == 1 when boss connects with ship (2318)
 	                               	| [and  a]
@@ -4401,7 +4401,7 @@ l_1A3F_join_ship_to_group:
 	lea	ds_sprite_code,a1              	| [ld   d,#>ds_sprite_code]
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	illegal  |       ^^^^ review XX value
+	illegal  |       ^^^^ review A1/D4 value here
 	move.b	#6,d0                           	| [ld   a,#6] ship sprite code
 	move.b	d0,(a1)                         	| [ld   (de),a]
 l_1A4B_test_positioning_timer:
@@ -4415,10 +4415,10 @@ l_1A4B_test_positioning_timer:
 	jne	l_1A58                             	| [jr   nz,l_1A58]
 	subq.b	#2,d1                           	| [dec  b] * 2
 l_1A58:
+	moveq	#0,d6
 	move.b	d4,d6                           	| [ld   l,e] TODO value of A1 to compute D4????
 	addq.b	#1,d6                           	| [inc  l] set vertical position (odd-byte)
 	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	d1,d0                           	| [ld   a,b]
 	add.b	(a0),d0                          	| [add  a,(hl)]
@@ -4455,7 +4455,7 @@ l_1A6A_ship_in_position:
 	rts                                    	| [ret]
 
 *=============================================================================
-* f_1A80()
+* f_clone_attack_manager_1A80()
 *  Description:
 *   "clone-attack" manager.
 *   Not active until stage-4 or higher because the parameter is 0.
@@ -4464,7 +4464,7 @@ l_1A6A_ship_in_position:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_1A80:
+f_clone_attack_manager_1A80:
 * check parameter for condition to enable the bonus-bee feature.
 * if ( num_bugs > num_bugs_for_bonus_bee ) then return
 	move.b	ds_new_stage_parms+0x0A,d0      	| [ld   a,(ds_new_stage_parms + 0x0A)] bonus-bee when bug count reaches this
@@ -4509,8 +4509,8 @@ l_1AAB_found_one:
 	subq.w	#1,a0                           	| [dec  l]
 	COMPUTE_LSB_A0_D6	b_8800
 	lea	ds_sprite_code,a1              	| [ld   d,#>ds_sprite_code]
+	moveq	#0,d4
  	move.b	d6,d4                           	| [ld   e,l]
-	and.w	#0xFF,d4
 	add.w	d4,a1
 	                          	| [inc  e]
 	move.b	(1,a1),d0                         	| [ld   a,(de)]
@@ -4562,7 +4562,7 @@ l_1AF0_alternating_colors:
 	rts                                    	| [ret]
 
 l_1AF4_ready_go:
-	move.b	ds_cpu0_task_actv+0x15,d0       	| [ld   a,(ds_cpu0_task_actv + 0x15)] f_1F04: fire button input ...  a "bonus-bee" has started
+	move.b	ds_cpu0_task_actv+0x15,d0       	| [ld   a,(ds_cpu0_task_actv + 0x15)] f_read_fire_button_1f04: fire button input ...  a "bonus-bee" has started
 	                               	| [and  a]
 	jne	l_1B00                             	| [jr   nz,l_1B00]
 	move.b	#0xE0,d0                        	| [ld   a,#0xE0]
@@ -4632,7 +4632,7 @@ l_1B00:
 	jbsr	c_1083                            	| [call c_1083] bomber setup, clone-attack mgr
 l_1B54_getout:
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv+0x04       	| [ld   (ds_cpu0_task_actv + 0x04),a] 0: f_1A80 ... this task
+	move.b	d0,ds_cpu0_task_actv+0x04       	| [ld   (ds_cpu0_task_actv + 0x04),a] 0: f_clone_attack_manager_1A80 ... this task
 
 	rts                                    	| [ret]
 
@@ -4648,7 +4648,7 @@ d_1B5F:
 	.long db_04AB
 
 *=============================================================================
-* f_1B65()
+* f_manage_bomber_attacks_1b65()
 *  Description:
 *   Manage bomber attacks, enabled during demo in fighter-movement phase, as
 *   well as in training mode. Disabled at start of each round until all
@@ -4658,16 +4658,16 @@ d_1B5F:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_1B65:
+f_manage_bomber_attacks_1b65:
 * if ( flag == zero ) skip the condition check
 	move.b	ds_9200_glbls+0x0B,d0           	| [ld   a,(ds_9200_glbls + 0x0B)] glbl_enemy_enbl
 	                               	| [and  a]
 	jeq	l_1B75                             	| [jr   z,l_1B75]
 
 * if ((0 == ds_cpu0_task_actv[0x15])    	|| (0 != ds_cpu0_task_actv + 0x1D))  return
-	move.b	ds_cpu0_task_actv+0x15,d0       	| [ld   a,(ds_cpu0_task_actv + 0x15)] f_1F04 (fire button input)
+	move.b	ds_cpu0_task_actv+0x15,d0       	| [ld   a,(ds_cpu0_task_actv + 0x15)] f_read_fire_button_1f04 (fire button input)
 	move.b	d0,d2                           	| [ld   c,a]
-	move.b	ds_cpu0_task_actv+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv + 0x1D)] f_2000 (destroyed capture-boss)
+	move.b	ds_cpu0_task_actv+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv + 0x1D)] f_boss_capturing_ship_killed_2000 (destroyed capture-boss)
 	not.b	d0                               	| [cpl]
 	and.b	d2,d0                            	| [and  c]
 	bne.b	0f                               	| [...]
@@ -5184,7 +5184,7 @@ d_1D2C_wingmen:
 	.byte 0x4A,0x52,0x5A,0x58,0x50,0x48
 
 *=============================================================================
-* f_1D32()
+* f_move_swarm_when_player_changes_1d32()
 *  Description:
 *   Moves bug nest on and off the screen at player changeover.
 * IN:
@@ -5192,7 +5192,7 @@ d_1D2C_wingmen:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_1D32:
+f_move_swarm_when_player_changes_1d32:
 	lea	b8_99B4_bugnest_onoff_scrn_tmr,a0	| [ld   hl,#b8_99B4_bugnest_onoff_scrn_tmr] increment timer
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	and.b	#0x7F,d0                         	| [and  #0x7F]
@@ -5253,11 +5253,11 @@ l_1D5E:
 	rts                                    	| [ret]
 
 l_1D72:
-	move.b	d0,ds_cpu0_task_actv+0x0E       	| [ld   (ds_cpu0_task_actv + 0x0E),a] f_1D32
+	move.b	d0,ds_cpu0_task_actv+0x0E       	| [ld   (ds_cpu0_task_actv + 0x0E),a] f_move_swarm_when_player_changes_1d32
 	rts                                    	| [ret]
 
 *=============================================================================
-* f_1D76()
+* f_star_control_1d76()
 *  Description:
 *   handles changes in star control status?
 * IN:
@@ -5265,7 +5265,7 @@ l_1D72:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_1D76:
+f_star_control_1d76:
 	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
 	move.b	d0,d1                           	| [ld   b,a]
 	lea	ds_99B9_star_ctrl+0x00,a0      	| [ld   hl,#ds_99B9_star_ctrl + 0x00] 1 when ship on screen
@@ -5316,7 +5316,7 @@ l_1DA8:
 	jra	l_1DA4                             	| [jr   l_1DA4] set star ctrl state
 
 *=============================================================================
-* f_1DB3() ... 0x0B
+* f_update_enemy_status_1db3() ... 0x0B
 *  Description:
 *   Update enemy status.
 *
@@ -5345,7 +5345,7 @@ l_1DA8:
 *  obj_collsn_notif[L]  == $01
 *
 *-----------------------------------------------------------------------------
-f_1DB3:
+f_update_enemy_status_1db3:
 	lea	b_9200_obj_collsn_notif,a0     	| [ld   hl,#b_9200_obj_collsn_notif] $30 bytes ... test bit-7
 	move.b	#0x30,d1                        	| [ld   b,#0x30]
 l_1DB8:
@@ -5381,7 +5381,7 @@ l_1DC1_make_him_dead:
 * end 1DB3
 
 *=============================================================================
-* f_1DD2()
+* f_update_timers_1dd2()
 *  Description:
 *   Updates array of 4 timers at 2Hz rate.
 * IN:
@@ -5389,7 +5389,7 @@ l_1DC1_make_him_dead:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_1DD2:
+f_update_timers_1dd2:
 *  if ( frame_cts[2] & 0x01 ) return ... divides the 4 Hz timer by 2 ... why not just use frame_cts[1]
 	move.b	ds3_92A0_frame_cts+2,d0         	| [ld   a,(ds3_92A0_frame_cts + 2)] [2]: 4 Hz timer
 	and.b	#0x01,d0                         	| [and  #0x01]
@@ -5414,16 +5414,16 @@ l_1DE2:
 	rts                                    	| [ret]
 
 *=============================================================================
-* f_1DE6()
+* f_pulsating_swarm_movement_1de6()
 *  Description:
 *   Provides pulsating movement of the collective.
-*   Enabled by f_2A90 once the initial formation waves have completed.
+*   Enabled by f_lateral_movement_at_round_start_2a90 once the initial formation waves have completed.
 * IN:
 *  ...
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_1DE6:
+f_pulsating_swarm_movement_1de6:
 *  if ( frame_count % 4 != 0 ) return
 	move.b	ds3_92A0_frame_cts+0,d0         	| [ld  a,(ds3_92A0_frame_cts + 0)] frame_ct%4 ... ... (provides 15Hz timer)
 	and.b	#0x03,d0                         	| [and  #0x03]
@@ -5603,7 +5603,7 @@ d_1E64_bitmap_tables:
 	.byte 0xFF,0xF7,0xD5,0x91,0x10,0x10,0x91,0xD5,0xF7,0xFF,0x00,0x10,0x91,0xD5,0xF7,0xFF
 
 *=============================================================================
-* f_1EA4()
+* f_bomb_position_updater_1ea4()
 *  Description:
 *    Bomb position updater... this task is not disabled.
 * IN:
@@ -5611,7 +5611,7 @@ d_1E64_bitmap_tables:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_1EA4:
+f_bomb_position_updater_1ea4:
 * Determine y-increment: each frame alternates 2 or 3 pixels-per-frame
 * increment to provide the average Y velocity, and negated for inverted screen.
 	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
@@ -5718,7 +5718,7 @@ l_1EFF:
 	jra	l_1EF9                             	| [jr   l_1EF9]
 
 *=============================================================================
-* f_1F04()
+* f_read_fire_button_1f04()
 *  Description:
 *   Read fire button input.
 *   The IO port is determined according to whether or not the screen is flipped.
@@ -5733,7 +5733,7 @@ l_1EFF:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_1F04:
+f_read_fire_button_1f04:
 * select the input port depending upon whether screen is flipped.
 	*move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
 	*add.b	<ds3_99B5_io_input+0x01,d0       	| [add  a,#<ds3_99B5_io_input + 0x01] add lsb
@@ -5928,7 +5928,7 @@ l_1F71:
 * end 1F04
 
 *=============================================================================
-* f_1F85()
+* f_controller_io_and_ship_movement_1f85()
 *  Description:
 *   Handle changes in controller IO Input bits, update ship movement.
 *   (Called continuously in game-play, but also toward end of demo starting
@@ -5938,7 +5938,7 @@ l_1F71:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_1F85:
+f_controller_io_and_ship_movement_1f85:
 	move.b	ds_plyr_actv+_b_2ship,d0        	| [ld   a,(ds_plyr_actv +_b_2ship)]
 	move.b	d0,d4                           	| [ld   e,a]
 
@@ -6073,7 +6073,7 @@ l_1FD4_update_two_ship:
 
 *=============================================================================
 
-*           00002000  f_2000
+*           00002000  f_boss_capturing_ship_killed_2000
 
 *
 * input file gg1-3.s
@@ -6095,7 +6095,7 @@ l_1FD4_update_two_ship:
 
 
 *=============================================================================
-* f_2000()
+* f_boss_capturing_ship_killed_2000()
 *  Description:
 *    activated when the boss that has captured the ship is destroyed 
 * IN:
@@ -6105,7 +6105,7 @@ l_1FD4_update_two_ship:
 * this routine spends its time loading h without changing l... There are several
 * arrays which share the same lsb... Annoying as hell to port!
 *-----------------------------------------------------------------------------
-f_2000:
+f_boss_capturing_ship_killed_2000:
 	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d6	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)] object locator for captured ship
 	                           	| [ld   l,a]
 	lea	b_8800,a0                      	| [ld   h,#>b_8800]
@@ -6267,8 +6267,8 @@ l_2097:
 	add.w	d6,a0
 	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] put in center
 	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,ds_cpu0_task_actv+0x14       	| [ld   (ds_cpu0_task_actv + 0x14),a] 1 (f_0827 ... empty task)
-	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 1 (f_1F04 ...fire button input))
+	move.b	d0,ds_cpu0_task_actv+0x14       	| [ld   (ds_cpu0_task_actv + 0x14),a] 1 (f_rts_0827 ... empty task)
+	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 1 (f_read_fire_button_1f04 ...fire button input))
 	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 1 (cpu1:f_05EE .. Manage ship collision detection)
 	move.b	d0,ds_99B9_star_ctrl+0x00       	| [ld   (ds_99B9_star_ctrl + 0x00),a] 1 (when ship on screen
 * capture ship rejoined with active ship
@@ -6300,8 +6300,8 @@ l_20D1_update_ship_spin:
 	rts                                    	| [ret  nz] [...]
 0:
 * rescued ship stopped spinning ... begin "landing"
-	move.b	d0,ds_cpu0_task_actv+0x14       	| [ld   (ds_cpu0_task_actv + 0x14),a] 0 (f_0827)
-	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 0 (f_1F04 ...fire button input))
+	move.b	d0,ds_cpu0_task_actv+0x14       	| [ld   (ds_cpu0_task_actv + 0x14),a] 0 (f_rts_0827)
+	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 0 (f_read_fire_button_1f04 ...fire button input))
 	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 0 (cpu1:f_05EE)
 	move.b	#2,d0                           	| [ld   a,#2]
 	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 2
@@ -6309,7 +6309,7 @@ l_20D1_update_ship_spin:
 * end 2000?
 
 *=============================================================================
-* f_20F2()
+* f_tractor_beam_captures_ship_20f2()
 *  Description:
 *   handles the sequence where the tractor beam captures the ship.
 * IN:
@@ -6317,7 +6317,7 @@ l_20D1_update_ship_spin:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_20F2:
+f_tractor_beam_captures_ship_20f2:
 	lea	ds_sprite_ctrl_9B00+0x62,a0         	| [ld   hl,#ds_sprite_ctrl_9B00 + 0x62] ship (1) position ...base address for c_2188
 	jbsr	c_2188_ship_spin                  	| [call c_2188_ship_spin] Base address in HL, retval in B
 	btst.b	#0,d1                           	| [bit  0,b]
@@ -6392,13 +6392,13 @@ l_2141_connected:
 * disables your rockets when the boss has finally connected.
 l_214C_disable_firepower:
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 0 ... f_1F04 (fire button input)
+	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 0 ... f_read_fire_button_1f04 (fire button input)
 	rts                                    	| [ret]
 
  * either the boss made final connection with ship, or the boss was shot while beaming the ship
 l_2151:
 * if ( firepower_enabled )...
-	move.b	ds_cpu0_task_actv+0x15,d0       	| [ld   a,(ds_cpu0_task_actv + 0x15)] f_1F04
+	move.b	ds_cpu0_task_actv+0x15,d0       	| [ld   a,(ds_cpu0_task_actv + 0x15)] f_read_fire_button_1f04
 	                               	| [and  a]
 	jne	l_215D                             	| [jr   nz,l_215D]
 * else ...
@@ -6443,7 +6443,7 @@ l_217D:
 0:
 l_217F_finished:
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv+0x1C       	| [ld   (ds_cpu0_task_actv + 0x1C),a] 0: f_20F2 ... this task
+	move.b	d0,ds_cpu0_task_actv+0x1C       	| [ld   (ds_cpu0_task_actv + 0x1C),a] 0: f_tractor_beam_captures_ship_20f2 ... this task
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 1: cpu1:f_05EE ... Manage ship collision detection
 	rts                                    	| [ret]
@@ -6516,7 +6516,7 @@ l_21C7:
 * end 2188
 
 *=============================================================================
-* f_21CB()
+* f_boss_diving_down_to_capture_ship_21cb()
 *  Description:
 *   Active when a boss diving down to capture the ship. Ends when the boss
 *   takes position to start the beam.
@@ -6525,7 +6525,7 @@ l_21C7:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_21CB:
+f_boss_diving_down_to_capture_ship_21cb:
 * if ( HOMING == b_8800[ plyr_actv.captr_boss_id ] )
 	lea	ds_plyr_actv+_b_bmbr_boss_cobj,a0	| [ld   hl,#ds_plyr_actv +_b_bmbr_boss_cobj]
 	move.b	(a0),d4                         	| [ld   e,(hl)]
@@ -6576,32 +6576,32 @@ l_21EC:
 	move.b	d0,ds_plyr_actv+_b_captr_flag   	| [ld   (ds_plyr_actv +_b_captr_flag),a] new_stage_parms[ 6 ]
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,(0x0C,a2)                    	| [ld   0x0C(ix),a] 0
-	move.b	d0,ds_cpu0_task_actv+0x19       	| [ld   (ds_cpu0_task_actv + 0x19),a] 0 (f_21CB)
+	move.b	d0,ds_cpu0_task_actv+0x19       	| [ld   (ds_cpu0_task_actv + 0x19),a] 0 (f_boss_diving_down_to_capture_ship_21cb)
 	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 0
 	move.b	d0,ds_9200_glbls+0x0D           	| [ld   (ds_9200_glbls + 0x0D),a] 0
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv+0x18       	| [ld   (ds_cpu0_task_actv + 0x18),a] 1 (f_2222 ... Boss starts tractor beam)
+	move.b	d0,ds_cpu0_task_actv+0x18       	| [ld   (ds_cpu0_task_actv + 0x18),a] 1 (f_boss_starts_tractor_beam_2222 ... Boss starts tractor beam)
 	move.b	d0,ds5_928A_captr_status+0x02   	| [ld   (ds5_928A_captr_status + 0x02),a] 1
 	move.b	d0,ds5_928A_captr_status+0x03   	| [ld   (ds5_928A_captr_status + 0x03),a] 1
 	rts                                    	| [ret]
 l_221A:
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv+0x19       	| [ld   (ds_cpu0_task_actv + 0x19),a] 0 (f_21CB)
+	move.b	d0,ds_cpu0_task_actv+0x19       	| [ld   (ds_cpu0_task_actv + 0x19),a] 0 (f_boss_diving_down_to_capture_ship_21cb)
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
 	rts                                    	| [ret]
 * end 21CB
 
 *=============================================================================
-* f_2222()
+* f_boss_starts_tractor_beam_2222()
 *  Description:
 *   Boss starts tractor beam
-*   Activated by f_21CB (capture boss dives down)
+*   Activated by f_boss_diving_down_to_capture_ship_21cb (capture boss dives down)
 * IN:
 *  ...
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_2222:
+f_boss_starts_tractor_beam_2222:
 *  if ( frame_count % 4 != 0 ) goto 2257
 	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)] frame_ct%4 ... (provides 15Hz timer)
 	move.b	d0,d2                           	| [ld   c,a]
@@ -6711,7 +6711,7 @@ l_22AB:
 	cmp.b	#0x0B,d0                         	| [cp   #0x0B]
 	jne	l_22C5                             	| [jr   nz,l_22C5]
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv+0x18       	| [ld   (ds_cpu0_task_actv + 0x18),a] 0 (f_2222 ... this one)
+	move.b	d0,ds_cpu0_task_actv+0x18       	| [ld   (ds_cpu0_task_actv + 0x18),a] 0 (f_boss_starts_tractor_beam_2222 ... this one)
 	move.b	d0,b_9AA0+0x05                  	| [ld   (b_9AA0 + 0x05),a] 0 ... sound-fx count/enable registers, capture beam sound active uno
 	move.b	d0,b_9AA0+0x06                  	| [ld   (b_9AA0 + 0x06),a] 0 ... sound-fx count/enable registers, capture beam sound active deux
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
@@ -6748,7 +6748,7 @@ l_22D2:
 * capture beam has stopped (whether or not ship is captured or got destroyed by a bomb)
 l_22E3:
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv+0x18       	| [ld   (ds_cpu0_task_actv + 0x18),a] 0 (disable f_2222 ... this one)
+	move.b	d0,ds_cpu0_task_actv+0x18       	| [ld   (ds_cpu0_task_actv + 0x18),a] 0 (disable f_boss_starts_tractor_beam_2222 ... this one)
 	move.b	d0,b_9AA0+0x05                  	| [ld   (b_9AA0 + 0x05),a] 0 ... sound-fx count/enable registers, capture beam sound active uno
 	move.b	d0,b_9AA0+0x06                  	| [ld   (b_9AA0 + 0x06),a] 0 ... sound-fx count/enable registers, capture beam sound active deux
 	                               	| [and  a]
@@ -6783,7 +6783,7 @@ l_2305:
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_99B9_star_ctrl+0x01       	| [ld   (ds_99B9_star_ctrl + 0x01),a] 0
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv+0x11       	| [ld   (ds_cpu0_task_actv + 0x11),a] 1 (enable f_19B2 ... fighter captured)
+	move.b	d0,ds_cpu0_task_actv+0x11       	| [ld   (ds_cpu0_task_actv + 0x11),a] 1 (enable f_manage_ship_capture_movement_19b2 ... fighter captured)
 	move.b	d0,ds5_928A_captr_status+0x04   	| [ld   (ds5_928A_captr_status + 0x04),a] 1 ... (fighter captured)
 	rts                                    	| [ret]
 
@@ -6803,7 +6803,7 @@ l_2327_shot_boss_while_capturing:
 	move.b	d0,ds_99B9_star_ctrl+0x01       	| [ld   (ds_99B9_star_ctrl + 0x01),a] 0
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,ds5_928A_captr_status+0x02   	| [ld   (ds5_928A_captr_status + 0x02),a] 1 ... shot_boss_while_capturing
-	move.b	d0,ds_cpu0_task_actv+0x14       	| [ld   (ds_cpu0_task_actv + 0x14),a] 1  (f_1F85 ... control stick input)
+	move.b	d0,ds_cpu0_task_actv+0x14       	| [ld   (ds_cpu0_task_actv + 0x14),a] 1  (f_controller_io_and_ship_movement_1f85 ... control stick input)
 	rts                                    	| [ret]
 
 l_233D:
@@ -6834,7 +6834,7 @@ l_2352:
 	subq.b	#1,d0                           	| [dec  a]
 	jeq	l_236D                             	| [jr   z,l_236D]
 * else if (  !  ( task_enabled  &&  !restart_stage )  return
-	move.b	ds_cpu0_task_actv+0x14,d0       	| [ld   a,(ds_cpu0_task_actv + 0x14)] f_1D32 (Moves bug nest on and off the screen )
+	move.b	ds_cpu0_task_actv+0x14,d0       	| [ld   a,(ds_cpu0_task_actv + 0x14)] f_move_swarm_when_player_changes_1d32 (Moves bug nest on and off the screen )
 	move.b	d0,d2                           	| [ld   c,a]
 	move.b	ds_9200_glbls+0x13,d0           	| [ld   a,(ds_9200_glbls + 0x13)]
 	eor.b	#0x01,d0                         	| [xor  #0x01]
@@ -6845,12 +6845,12 @@ l_2352:
 
 l_236D:
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv+0x14       	| [ld   (ds_cpu0_task_actv + 0x14),a] 0: f_1F85... control stick input
+	move.b	d0,ds_cpu0_task_actv+0x14       	| [ld   (ds_cpu0_task_actv + 0x14),a] 0: f_controller_io_and_ship_movement_1f85... control stick input
 	move.b	d0,b_9AA0+0x05                  	| [ld   (b_9AA0 + 0x05),a] 0: sound-fx count/enable registers, capture beam sound active uno
 	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 0 ... cpu1:f_05EE
 	move.b	d0,ds_9200_glbls+0x13           	| [ld   (ds_9200_glbls + 0x13),a] 0
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv+0x1C       	| [ld   (ds_cpu0_task_actv + 0x1C),a] 1: f_20F2 ... tractor beam captures
+	move.b	d0,ds_cpu0_task_actv+0x1C       	| [ld   (ds_cpu0_task_actv + 0x1C),a] 1: f_tractor_beam_captures_ship_20f2 ... tractor beam captures
 	move.b	d0,b_9AA0+0x06                  	| [ld   (b_9AA0 + 0x06),a] 1 ... sound-fx count/enable registers, tractor beam
 	move.b	d0,ds_99B9_star_ctrl+0x01       	| [ld   (ds_99B9_star_ctrl + 0x01),a] 1
 	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
@@ -6860,7 +6860,7 @@ l_236D:
 *=============================================================================
 * c_238A()
 *  Description:
-*   for f_2222
+*   for f_boss_starts_tractor_beam_2222
 *   boss about to start tractor beam
 * IN:
 *   A==
@@ -6888,7 +6888,7 @@ c_238A:
 * end 238A
 
 *=============================================================================
-* data for f_2222
+* data for f_boss_starts_tractor_beam_2222
 * 6-bytes per entry, (table starts 6-bytes past the value ld'd to HL)
 d_23A1:
 	.byte 0x24,0x4E,0x4F,0x50,0x51,0x24,0x24,0x52,0x53,0x54
@@ -6898,12 +6898,12 @@ d_23A1:
 	.byte 0x7E,0x7F
 
 *=============================================================================
-* f_23DD()
+* f_update_objects_23dd()
 *  Description:
 *   This task is never disabled.
 *   Updates each object in obj_status[] and updates global count of active
 *   objects.
-*   Call here for f_1D32, but normally this is a periodic task called 60Hz.
+*   Call here for f_move_swarm_when_player_changes_1d32, but normally this is a periodic task called 60Hz.
 *   Using bits <1:0> of framecounter as the state variable, 1 cycle of this
 *   task is completed over four successive frames, i.e. the cycle is repeated
 *   at a rate of 15Hz. Half of the objects are updated at each alternating odd
@@ -6915,7 +6915,7 @@ d_23A1:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_23DD:
+f_update_objects_23dd:
 	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
 
 * c_23E0
@@ -6923,8 +6923,8 @@ f_23DD:
 *=============================================================================
 * c_23E0()
 *  Description:
-*   Implementation of f_23DD()
-*   See comments for f_23DD() above.
+*   Implementation of f_update_objects_23dd()
+*   See comments for f_update_objects_23dd() above.
 * IN:
 *  A==_frame_counter
 * OUT:
@@ -7158,10 +7158,10 @@ case_24B2:
 	move.b	d4,d6                           	| [ld   l,e] will be used below!
 	addq.w	#1,a1                           	| [inc  e] .b1
 	addq.b	#1,d4                           	| [inc  e] .b1
-	move.b	(a1),d0                         	| [ld   a,(de)] b8800_obj_status[ E ].obj_idx (explosion count, see f_1DB3)
+	move.b	(a1),d0                         	| [ld   a,(de)] b8800_obj_status[ E ].obj_idx (explosion count, see f_update_enemy_status_1db3)
 * if count == 45 then finish
 	cmp.b	#0x45,d0                         	| [cp   #0x45]
-	jeq	l_24E6_i_am_at_45                  	| [jr   z,l_24E6_i_am_at_45] set by f_1DB3
+	jeq	l_24E6_i_am_at_45                  	| [jr   z,l_24E6_i_am_at_45] set by f_update_enemy_status_1db3
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,(a1)                         	| [ld   (de),a] 8800[odd]++ ... (40 -> 41, 42, 43, 44, 45 ) explosion changing
 	subq.w	#1,a1                           	| [dec  e]
@@ -7419,7 +7419,7 @@ l_2596_even_frame:
 *  Description:
 *   Setup the mob to do its evil work. Builds up 5 configuration tables at
 *   b_8920 which organizes the mob objects into the flying waves.
-*   These are formed into the attack wave queue structures by f_2916().
+*   These are formed into the attack wave queue structures by f_insert_attackers_2916().
 *   The format is oriented toward having two flights of 4 creatures in each
 *   wave, so they are configured in pairs and I refer to as "lefty" and "righty"
 *   in each pair, although it is an arbitrary designation. In waves that fly
@@ -7921,7 +7921,7 @@ d_290E:
 	.byte 0x36,0x24,0xD4,0xBA,0xE4,0xCC,0xA8,0xF4
 
 *=============================================================================
-* f_2916()
+* f_insert_attackers_2916()
 *  Description:
 *   Inserts creature objects from the attack wave table into the movement
 *   queue. Essentially, it launches the attack formations swarming into the
@@ -7934,7 +7934,7 @@ d_290E:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_2916:
+f_insert_attackers_2916:
 
 * check for end of table
 * if ( 7f == current_token ) goto complete
@@ -8203,10 +8203,10 @@ l_2A29_attack_waves_complete:
 0:
 
 * the last one has found its position in the collective.
-	move.b	d0,ds_cpu0_task_actv+0x08       	| [ld   (ds_cpu0_task_actv + 0x08),a] 0  (f_2916 ... end of attack waves)
+	move.b	d0,ds_cpu0_task_actv+0x08       	| [ld   (ds_cpu0_task_actv + 0x08),a] 0  (f_insert_attackers_2916 ... end of attack waves)
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv+0x04       	| [ld   (ds_cpu0_task_actv + 0x04),a] 1  (f_1A80 ... bonus-bee manager)
-	move.b	d0,ds_cpu0_task_actv+0x10       	| [ld   (ds_cpu0_task_actv + 0x10),a] 1  (f_1B65 ... manage bomber attack )
+	move.b	d0,ds_cpu0_task_actv+0x04       	| [ld   (ds_cpu0_task_actv + 0x04),a] 1  (f_clone_attack_manager_1A80 ... bonus-bee manager)
+	move.b	d0,ds_cpu0_task_actv+0x10       	| [ld   (ds_cpu0_task_actv + 0x10),a] 1  (f_manage_bomber_attacks_1b65 ... manage bomber attack )
 	move.b	d0,ds_plyr_actv+_b_nestlr_inh   	| [ld   (ds_plyr_actv +_b_nestlr_inh),a] 1  ... inhibit nest left/right movement
 
 	rts                                    	| [ret]
@@ -8244,7 +8244,7 @@ db_2A6C:
 
 
 *=============================================================================
-* f_2A90()
+* f_lateral_movement_at_round_start_2a90()
 *  Description:
 *   left/right movement of collective while attack waves coming in at
 *   start of round.
@@ -8253,7 +8253,7 @@ db_2A6C:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_2A90:
+f_lateral_movement_at_round_start_2a90:
 
 *  if ( frame_cnt % 4 != 0 ) return
 	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
@@ -8264,10 +8264,10 @@ f_2A90:
 0:
 
 * check for exit condition
-*  if  ! ( num_bugs != 0                	||  f_2916_active )  then ...
+*  if  ! ( num_bugs != 0                	||  f_insert_attackers_2916_active )  then ...
 	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
 	move.b	d0,d1                           	| [ld   b,a]
-	move.b	ds_cpu0_task_actv+0x08,d0       	| [ld   a,(ds_cpu0_task_actv + 0x08)] f_2916 supervises attack waves
+	move.b	ds_cpu0_task_actv+0x08,d0       	| [ld   a,(ds_cpu0_task_actv + 0x08)] f_insert_attackers_2916 supervises attack waves
 	or.b	d1,d0                             	| [or   b]
 	jeq	l_2AE9_done                        	| [jr   z,l_2AE9_done]
 
@@ -8333,15 +8333,15 @@ l_2AD3:
 l_2ADA_done:
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_9200_glbls+0x0F           	| [ld   (ds_9200_glbls + 0x0F),a] 0 ... nest direction
-	move.b	d0,ds_cpu0_task_actv+0x0A       	| [ld   (ds_cpu0_task_actv + 0x0A),a] 0 ... disable this task (f_2A90)
+	move.b	d0,ds_cpu0_task_actv+0x0A       	| [ld   (ds_cpu0_task_actv + 0x0A),a] 0 ... disable this task (f_lateral_movement_at_round_start_2a90)
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,b_9AA0+0x00                  	| [ld   (b_9AA0 + 0x00),a] 1 ... sound-fx count/enable register, pulsing formation sound effect
-	move.b	d0,ds_cpu0_task_actv+0x09       	| [ld   (ds_cpu0_task_actv + 0x09),a] 1 ... enable f_1DE6 ... collective bug movement
+	move.b	d0,ds_cpu0_task_actv+0x09       	| [ld   (ds_cpu0_task_actv + 0x09),a] 1 ... enable f_pulsating_swarm_movement_1de6 ... collective bug movement
 	rts                                    	| [ret]
 
 * last bug of challenge is gone or killed
 l_2AE9_done:
-	move.b	d0,ds_cpu0_task_actv+0x0A       	| [ld   (ds_cpu0_task_actv + 0x0A),a] 0 ... disable this task (f_2A90)
+	move.b	d0,ds_cpu0_task_actv+0x0A       	| [ld   (ds_cpu0_task_actv + 0x0A),a] 0 ... disable this task (f_lateral_movement_at_round_start_2a90)
 	rts                                    	| [ret]
 
 
@@ -10764,7 +10764,7 @@ b_9215_flip_screen:
 *. = ds_9200 | roll back the PC
 
 *-----------------------------------------------------------------------------
-* Object-collision notification to f_1DB3 from cpu1:c_076A (even-bytes)
+* Object-collision notification to f_update_enemy_status_1db3 from cpu1:c_076A (even-bytes)
 *-----------------------------------------------------------------------------
 b_9200_obj_collsn_notif:
      ds.b     0x60       | even bytes ($30 elements)
@@ -10801,7 +10801,7 @@ ds3_9288_tmp_IO_data:
 p_attrmode_sptiles:
 	ds.l    1       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
 pdb_demo_fghtrvctrs:
-	ds.l     1       | f_1700, tracks state of demo mode by setting an offset to the data table
+	ds.l     1       | f_ship_demo_controls_1700, tracks state of demo mode by setting an offset to the data table
 ds2_stg_chllg_rnd_attrib:   | attributes selected for hit all 8 bonus on challenge round convoy i.e. score, sprite tile
      ds.b     0x01       | hit-count, add to collsn_hit_mult[0x0F]
      ds.b     0x01       | sprite code and collision flag, ld to obj_collsn_notif[L]
@@ -10854,7 +10854,7 @@ ds4_game_tmrs:
 
 b_92B0:
      ds.b     0x02 * 8   | bomb X-rate
-                            * accumulator for division remainder (f_1EA4)
+                            * accumulator for division remainder (f_bomb_position_updater_1ea4)
 
 b_92C0:
 * bomber activation timers (3 bytes) and init values (3 bytes)
@@ -11350,41 +11350,38 @@ _l_2E75:
 *   void (* const d_cpu0_task_table[32])(void)
 *-----------------------------------------------------------------------------
 d_cpu0_task_table:
-	.long f_0827
-	.long f_0828
-	.long f_17B2
-	.long f_1700
-	.long f_1A80
-	.long f_0857
-	.long f_0827
-	.long f_0827
-
-	.long f_2916
-	.long f_1DE6
-	.long f_2A90
-	.long f_1DB3
-	.long f_23DD
-	.long f_1EA4
-	.long f_1D32
-	.long f_0935
-
-	.long f_1B65
-	.long f_19B2
-	.long f_1D76
-	.long f_0827
-	.long f_1F85
-	.long f_1F04
-	.long f_0827
-	.long f_1DD2
-
-	.long f_2222
-	.long f_21CB
-	.long f_0827
-	.long f_0827
-	.long f_20F2
-	.long f_2000
-	.long f_0827
-	.long f_0977
+	.long f_rts_0827                                         | $00
+	.long f_update_sprites_0828                              | $01
+	.long f_manage_attract_mode_17B2                         | $02
+	.long f_ship_demo_controls_1700                          | $03
+	.long f_clone_attack_manager_1A80                        | $04
+	.long f_misc_gameplay_events_0857                        | $05
+	.long f_rts_0827                                         | $06
+	.long f_rts_0827                                         | $07
+	.long f_insert_attackers_2916                            | $08
+	.long f_pulsating_swarm_movement_1de6                    | $09
+	.long f_lateral_movement_at_round_start_2a90             | $0A
+	.long f_update_enemy_status_1db3                         | $0B
+	.long f_update_objects_23dd                              | $0C
+	.long f_bomb_position_updater_1ea4                       | $0D
+	.long f_move_swarm_when_player_changes_1d32              | $0E
+	.long f_blink_players_text_0935                          | $0F
+	.long f_manage_bomber_attacks_1b65                       | $10
+	.long f_manage_ship_capture_movement_19b2                | $11
+	.long f_star_control_1d76                                | $12
+	.long f_rts_0827                                         | $13
+	.long f_controller_io_and_ship_movement_1f85             | $14
+	.long f_read_fire_button_1f04                            | $15
+	.long f_rts_0827                                         | $16
+	.long f_update_timers_1dd2                               | $17
+	.long f_boss_starts_tractor_beam_2222                    | $18
+	.long f_boss_diving_down_to_capture_ship_21cb            | $19
+	.long f_rts_0827                                         | $1A
+	.long f_rts_0827                                         | $1B
+	.long f_tractor_beam_captures_ship_20f2                  | $1C
+	.long f_boss_capturing_ship_killed_2000                  | $1D
+	.long f_rts_0827                                         | $1E
+	.long f_credit_game_state_management_0977                | $1F
 
 *=============================================================================
 * c_textout_1uphighscore_onetime()
@@ -11607,9 +11604,9 @@ l_01DF:
 	subq.b	#1,d1                           	| [...]
 	jne	l_01DF                             	| [djnz l_01DF]
 
-	move.b	d0,ds_cpu0_task_actv+0x09       	| [ld   (ds_cpu0_task_actv + 0x09),a] 0  (f_1DE6 ... collective bug movement)
-	move.b	d0,ds_cpu0_task_actv+0x10       	| [ld   (ds_cpu0_task_actv + 0x10),a] 0  (f_1B65 ... manage bomber attack )
-	move.b	d0,ds_cpu0_task_actv+0x04       	| [ld   (ds_cpu0_task_actv + 0x04),a] 0  (f_1A80 ... bonus-bee manager)
+	move.b	d0,ds_cpu0_task_actv+0x09       	| [ld   (ds_cpu0_task_actv + 0x09),a] 0  (f_pulsating_swarm_movement_1de6 ... collective bug movement)
+	move.b	d0,ds_cpu0_task_actv+0x10       	| [ld   (ds_cpu0_task_actv + 0x10),a] 0  (f_manage_bomber_attacks_1b65 ... manage bomber attack )
+	move.b	d0,ds_cpu0_task_actv+0x04       	| [ld   (ds_cpu0_task_actv + 0x04),a] 0  (f_clone_attack_manager_1A80 ... bonus-bee manager)
 
 	move.b	d0,b_bug_flyng_hits_p_round     	| [ld   (b_bug_flyng_hits_p_round),a] 0
 
@@ -11625,9 +11622,9 @@ l_01DF:
 	move.b	d0,ds_plyr_susp+_b_bbee_obj     	| [ld   (ds_plyr_susp +_b_bbee_obj),a] 1
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] 1: invalidate the capture boss object
 
-	move.b	d0,ds_cpu0_task_actv+0x0B       	| [ld   (ds_cpu0_task_actv + 0x0B),a] 1: f_1DB3 ... Update enemy status.
-	move.b	d0,ds_cpu0_task_actv+0x08       	| [ld   (ds_cpu0_task_actv + 0x08),a] 1: f_2916 ... Launches the attack formations
-	move.b	d0,ds_cpu0_task_actv+0x0A       	| [ld   (ds_cpu0_task_actv + 0x0A),a] 1: f_2A90 ... left/right movement of collective while attack waves coming
+	move.b	d0,ds_cpu0_task_actv+0x0B       	| [ld   (ds_cpu0_task_actv + 0x0B),a] 1: f_update_enemy_status_1db3 ... Update enemy status.
+	move.b	d0,ds_cpu0_task_actv+0x08       	| [ld   (ds_cpu0_task_actv + 0x08),a] 1: f_insert_attackers_2916 ... Launches the attack formations
+	move.b	d0,ds_cpu0_task_actv+0x0A       	| [ld   (ds_cpu0_task_actv + 0x0A),a] 1: f_lateral_movement_at_round_start_2a90 ... left/right movement of collective while attack waves coming
 	jbsr	c_2C00                            	| [call c_2C00] new stage setup
 
 	lea	ds_plyr_actv+_ds_bmbr_boss_scode,a0	| [ld   hl,#ds_plyr_actv +_ds_bmbr_boss_scode] set 8 bytes "01B501B501B501B5"
