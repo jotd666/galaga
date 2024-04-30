@@ -118,7 +118,7 @@
 	.global		mrw_sprite_code
 	.global		sfr_sprite_code
 	.global		ds_9000_RAM1
-	.global		ds_cpu0_task_actv
+	.global		ds_cpu0_task_actv_9000
 	.global		ds_cpu1_task_actv
 	.global		ds_stk_cpu0_init
 	.global		ds_stk_cpu1_init
@@ -127,7 +127,7 @@
 	.global		ds_9100_tmp
 	.global		b_svc_test_inp_buf
 	.global		ds_atk_wav_tmp_buf
-	.global		ds_bug_motion_que
+	.global		ds_bug_motion_que_9100
 	.global		ds_9200
 	.global		ds_9200_glbls
 	.global		b8_9201_game_state
@@ -312,7 +312,7 @@ sfr_sprite_code:
 
 ds_9000_RAM1:
 
-ds_cpu0_task_actv:
+ds_cpu0_task_actv_9000:
        ds.b     0x20
 
 ds_cpu1_task_actv:
@@ -350,7 +350,7 @@ ds_atk_wav_tmp_buf:
 *  10    index/offset of object .... i.e. 8800 etc.
 *  11
 *  13
-ds_bug_motion_que:
+ds_bug_motion_que_9100:
        ds.b     0x14*12  | 12 object data structures (total size $F0)
 
        ds.b     0x10       | 91F0 unused

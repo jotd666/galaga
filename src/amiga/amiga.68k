@@ -753,8 +753,6 @@ really_update_sprites:
 
 	movem.l	a0-a6/d0-d7,-(a7)
 	* first, make sure we have the proper palette (TODO challenging stages)
-
-	bsr		update_delta_mockup
 	
 	bsr		update_hardware_sprites
 	bsr		update_bobs

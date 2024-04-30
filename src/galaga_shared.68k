@@ -267,7 +267,7 @@ rst_18:
 	rts                                    	| [ret]
 
 rst_28:
-	lea	ds_bug_motion_que,a0           	| [ld   hl,#ds_bug_motion_que] memset(..., 0, $F0)
+	lea	ds_bug_motion_que_9100,a0           	| [ld   hl,#ds_bug_motion_que_9100] memset(..., 0, $F0)
 	move.b	#0xF0,d1                        	| [ld   b,#0xF0]
 	clr.b	d0                               	| [xor  a] A==00
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)

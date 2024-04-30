@@ -473,14 +473,14 @@ l_0537:
 	LOAD_D5_16_FROM_D5D6
 	MOVE_TO_VAR	d5,ds3_92A0_frame_cts+1         	| [ld   (ds3_92A0_frame_cts + 1),hl] [1]: 32-frame ... ~2Hz timer
 
-* flag = ( num_bugs < param07 ) && ds_cpu0_task_actv[0x15]
+* flag = ( num_bugs < param07 ) && ds_cpu0_task_actv_9000[0x15]
 	move.b	ds_new_stage_parms+0x07,d0      	| [ld   a,(ds_new_stage_parms + 0x07)] number of aliens left when continous bombing can start
 	move.b	d0,d4                           	| [ld   e,a]
 	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
 	cmp.b	d4,d0                            	| [cp   e]
 	SET_X_FROM_C
 	roxl.b	#1,d1                           	| [rl   b] Cy set if E > A ... shift into B ... clever.
-	move.b	ds_cpu0_task_actv+0x15,d0       	| [ld   a,(ds_cpu0_task_actv + 0x15)] cpu0:f_1F04 (reads fire button input)
+	move.b	ds_cpu0_task_actv_9000+0x15,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x15)] cpu0:f_1F04 (reads fire button input)
 	and.b	d1,d0                            	| [and  b]
 	and.b	#0x01,d0                         	| [and  #0x01] mask off bit-0
 	move.b	d0,b_92A0+0x0A                  	| [ld   (b_92A0 + 0x0A),a] continuous bombing flag (set here by tasking kernel)
@@ -596,7 +596,7 @@ l_057F:
 	jbsr	osd_interrupt_control               | [ei]
 
 l_05B1:
-	lea		ds_stk_cpu1_init,a7    | ld   sp,#ds_stk_cpu1_init
+	*lea		ds_stk_cpu1_init,a7    | ld   sp,#ds_stk_cpu1_init
 	jra	l_05B1                             	| [jp   l_05B1] loop forever
 
 *=============================================================================
@@ -666,7 +666,7 @@ l_05E7_while_wait_for_main_CPU:
 *-----------------------------------------------------------------------------
 f_05EE:
 * if ( task_state == inactive ) return
-	move.b	ds_cpu0_task_actv+0x14,d0       	| [ld   a,(ds_cpu0_task_actv + 0x14)] f_1F85 (input and ship movement)
+	move.b	ds_cpu0_task_actv_9000+0x14,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x14)] f_1F85 (input and ship movement)
 	                               	| [and  a]
 	bne.b	0f                               	| [...]
 	rts                                    	| [ret  z] [...]
@@ -726,8 +726,8 @@ l_0613:
 
 l_0639_not_two_ship:
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv+0x14       	| [ld   (ds_cpu0_task_actv + 0x14),a] 0 ... f_1F85 (input and fighter movement)
-	move.b	d0,ds_cpu0_task_actv+0x15       	| [ld   (ds_cpu0_task_actv + 0x15),a] 0 ... f_1F04 (fire button input)
+	move.b	d0,ds_cpu0_task_actv_9000+0x14       	| [ld   (ds_cpu0_task_actv_9000 + 0x14),a] 0 ... f_1F85 (input and fighter movement)
+	move.b	d0,ds_cpu0_task_actv_9000+0x15       	| [ld   (ds_cpu0_task_actv_9000 + 0x15),a] 0 ... f_1F04 (fire button input)
 	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 0 ... f_05EE (this task, fighter hit-detection)
 	move.b	d0,ds_99B9_star_ctrl+0x00       	| [ld   (ds_99B9_star_ctrl + 0x00),a] 0 ... 1 when fighter on screen
 	move.b	d0,ds_9200_glbls+0x17           	| [ld   (ds_9200_glbls + 0x17),a] 0 ... no_restart_stg (not docked fighters)
@@ -847,7 +847,7 @@ hitd_fghtr_notif:
 	move.b	d6,d4                           	| [ld   e,l] preserved object/index of fighter passed as argument in L
 
 * if ( cpu0:f_2916  active ) ...
-	move.b	ds_cpu0_task_actv+0x08,d0       	| [ld   a,(ds_cpu0_task_actv + 0x08)] cpu0:f_2916 ...supervises attack waves
+	move.b	ds_cpu0_task_actv_9000+0x08,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x08)] cpu0:f_2916 ...supervises attack waves
 	                               	| [and  a]
 	jeq	l_06A8                             	| [jr   z,l_06A8]
 * ... then ...
@@ -1072,7 +1072,7 @@ l_0738:
 	move.b	d6,d4                           	| [ld   e,l]
 
 * if ( task_active ) then ... else _call_hit_detection_all
-	move.b	ds_cpu0_task_actv+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv + 0x1D)] cpu0:f_2000 (capturing boss destroyed, rescued ship spinning)
+	move.b	ds_cpu0_task_actv_9000+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x1D)] cpu0:f_2000 (capturing boss destroyed, rescued ship spinning)
 	                               	| [and  a]
 	jeq	l_0757_call_hit_detection_all      	| [jr   z,l_0757_call_hit_detection_all]
 
@@ -1373,7 +1373,7 @@ l_081E_hdl_flyng_bug:
 	addq.b	#1,d6                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprt_mctl_objs[L].mctl_idx
 
-	lea	ds_bug_motion_que(pc),a0           	| [ld   h,#>ds_bug_motion_que] bug_motion_que[A].b13 = 0 (release this slot)
+	lea	ds_bug_motion_que_9100(pc),a0           	| [ld   h,#>ds_bug_motion_que_9100] bug_motion_que[A].b13 = 0 (release this slot)
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	add.b	#0x13,d0                         	| [add  a,#0x13]
@@ -1454,7 +1454,7 @@ l_0852:
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprt_mctl_objs[ HL ].mctl_idx
 	add.b	#0x13,d0                         	| [add  a,#0x13] mctl_mpool[n].b13
 	move.b	d0,d4                           	| [ld   e,a]
-	lea	ds_bug_motion_que(pc),a1           	| [ld   d,#>ds_bug_motion_que] mctl_mpool[n].b13 == 0 ... make slot inactive
+	lea	ds_bug_motion_que_9100(pc),a1           	| [ld   d,#>ds_bug_motion_que_9100] mctl_mpool[n].b13 == 0 ... make slot inactive
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	clr.b	d0                               	| [xor  a]
@@ -1475,7 +1475,7 @@ l_0852:
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 0
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv+0x1D       	| [ld   (ds_cpu0_task_actv + 0x1D),a] 1 ... shot the boss that captured the ship
+	move.b	d0,ds_cpu0_task_actv_9000+0x1D       	| [ld   (ds_cpu0_task_actv_9000 + 0x1D),a] 1 ... shot the boss that captured the ship
 	move.b	d0,ds5_928A_captr_status+0x03   	| [ld   (ds5_928A_captr_status + 0x03),a] 1
 	move.b	d0,b_9AA0+0x11                  	| [ld   (b_9AA0 + 0x11),a] 1 ... sound-fx count/enable registers, "rescued ship" music
 	movem.l	(sp)+,a0/d6                        	| [pop  hl] restore boss object locator e.g. b_883x
@@ -1538,7 +1538,7 @@ l_08CA_hit_green_boss:
 * f_08D3()
 *  Description:
 *   bug motion runner
-*   The flying bugs are tracked by the queue (ds_bug_motion_que) which is
+*   The flying bugs are tracked by the queue (ds_bug_motion_que_9100) which is
 *   populated by f_2916.
 * IN:
 *  ...
@@ -1546,8 +1546,8 @@ l_08CA_hit_green_boss:
 *  ...
 *-----------------------------------------------------------------------------
 f_08D3:
-	lea	ds_bug_motion_que(pc),a2           	| [ld   ix,#ds_bug_motion_que]
-
+	lea	ds_bug_motion_que_9100(pc),a2           	| [$08D3: ld   ix,#ds_bug_motion_que_9100]
+	
 	move.b	#0x0C,d0                        	| [ld   a,#0x0C]
 	move.b	d0,b_bug_que_idx                	| [ld   (b_bug_que_idx),a] 12 ... nbr of queue structures
 
@@ -1558,16 +1558,16 @@ f_08D3:
 	move.b	d0,(a0)                         	| [ld   (hl),a] = bugs_flying_cnt
 
 * traverse the object-motion queue
-for__pool_idx:
-	btst.b	#0,(0x13,a2)                    	| [bit  0,0x13(ix)] check for activated state
+for__pool_idx_08E4:
+	btst.b	#0,(0x13,a2)                    	| [$08E4: bit  0,0x13(ix)] check for activated state
 	jeq	next__pool_idx                     	| [jp   z,next__pool_idx]
 
 	lea	b_bugs_flying_cnt(pc),a0           	| [ld   hl,#b_bugs_flying_cnt] +=1
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 
+	moveq	#0,d6
 	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] object identifier...8800[L]
 	lea	b_8800,a0                      	| [ld   h,#>b_8800]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 
 * 9 is diving, 7 is spawning, 3 (and 6) bomb?
@@ -1670,10 +1670,12 @@ l_0959:
 
 * not until stage 8 ... load a pointer from data tbl into .p08 (09)
 	addq.w	#1,a0                           	| [inc  hl] ptr to data table
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	addq.w	#1,a0                           	| [inc  hl]
+	move.b	(a0)+,d0                         	| [ld   a,(hl)]
+	                           	| [inc  hl]
 	move.b	(a0),d5                         	| [ld   h,(hl)]
 	move.b	d0,d6                           	| [ld   l,a]
+	illegal
+	dc.w	1680
 	jra	l_0B8C                             	| [jp   l_0B8C] skips inc hl ($0B8C), update $08, $09, $0D, break
 
 l_0963:
@@ -1737,7 +1739,7 @@ l_098F_do_split_off_bonus_bee:
 	exg		d0,d7                              	| [ex   af,af'] stash index of spawning yellow alien
 
 * find available slot or getout
-	lea	ds_bug_motion_que+0xF0-1(pc),a0    	| [ld   hl,#ds_bug_motion_que + 0xF0 - 1] start at end/top of segment
+	lea	ds_bug_motion_que_9100+0xF0-1(pc),a0    	| [ld   hl,#ds_bug_motion_que_9100 + 0xF0 - 1] start at end/top of segment
 	move.w	#-14,d3                       	| [ld   de,#-0x14] sizeof array element
 	move.b	#0x0C,d1                        	| [ld   b,#0x0C] nbr of object in the array
 l_09A3:
@@ -1758,9 +1760,8 @@ l_09AE_doit:
 											| [ld   e,ixl]
 											| [ld   d,ixh]
 	exg	a1,a0                              	| [ex   de,hl]
-	move.l	a1,a2
-	| ld   iyl,e
-	| ld   iyh,d
+	move.l	a1,a3							| ld   iyl,e
+											| ld   iyh,d
 	move.w	#0x06,d1                        	| [ld   bc,#0x0006] 6
 	jbsr	ldir                              	| [ldir]
 	move.w	#6,d1                           	| [ld   c,#6]
@@ -1770,7 +1771,7 @@ l_09AE_doit:
 	exg	a1,a0                              	| [ex   de,hl]
 	move.w	#4,d1                           	| [ld   c,#4]
 	jbsr	ldir                              	| [ldir]
-	move.b	(0x13,a2),d0                    	| [ld   a,0x13(ix)] 0x13(iy)
+	move.b	(0x13,a2),d0                    	| [$0E54: ld   a,0x13(ix)] 0x13(iy)
 	move.b	d0,(0x13,a3)                    	| [ld   0x13(iy),a]
 
 * load new data pointer from data and store in flite q object
@@ -1795,7 +1796,9 @@ l_09AE_doit:
 	move.b	d0,(a1)+                         	| [ld   (de),a]
 	                           	| [inc  e]
 	* TODO debug here a3 value????
-	*move.b	iyl,d0                         	| [ld   a,iyl]
+	illegal
+	dc.w	1800
+	*move.b	iyl,d0                         	| [$09F3: ld   a,iyl]
 	move.b	d0,(a1)                         	| [ld   (de),a]
 	addq.w	#1,a0                           	| [inc  hl] new ptr loaded to b08/b09, but HL is advanced, still in same data series
 	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
@@ -1910,7 +1913,7 @@ l_0A73:
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 0
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv+0x19       	| [ld   (ds_cpu0_task_actv + 0x19),a] 1: f_21CB ... boss diving to capture position
+	move.b	d0,ds_cpu0_task_actv_9000+0x19       	| [ld   (ds_cpu0_task_actv_9000 + 0x19),a] 1: f_21CB ... boss diving to capture position
 	jbsr	read_ixl_into_d0                         	| [ld   a,ixl]
 	move.b	d0,ds_plyr_actv+_b_cboss_slot   	| [ld   (ds_plyr_actv +_b_cboss_slot),a] ixl ... offset of slot used by capture boss, referenced by cpu0:f_21CB
 	move.l	(sp)+,a0                        	| [pop  hl] ptr to data table
@@ -2064,9 +2067,11 @@ case_0B46: | 0x02
 l_0B46:
 * ld new data ptr into de and ex into hl ... resultant de not used
 	addq.w	#1,a0                           	| [inc  hl] ptr to data table
-	move.b	(a0),d4                         	| [ld   e,(hl)]
-	addq.w	#1,a0                           	| [inc  hl]
+	move.b	(a0)+,d4                         	| [ld   e,(hl)]
+	                           	| [inc  hl]
 	move.b	(a0),d3                         	| [ld   d,(hl)]
+	illegal
+	dc.w	2073
 	exg	a1,a0                              	| [ex   de,hl] new pointer to HL
 	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
 
@@ -2121,6 +2126,8 @@ case_0B87:  | 0x07
 l_0B8B:
 	addq.w	#1,a0                           	| [inc  hl] data pointer
 l_0B8C:
+	illegal
+	dc.w	2127
 	move.b	d6,(0x08,a2)                    	| [ld   0x08(ix),l] .b00
 	move.b	d5,(0x09,a2)                    	| [ld   0x09(ix),h] .b01
 	addq.b	#1,(0x0D,a2)                    	| [inc  0x0D(ix)]
@@ -2129,7 +2136,7 @@ l_0B8C:
 
 * in an attack convoy ... changing direction
 case_0B98:  | 0x08
-* if (0x38 != (0x38 & ds_bug_motion_que[b_bug_que_idx].b10))  hl += 3 ...
+* if (0x38 != (0x38 & ds_bug_motion_que_9100[b_bug_que_idx].b10))  hl += 3 ...
 	move.b	(0x10,a2),d0                    	| [ld   a,0x10(ix)] offset of object ...8800[L]
 	and.b	#0x38,d0                         	| [and  #0x38]
 	cmp.b	#0x38,d0                         	| [cp   #0x38] "transient"? ($38, $3A, $3C, $3E)
@@ -2167,7 +2174,7 @@ case_0BD1:  | 0x05
 * if (1 == cont_bmb_flag && 0 == task_actv[0x1D]) then pD += 3 else pD = *(pHL)
 	move.b	b_92A0+0x0A,d0                  	| [ld   a,(b_92A0 + 0x0A)] continuous bombing flag, test for reload data pointer
 	move.b	d0,d2                           	| [ld   c,a]
-	move.b	ds_cpu0_task_actv+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv + 0x1D)] f_2000 (destroyed boss that captured ship) test for reload data pointer
+	move.b	ds_cpu0_task_actv_9000+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x1D)] f_2000 (destroyed boss that captured ship) test for reload data pointer
 	subq.b	#1,d0                           	| [dec  a]
 	and.b	d2,d0                            	| [and  c]
 	jra	l_0B9F                             	| [jr   l_0B9F] load next ptr or skip
@@ -2560,7 +2567,7 @@ l_0D50:
 	cmp.b	#152>>1,d0			| cp   #152>>1                               ; 0x4C
 	jcs	l_0DF5_next_superloop_and_reload_0E	| [jp   c,l_0DF5_next_superloop_and_reload_0E]
 
-	move.b	ds_cpu0_task_actv+0x15,d0       	| [ld   a,(ds_cpu0_task_actv + 0x15)] f_1F04 ...fire button input
+	move.b	ds_cpu0_task_actv_9000+0x15,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x15)] f_1F04 ...fire button input
 	                               	| [and  a]
 	jeq	l_0DF5_next_superloop_and_reload_0E	| [jp   z,l_0DF5_next_superloop_and_reload_0E]
 
@@ -2688,7 +2695,7 @@ l_0DE2:
 	clr.b	(a0)                             	| [ld   (hl),#0]
 
 l_0DF5_next_superloop_and_reload_0E:
-	move.b	b_92E2+0x00,d0                  	| [ld   a,(b_92E2 + 0x00)] to $0E(ix) e.g. A==14 (set for each round ... bomb drop counter)
+	move.b	b_92E2,d0                  	| [ld   a,(b_92E2 + 0x00)] to $0E(ix) e.g. A==14 (set for each round ... bomb drop counter)
 	move.b	d0,(0x0E,a2)                    	| [ld   0x0E(ix),a] b_92E2[0] ... bomb drop counter
 
 next__pool_idx:
@@ -2701,7 +2708,7 @@ next__pool_idx:
 	move.w	#0x0014,d3                      	| [ld   de,#0x0014] size of object-movement structure 20
 	add.w	d3,a2                            	| [add  ix,de]
 
-	jra	for__pool_idx                      	| [jp   for__pool_idx]
+	jra	for__pool_idx_08E4                      	| [jp   for__pool_idx_08E4]
 
 * creature gets to home-spot
 l_0E08_imhome:
