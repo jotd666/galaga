@@ -546,13 +546,13 @@ l_0575:
 *  ...
 *-----------------------------------------------------------------------------
 galaga1_reset:
-	lea	ds_rom_test_status,a1     	| [ld   de,#ds_rom_test_status + 0x00] pause/resume flag
-
-* wait for master CPU to acknowledge/resume (0)
-l_057F:
-	tst.b	(a1)                         	| [ld   a,(de)]
-	                               	| [and  a]
-	jne	l_057F                             	| [jr   nz,l_057F]
+*	lea	ds_rom_test_status,a1     	| [ld   de,#ds_rom_test_status + 0x00] pause/resume flag
+*
+** wait for master CPU to acknowledge/resume (0)
+*l_057F:
+*	tst.b	(a1)                         	| [ld   a,(de)]
+*	                               	| [and  a]
+*	jne	l_057F                             	| [jr   nz,l_057F]
 
 ** compute ROM checksum
 *	move.b	d0,d5                           	| [ld   h,a]

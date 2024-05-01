@@ -123,7 +123,6 @@
 	.global		ds_stk_cpu0_init
 	.global		ds_stk_cpu1_init
 	.global		ds_9100
-	.global		ds_rom_test_status
 	.global		ds_9100_tmp
 	.global		b_svc_test_inp_buf
 	.global		ds_atk_wav_tmp_buf
@@ -325,10 +324,10 @@ ds_stk_cpu1_init:
 ds_9100:
 
 * temp variables for romtest mgr
-ds_rom_test_status:
+
 
 ds_9100_tmp:
-b_svc_test_inp_buf:
+
 
 ds_atk_wav_tmp_buf:
        ds.b     0x10       | temp array for c_25A2 ($0100 boundary)
