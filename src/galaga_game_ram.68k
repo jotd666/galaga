@@ -115,8 +115,8 @@
 	.global		b_best5_name4
 	.global		b_best5_name5
 	.global		ds_sprite_code_8B00
-	.global		mrw_sprite_code
-	.global		sfr_sprite_code
+	.global		mrw_sprite_code_8B00
+	.global		sfr_sprite_code_8B80
 	.global		ds_9000_RAM1
 	.global		ds_cpu0_task_actv_9000
 	.global		ds_cpu1_task_actv
@@ -161,8 +161,8 @@
 	.global		pb_attk_wav_IDs
 	.global		b_92E2
 	.global		ds_sprite_posn_9300
-	.global		mrw_sprite_posn
-	.global		sfr_sprite_posn
+	.global		mrw_sprite_posn_9300
+	.global		sfr_sprite_posn_9380
 	.global		ds_9800_RAM2
 	.global		ds_hpos_spcoords_9800
 	.global		ds_plyr_data
@@ -204,10 +204,12 @@
 	.global		b_9A80
 	.global		b_9AA0
 	.global		b_9AC0
+	.global		ds_9AA0
+	.global		ds_hpos_loc_offs_9900
 	.global		_stack_cpu_sub2
 	.global		ds_sprite_ctrl_9B00
-	.global		mrw_sprite_ctrl
-	.global		sfr_sprite_ctrl
+	.global		mrw_sprite_ctrl_9B00
+	.global		sfr_sprite_ctrl_9B80
 	.global		ds2_stg_chllg_rnd_attrib
 
 *=============================================================================
@@ -245,15 +247,16 @@ ds_8920:
 
 ds_89E0:
        ds.b     0x20       | data for CPU sub-1 f_0ECA (the unused mystery task)
-
+* moved a pointer here
+	ds.b		0x4
 
 * Temp vars for _top5_dlg_proc ... gg1-4
 b_8A00:
-       ds.b     0x02       | ptr to plyr1 score or plyr2 score on screen.
+	ds.b     0x04       | ptr to plyr1 score or plyr2 score on screen.
        ds.b     0x01       | L==2, R==8 X=A   previous controller state
        ds.b     0x01       | character selection counter/timer
        ds.b     0x04       | pointer to new name in table
-       ds.b     0x08       | unused
+	ds.b     0x06       | unused (jotd: removed 4 bytes so rest is not shifted)
 *b_8A10:
        ds.b     0x01       | lower byte of current input character's address in v-ram
        ds.b     0x01       | 1==1ST place etc.
@@ -289,15 +292,6 @@ b_best5_name5:
        ds.b     0xB0       | unused (8A50)
 
 
-* origin base of sprite data block
-ds_sprite_code_8B00:
-
-mrw_sprite_code:
-       ds.b     0x0040     | sprite code/color l (buffer)
-       ds.b     0x0040     | sprite code/color h (buffer)
-sfr_sprite_code:
-       ds.b     0x0040     | sprite code/color l ("video" registers)
-       ds.b     0x0040     | sprite code/color h ("video" registers)
 
 
 *=============================================================================
@@ -378,7 +372,7 @@ b8_9201_game_state:
        ds.b     0x01       | game states (1, 2, 3, 4 from the manual)
                             * 0==Game Ended   (not described in manual)
                             * 1==ATTRACT_MODE, 2==READY_TO_PLAY_MODE, 3==PLAY_MODE
-                            * ??==SELF_TEST_MODE  (doesn't have a corresponding enumeration value)
+                            * ?==SELF_TEST_MODE  (doesn't have a corresponding enumeration value)
        ds.b     0x01
 *_b_9203
        ds.b     0x01       | jp table index demo mode
@@ -419,7 +413,7 @@ b_9215_flip_screen:
 
 
 *-----------------------------------------------------------------------------
-* Object-collision notification to f_1DB3 from cpu1:c_076A (even-bytes)
+* Object-collision notification to f_update_enemy_status_1db3 from cpu1:c_076A (even-bytes)
 *-----------------------------------------------------------------------------
 b_9200_obj_collsn_notif:
        ds.b     0x60       | even bytes ($30 elements)
@@ -452,9 +446,9 @@ ds3_9288_tmp_IO_data:
 
 *-----------------------------------------------------------------------------
 p_attrmode_sptiles:
-       ds.l     0x01       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
+	ds.l    1       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
 pdb_demo_fghtrvctrs:
-       ds.l     0x01       | f_1700, tracks state of demo mode by setting an offset to the data table
+	ds.l     1       | f_ship_demo_controls_1700, tracks state of demo mode by setting an offset to the data table
 ds2_stg_chllg_rnd_attrib:   | attributes selected for hit all 8 bonus on challenge round convoy i.e. score, sprite tile
        ds.b     0x01       | hit-count, add to collsn_hit_mult[0x0F]
        ds.b     0x01       | sprite code and collision flag, ld to obj_collsn_notif[L]
@@ -507,7 +501,7 @@ ds4_game_tmrs_92ac:
 
 b_92B0:
        ds.b     0x02 * 8   | bomb X-rate
-                            * accumulator for division remainder (f_1EA4)
+                            * accumulator for division remainder (f_bomb_position_updater_1ea4)
 
 b_92C0:
 * bomber activation timers (3 bytes) and init values (3 bytes)
@@ -529,24 +523,38 @@ b_CPU2_in_progress:
 
        ds.b     0x08       | unused
 
+	.align	2
 pb_attk_wav_IDs:
-       ds.b     0x02       | tmp ptr in c_25A2
+     ds.b     0x04       | tmp ptr in c_25A2
 b_92E2:
        ds.b     0x01       | _stg_dat[0] e.g. *(26F4) ... c_25A2
        ds.b     0x01       | _stg_dat[1] e.g. *(26F5) ... c_25A2, ld to 0x0f(ix)
 
        ds.b     0x1C       | unused
 
+* origin base of sprite data block
+ds_sprite_code_8B00:
+
+mrw_sprite_code_8B00:
+       ds.b     0x0040     | sprite code/color l (buffer)
+       ds.b     0x0040     | sprite code/color h (buffer)
 
 * sprite position buffer and SFRs
 ds_sprite_posn_9300:
+mrw_sprite_posn_9300:
+     ds.b     0x40       | sprite position l (buffer)
+     ds.b     0x40       | sprite position h (buffer)
 
-mrw_sprite_posn:
-       ds.b     0x40       | sprite position l (buffer)
-       ds.b     0x40       | sprite position h (buffer)
-sfr_sprite_posn:
-       ds.b     0x40       | sprite position l ("video" registers)
-       ds.b     0x40       | sprite position h ("video" registers)
+	 * this should be continuous
+sfr_sprite_code_8B80:
+     ds.b     0x0040     | sprite code/color l ("video" registers) 0x8B80
+     ds.b     0x0040     | sprite code/color h ("video" registers) 0x8BC0
+sfr_sprite_ctrl_9B80:
+     ds.b     0x40       | sprite control l ("video" registers)
+     ds.b     0x40       | sprite control h ("video" registers)
+sfr_sprite_posn_9380:
+     ds.b     0x40       | sprite position l ("video" registers)
+     ds.b     0x40       | sprite position h ("video" registers)
 
 
 *=============================================================================
@@ -589,7 +597,7 @@ ds_cpu0_task_resrv:
 * 10 column coordinates, 6 row coordinates, 2-bytes per coordinate.
 
 * even-bytes: offset of home-position coordinate relative to origin
-ds_hpos_loc_offs:
+ds_hpos_loc_offs_9900:
 
 * odd-bytes: copy of origin data for access in CPU1 address space (i.e. bits <8:1> of precision coordinate)
 ds_hpos_loc_orig:
@@ -748,18 +756,13 @@ b_9AC0:
        ds.b     0x20       | Active flags of each sound effect
 
 
-_stack_cpu_sub2:
-       ds.b     0x20       | 9AE0
-*_stack_cpu_sub2_init:
+
 
 
 * sprite control buffer and SFRs (9B00)
 ds_sprite_ctrl_9B00:
 
-mrw_sprite_ctrl:
+mrw_sprite_ctrl_9B00:
        ds.b     0x40       | sprite control l (buffer)
        ds.b     0x40       | sprite control h (buffer)
-sfr_sprite_ctrl:
-       ds.b     0x40       | sprite control l ("video" registers)
-       ds.b     0x40       | sprite control h ("video" registers)
 

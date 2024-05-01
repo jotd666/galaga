@@ -7,4 +7,4 @@
 db_2A3C: table+bits to rework & understand how it's read
 flv tables: -base to handle
 
-debug d_cpu0_task_table calls
+debug sprite shadow register write on MAME

@@ -435,12 +435,13 @@ p_flv_0502:
 *-----------------------------------------------------------------------------
 galaga1_irq:
 jp_0513_rst38:
-	clr.b	d0                               	| [xor  a]
-	jbsr	osd_interrupt_control                    	| [ld   (_sfr_6821),a] 0 ...CPU-sub1 IRQ acknowledge/enable
+	*clr.b	d0                               	| [xor  a]
+	*jbsr	osd_interrupt_control                    	| [ld   (_sfr_6821),a] 0 ...CPU-sub1 IRQ acknowledge/enable
 	*move.b	_sfr_dsw5,d0                    	| [ld   a,(_sfr_dsw5)] DSWA: freeze video
 	*and.b	#0x02,d0                         	| [and  #0x02] freeze_ctrl_dsw (6j)
 	*jeq	l_0575                             	| [jp   z,l_0575] if paused, goto 0575 // done
 
+	move.w	#0,0x201
 * frame_cntr++
 	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
 	addq.b	#1,d0                           	| [inc  a]
@@ -461,15 +462,19 @@ jp_0513_rst38:
 	jne	l_0537                             	| [jr   nz,l_0537] A!=0 && A!=1 .... do nothing (why reload from HL?)
 * ...
 * Before incrementing 4Hz, assert that 4Hz is ODD on frame where _92A0[0] increments to 0.
-	move.b	d5,d0                           	| [ld   a,h] t[2] ... MSB
-	or.b	#0x01,d0                          	| [or   #0x01]
-	move.b	d0,d5                           	| [ld   h,a]
+	                           	| [ld   a,h] t[2] ... MSB
+	or.b	#0x01,d5                          	| [or   #0x01]
+	                           	| [ld   h,a]
 
 * update both 4Hz and 2Hz
 	addq.b	#1,d6                           	| [inc  l] t[1] = L++ ... 2Hz
 l_0536:
 	addq.b	#1,d5                           	| [inc  h] t[2] = H++ ... 4Hz
 l_0537:
+	* D5 remains odd, except when counter "ticks", in which case there's a "pulse" where d5 is even, then
+	* switches to odd immediately after. It allows observers of the value to sync on this frequency without
+	* having to store the previous value
+	
 	LOAD_D5_16_FROM_D5D6
 	MOVE_TO_VAR	d5,ds3_92A0_frame_cts+1         	| [ld   (ds3_92A0_frame_cts + 1),hl] [1]: 32-frame ... ~2Hz timer
 
@@ -517,7 +522,7 @@ l_055C:
 
 	jbsr	c_0034                            	| [call c_0034] (jumps to (a0) from task table)
 
-	movem.w	(sp)+,d1/d2                    	| [pop  bc]
+	movem.w	(sp)+,d1/d2                    		| [pop  bc]
 	move.b	d1,d0                           	| [ld   a,b] "status" actually adds to index
 	add.b	d2,d0                            	| [add  a,c]
 	move.b	d0,d2                           	| [ld   c,a]
@@ -525,9 +530,9 @@ l_055C:
 	jeq	l_054F_while                       	| [jr   z,l_054F_while]
 
 l_0575:
-	move.b	#1,d0                           	| [ld   a,#1]
+	*move.b	#1,d0                           	| [ld   a,#1]
 	*move.b	d0,_sfr_6821                    	| [ld   (_sfr_6821),a] 1 ...CPU-sub1 IRQ acknowledge/enable
-	jbsr	osd_interrupt_control
+	*jbsr	osd_interrupt_control
 	rts                                    	| [ret]
 
 *=============================================================================
@@ -632,16 +637,16 @@ f_05BF:
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,b_CPU2_in_progress           	| [ld   (b_CPU2_in_progress),a] 1
 
-	lea	mrw_sprite_code,a0             	| [ld   hl,#mrw_sprite_code]
-	lea	sfr_sprite_code,a1             	| [ld   de,#sfr_sprite_code]
+	lea	mrw_sprite_code_8B00,a0             	| [ld   hl,#mrw_sprite_code_8B00]
+	lea	sfr_sprite_code_8B80,a1             	| [ld   de,#sfr_sprite_code_8B80]
 	move.w	#0x40,d1                        	| [ld   bc,#0x0040] 64
 	jbsr	ldir                              	| [ldir]
-	lea	mrw_sprite_posn,a0             	| [ld   hl,#mrw_sprite_posn]
-	lea	sfr_sprite_posn,a1             	| [ld   de,#sfr_sprite_posn]
+	lea	mrw_sprite_posn_9300,a0             	| [ld   hl,#mrw_sprite_posn_9300]
+	lea	sfr_sprite_posn_9380,a1             	| [ld   de,#sfr_sprite_posn_9380]
 	move.w	#0x40,d1                        	| [ld   c,#0x40]
 	jbsr	ldir                              	| [ldir]
-	lea	mrw_sprite_ctrl,a0             	| [ld   hl,#mrw_sprite_ctrl]
-	lea	sfr_sprite_ctrl,a1             	| [ld   de,#sfr_sprite_ctrl]
+	lea	mrw_sprite_ctrl_9B00,a0             	| [ld   hl,#mrw_sprite_ctrl_9B00]
+	lea	sfr_sprite_ctrl_9B80,a1             	| [ld   de,#sfr_sprite_ctrl_9B80]
 	move.w	#0x40,d1                        	| [ld   c,#0x40]
 	jbsr	ldir                              	| [ldir]
 
@@ -720,8 +725,8 @@ l_0613:
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
 	move.b	ds_sprite_posn_9300+0x60,d0          	| [ld   a,(ds_sprite_posn_9300 + 0x60)] get ship 2 position
 	move.b	d0,ds_sprite_posn_9300+0x62          	| [ld   (ds_sprite_posn_9300 + 0x62),a] ship_1_position = ship_2_position
-	move.b	sfr_sprite_posn+0x62,d0         	| [ld   a,(sfr_sprite_posn + 0x62)]
-	lea	sfr_sprite_posn+0x60,a0        	| [ld   hl,#sfr_sprite_posn + 0x60]
+	move.b	sfr_sprite_posn_9380+0x62,d0         	| [ld   a,(sfr_sprite_posn_9380 + 0x62)]
+	lea	sfr_sprite_posn_9380+0x60,a0        	| [ld   hl,#sfr_sprite_posn_9380 + 0x60]
 	jra	l_064F                             	| [jr   l_064F] handle ship collision
 
 l_0639_not_two_ship:
@@ -2033,7 +2038,7 @@ case_0B16:  | 0x01
 	move.b	(0x13,a2),d1                    	| [ld   b,0x13(ix)] xor
 	eor.b	d1,d0                            	| [xor  b]
 	rol.b	#1,d0                            	| [rlca]
-	move.b	sfr_sprite_posn+0x62,d0         	| [ld   a,(sfr_sprite_posn + 0x62)] ship1
+	move.b	sfr_sprite_posn_9380+0x62,d0         	| [ld   a,(sfr_sprite_posn_9380 + 0x62)] ship1
 	addq.b	#1,d0                           	| [inc  a]
 	subq.b	#1,d0                           	| [dec  a]
 	scs	d7
@@ -2941,33 +2946,6 @@ f_0ECA:
 	
 
 
-*=============================================================================
-* c_0FC6()
-*  Description:
-*    Called by f_0ECA
-* IN:
-*  ...
-* OUT:
-*  ...
-*-----------------------------------------------------------------------------
-c_0FC6:
-	exg		a0,d7
-	move.b	d0,d2                           	| [ld   c,a]
-	and.b	#0x0F,d0                         	| [and  #0x0F]
-	jbsr	osd_w_colorram                         	| [ld   (hl),a]
-	addq.w	#1,d7                           	| [inc  l]
-	move.b	d2,d0                           	| [ld   a,c]
-	rol.b	#4,d0                            	| [rlca] * 4
-	and.b	#0x0F,d0                         	| [and  #0x0F]
-	jbsr	osd_w_colorram                         	| [ld   (hl),a]
-	addq.w	#1,d7                           	| [inc  l]
-	exg		a0,d7
-	rts                                    	| [ret]
-
-*=============================================================================
-* data for f_0ECA
-d_0FD5:
-	.byte 0xFD,0xFB,0xF7,0xEF,0xFE
 
 * additional challenge stage data (see db_2A3C)
 db_flv_0fda:
