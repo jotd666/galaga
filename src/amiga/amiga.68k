@@ -2095,6 +2095,8 @@ osd_w_videoram:
 * should preserve all registers
 
 osd_w_colorram:
+	rts
+	
     .ifeq OPT_DISABLE_BG_LAYER
 	movem.l	d0-d7/a0-a3,-(a7)
 	

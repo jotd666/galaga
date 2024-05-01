@@ -41,7 +41,7 @@
 * < A0 (HL)
 * < D0 (A)
 rld:
-	illegal
+	*illegal
     movem.w    d1/d2,-(a7)
     move.b    d0,d1        | backup A
     clr.w    d2            | make sure high bits of D2 are clear
@@ -68,7 +68,7 @@ rld:
 * A = $WZ
 * (HL) = $XY
 rrd:
-	illegal   | needs to be properly debugged
+	*illegal   | needs to be properly debugged
 	movem.w	d1/d2,-(a7)
 	move.b	d0,d1		| backup A
 	clr.w	d2			| make sure high bits of D2 are clear

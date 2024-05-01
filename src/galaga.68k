@@ -1387,6 +1387,8 @@ f_update_sprites_0828:
 	* update all sprite registers at the same time
 	* (it was done in cooperation with the other cpu)
 	
+	move.b	#0,0x200
+	
 	lea	mrw_sprite_code_8B00,a0             	| [ld   hl,#mrw_sprite_code_8B00]
 	lea	sfr_sprite_code_8B80,a1             	| [ld   de,#sfr_sprite_code_8B80]
 	move.w	#0x80,d1                        	| [ld   bc,#0x0040] 64
@@ -3063,7 +3065,8 @@ l_1289:
 *  _attrmode_sptiles: advanced to next data group
 *-----------------------------------------------------------------------------
 c_sprite_tiles_displ_128C:
-	move.b	#0x2,0x200
+
+
 	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
 
 * L = p_sptiles_displ[idx*4 + 0] ... index/offset of object to use
@@ -3077,14 +3080,15 @@ c_sprite_tiles_displ_128C:
 	move.b	(a1),d0                         	| [ld   a,(de)]
 	move.b	d0,d2                           	| [ld   c,a]
 
-* sprite_code<3:6>
+* sprite_code<3:6>	
+
 * tile 0+6 in each set of 8 is the "upright" orientation (wings spread for bug)
 	and.b	#0x78,d0                         	| [$1297: and  #0x78]
 	addq.b	#6,d0                           	| [$1299: add  a,#6]
 	move.b	d0,(a0)                         	| [$129B: ld   (hl),a] sprite_code_base[ object + 0 ] ... sprite tile code
 
 * advance pointer, i.e. sprite_code_base[ index + 1 ] ... color code
-	addq.w	#1,a0                           	| [inc  l]
+	                           	| [inc  l]
 
 * get color bits from original color/code value
 	move.b	d2,d0                           	| [ld   a,c]
@@ -3096,11 +3100,11 @@ c_sprite_tiles_displ_128C:
 	jeq	l_12A6                             	| [jr   z,l_12A6]
 	or.b	#0x08,d0                          	| [or   #0x08]
 l_12A6:
-	move.b	d0,(a0)                         	| [ld   (hl),a] sprite_code_base
+	move.b	d0,(1,a0)                         	| [ld   (hl),a] sprite_code_base
 
 	addq.w	#1,a1                           	| [inc  de] &table[ n + 2 ]  ... L/R offset
 
-	subq.w	#1,a0                           	| [dec  l] object_data[ n + 0 ] ... object state
+	                           	| [dec  l] object_data[ n + 0 ] ... object state
 
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
 
@@ -3110,13 +3114,13 @@ l_12A6:
 
 	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
 	add.w	d6,a0
-	move.b	(a1),d0                         	| [ld   a,(de)] L/R offset
-	move.b	d0,(a0)                         	| [ld   (hl),a] sprite_posn.X
+	move.b	(a1)+,d0                         	| [ld   a,(de)] L/R offset
+	move.b	d0,(a0)+                         	| [ld   (hl),a] sprite_posn.X
 
 * Y coordinate: the table value is actually sprite.posn.Y<8..1> and the sla
 * causes the Cy flag to pick up sprite.posn<8> ...
-	addq.w	#1,a1                           	| [inc  de] &table[ n + 3 ]  ... T/B offset
-	addq.w	#1,a0                           	| [inc  l] sprite_posn.Y<0..7>
+												| [inc  de] &table[ n + 3 ]  ... T/B offset
+												| [inc  l] sprite_posn.Y<0..7>
 	move.b	(a1),d0                         	| [ld   a,(de)]
 	asl.b	#1,d0                            	| [sla  a]
 	move.b	d0,(a0)                         	| [ld   (hl),a] sprite_posn.Y
@@ -4092,12 +4096,12 @@ l_18BB:
 l_18C6:
 * tmr == 5, explosion complete ... '150' score on display
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_sprite_posn_9300+0x62          	| [ld   (ds_sprite_posn_9300 + 0x62),a] 0 ... fighter (1) is removed from screen
+	move.b	d0,ds_sprite_posn_9300+0x62         | [ld   (ds_sprite_posn_9300 + 0x62),a] 0 ... fighter (1) is removed from screen
 	move.b	#0x13,d2                        	| [ld   c,#0x13]
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("(C) 1981 NAMCO LTD.")
+	jbsr	string_out_pe_30                    | [rst  0x30] string_out_pe ("(C) 1981 NAMCO LTD.")
 	move.b	#0x14,d2                        	| [ld   c,#0x14]
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("NAMCO" - 6 tiles)
-	rts                                    	| [ret]
+	jbsr	string_out_pe_30                    | [rst  0x30] string_out_pe ("NAMCO" - 6 tiles)
+	rts                                    		| [ret]
 
 * 04, 09, 11: wait for fighter control task to disable itself
 case_wait_for_fighter_task_18D1:
@@ -10337,7 +10341,6 @@ rst_00_cpu0:
 *  HL == final offset in video ram (some code actually uses this!)
 *-----------------------------------------------------------------------------
 string_out_pe_30:
-												| [scf]
 	st.b	d7                              	| [ex   af,af']
 	jra	j_string_out_pe_139a                    	| [jp   j_string_out_pe_139a]
 

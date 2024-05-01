@@ -7,4 +7,7 @@
 db_2A3C: table+bits to rework & understand how it's read
 flv tables: -base to handle
 
-debug sprite shadow register write on MAME
+- debug rld,rrd (called after intro)
+- yellow flashes
+- HIGH SCORE not displayed!
+- remove red timer flashes, maybe speedup using F10?

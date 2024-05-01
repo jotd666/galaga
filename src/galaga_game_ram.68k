@@ -548,12 +548,12 @@ mrw_sprite_posn_9300:
 sfr_sprite_code_8B80:
      ds.b     0x0040     | sprite code/color l ("video" registers) 0x8B80
      ds.b     0x0040     | sprite code/color h ("video" registers) 0x8BC0
-sfr_sprite_ctrl_9B80:
-     ds.b     0x40       | sprite control l ("video" registers)
-     ds.b     0x40       | sprite control h ("video" registers)
 sfr_sprite_posn_9380:
      ds.b     0x40       | sprite position l ("video" registers)
      ds.b     0x40       | sprite position h ("video" registers)
+sfr_sprite_ctrl_9B80:
+     ds.b     0x40       | sprite control l ("video" registers)
+     ds.b     0x40       | sprite control h ("video" registers)
 
 
 *=============================================================================
