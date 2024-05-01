@@ -5,13 +5,17 @@
 	sub.l	#\base,d6
 	.ifndef		RELEASE
 	jpl		0f
+	move.l	a0,a2
 	lea		\base,a1
+	lea		compute_lsb_a0_d6_base_mismatch_msg,a0
 	jbsr	osd_break
 	illegal
 0:
 	cmp.w	#0x100,d6
 	jcs		0f
-	lea		\base,a2
+	move.l	a0,a2
+	lea		\base,a1
+	lea		compute_lsb_a0_d6_base_mismatch_msg,a0
 	jbsr	osd_break
 	illegal
 0:
@@ -24,12 +28,14 @@
 	.ifndef		RELEASE
 	jpl		0f
 	lea		\base,a2
+	lea		compute_lsb_a1_d4_base_mismatch_msg,a0
 	jbsr	osd_break
 	illegal
 0:
 	cmp.w	#0x100,d4
 	jcs		0f
 	lea		\base,a2
+	lea		compute_lsb_a1_d4_base_mismatch_msg,a0
 	jbsr	osd_break
 	illegal
 0:
@@ -117,3 +123,12 @@
 	move.b	d3,d4
 	lsr.w	#8,d3
 	.endm
+
+	.ifndef	RELEASE
+compute_lsb_a0_d6_base_mismatch_msg:
+	.asciz	"compute_lsb_a0_d6_base_mismatch"
+compute_lsb_a1_d4_base_mismatch_msg:
+	.asciz	"compute_lsb_a1_d4_base_mismatch"
+
+	.endif
+	

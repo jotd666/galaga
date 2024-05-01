@@ -114,7 +114,7 @@
 	.global		b_best5_name3
 	.global		b_best5_name4
 	.global		b_best5_name5
-	.global		ds_sprite_code
+	.global		ds_sprite_code_8B00
 	.global		mrw_sprite_code
 	.global		sfr_sprite_code
 	.global		ds_9000_RAM1
@@ -160,7 +160,7 @@
 	.global		b_CPU2_in_progress
 	.global		pb_attk_wav_IDs
 	.global		b_92E2
-	.global		ds_sprite_posn
+	.global		ds_sprite_posn_9300
 	.global		mrw_sprite_posn
 	.global		sfr_sprite_posn
 	.global		ds_9800_RAM2
@@ -290,7 +290,7 @@ b_best5_name5:
 
 
 * origin base of sprite data block
-ds_sprite_code:
+ds_sprite_code_8B00:
 
 mrw_sprite_code:
        ds.b     0x0040     | sprite code/color l (buffer)
@@ -539,7 +539,7 @@ b_92E2:
 
 
 * sprite position buffer and SFRs
-ds_sprite_posn:
+ds_sprite_posn_9300:
 
 mrw_sprite_posn:
        ds.b     0x40       | sprite position l (buffer)

@@ -49,7 +49,7 @@ $(MAIN): $(OBJS)
 
 $(PROGNAME)_ram.o: $(PROGNAME)_ram.68k $(PROGNAME)_game_ram.68k
 	$(ASM) $(PROGNAME)_ram.68k -o $(PROGNAME)_ram.o
-$(PROGNAME).o: $(PROGNAME).68k $(PROGNAME).inc
+$(PROGNAME).o: $(PROGNAME).68k $(PROGNAME).inc m68k_macros.inc
 	$(ASM) $(PROGNAME).68k -o $(PROGNAME).o
 $(PROGNAME)_sub.o: $(PROGNAME)_sub.68k $(PROGNAME).inc
 	$(ASM) $(PROGNAME)_sub.68k -o $(PROGNAME)_sub.o
