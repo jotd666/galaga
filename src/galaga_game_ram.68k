@@ -144,7 +144,7 @@
 	.global		b_bugs_flying_cnt
 	.global		b_bugs_flying_nbr
 	.global		b_bug_flyng_hits_p_round
-	.global		b_bug_que_idx
+	.global		b_bug_que_idx_9289
 	.global		ds5_928A_captr_status
 	.global		ds_bug_collsn_hit_mult
 	.global		b_92A0
@@ -152,7 +152,7 @@
 	.global		b_bugs_actv_cnt
 	.global		b_bugs_actv_nbr
 	.global		w_bug_flying_hit_cnt
-	.global		ds4_game_tmrs
+	.global		ds4_game_tmrs_92ac
 	.global		b_92B0
 	.global		b_92C0
 	.global		bmbr_boss_pool
@@ -465,7 +465,7 @@ b_bugs_flying_nbr:
 
 b_bug_flyng_hits_p_round:
        ds.b     0x01
-b_bug_que_idx:
+b_bug_que_idx_9289:
        ds.b     0x01       | cpu1:f_08D3 local loop counter
 
 ds5_928A_captr_status:
@@ -502,7 +502,7 @@ w_bug_flying_hit_cnt:
 
 
 * global game timer array
-ds4_game_tmrs:
+ds4_game_tmrs_92ac:
        ds.b     0x04
 
 b_92B0:

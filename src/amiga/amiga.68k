@@ -2067,6 +2067,7 @@ osd_w_videoram:
 	.ifndef		RELEASE
 
 	* should not happen
+	add.w	#SCREEN_ADDRESS,d7
 	lea		write_videoram_out_of_range_error(pc),a0
 	jbsr	osd_break
 	nop	

@@ -39,9 +39,9 @@ j_Game_init_02d3:
 	*lea	ds_stk_cpu0_init,a7  | [ld   sp,#ds_stk_cpu0_init]
 
 	
-*  memset(ds4_game_tmrs,0,4)
+*  memset(ds4_game_tmrs_92ac,0,4)
 	clr.b	d0                               	| [xor  a]
-	lea	ds4_game_tmrs,a0             	| [ld   hl,#ds4_game_tmrs + 0] memset(...,0,4)
+	lea	ds4_game_tmrs_92ac,a0             	| [ld   hl,#ds4_game_tmrs_92ac + 0] memset(...,0,4)
 	move.b	#4,d1                           	| [ld   b,#4]
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
@@ -224,7 +224,6 @@ l_0380:
 	move.b	d0,ds_cpu0_task_actv_9000+0x02       	| [ld   (ds_cpu0_task_actv_9000 + 0x02),a] 1 ... f_manage_attract_mode_17B2 (attract-mode control)
 
 	lea		ds_cpu0_task_actv_9000,a0
-	jbsr	osd_break
 	
 * while (game_state == ATTRACT_MODE) { | }
 l_038D_while:
@@ -246,9 +245,9 @@ l_game_state_ready:
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 0 ... glbl_enemy_enbl: cleared in case demo was running
 	move.b	#0x13,d2                        	| [ld   c,#0x13] C = string_out_pe_index
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe "(c) 1981 NAMCO LTD"
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "(c) 1981 NAMCO LTD"
 	move.b	#1,d2                           	| [ld   c,#1] C = string_out_pe_index
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe "PUSH START BUTTON"
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "PUSH START BUTTON"
 
 	lea	d_attrmode_sptiles_ships,a0    	| [ld   hl,#d_attrmode_sptiles_ships]
 	move.l	a0,p_attrmode_sptiles           	| [ld   (p_attrmode_sptiles),hl] &_attrmode_sptiles[0] ... parameter to _sprite_tiles_displ()
@@ -327,11 +326,11 @@ l_0003D8:
 	jbsr	c_game_or_demo_init               	| [call c_game_or_demo_init]
 
 	move.b	#4,d2                           	| [ld   c,#4] C=string_out_pe_index
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe "PLAYER 1" (always starts with P1 no matter what!)
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "PLAYER 1" (always starts with P1 no matter what!)
 
 * busy loop -leaves "Player 1" text showing while some of the opening theme music plays out
 * game_tmr_3 = 8|
-	lea	ds4_game_tmrs+3,a0             	| [ld   hl,#ds4_game_tmrs + 3] = 8 ... while ! 0
+	lea	ds4_game_tmrs_92ac+3,a0             	| [ld   hl,#ds4_game_tmrs_92ac + 3] = 8 ... while ! 0
 	move.b	#8,(a0)                         	| [ld   (hl),#8]
 l_0414_while_tmr_3:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -351,7 +350,7 @@ l_0414_while_tmr_3:
 * settext($0b, $83b0)
 	lea	0x8000+0x03B0,a0           	| [ld   hl,#0x8000 + 0x03B0]
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
-	jbsr	c_string_out                      	| [call c_string_out] erase PLAYER 1 text
+	jbsr	c_string_out_1398                      	| [call c_string_out_1398] erase PLAYER 1 text
 
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,ds_plyr_susp+_b_plyr_nbr     	| [ld   (ds_plyr_susp +_b_plyr_nbr),a] 1==plyr2
@@ -379,7 +378,7 @@ l_0414_while_tmr_3:
 *-----------------------------------------------------------------------------
 c_game_bonus_info_show_line:
 
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe ('XXX BONUS FOR   ', 'AND FOR EVERY   ' )
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ('XXX BONUS FOR   ', 'AND FOR EVERY   ' )
 
 * set next position to append 'X0000 PTS'
 	exg	a1,a0                              	| [ex   de,hl] get position of final character from string_out (digit now in L)
@@ -392,7 +391,7 @@ c_game_bonus_info_show_line:
 
 	exg	a1,a0                              	| [ex   de,hl]
 	move.b	#0x1E,d2                        	| [ld   c,#0x1E]
-	jbsr	c_string_out                      	| [call c_string_out] DE=dest, C=string_out_pe_index
+	jbsr	c_string_out_1398                      	| [call c_string_out_1398] DE=dest, C=string_out_pe_index
 
 	jbsr	c_sprite_tiles_displ              	| [call c_sprite_tiles_displ]
 
@@ -519,7 +518,7 @@ gctl_stg_restart_hdlr:
 * return is by jp ... pop the push'd return address of call c_080B_monitor_stage_start_
 	move.l	(sp)+,a0                        	| [pop  hl]
 
-	lea	ds4_game_tmrs+3,a0             	| [ld   hl,#ds4_game_tmrs + 3] = 4 (set a time to wait while ship exploding)
+	lea	ds4_game_tmrs_92ac+3,a0             	| [ld   hl,#ds4_game_tmrs_92ac + 3] = 4 (set a time to wait while ship exploding)
 	move.b	#4,(a0)                         	| [ld   (hl),#4]
 
 * wait for ship explosion or bug explosion or for a landing captured ship
@@ -609,11 +608,11 @@ gctl_plyr_terminate:
 	move.b	ds_plyr_actv+_b_plyr_nbr,d0     	| [ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
 	addq.b	#4,d0                           	| [add  a,#4]
 	move.b	d0,d2                           	| [ld   c,a] string index
-	jbsr	c_string_out                      	| [call c_string_out] "PLAYER X" (for "PLAYER X GAME OVER")
+	jbsr	c_string_out_1398                      	| [call c_string_out_1398] "PLAYER X" (for "PLAYER X GAME OVER")
 
 l_04FD_end_of_game:
 	move.b	#0x02,d2                        	| [ld   c,#0x02] string index
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe "GAME OVER"
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "GAME OVER"
 
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
@@ -631,32 +630,32 @@ l_0509_while:
 	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr]
 
 	move.b	#0x15,d2                        	| [ld   c,#0x15] string index
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("-RESULTS-")
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("-RESULTS-")
 	move.b	#0x16,d2                        	| [ld   c,#0x16] string index
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("SHOTS FIRED")
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("SHOTS FIRED")
 
 	lea	0x8000+0x0120+0x12,a1      	| [ld   de,#0x8000 + 0x0120 + 0x12]
 	move.w	ds_plyr_actv+_w_shot_ct,d5  	| [ld   hl,(ds_plyr_actv +_w_shot_ct)] puts game shots fired count
 	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] puts game shots fired count
 
 	move.b	#0x18,d2                        	| [ld   c,#0x18] string index
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("NUMBER OF HITS")
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("NUMBER OF HITS")
 
 	lea	0x8000+0x0120+0x15,a1      	| [ld   de,#0x8000 + 0x0120 + 0x15]
 	move.w	ds_plyr_actv+_w_hit_ct,d5   	| [ld   hl,(ds_plyr_actv +_w_hit_ct)] puts game number of hits
 	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] puts game number of hits
 
 	move.b	#0x19,d2                        	| [ld   c,#0x19] string index
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("HIT-MISS RATIO")
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("HIT-MISS RATIO")
 
 	jbsr	c_puts_hitmiss_ratio_0A72         	| [call c_puts_hitmiss_ratio_0A72]
 
-	exg	a1,a0                              	| [ex   de,hl] HL becomes c_string_out<IN:position in tile RAM>
+	exg	a1,a0                              	| [ex   de,hl] HL becomes c_string_out_1398<IN:position in tile RAM>
 	move.b	#0x1A,d2                        	| [ld   c,#0x1A] string index
-	jbsr	c_string_out                      	| [call c_string_out] "%" after hit-miss number
+	jbsr	c_string_out_1398                      	| [call c_string_out_1398] "%" after hit-miss number
 
        * wait for the timer
-	lea	ds4_game_tmrs+2,a0             	| [ld   hl,#ds4_game_tmrs + 2]
+	lea	ds4_game_tmrs_92ac+2,a0             	| [ld   hl,#ds4_game_tmrs_92ac + 2]
 	move.b	#0x0E,(a0)                      	| [ld   (hl),#0x0E]
 l_0540_while:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -759,12 +758,12 @@ l_05A3_while:
 * exchange player data
 	move.b	b_9AA0+0x00,d0                  	| [ld   a,(b_9AA0 + 0x00)] plyr_actv.b_sndflag
 	move.b	d0,ds_plyr_actv+_b_sndflag      	| [ld   (ds_plyr_actv +_b_sndflag),a] _fx[0] ... enable for pulsing_sound
-	move.b	ds4_game_tmrs+2,d0              	| [ld   a,(ds4_game_tmrs + 2)]
+	move.b	ds4_game_tmrs_92ac+2,d0              	| [ld   a,(ds4_game_tmrs_92ac + 2)]
 	move.b	d0,ds_plyr_actv+_b_plyr_swap_tmr	| [ld   (ds_plyr_actv +_b_plyr_swap_tmr),a] game_tmr[2]
 	jbsr	c_player_active_switch            	| [call c_player_active_switch]
 	jbsr	c_2C00                            	| [call c_2C00] new stage setup
 	move.b	ds_plyr_actv+_b_plyr_swap_tmr,d0	| [ld   a,(ds_plyr_actv +_b_plyr_swap_tmr)] game_tmr[2]
-	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] actv_plyr_state[0x1F]
+	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] actv_plyr_state[0x1F]
 	move.b	ds_plyr_actv+_b_sndflag,d0      	| [ld   a,(ds_plyr_actv +_b_sndflag)] _fx[0] ... enable for pulsing_sound
 	move.b	d0,b_9AA0+0x00                  	| [ld   (b_9AA0 + 0x00),a] enable for pulsing_sound
 	jbsr	draw_resv_ships                   	| [call draw_resv_ships]
@@ -802,7 +801,7 @@ l_05D1:
 
 * else ...
 	move.b	#3,d2                           	| [ld   c,#3] C=string_out_pe_index
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe "READY"
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "READY"
 
 * set wait-time for bug nest retreat. The count is masked with $7F in f_move_swarm_when_player_changes_1d32, so I
 * don't see why it starts at $80 here instead of 0. Shouldn't make any difference tho'...
@@ -855,23 +854,23 @@ plyr_respawn_plyrup:
 	addq.b	#4,d0                           	| [add  a,#4] P1 text is index 4, P2 is index 5
 	move.b	d0,d2                           	| [ld   c,a] index into string table
 	lea	0x8000+0x0260+0x0E,a0      	| [ld   hl,#0x8000 + 0x0260 + 0x0E] not position encoded, this one is 1C left and 2R up
-	jbsr	c_string_out                      	| [call c_string_out] puts PLAYER X ("1" or "2") .
+	jbsr	c_string_out_1398                      	| [call c_string_out_1398] puts PLAYER X ("1" or "2") .
 
 *-----------------------------------------------------------------------------
 * _fghtr_rdy + wait ... 1 player skips previous stuff
 gctl_plyr_respawn_wait:
 	jbsr	c_player_respawn                  	| [call c_player_respawn] "credit X" is wiped and reserve ships appear on lower left of screen
 
-* ds4_game_tmrs[2] was set to 120 by new_stg_game_or_demo
+* ds4_game_tmrs_92ac[2] was set to 120 by new_stg_game_or_demo
 
 * if tmr > $5A then reset to $78
-	move.b	ds4_game_tmrs+2,d0              	| [ld   a,(ds4_game_tmrs + 2)]
+	move.b	ds4_game_tmrs_92ac+2,d0              	| [ld   a,(ds4_game_tmrs_92ac + 2)]
 	add.b	#0x1E,d0                         	| [add  a,#0x1E]
 	cmp.b	#0x78,d0                         	| [cp   #0x78]
 	jcs	l_062C                             	| [jr   c,l_062C]
 	move.b	#0x78,d0                        	| [ld   a,#0x78]
 l_062C:
-	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] $78
+	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] $78
 
 * new ship appears on screen and stars start moving ... should about take care of the music
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
@@ -886,11 +885,11 @@ plyr_respawn_rdy:
 
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
 	lea	0x8000+0x03B0,a0           	| [ld   hl,#0x8000 + 0x03B0]
-	jbsr	c_string_out                      	| [call c_string_out] erase "READY" or "STAGE X"
+	jbsr	c_string_out_1398                      	| [call c_string_out_1398] erase "READY" or "STAGE X"
 
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
 	lea	0x8000+0x03A0+0x0E,a0      	| [ld   hl,#0x8000 + 0x03A0 + 0x0E]
-	jbsr	c_string_out                      	| [call c_string_out] erase "PLAYER 1"
+	jbsr	c_string_out_1398                      	| [call c_string_out_1398] erase "PLAYER 1"
 
 	jra	gctl_game_runner                   	| [jp   gctl_game_runner] resume background super loop
 
@@ -921,7 +920,7 @@ l_065E:
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 
 	move.b	#0x08,d2                        	| [ld   c,#0x08]
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("NUMBER OF HITS")
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("NUMBER OF HITS")
 
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 
@@ -939,7 +938,7 @@ l_065E:
 	jeq	l_0699_special_bonus               	| [jr   z,l_0699_special_bonus]
 * then ...
 	move.b	#9,d2                           	| [ld   c,#9]
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("BONUS")
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("BONUS")
 
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 
@@ -978,7 +977,7 @@ l_069B_while_fcnt:
 	addq.b	#1,d2                           	| [inc  c] C = 0x0C| // index into string table "PERFECT !"
 l_06A9:
 	movem.w	d1/d2,-(sp)                    	| [push bc]
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe ( C == $0B or C == $0C ... "PERFECT !" or spaces)
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ( C == $0B or C == $0C ... "PERFECT !" or spaces)
 
 	movem.w	(sp)+,d1/d2                    	| [pop  bc]
 
@@ -991,7 +990,7 @@ l_06AC_while_fcnt:
 	jne	l_069B_while_b                     	| [djnz l_069B_while_b]
 
 	move.b	#0x0D,d2                        	| [ld   c,#0x0D] index into string table
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("SPECIAL BONUS 10000 PTS")
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("SPECIAL BONUS 10000 PTS")
 
 	move.b	#100,d0                         	| [ld   a,#100] 100 * 10 ... special bonus (d_scoreman_inc_lut[0] == $10)
 l_06BA:
@@ -1004,14 +1003,14 @@ l_06BA:
 
 	lea	0x8000+0x03A0+0x10,a0      	| [ld   hl,#0x8000 + 0x03A0 + 0x10]
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
-	jbsr	c_string_out                      	| [call c_string_out] erase "Number of hits XX" (line below Perfect)
+	jbsr	c_string_out_1398                      	| [call c_string_out_1398] erase "Number of hits XX" (line below Perfect)
 
 	lea	0x8000+0x03A0+0x13,a0      	| [ld   hl,#0x8000 + 0x03A0 + 0x13]
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
-	jbsr	c_string_out                      	| [call c_string_out] erase "Special Bonus 10000 Pts" (or Bonus xxxx)
+	jbsr	c_string_out_1398                      	| [call c_string_out_1398] erase "Special Bonus 10000 Pts" (or Bonus xxxx)
 
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe (erase "PERFECT !")
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe (erase "PERFECT !")
 
 	jra	l_04DC_break                       	| [jp   l_04DC_break]
 
@@ -1440,7 +1439,7 @@ l_0850:
 *  ...
 *-----------------------------------------------------------------------------
 f_misc_gameplay_events_0857:
-	move.b	ds4_game_tmrs+2,d0              	| [ld   a,(ds4_game_tmrs + 2)]
+	move.b	ds4_game_tmrs_92ac+2,d0              	| [ld   a,(ds4_game_tmrs_92ac + 2)]
 	move.b	d0,d1                           	| [ld   b,a] parameter to c_08AD
 	cmp.b	#0x3C,d0                         	| [cp   #0x3C]
 	jcc	l_0865                             	| [jr   nc,l_0865]
@@ -1499,7 +1498,7 @@ l_0888:
 *  for f_misc_gameplay_events_0857
 * IN:
 *  A == ds_new_stage_parms[2] or [3]
-*  B == ds4_game_tmrs[2]
+*  B == ds4_game_tmrs_92ac[2]
 *  HL == d_08CD or d_08EB
 * OUT:
 *  A == (hl)
@@ -1511,7 +1510,7 @@ c_08AD:
 	add.b	d4,d0                            	| [add  a,e]
 	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 
-	move.b	d1,d0                           	| [ld   a,b] ds4_game_tmrs[2] from f_misc_gameplay_events_0857
+	move.b	d1,d0                           	| [ld   a,b] ds4_game_tmrs_92ac[2] from f_misc_gameplay_events_0857
 	cmp.b	#0x28,d0                         	| [cp   #0x28]
 	jcc	l_08B8                             	| [jr   nc,l_08B8]
 	addq.w	#1,a0                           	| [inc  hl]
@@ -3242,7 +3241,7 @@ c_tdelay_3:
 
 	move.l	a0,-(sp)                        	| [push hl]
 *  game_tmrs[3] = 3
-	lea	ds4_game_tmrs+3,a0             	| [ld   hl,#ds4_game_tmrs + 3] =3 ... while ! 0
+	lea	ds4_game_tmrs_92ac+3,a0             	| [ld   hl,#ds4_game_tmrs_92ac + 3] =3 ... while ! 0
 	move.b	#3,(a0)                         	| [ld   (hl),#3]
 *  while ( game_tmrs[3] != 0 ) {}
 l_1325:
@@ -3297,7 +3296,7 @@ c_player_respawn:
 	jne	l_133A                             	| [jr   nz,l_133A]
 * ... else
 	move.b	#3,d2                           	| [ld   c,#3] string_out_pe  index
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe "READY" (at 8270)
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "READY" (at 8270)
 l_133A:
 
 *=============================================================================
@@ -3420,7 +3419,7 @@ l_1390:
 	rts                                    	| [ret]
 
 *=============================================================================
-* c_string_out()
+* c_string_out_1398()
 *  Description:
 *    Copy a series of characters to tile-ram (see d_cstring_tbl).
 *    Converts characters strings from ASCII to corresponding character tiles.
@@ -3440,34 +3439,35 @@ l_1390:
 *  IN:
 *    HL: position in tile RAM.
 *    C: index into table of string pointers (d_cstring_tbl)
-*    CY: "set" if jumped to j_string_out_pe_13b5
+*    CY: "set" if jumped to j_string_out_pe_139a
 *  OUT:
 *    HL contains final string character display position.
 *
 *    PRESERVES :   DE
 *-----------------------------------------------------------------------------
-c_string_out:
-													| [and  a] clear CY flag.
-	clr.b		d7                              	| [ex   af,af'] save CY flag.
+c_string_out_1398:
+											| [and  a] clear CY flag.
+	clr.b		d7                          | [ex   af,af'] save CY flag.
 
-j_string_out_pe_13b5:
+j_string_out_pe_139a:
+	jbsr	osd_break
 	movem.w	d3/d4,-(sp)                    	| [push de] preserves DE
-	move.l	a1,-(sp)                        	| [push de] preserves DE
+	move.l	a1,-(sp)                        | [push de] preserves DE
 	exg	a1,a0                              	| [ex   de,hl] DE := position in tile RAM
 
 * Get address of string pointer using index in C ...
 * p_sptr = ( ptr_tbl - sizeof(ptr) ) + sizeof(ptr) * index
 	move.b	d2,d0                           	| [ld   a,c] C = index into table string pointers (d_cstring_tbl)
-	lea	d_cstring_tbl-4,a0             	| [ld   hl,#d_cstring_tbl - 2] index is ordered from 1 !!
-	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
+	lea	d_cstring_tbl-4,a0             			| [ld   hl,#d_cstring_tbl - 2] index is ordered from 1 !!
+	jbsr	add_4_times_d0_to_a0_0008           | [rst  0x08] HL += 2A
 
 * De-reference the string pointer
 * sptr = *(p_sptr)
 	move.l	(a0),a0
 											| [ld   a,(hl)] lsb
-							| [inc  hl]
-										| [ld   h,(hl)] msb
-										| [ld   l,a] lsb
+											| [inc  hl]
+											| [ld   h,(hl)] msb
+											| [ld   l,a] lsb
 					
 	
 * Restore flags and check CY
@@ -3476,12 +3476,13 @@ j_string_out_pe_13b5:
 	jeq	l_13AE                             	| [jr   nc,l_13AE]
 * ... do PE stuff: get position into DE ... HL-=2, DE:=*(HL)
 	subq.w	#2,a0                           	| [dec  hl] * 2
-	move.b	(a0)+,d4                         	| [ld   e,(hl)] LSB
+	* jotd: the macro generates big endian words, code needs adaptation
+	move.b	(a0)+,d3                         	| [ld   e,(hl)] MSB
 	                           	| [inc  hl]
-	move.b	(a0)+,d3                         	| [ld   d,(hl)] MSB
+	move.b	(a0)+,d4                         	| [ld   d,(hl)] LSB
 	                           	| [inc  hl] HL now pointing to "color".
 	LOAD_D3_16_FROM_D3D4
-	move.w	d3,d7
+	move.w	d3,d7				| screen address
 	
 * now DE == position, so the rest is the same...
 l_13AE:
@@ -3519,10 +3520,10 @@ l_13C4_putc:
 
 * HL-=$20 (advance destination position one tile to the "right")
 	                           	| [ld   a,l]
-	sub.b	#0x20,d7                         	| [sub  #0x20]
+	sub.w	#0x20,d7                         	| [sub  #0x20]
 	                           	| [ld   l,a]
-	jcc	l_13B1                             	| [jr   nc,l_13B1]
-	subq.b	#1,d5                           	| [dec  h]
+	                             	| [jr   nc,l_13B1]
+	                           	| [dec  h]
        
 	jra	l_13B1                             	| [jr   l_13B1]
 l_13D4_out:
@@ -3532,7 +3533,7 @@ l_13D4_out:
 	rts                                    	| [ret]
 
 *=============================================================================
-* strings for c_string_out
+* strings for c_string_out_1398
 d_cstring_tbl:
   * 0x00
 	.long s_1414,s_1429,s_1436,s_1441,s_144B,s_1457,s_1461,s_1476,s_1488,s_1493
@@ -3912,7 +3913,7 @@ case_17A8:
 	move.b	(a1),d0                         	| [ld   a,(de)]
 	and.b	#0x1F,d0                         	| [and  #0x1F]
 	move.b	d0,d2                           	| [ld   c,a]
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe
 	rts                                    	| [ret]
 
 * $8x: prior to each fighter shot in training mode?
@@ -3971,7 +3972,7 @@ d_17C3_jptbl:
 * 0E: end of Demo ...  delay, then show GALACTIC HERO screen
 case_17E1:
 * if ( game_timers[3] == 0 ) then l_17EC
-	move.b	ds4_game_tmrs+3,d0              	| [ld   a,(ds4_game_tmrs + 3)] if 0, display hi-score tbl
+	move.b	ds4_game_tmrs_92ac+3,d0              	| [ld   a,(ds4_game_tmrs_92ac + 3)] if 0, display hi-score tbl
 	                               	| [and  a]
 	jeq	l_17EC                             	| [jr   z,l_17EC]
 * else if ( game_timers[3] == 1 )  advance state
@@ -3982,7 +3983,7 @@ case_17E1:
 l_17EC:
 	jbsr	c_mach_hiscore_show               	| [call c_mach_hiscore_show]
 	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
-	move.b	d0,ds4_game_tmrs+3              	| [ld   (ds4_game_tmrs + 3),a] $0A ... after displ hi-score tbl
+	move.b	d0,ds4_game_tmrs_92ac+3              	| [ld   (ds4_game_tmrs_92ac + 3),a] $0A ... after displ hi-score tbl
 	rts                                    	| [ret]
 
 * 07: just cleared screen from training mode, delay ~1 sec before puts("game over")
@@ -3998,7 +3999,7 @@ case_17F5:
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,ds_cpu0_task_actv_9000+0x05       	| [ld   (ds_cpu0_task_actv_9000 + 0x05),a] 1 ... f_misc_gameplay_events_0857
 	move.b	#2,d2                           	| [ld   c,#2] index of string
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("GAME OVER")
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("GAME OVER")
 	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
 
 * 10: enable fighter control demo
@@ -4071,7 +4072,7 @@ d_1887:
 case_18AC:
 * tmr[2] always 0 at transition to this case (was reloaded at last of 5 texts in case_1984)
 * if (0 == tmr[2])  collsn_notif && tmr[2]=9 && break
-	move.b	ds4_game_tmrs+2,d0              	| [ld   a,(ds4_game_tmrs + 2)] always 0 here at entry to case_18AC
+	move.b	ds4_game_tmrs_92ac+2,d0              	| [ld   a,(ds4_game_tmrs_92ac + 2)] always 0 here at entry to case_18AC
 	                               	| [and  a]
 	jeq	l_18BB                             	| [jr   z,l_18BB]
 * else  if (1 == tmr[2])  state++ | break
@@ -4088,16 +4089,16 @@ l_18BB:
 	move.b	#0x34,d0                        	| [ld   a,#0x34]
 	move.b	d0,b_9200_obj_collsn_notif+0x34 	| [ld   (b_9200_obj_collsn_notif + 0x34),a] $34
 	move.b	#9,d0                           	| [ld   a,#9]
-	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] 9
+	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] 9
 	rts                                    	| [ret]
 l_18C6:
 * tmr == 5, explosion complete ... '150' score on display
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_sprite_posn+0x62          	| [ld   (ds_sprite_posn + 0x62),a] 0 ... fighter (1) is removed from screen
 	move.b	#0x13,d2                        	| [ld   c,#0x13]
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("(C) 1981 NAMCO LTD.")
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("(C) 1981 NAMCO LTD.")
 	move.b	#0x14,d2                        	| [ld   c,#0x14]
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("NAMCO" - 6 tiles)
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("NAMCO" - 6 tiles)
 	rts                                    	| [ret]
 
 * 04, 09, 11: wait for fighter control task to disable itself
@@ -4183,7 +4184,7 @@ case_1948:
 	move.b	d0,w_bug_flying_hit_cnt         	| [ld   (w_bug_flying_hit_cnt),a] 0
 
 	move.b	#2,d0                           	| [ld   a,#2]
-	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] 2 (1 sec)
+	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] 2 (1 sec)
 	jra	l_attmode_state_step               	| [jr   l_attmode_state_step]
 
 * parameters for sprite tiles used in attract mode, 4-bytes each:
@@ -4210,7 +4211,7 @@ d_attrmode_sptiles:
 * 02: info-screen sequencer, advance text and sprite tiles indices
 case_1984:
 *  if ( 0 == game_tmrs[2] ) ... (2 on the clock from case_1948)
-	move.b	ds4_game_tmrs+2,d0              	| [ld   a,(ds4_game_tmrs + 2)]
+	move.b	ds4_game_tmrs_92ac+2,d0              	| [$1984: ld   a,(ds4_game_tmrs_92ac + 2)]
 	                               	| [and  a]
 	beq.b	0f                               	| [...]
 	rts                                    	| [ret  nz] [...]
@@ -4218,7 +4219,7 @@ case_1984:
 * then ...
 * . game_tmrs[2] = 2| // 1 second
 	move.b	#2,d0                           	| [ld   a,#2]
-	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] info-screen: 2counts (1 second) between text
+	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] info-screen: 2counts (1 second) between text
 
 * . if (index == 5) then  state++ | break
 	move.b	ds_9200_glbls+0x05,d0           	| [ld   a,(ds_9200_glbls + 0x05)] if 5 ... demo_scrn_txt_indx
@@ -4226,11 +4227,11 @@ case_1984:
 	jeq	l_attmode_state_step               	| [jr   z,l_attmode_state_step]
 * . else
 * .. txt_index++ | show text
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_9200_glbls+0x05           	| [ld   (ds_9200_glbls + 0x05),a] demo_scrn_txt_indx++
-	add.b	#0x0D,d0                         	| [add  a,#0x0D] s_14EE - d_cstring_tbl - 1
-	move.b	d0,d2                           	| [ld   c,a] C = 0x0D + A ... string index
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe ("GALAGA", "--SCORE--", etc)
+	addq.b	#1,d0                           	| [$1995: inc  a]
+	move.b	d0,ds_9200_glbls+0x05           	| [$1996: ld   (ds_9200_glbls + 0x05),a] demo_scrn_txt_indx++
+	add.b	#0x0D,d0                         	| [$1999: add  a,#0x0D] s_14EE - d_cstring_tbl - 1
+	move.b	d0,d2                           	| [$199B: ld   c,a] C = 0x0D + A ... string index
+	jbsr	string_out_pe_30                            	| [$199C: rst  0x30] string_out_pe ("GALAGA", "--SCORE--", etc)
 
 * .. [index >= 3] && sprite_tiles_displ() && break
 	move.b	ds_9200_glbls+0x05,d0           	| [ld   a,(ds_9200_glbls + 0x05)] [demo_scrn_txt_indx >= 3] ... sprite tile display
@@ -4283,7 +4284,7 @@ f_manage_ship_capture_movement_19b2:
 
 *  else if ( game_tmrs[1]               	| 0 == 0 )  goto erase_text
 *   ... with A already 0, we use OR to check Z flag for zero count... which efficently loads our count to A at the same time!
-	lea	ds4_game_tmrs+1,a0             	| [ld   hl,#ds4_game_tmrs + 1]
+	lea	ds4_game_tmrs_92ac+1,a0             	| [ld   hl,#ds4_game_tmrs_92ac + 1]
 	or.b	(a0),d0                           	| [or   (hl)]
 	jeq	l_1A01_erase_text                  	| [jr   z,l_1A01_erase_text]
 
@@ -4308,9 +4309,9 @@ l_19C7:
 l_19D2_fighter_captured:
 * sets up a captured-fighter as an enemy object
 	move.b	#0x0A,d2                        	| [ld   c,#0x0A] index of string
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe "FIGHTER CAPTURED"
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "FIGHTER CAPTURED"
 	move.b	#6,d0                           	| [ld   a,#6] set time of countdown
-	move.b	d0,ds4_game_tmrs+1              	| [ld   (ds4_game_tmrs + 1),a] 6 ...time to show fighter-captured-text
+	move.b	d0,ds4_game_tmrs_92ac+1              	| [ld   (ds4_game_tmrs_92ac + 1),a] 6 ...time to show fighter-captured-text
 	lea	ds_sprite_posn+0x62,a0         	| [ld   hl,#ds_sprite_posn + 0x62] ship (1) position
 	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d0	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)]
 	illegal
@@ -4363,7 +4364,7 @@ l_1A01_erase_text:
 *  clear "fighter captured" text
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
 	lea	0x8000+0x03A0+0x11,a0      	| [ld   hl,#0x8000 + 0x03A0 + 0x11] "leftmost" column of row where "fighter captured" is displayed
-	jbsr	c_string_out                      	| [call c_string_out] erase fighter capture text
+	jbsr	c_string_out_1398                      	| [call c_string_out_1398] erase fighter capture text
 l_1A10:
 	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d0	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)]
 	move.b	d0,d6                           	| [ld   l,a]
@@ -5418,7 +5419,7 @@ f_update_timers_1dd2:
 	rts                                    	| [ret  nz] [...]
 0:
 
-	lea	ds4_game_tmrs+0,a0             	| [ld   hl,#ds4_game_tmrs + 0] decrement each of the 4 game timers
+	lea	ds4_game_tmrs_92ac+0,a0             	| [ld   hl,#ds4_game_tmrs_92ac + 0] decrement each of the 4 game timers
 	move.b	#4,d1                           	| [ld   b,#4]
 *  for ( b = 0 | b < 4 | b++ ) {
 *    if ( game_tmrs[b] > 0 )   game_tmrs[b]--
@@ -6303,14 +6304,14 @@ l_20C7:                                           | *( ds5_928A_captr_status + 0
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 1
 	move.b	#2,d0                           	| [ld   a,#2]
-	move.b	d0,ds4_game_tmrs+1              	| [ld   (ds4_game_tmrs + 1),a] 2
+	move.b	d0,ds4_game_tmrs_92ac+1              	| [ld   (ds4_game_tmrs_92ac + 1),a] 2
 	rts                                    	| [ret]
 
 l_20D1_update_ship_spin:
 	COMPUTE_LSB_A0_D6	b_8800
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] base address for c_2188
 	add.w	d6,a0
-	move.b	ds4_game_tmrs+1,d0              	| [ld   a,(ds4_game_tmrs + 1)]
+	move.b	ds4_game_tmrs_92ac+1,d0              	| [ld   a,(ds4_game_tmrs_92ac + 1)]
 	move.b	d0,d4                           	| [ld   e,a]
 	move.b	b_bugs_flying_nbr,d0            	| [ld   a,(b_bugs_flying_nbr)]
 	or.b	d4,d0                             	| [or   e]
@@ -7988,7 +7989,7 @@ f_insert_attackers_2916:
 	jne	l_2944_attack_wave_start           	| [jr   nz,l_2944_attack_wave_start]
 * ...
 *  if ( 1 == game_tmrs[0] ) ..
-	move.b	ds4_game_tmrs+0,d0              	| [ld   a,(ds4_game_tmrs + 0)] if tmr==1 ( on stage 3 ..challenge stage)
+	move.b	ds4_game_tmrs_92ac+0,d0              	| [ld   a,(ds4_game_tmrs_92ac + 0)] if tmr==1 ( on stage 3 ..challenge stage)
 	cmp.b	#1,d0                            	| [cp   #1]
 	jne	l_2942_chk_tmr0                    	| [jr   nz,l_2942_chk_tmr0]
 *  ..
@@ -8014,7 +8015,7 @@ l_2944_attack_wave_start:
 
 l_294D_set_tmr0:
 	move.b	#2,d0                           	| [ld   a,#2]
-	move.b	d0,ds4_game_tmrs+0              	| [ld   (ds4_game_tmrs + 0),a] 2
+	move.b	d0,ds4_game_tmrs_92ac+0              	| [ld   (ds4_game_tmrs_92ac + 0),a] 2
 	rts                                    	| [ret]
 * ....
 
@@ -8521,14 +8522,14 @@ l_3073:
 
 * wait 2 seconds
 	move.b	#4,d0                           	| [ld   a,#4]
-	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a]
+	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a]
 l_30AA:
-	move.b	ds4_game_tmrs+2,d0              	| [ld   a,(ds4_game_tmrs + 2)]
+	move.b	ds4_game_tmrs_92ac+2,d0              	| [ld   a,(ds4_game_tmrs_92ac + 2)]
 	                               	| [and  a]
 	jne	l_30AA                             	| [jr   nz,l_30AA]
 
 	move.b	#40,d0                          	| [ld   a,#40] 20 seconds
-	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] :=$28
+	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] :=$28
 
 * jp here from section _314C
 l_30B5_next_char_selectn:
@@ -8588,7 +8589,7 @@ l_30ED:
 	cmp.b	#2,d0                            	| [cp   #2]
 	jne	l_30BF_dlg_proc                    	| [jr   nz,l_30BF_dlg_proc] stick not left (or right)
 	move.b	#40,d0                          	| [ld   a,#40] 20 seconds
-	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] reset timer
+	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] reset timer
 
 	move.b	b_8A00+0x10,d0                  	| [ld   a,(b_8A00 + 0x10)] lower byte of first character's address in v-ram
 	move.b	d0,d6                           	| [ld   l,a]
@@ -8649,7 +8650,7 @@ l_311D_stick_right:
 	and.w	#0xFF,d6
 	add.w	d6,d7
 	move.b	#40,d0                          	| [ld   a,#40] 20 seconds
-	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] reset timer
+	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] reset timer
 	jbsr	osd_r_videoram                         	| [ld   a,(hl)]
 	addq.b	#1,d0                           	| [inc  a]
 	cmp.b	#0x2B,d0                         	| [cp   #0x2B] 2A is '.' character which is allowed
@@ -8749,7 +8750,7 @@ j_314C_select_char:
 	jbsr	osd_r_videoram
 	move.b	d0,d2                         	| [ld   c,(hl)] copy the character from the input entry position in tile-ram
 	move.b	#40,d0                          	| [ld   a,#40] 20 seconds
-	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] :=$28
+	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] :=$28
 
 * get the pointer to the new name entry in the table, and increment since it is actually ( &name[0] -1 )
 	move.l	b_8A00+0x06,a0              	| [ld   hl,(b_8A00 + 0x04)]
@@ -9172,7 +9173,7 @@ c_32ED_top5_dlg_endproc:
 	jcs	l_3300_finish                      	| [jr   c,l_3300_finish]
 
 l_32FB_check_for_timeout:
-	move.b	ds4_game_tmrs+2,d0              	| [ld   a,(ds4_game_tmrs + 2)]
+	move.b	ds4_game_tmrs_92ac+2,d0              	| [ld   a,(ds4_game_tmrs_92ac + 2)]
 	                               	| [and  a]
 	beq.b	0f                               	| [...]
 	rts                                    	| [ret  nz] [...]
@@ -10334,7 +10335,7 @@ rst_00_cpu0:
 *.org 0x0030
 
 *=============================================================================
-* RST_30()
+* string_out_pe_30()
 *  Description:
 *   Entry point to display string function at _139A
 * IN:
@@ -10342,10 +10343,10 @@ rst_00_cpu0:
 * OUT:
 *  HL == final offset in video ram (some code actually uses this!)
 *-----------------------------------------------------------------------------
-rst_30:
+string_out_pe_30:
 												| [scf]
 	st.b	d7                              	| [ex   af,af']
-	jra	j_string_out_pe_13b5                    	| [jp   j_string_out_pe_13b5]
+	jra	j_string_out_pe_139a                    	| [jp   j_string_out_pe_139a]
 
 
 *
@@ -10841,7 +10842,7 @@ b_bugs_flying_nbr:
 
 b_bug_flyng_hits_p_round:
      ds.b     0x01
-b_bug_que_idx:
+b_bug_que_idx_9289:
      ds.b     0x01       | cpu1:f_08D3 local loop counter
 
 ds5_928A_captr_status:
@@ -10878,7 +10879,7 @@ w_bug_flying_hit_cnt:
 
 
 * global game timer array
-ds4_game_tmrs:
+ds4_game_tmrs_92ac:
      ds.b     0x04
 
 b_92B0:
@@ -11553,7 +11554,7 @@ stg_init_splash:
 	jeq	l_01A2_set_challeng_stg            	| [jr   z,l_01A2_set_challeng_stg]
 * then {
 	move.b	#0x06,d2                        	| [ld   c,#0x06] C=string_out_pe_index
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe "STAGE "
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "STAGE "
 * HL == $81B0 ... "X" of STAGE X.
 	exg	a1,a0                              	| [ex   de,hl] DE now 81B0 (points to X in "STAGE X")
 	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] show score
@@ -11565,7 +11566,7 @@ stg_init_splash:
 * } else {
 l_01A2_set_challeng_stg:
 	move.b	#0x07,d2                        	| [ld   c,#0x07] C=string_out_pe_index
-	jbsr	rst_30                            	| [rst  0x30] string_out_pe "CHALLENGING STAGE"
+	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "CHALLENGING STAGE"
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,b_9AA0+0x0D                  	| [ld   (b_9AA0 + 0x0D),a] 1 ... sound-fx count/enable registers, start challenge stage
 	move.b	#8,d0                           	| [ld   a,#8] start value for wave_bonus_ctr (decremented by cpu-b when bug destroyed)
@@ -11576,7 +11577,7 @@ l_01AC:
 
 * set the timer to synchronize finish of c_new_level_tokens
 	move.b	#3,d0                           	| [ld   a,#3]
-	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] 3
+	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] 3
 
 	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 3: enemy_enable, begin round, needs to be !0 (use 3 for optimization)
 
@@ -11588,7 +11589,7 @@ l_01AC:
 
 * while ( game_tmrs[2] ){}
 l_01BF:
-	move.b	ds4_game_tmrs+2,d0              	| [ld   a,(ds4_game_tmrs + 2)]
+	move.b	ds4_game_tmrs_92ac+2,d0              	| [ld   a,(ds4_game_tmrs_92ac + 2)]
 	                               	| [and  a]
 	jne	l_01BF                             	| [jr   nz,l_01BF]
 
@@ -11606,13 +11607,13 @@ l_01BF:
 *-----------------------------------------------------------------------------
 stg_init_env:
 	move.b	#120,d0                         	| [ld   a,#120]
-	move.b	d0,ds4_game_tmrs+2              	| [ld   (ds4_game_tmrs + 2),a] load the timer ($78 - new stage)
+	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] load the timer ($78 - new stage)
 	jbsr	c_2896                            	| [call c_2896] Initializes each creature by position
 	jbsr	c_25A2                            	| [call c_25A2] mob setup
 
 * set game_tmrs[0] (attack formation timing)
 	move.b	#2,d0                           	| [ld   a,#2]
-	move.b	d0,ds4_game_tmrs+0              	| [ld   (ds4_game_tmrs + 0),a] 2
+	move.b	d0,ds4_game_tmrs_92ac+0              	| [ld   (ds4_game_tmrs_92ac + 0),a] 2
 
 	clr.b	d0                               	| [xor  a]
 	jbsr	c_12C3                            	| [call c_12C3] A == 0 .... set MOB coordinates, new stage
@@ -11672,7 +11673,7 @@ l_0220:
 *  else handle rack advance operation
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B]
 	lea	0x8000+0x03A0+0x10,a0      	| [ld   hl,#0x8000 + 0x03A0 + 0x10]
-	jbsr	c_string_out                      	| [call c_string_out] erase "stage X" text"
+	jbsr	c_string_out_1398                      	| [call c_string_out_1398] erase "stage X" text"
 
 	jra	stg_init_splash                    	| [jp   stg_init_splash] start over again
 

@@ -488,7 +488,7 @@ l_0537:
 * find the first ready task.. may run more than one.
 	clr.w	d2                               	| [ld   c,#0]
 l_054F_while:
-	lea	ds_cpu1_task_actv(pc),a0           	| [ld   hl,#ds_cpu1_task_actv]
+	lea	ds_cpu1_task_actv,a0           	| [ld   hl,#ds_cpu1_task_actv]
 	add.w	d2,a0										| [ld   a,c]
 												| [add  a,l]
 											| [ld   l,a]
@@ -500,7 +500,7 @@ l_054F_while:
 
 l_055C:
 	move.b	d0,d1                           	| [ld   b,a] A == task status
-	lea	d_003B_task_table(pc),a0           	| [ld   hl,#d_003B_task_table]
+	lea	d_003B_task_table,a0           	| [ld   hl,#d_003B_task_table]
 	moveq	#0,d0
 	
 	move.b	d2,d0                           	| [ld   a,c] C == task index
@@ -580,8 +580,8 @@ l_057F:
 	move.b	d0,ds_89E0                      	| [ld   (ds_89E0),a] 0
 
 * set task-enable defaults
-	lea	d_05B7(pc),a0                      	| [ld   hl,#d_05B7]
-	lea	ds_cpu1_task_actv+1(pc),a1         	| [ld   de,#ds_cpu1_task_actv + 1] cp $07 bytes (d_05B7)
+	lea	d_05B7,a0                      	| [ld   hl,#d_05B7]
+	lea	ds_cpu1_task_actv+1,a1         	| [ld   de,#ds_cpu1_task_actv + 1] cp $07 bytes (d_05B7)
 	move.w	#0x07,d1                        	| [ld   bc,#0x0007] 7
 	jbsr	ldir                              	| [ldir]
 
@@ -632,16 +632,16 @@ f_05BF:
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,b_CPU2_in_progress           	| [ld   (b_CPU2_in_progress),a] 1
 
-	lea	mrw_sprite_code(pc),a0             	| [ld   hl,#mrw_sprite_code]
-	lea	sfr_sprite_code(pc),a1             	| [ld   de,#sfr_sprite_code]
+	lea	mrw_sprite_code,a0             	| [ld   hl,#mrw_sprite_code]
+	lea	sfr_sprite_code,a1             	| [ld   de,#sfr_sprite_code]
 	move.w	#0x40,d1                        	| [ld   bc,#0x0040] 64
 	jbsr	ldir                              	| [ldir]
-	lea	mrw_sprite_posn(pc),a0             	| [ld   hl,#mrw_sprite_posn]
-	lea	sfr_sprite_posn(pc),a1             	| [ld   de,#sfr_sprite_posn]
+	lea	mrw_sprite_posn,a0             	| [ld   hl,#mrw_sprite_posn]
+	lea	sfr_sprite_posn,a1             	| [ld   de,#sfr_sprite_posn]
 	move.w	#0x40,d1                        	| [ld   c,#0x40]
 	jbsr	ldir                              	| [ldir]
-	lea	mrw_sprite_ctrl(pc),a0             	| [ld   hl,#mrw_sprite_ctrl]
-	lea	sfr_sprite_ctrl(pc),a1             	| [ld   de,#sfr_sprite_ctrl]
+	lea	mrw_sprite_ctrl,a0             	| [ld   hl,#mrw_sprite_ctrl]
+	lea	sfr_sprite_ctrl,a1             	| [ld   de,#sfr_sprite_ctrl]
 	move.w	#0x40,d1                        	| [ld   c,#0x40]
 	jbsr	ldir                              	| [ldir]
 
@@ -680,7 +680,7 @@ f_05EE:
 	jeq	l_0613                             	| [jr   z,l_0613]
 
 * ... handle 2-ship configuration
-	lea	ds_sprite_posn+0x60(pc),a0         	| [ld   hl,#ds_sprite_posn + 0x60] fighter2 position
+	lea	ds_sprite_posn+0x60,a0         	| [ld   hl,#ds_sprite_posn + 0x60] fighter2 position
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	                               	| [and  a]
 	jeq	l_0613                             	| [jr   z,l_0613]
@@ -696,7 +696,7 @@ f_05EE:
 
 l_0613:
 * if ( ship position == 0 ) return
-	lea	ds_sprite_posn+0x62(pc),a0         	| [ld   hl,#ds_sprite_posn + 0x62] fighter1 position
+	lea	ds_sprite_posn+0x62,a0         	| [ld   hl,#ds_sprite_posn + 0x62] fighter1 position
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	                               	| [and  a]
 	bne.b	0f                               	| [...]
@@ -721,7 +721,7 @@ l_0613:
 	move.b	ds_sprite_posn+0x60,d0          	| [ld   a,(ds_sprite_posn + 0x60)] get ship 2 position
 	move.b	d0,ds_sprite_posn+0x62          	| [ld   (ds_sprite_posn + 0x62),a] ship_1_position = ship_2_position
 	move.b	sfr_sprite_posn+0x62,d0         	| [ld   a,(sfr_sprite_posn + 0x62)]
-	lea	sfr_sprite_posn+0x60(pc),a0        	| [ld   hl,#sfr_sprite_posn + 0x60]
+	lea	sfr_sprite_posn+0x60,a0        	| [ld   hl,#sfr_sprite_posn + 0x60]
 	jra	l_064F                             	| [jr   l_064F] handle ship collision
 
 l_0639_not_two_ship:
@@ -750,7 +750,7 @@ hitd_fghtr_hit:
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
 
 	exg	a1,a0                              	| [ex   de,hl]
-	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn] read directly from SFRs (not buffer RAM) ... already 0'd by hitd_dspchr
+	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn] read directly from SFRs (not buffer RAM) ... already 0'd by hitd_dspchr
 	and.w	#0xFF,d6
 	bset.b	#7,d6                           	| [set  7,l]
 	add.w	d6,a0
@@ -820,7 +820,7 @@ hitd_fghtr_notif:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
+	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	cmp.b	#8,d0                            	| [cp   #8] fighter disposition 08 if already dooomed ...
@@ -899,7 +899,7 @@ while_06B7:
 	cmp.b	#4,d0                            	| [cp   #4]
 	jeq	l_06F0                             	| [jr   z,l_06F0]
 
-	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
+	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -952,12 +952,12 @@ l_06F0:
 *  ...
 *-----------------------------------------------------------------------------
 f_06F5:
-	lea	b_92A0+0x04+0(pc),a1               	| [ld   de,#b_92A0 + 0x04 + 0] rocket "attribute"
-	lea	ds_sprite_posn+0x64(pc),a0         	| [ld   hl,#ds_sprite_posn + 0x64] rocket
+	lea	b_92A0+0x04+0,a1               	| [ld   de,#b_92A0 + 0x04 + 0] rocket "attribute"
+	lea	ds_sprite_posn+0x64,a0         	| [ld   hl,#ds_sprite_posn + 0x64] rocket
 	jbsr	rckt_man                          	| [call rckt_man]
 
-	lea	b_92A0+0x04+1(pc),a1               	| [ld   de,#b_92A0 + 0x04 + 1] rocket "attribute"
-	lea	ds_sprite_posn+0x66(pc),a0         	| [ld   hl,#ds_sprite_posn + 0x66] rocket
+	lea	b_92A0+0x04+1,a1               	| [ld   de,#b_92A0 + 0x04 + 1] rocket "attribute"
+	lea	ds_sprite_posn+0x66,a0         	| [ld   hl,#ds_sprite_posn + 0x66] rocket
        * call rckt_man
 
 *=============================================================================
@@ -1053,7 +1053,7 @@ l_0729:
 * rocket.sy<8:1>, passed to hitd_det_rckt in IXH
 l_0738:
 	move.b	(a0),d2                         	| [ld   c,(hl)] rocket.sy<8>
-	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
+	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)] rocket.sy<7:0>
@@ -1083,14 +1083,14 @@ l_0738:
 * ( $00, thru $06 ) ... in a moment, rockets will be disabled while the
 * the rescued ship is landing.
 
-	lea	ds_sprite_posn+0x08(pc),a0         	| [ld   hl,#ds_sprite_posn + 0x08] skip first 4 objects...
+	lea	ds_sprite_posn+0x08,a0         	| [ld   hl,#ds_sprite_posn + 0x08] skip first 4 objects...
 	move.b	#44,d1                          	| [ld   b,#44] 0x30 - 4
 
 	jra	l_075C_call_hit_detection          	| [jr   l_075C_call_hit_detection]
 
 l_0757_call_hit_detection_all:
 * reset HL and count to check $30 objects
-	lea	ds_sprite_posn(pc),a0         	| [ld   hl,#ds_sprite_posn + 0x00]
+	lea	ds_sprite_posn,a0         	| [ld   hl,#ds_sprite_posn + 0x00]
 	move.b	#0x30,d1                        	| [ld   b,#0x30]
 
 l_075C_call_hit_detection:
@@ -1101,7 +1101,7 @@ l_075C_call_hit_detection:
 l_0760_disable_rocket_wposn:
 	subq.w	#1,a0                           	| [dec  l] .b0 (sX)
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn] x
+	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn] x
 	add.w	d6,a0
 
 * when testing X limits, &sprite_posn[0] already in H so skip loading it
@@ -1139,7 +1139,7 @@ l_076A_while_object:
 
 * if (0x80 != ( obj_status[L].state & _obj_collsn_notif[L] ))
 	COMPUTE_LSB_A0_D6	ds_sprite_posn
-	lea	b_9200_obj_collsn_notif(pc),a0     	| [ld   h,#>b_9200_obj_collsn_notif] is hit notification already in progress
+	lea	b_9200_obj_collsn_notif,a0     	| [ld   h,#>b_9200_obj_collsn_notif] is hit notification already in progress
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -1167,7 +1167,7 @@ l_076A_while_object:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d3                         	| [ld   d,(hl)]
-	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn] sprite.sy<7:0>
+	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn] sprite.sy<7:0>
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -1233,7 +1233,7 @@ l_07B4_next_object:
 hitd_dspchr_rckt:
 
 	move.b	d6,d0                           	| [ld   a,l] stash L, use HL for 16-bits math
-	move.l	ds_plyr_actv+_w_hit_ct(pc),a0   	| [ld   hl,(ds_plyr_actv +_w_hit_ct)]
+	move.l	ds_plyr_actv+_w_hit_ct,a0   	| [ld   hl,(ds_plyr_actv +_w_hit_ct)]
 	addq.w	#1,a0                           	| [inc  hl]
 	move.l	a0,ds_plyr_actv+_w_hit_ct       	| [ld   (ds_plyr_actv +_w_hit_ct),hl]
 	move.b	d0,d6                           	| [ld   l,a] restore L
@@ -1258,7 +1258,7 @@ hitd_dspchr_rckt:
 *  ...
 *-----------------------------------------------------------------------------
 hitd_dspchr:
-	lea	ds_sprite_posn(pc),a1              	| [ld   d,#>ds_sprite_posn] _sprite_posn[E].b0 = 0 ... sX
+	lea	ds_sprite_posn,a1              	| [ld   d,#>ds_sprite_posn] _sprite_posn[E].b0 = 0 ... sX
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	clr.b	d0                               	| [xor  a]
@@ -1291,7 +1291,7 @@ hitd_dspchr:
 l_07DB:
 	COMPUTE_LSB_A0_D6	ds_sprite_code
 * set it up for elimination
-	lea	b_9200_obj_collsn_notif(pc),a0     	| [ld   h,#>b_9200_obj_collsn_notif] = $81
+	lea	b_9200_obj_collsn_notif,a0     	| [ld   h,#>b_9200_obj_collsn_notif] = $81
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#0x81,(a0)                      	| [ld   (hl),#0x81]
@@ -1323,7 +1323,7 @@ l_07F5:
 	and.b	#0x03,d0                         	| [and  #0x03]
 
 l_07F8_:
-	lea	b_9AA0+0x01(pc),a0                 	| [ld   hl,#b_9AA0 + 0x01] b_9AA0[1 + A] = 1 ... sound-fx count/enable registers
+	lea	b_9AA0+0x01,a0                 	| [ld   hl,#b_9AA0 + 0x01] b_9AA0[1 + A] = 1 ... sound-fx count/enable registers
 	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	move.b	#1,(a0)                         	| [ld   (hl),#1]
 
@@ -1331,12 +1331,12 @@ l_07F8_:
 	move.b	d2,d0                           	| [ld   a,c] .... sprite.cclr.b1
 	cmp.b	#0x07,d0                         	| [cp   #0x07]
 	jne	l_0808                             	| [jr   nz,l_0808]
-	lea	ds_plyr_actv+_b_bmbr_boss_cflag(pc),a0	| [ld   hl,#ds_plyr_actv +_b_bmbr_boss_cflag] 0 ... enable capture-mode selection
+	lea	ds_plyr_actv+_b_bmbr_boss_cflag,a0	| [ld   hl,#ds_plyr_actv +_b_bmbr_boss_cflag] 0 ... enable capture-mode selection
 	clr.b	(a0)                             	| [ld   (hl),#0]
 
 l_0808:
 * _bug_collsn[ color ] += 1
-	lea	ds_bug_collsn_hit_mult(pc),a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x00] rocket/bug or ship/bug collision
+	lea	ds_bug_collsn_hit_mult,a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x00] rocket/bug or ship/bug collision
 	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A ... _collsn_hit_mult[sprite.cclr.b1]
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 
@@ -1350,7 +1350,7 @@ l_0811:
 * this invalidates the bomb object... but what about the ship?
 l_0815_bomb_hit:
 	COMPUTE_LSB_A0_D6	ds_sprite_code
-	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn] sprite[L].sx = 0 ... bomb colliding with fighter
+	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn] sprite[L].sx = 0 ... bomb colliding with fighter
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [ld   (hl),#0]
@@ -1373,26 +1373,26 @@ l_081E_hdl_flyng_bug:
 	addq.b	#1,d6                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprt_mctl_objs[L].mctl_idx
 
-	lea	ds_bug_motion_que_9100(pc),a0           	| [ld   h,#>ds_bug_motion_que_9100] bug_motion_que[A].b13 = 0 (release this slot)
+	lea	ds_bug_motion_que_9100,a0           	| [ld   h,#>ds_bug_motion_que_9100] bug_motion_que[A].b13 = 0 (release this slot)
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	add.b	#0x13,d0                         	| [add  a,#0x13]
 	move.b	d0,d6                           	| [ld   l,a]
 	clr.b	(a0)                             	| [ld   (hl),#0]
 
-	lea	b_bug_flyng_hits_p_round(pc),a0    	| [ld   hl,#b_bug_flyng_hits_p_round] +=1
+	lea	b_bug_flyng_hits_p_round,a0    	| [ld   hl,#b_bug_flyng_hits_p_round] +=1
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 
 * bug_flying_hit_cnt is probably only meaningful in challenge rounds. In other
 * rounds it is simply intiialized to 0 at start of round.
-	lea	w_bug_flying_hit_cnt(pc),a0        	| [ld   hl,#w_bug_flying_hit_cnt] hit_cnt -= 1 ... reset 8 each challenge_wave
+	lea	w_bug_flying_hit_cnt,a0        	| [ld   hl,#w_bug_flying_hit_cnt] hit_cnt -= 1 ... reset 8 each challenge_wave
 	subq.b	#1,(a0)                         	| [dec  (hl)]
 	movem.l	(sp)+,a0/d6                        	| [pop  hl] &sprt_mctl_objs[L].mctl_idx
 
 	jne	l_0849                             	| [jr   nz,l_0849]
 
 * award bonus points for destroying complete formation of 8 on challenge stage
-	lea	b_9200_obj_collsn_notif(pc),a0     	| [ld   h,#>b_9200_obj_collsn_notif] = b_9280[4 + 1]
+	lea	b_9200_obj_collsn_notif,a0     	| [ld   h,#>b_9200_obj_collsn_notif] = b_9280[4 + 1]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	ds2_stg_chllg_rnd_attrib+1,d0   	| [ld   a,(ds2_stg_chllg_rnd_attrib + 1)] sprite code + flag
@@ -1454,7 +1454,7 @@ l_0852:
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprt_mctl_objs[ HL ].mctl_idx
 	add.b	#0x13,d0                         	| [add  a,#0x13] mctl_mpool[n].b13
 	move.b	d0,d4                           	| [ld   e,a]
-	lea	ds_bug_motion_que_9100(pc),a1           	| [ld   d,#>ds_bug_motion_que_9100] mctl_mpool[n].b13 == 0 ... make slot inactive
+	lea	ds_bug_motion_que_9100,a1           	| [ld   d,#>ds_bug_motion_que_9100] mctl_mpool[n].b13 == 0 ... make slot inactive
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	clr.b	d0                               	| [xor  a]
@@ -1487,23 +1487,23 @@ l_0899:
 
 	move.l	a0,-(sp)                        	| [push hl] sprt_mctl_objs[L] (boss) e.g. b_8830
 	move.b	#6,d0                           	| [ld   a,#6]
-	move.b	d0,ds4_game_tmrs+1              	| [ld   (ds4_game_tmrs + 1),a] 6 ... captured ship timer
+	move.b	d0,ds4_game_tmrs_92ac+1              	| [ld   (ds4_game_tmrs_92ac + 1),a] 6 ... captured ship timer
 	move.b	d6,d0                           	| [ld   a,l]
 	and.b	#7,d0                            	| [and  #7] gets offset of object from $30
-	lea	ds_plyr_actv+_ds_bmbr_boss_scode(pc),a0	| [ld   hl,#ds_plyr_actv +_ds_bmbr_boss_scode] bonus code/scoring attributes for 1 of 4 flying bosses
+	lea	ds_plyr_actv+_ds_bmbr_boss_scode,a0	| [ld   hl,#ds_plyr_actv +_ds_bmbr_boss_scode] bonus code/scoring attributes for 1 of 4 flying bosses
 	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
 	move.b	(a0)+,d0                         	| [ld   a,(hl)] .b0 ... add to bug_collsn[$0F] (adjusted scoring increment)
 												| [inc  l]
 	move.b	(a0),d3                         	| [ld   d,(hl)] .b1 -> obj_collsn_notif[L] ... sprite code + 0x80
 l_08AA:
-	lea	ds_bug_collsn_hit_mult+0x0F(pc),a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x0F] bonus score increment boss killed
+	lea	ds_bug_collsn_hit_mult+0x0F,a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x0F] bonus score increment boss killed
 	add.b	(a0),d0                          	| [add  a,(hl)]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	move.l	(sp)+,a0                        	| [pop  hl]
 
 * jp here if shot the flying captured ship
 l_08B0_set_bonus_sprite_code:
-	lea	b_9200_obj_collsn_notif(pc),a0     	| [ld   h,#>b_9200_obj_collsn_notif]
+	lea	b_9200_obj_collsn_notif,a0     	| [ld   h,#>b_9200_obj_collsn_notif]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	ILLEGAL		| check D6 value when shooting captured ship
@@ -1513,7 +1513,7 @@ l_08B0_set_bonus_sprite_code:
 l_08B6:
 
 	move.l	a0,-(sp)                        	| [push hl]
-	lea	b8_99B0_X3attackcfg_ct(pc),a0      	| [ld   hl,#b8_99B0_X3attackcfg_ct] decrement (HL) (counter for triple attack?)
+	lea	b8_99B0_X3attackcfg_ct,a0      	| [ld   hl,#b8_99B0_X3attackcfg_ct] decrement (HL) (counter for triple attack?)
 	subq.b	#1,(a0)                         	| [dec  (hl)]
 	movem.l	(sp)+,a0                        	| [pop  hl]
 	jne	l_07DB                             	| [jp   nz,l_07DB]
@@ -1546,23 +1546,23 @@ l_08CA_hit_green_boss:
 *  ...
 *-----------------------------------------------------------------------------
 f_08D3:
-	lea	ds_bug_motion_que_9100(pc),a2           	| [$08D3: ld   ix,#ds_bug_motion_que_9100]
-	
-	move.b	#0x0C,d0                        	| [ld   a,#0x0C]
-	move.b	d0,b_bug_que_idx                	| [ld   (b_bug_que_idx),a] 12 ... nbr of queue structures
-
-	lea	b_bugs_flying_cnt(pc),a0           	| [ld   hl,#b_bugs_flying_cnt] capture the (previous) count and zero the current count
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	clr.b	(a0)+                             	| [ld   (hl),#0]
-	                           	| [inc  hl] b_bugs_flying_nbr
-	move.b	d0,(a0)                         	| [ld   (hl),a] = bugs_flying_cnt
+	lea	ds_bug_motion_que_9100,a2           | [$08D3: ld   ix,#ds_bug_motion_que_9100]
+	move.b	#0x0C,d0                        	| [$08D7: ld   a,#0x0C]
+	move.b	d0,b_bug_que_idx_9289               | [$08D9: ld   (b_bug_que_idx_9289),a] 12 ... nbr of queue structures
+	lea	b_bugs_flying_cnt,a0           	    | [$08DC: ld   hl,#b_bugs_flying_cnt] capture the (previous) count and zero the current count
+	move.b	(a0),d0                         	| [$08DF: ld   a,(hl)]
+	clr.b	(a0)+                             	| [$08E0: ld   (hl),#0]
+	                           	                | [$08E2: inc  hl] b_bugs_flying_nbr
+	move.b	d0,(a0)                         	| [$08E3: ld   (hl),a] = bugs_flying_cnt
 
 * traverse the object-motion queue
 for__pool_idx_08E4:
-	btst.b	#0,(0x13,a2)                    	| [$08E4: bit  0,0x13(ix)] check for activated state
-	jeq	next__pool_idx                     	| [jp   z,next__pool_idx]
 
-	lea	b_bugs_flying_cnt(pc),a0           	| [ld   hl,#b_bugs_flying_cnt] +=1
+
+	btst.b	#0,(0x13,a2)                    	| [$08E4: bit  0,0x13(ix)] check for activated state
+	jeq	next__pool_idx_0dfb                     	| [jp   z,next__pool_idx_0dfb]
+
+	lea	b_bugs_flying_cnt,a0           	| [ld   hl,#b_bugs_flying_cnt] +=1
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 
 	moveq	#0,d6
@@ -1615,7 +1615,7 @@ j_090E_flite_path_init:
 
 	move.l	a0,-(sp)                        	| [push hl] ptr to data table
 	not.b	d0                               	| [cpl]
-	lea	d_0920_jp_tbl(pc),a0               	| [ld   hl,#d_0920_jp_tbl]
+	lea	d_0920_jp_tbl,a0               	| [ld   hl,#d_0920_jp_tbl]
 	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
 	move.l	(a0),(4,a7)         	| [ld   a,(hl)]
 		                      	| [inc  hl]
@@ -1686,12 +1686,12 @@ l_0963:
 * diving attacks stop and bugs go home
 case_0968:  | 0x0E
 	move.b	(0x10,a2),d4                    	| [ld   e,0x10(ix)] home_posn_rc[ obj_id ]
-	lea	sprt_fmtn_hpos(pc),a1              	| [ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
+	lea	sprt_fmtn_hpos,a1              	| [ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	move.b	(a1),d0                         	| [ld   a,(de)] row position index
 	move.b	d0,d4                           	| [ld   e,a]
-	lea	ds_hpos_loc_orig(pc),a1            	| [ld   d,#>ds_hpos_loc_orig] b1: copy of origin data
+	lea	ds_hpos_loc_orig,a1            	| [ld   d,#>ds_hpos_loc_orig] b1: copy of origin data
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	addq.w	#1,a1                           	| [inc  e]
@@ -1706,7 +1706,7 @@ case_097B:  | 0x0D
 	move.l	a0,-(sp)                        	| [push hl] ptr to data table
 	move.b	(0x10,a2),d4                    	| [ld   e,0x10(ix)] object offset of bee that is to be split
 * find an inactive ($80) yellow alien or getout.
-	lea	b_8800+0x38(pc),a0                 	| [ld   hl,#b_8800 + 0x38]
+	lea	b_8800+0x38,a0                 	| [ld   hl,#b_8800 + 0x38]
 	move.b	#4,d1                           	| [ld   b,#4]
 l_0984:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -1739,7 +1739,7 @@ l_098F_do_split_off_bonus_bee:
 	exg		d0,d7                              	| [ex   af,af'] stash index of spawning yellow alien
 
 * find available slot or getout
-	lea	ds_bug_motion_que_9100+0xF0-1(pc),a0    	| [ld   hl,#ds_bug_motion_que_9100 + 0xF0 - 1] start at end/top of segment
+	lea	ds_bug_motion_que_9100+0xF0-1,a0    	| [ld   hl,#ds_bug_motion_que_9100 + 0xF0 - 1] start at end/top of segment
 	move.w	#-14,d3                       	| [ld   de,#-0x14] sizeof array element
 	move.b	#0x0C,d1                        	| [ld   b,#0x0C] nbr of object in the array
 l_09A3:
@@ -1931,13 +1931,13 @@ case_0AA0:  | 0x04
 	add.w	d6,a0
 	move.b	#9,(a0)                         	| [ld   (hl),#9] disposition = 9: diving/homing (currently 3)
 
-	lea	sprt_fmtn_hpos(pc),a0              	| [ld   h,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
+	lea	sprt_fmtn_hpos,a0              	| [ld   h,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0)+,d2                         	| [ld   c,(hl)] row index
 	                           	| [inc  l]
 	move.b	(a0),d6                         	| [ld   l,(hl)] column index
-	lea	ds_hpos_loc_t(pc),a0               	| [ld   h,#>ds_hpos_loc_t]
+	lea	ds_hpos_loc_t,a0               	| [ld   h,#>ds_hpos_loc_t]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 
@@ -1947,7 +1947,7 @@ case_0AA0:  | 0x04
 
 	move.b	d2,d6                           	| [ld   l,c] row position index
 
-	lea	ds_hpos_loc_t(pc),a0               	| [ld   h,#>ds_hpos_loc_t]
+	lea	ds_hpos_loc_t,a0               	| [ld   h,#>ds_hpos_loc_t]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 
@@ -2093,13 +2093,13 @@ case_0B5F:  | 0x06
 
 	move.b	(0x10,a2),d4                    	| [ld   e,0x10(ix)] home_posn_rc[ obj_id + 1 ]
 	addq.b	#1,d4                           	| [inc  e]
-	lea	sprt_fmtn_hpos(pc),a1              	| [ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) + 1 ] ... column position index
+	lea	sprt_fmtn_hpos,a1              	| [ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) + 1 ] ... column position index
 	and.w	#0xFF,d4
 	add.w	d4,a1
 
 	move.b	(a1),d0                         	| [ld   a,(de)]
 	move.b	d0,d4                           	| [ld   e,a]
-	lea	ds_hpos_spcoords_9800(pc),a1            	| [ld   d,#>ds_hpos_spcoords_9800] col pix coordinate, lsb only
+	lea	ds_hpos_spcoords_9800,a1            	| [ld   d,#>ds_hpos_spcoords_9800] col pix coordinate, lsb only
 	and.w	#0xFF,d4
 	add.w	d4,a1
 
@@ -2132,11 +2132,11 @@ l_0B8C:
 	move.b	d5,(0x09,a2)                    	| [ld   0x09(ix),h] .b01
 	addq.b	#1,(0x0D,a2)                    	| [inc  0x0D(ix)]
 
-	jra	next__pool_idx                     	| [jp   next__pool_idx]
+	jra	next__pool_idx_0dfb                     	| [jp   next__pool_idx_0dfb]
 
 * in an attack convoy ... changing direction
 case_0B98:  | 0x08
-* if (0x38 != (0x38 & ds_bug_motion_que_9100[b_bug_que_idx].b10))  hl += 3 ...
+* if (0x38 != (0x38 & ds_bug_motion_que_9100[b_bug_que_idx_9289].b10))  hl += 3 ...
 	move.b	(0x10,a2),d0                    	| [ld   a,0x10(ix)] offset of object ...8800[L]
 	and.b	#0x38,d0                         	| [and  #0x38]
 	cmp.b	#0x38,d0                         	| [cp   #0x38] "transient"? ($38, $3A, $3C, $3E)
@@ -2476,7 +2476,7 @@ l_0D03_flite_pth_posn_set:
 * fixed point 9.7 in .b02.b03 - left shift integer portion into A ... carry in to <0> from .b02<7>
 	COMPUTE_LSB_A0_D6 ds_sprite_ctrl_9B00
 
-	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
+	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(0x03,a2),d3                    	| [ld   d,0x03(ix)] bits<1:6> of x pixel ... could load directly to A
@@ -2555,7 +2555,7 @@ l_0D50:
 * Once the timer in $0E is reached, then check conditions to enable bomb drop.
 * If bomb is disabled for any reason, the timer is restarted.
 	subq.b	#1,(0x0E,a2)                    	| [dec  0x0E(ix)] countdown to enable a bomb
-	jne	next__pool_idx                     	| [jp   nz,next__pool_idx]
+	jne	next__pool_idx_0dfb                     	| [jp   nz,next__pool_idx_0dfb]
 	move.b	(0x0F,a2),d0
 	lsr.b	#1,d0                     	| [srl  0x0F(ix)] these bits enable bombing
 	scs		d7
@@ -2571,13 +2571,13 @@ l_0D50:
 	                               	| [and  a]
 	jeq	l_0DF5_next_superloop_and_reload_0E	| [jp   z,l_0DF5_next_superloop_and_reload_0E]
 
-	move.b	ds4_game_tmrs+1,d0              	| [ld   a,(ds4_game_tmrs + 1)]
+	move.b	ds4_game_tmrs_92ac+1,d0              	| [ld   a,(ds4_game_tmrs_92ac + 1)]
 	                               	| [and  a]
 	jne	l_0DF5_next_superloop_and_reload_0E	| [jp   nz,l_0DF5_next_superloop_and_reload_0E]
 
 * check for available bomb ... bombs are rendered inactive at l_0815
 	exg	a1,a0                              	| [ex   de,hl] &sprite.ctrl[bmbr].b1 to DE ...
-	lea	b_8800+0x68(pc),a0                 	| [ld   hl,#b_8800 + 0x68] bomb0 object/index
+	lea	b_8800+0x68,a0                 	| [ld   hl,#b_8800 + 0x68] bomb0 object/index
 	move.b	#8,d1                           	| [ld   b,#8] check 8 positions
 l_0D82:
 	move.b	(a0),d0                         	| [ld   a,(hl)] _objs[BOMB0].state
@@ -2594,12 +2594,12 @@ l_0D8D_got_a_bullet:
 
 	COMPUTE_LSB_A0_D6	b_8800
 	move.l	a0,-(sp)                        	| [push hl] &_objs[BOMB0 + n]
-	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
+	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 
 	COMPUTE_LSB_A1_D4	ds_sprite_ctrl_9B00
-	lea	ds_sprite_posn(pc),a1              	| [ld   h,#>ds_sprite_posn]
+	lea	ds_sprite_posn,a1              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d4
 	add.w	d4,a1                          	| [ld   d,h] weird msb change
 	subq.w	#1,a1                           	| [dec  e] ... E from &sprite.ctrl[L].b1
@@ -2687,7 +2687,7 @@ l_0DE2:
 	move.b	d6,d0                           	| [ld   a,l]
 	add.b	#8,d0                            	| [add  a,#8] IDX_BOMB will be index 0 thanks to and $0F
 	and.w	#0x0F,d0                         	| [and  #0x0F]
-	lea	b_92B0(pc),a0                 	| [ld   hl,#b_92B0 + 0x00] bomb x-coordinate structure ( 8 * 2 )
+	lea	b_92B0,a0                 	| [ld   hl,#b_92B0 + 0x00] bomb x-coordinate structure ( 8 * 2 )
 	add.w	d0,a0                            	| [add  a,l]
 	                           	| [ld   l,a]
 	move.b	d1,(a0)+                         	| [ld   (hl),b]
@@ -2698,8 +2698,8 @@ l_0DF5_next_superloop_and_reload_0E:
 	move.b	b_92E2,d0                  	| [ld   a,(b_92E2 + 0x00)] to $0E(ix) e.g. A==14 (set for each round ... bomb drop counter)
 	move.b	d0,(0x0E,a2)                    	| [ld   0x0E(ix),a] b_92E2[0] ... bomb drop counter
 
-next__pool_idx:
-	lea	b_bug_que_idx(pc),a0               	| [ld   hl,#b_bug_que_idx] -= 1 ... counts backwards
+next__pool_idx_0dfb:
+	lea	b_bug_que_idx_9289,a0               	| [$0dfb: ld   hl,#b_bug_que_idx_9289] -= 1 ... counts backwards
 	subq.b	#1,(a0)                         	| [dec  (hl)]
 	bne.b	0f                               	| [...]
 	rts                                    	| [ret  z] [...]
@@ -2764,13 +2764,13 @@ case_0E49_make_object_inactive: | 0x0
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] make inactive
-	lea	ds_sprite_posn(pc),a0              	| [ld   h,#>ds_sprite_posn]
+	lea	ds_sprite_posn,a0              	| [ld   h,#>ds_sprite_posn]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [ld   (hl),#0]
 	clr.b	(0x13,a2)                        	| [ld   0x13(ix),#0x00] make inactive
 
-	jra	next__pool_idx                     	| [jp   next__pool_idx]
+	jra	next__pool_idx_0dfb                     	| [jp   next__pool_idx_0dfb]
 * end f_08D3
 
 *=============================================================================
