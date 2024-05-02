@@ -17,8 +17,8 @@ NO68020 = 1
 PREVIOUS_SPRITE_SIZE = 8
 CURRENT_SPRITE_SIZE = 2
 
-SPRITE_Y_CORRECTION = 0
-SPRITE_X_CORRECTION = 1
+SPRITE_Y_CORRECTION = 8
+SPRITE_X_CORRECTION = 8
 
 BASE_BPLCON2_VALUE = 0x0024
 SCREEN_ADDRESS = 0x8000
@@ -2141,14 +2141,38 @@ osd_w_colorram:
 update_bg_tile:
 	and.w	#0xFF,d0	| mask up to 255
 
+	cmp.w	#0x3C0,d7
+	bcc.b	0f
+	cmp.w	#0x40,d7
+	bcs.b	2f
+	
 	move.w	d7,d3
 	and.w	#0x1F,d3	| this is Y (tile)
-	addq	#1,d3
+	addq	#3,d3
 	
 	lsr.w	#5,d7		| this is X (tile)
 	not.w	d7
 	add.w	#0x21,d7
-
+	bra.b	1f
+	* two first rows are special
+0:
+	move.w	d7,d3
+	lsr.w	#5,d3		| this is Y
+	
+	sub.w	#29,d3		| minus 2
+	and.w	#0x1F,d7	| this is X
+	neg.w	d7
+	add.w	#32,d7
+	bra.b	1f
+	* two last rows as well
+2:
+	move.w	d7,d3
+	lsr.w	#5,d3		| this is Y
+	add.w	#32,d3		| plus 2
+	and.w	#0x1F,d7	| this is X
+	neg.w	d7
+	add.w	#32,d7
+1:
 
 
 	lea		mulNB_BYTES_PER_ROW_table(pc),a0

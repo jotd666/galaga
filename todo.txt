@@ -7,7 +7,8 @@
 db_2A3C: table+bits to rework & understand how it's read
 flv tables: -base to handle
 
+- handle color cluts (unstub w_colorram)
 - debug rld,rrd (called after intro)
 - yellow flashes
-- HIGH SCORE not displayed!
+- CREDIT not displayed!
 - remove red timer flashes, maybe speedup using F10?
