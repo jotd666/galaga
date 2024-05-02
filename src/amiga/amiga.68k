@@ -23,6 +23,14 @@ SPRITE_X_CORRECTION = 8
 BASE_BPLCON2_VALUE = 0x0024
 SCREEN_ADDRESS = 0x8000
 
+* dynamic color change + stars lifted from my previous Galaxian port
+STAR_SPRITE_INDEX = 7
+STAR_SPRITE_COLOR_REG = color+(STAR_SPRITE_INDEX/2)*8+34
+
+copper_stars_offset = 12
+copper_row_size = 32
+copper_8x8_row_size = copper_stars_offset+copper_row_size*8
+
 
 BORDERBLANK = 0
 SCORE_FILE_SIZE = 0xAA
@@ -2917,6 +2925,26 @@ _end_of_ng_code:
 		
 	.align 2
 
+* 32 rows = 256 pixels
+* table of the colors for fg tiles in the copperlist
+	.set	row_offset,0
+bg_color_table:
+	.rept	27
+	.long	color_row_0+row_offset
+	* warning: this offset increase depends on what's in color_row_0
+	* 16=4 colors to change, 32 bytes per star pattern * 8 patterns per row
+	.set	row_offset,row_offset+copper_8x8_row_size
+	.endr
+	.long	color_row_27
+	.long	color_row_28
+	.set	row_offset,0
+	.rept	2
+	.long	color_row_29_plus+row_offset
+	.set	row_offset,row_offset+copper_8x8_row_size
+	.endr
+
+
+
 sprite_buffer:
 	ds.b	NB_TARGET_SPRITES*CURRENT_SPRITE_SIZE
 	
@@ -2993,6 +3021,22 @@ blank_sprite:
 	.long	0
 	.endr
 	
+	.macro STAR_COPPER_ROW
+    * we use sprite #7 (last) for the stars, multiplexing it
+	.word	STAR_SPRITE_COLOR_REG,0xF00	   | 4
+    .word    spr+sd_SIZEOF*STAR_SPRITE_INDEX+sd_pos,0   | 8
+    .word    spr+sd_SIZEOF*STAR_SPRITE_INDEX+sd_ctl,0   | 12
+	* sprite pattern
+    .word    spr+sd_SIZEOF*STAR_SPRITE_INDEX+sd_dataB,0x0000	| 16
+    .word    spr+sd_SIZEOF*STAR_SPRITE_INDEX+sd_dataa,0x8000	| 20
+	.word	beampos,0xFFFE              | 24
+    .word    spr+sd_SIZEOF*STAR_SPRITE_INDEX+sd_dataB,0	| 28
+    .word    spr+sd_SIZEOF*STAR_SPRITE_INDEX+sd_dataa,0	| 32	
+	
+	.endm
+
+start_color = color+32
+
 	* ATM sprite colors are out of copperlist
 	
 	* main copperlist
@@ -3032,13 +3076,57 @@ sprites:
     .word    sprpt+28,0
     .word    sprpt+30,0
 	
-	* pal limit
-    .word  0xFFDF,0xFFFE       | PAL wait
- 	.set    beampos,0x0401		| more lines to align
-
-
-	.set    beampos,beampos+0x800
+ 	.set    beampos,0x2401	| first displayed row
 	.word	beampos,0xFFFE
+color_row_0:
+	.rept	27
+	* set 4 colors for that 8-high row: 16 bytes
+	.word	start_color,0 
+	.word	start_color+8,0 
+	.word	start_color+16,0   
+	* set sprite slots for stars: 32*8 bytes
+	.rept	8
+	.set	beampos,beampos+0x100
+	STAR_COPPER_ROW
+	.endr
+	.endr
+color_row_27:
+	.word	start_color,0 
+	.word	start_color+8,0 
+	.word	start_color+16,0   
+	.rept	3
+	.set	beampos,beampos+0x100
+	STAR_COPPER_ROW
+	.endr
+
+	* pal limit
+    .word  0xFFDF,0xFFFE       | PAL wait (should be 0xFFDF but probably fmode=3 changes it)
+    .word  0x0401,0xFFFE
+
+	.set    beampos,0x0401
+    .word   beampos,0xFFFE	
+	
+color_row_28:
+	.word	start_color,0 
+	.word	start_color+8,0 
+	.word	start_color+16,0
+	.rept	8
+	.set	beampos,beampos+0x100
+	STAR_COPPER_ROW
+	.endr
+	
+	.set    beampos,0x0c01
+	
+color_row_29_plus:
+	.rept	4
+	.word	start_color,0 
+	.word	start_color+8,0 
+	.word	start_color+16,0   
+	.rept	8
+	.set	beampos,beampos+0x100
+	STAR_COPPER_ROW
+	.endr
+	.endr
 
     .word	 intreq,0x8010	| no bobs from now on, get more drawing time
 	
