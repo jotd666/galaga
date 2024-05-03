@@ -7,6 +7,7 @@
 db_2A3C: table+bits to rework & understand how it's read
 flv tables: -base to handle
 
+- generate sprite_cluts
 - handle color cluts (w_colorram is going to change the whole line with copper!!!)
   only exception is: when score is entered, letters can be of different colors in a row
   else they're of the same color! => display letters on the 5th plane

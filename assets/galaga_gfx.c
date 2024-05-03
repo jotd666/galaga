@@ -5260,7 +5260,7 @@ uint8_t sprite[NUM_SPRITES][256] =
   },
 };
 
-// palette (jotd: this is not the correct order)
+// palette (jotd: this is not the correct order at least for sprites)
 
 uint8_t palette[NUM_COLOURS][3] = 
 {

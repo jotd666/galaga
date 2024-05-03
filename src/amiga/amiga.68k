@@ -3109,9 +3109,12 @@ stars_palette_rgb4:
 palette:
 	.include "palette.68k"
 
-	* sprites "individual" 4-color palettes
+	* hardware sprites "individual" 4-color palettes
 sprite_cluts:
-	.include "palette_cluts.68k"
+	.include "sprite_cluts.68k"
+	* tiles "individual" 4-color palettes
+tile_cluts:
+	.include "tile_cluts.68k"
 	
 	* on amiga, this file is included in galaga.68k file
 	* so the assembler can optimize by using PC-relative addressing

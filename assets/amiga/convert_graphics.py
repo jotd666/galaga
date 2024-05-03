@@ -5,6 +5,7 @@ gamename = "galaga"
 
 import collections
 
+# ripped from MAME, Mark version is not correct or I just don't get the logic
 ripped_palette = """222,222,222,255
 255,0,0,255
 255,255,0,255
@@ -39,7 +40,6 @@ ripped_palette = """222,222,222,255
 0,0,0,255
 """.splitlines()
 
-#transparent = (60,100,200)  # whatever is not a used RGB is ok
 
 
 # only 1 4 color palette, all rows use 4 colors per row
@@ -179,11 +179,12 @@ with open(os.path.join(this_dir,"..",f"{gamename}_gfx.c")) as f:
 # block_dict structure is as follows:
 # dict_keys(['fg_tile', 'sprite', 'palette', 'fg_tile_clut', 'sprite_clut'])
 
-
-palette = [tuple(x) for x in block_dict["palette"]["data"]]
-# ripped palette is wrong. MAME gfxsave to the rescue!
+# palette looks ok for tiles, thanks Mark!!
+tiles_palette = [tuple(x) for x in block_dict["palette"]["data"]]
+# palette is wrong for sprites. MAME gfxsave to the rescue!
 palette = [tuple(int(x) for x in line.split(",")[0:3]) for line in ripped_palette]
 sprite_clut = [[tuple(palette[x]) for x in clut] for clut in block_dict["sprite_clut"]["data"]]
+fg_tile_clut = [[tuple(tiles_palette[x]) for x in clut] for clut in block_dict["fg_tile_clut"]["data"]]
 
 
 def replace_color(img,color,replacement_color):
@@ -286,6 +287,10 @@ with open(os.path.join(src_dir,"palette_cluts.68k"),"w") as f:
 with open(os.path.join(src_dir,"palette.68k"),"w") as f:
     f.write("palette:\n")
     bitplanelib.palette_dump(palette,f,pformat=bitplanelib.PALETTE_FORMAT_ASMGNU)
+with open(os.path.join(src_dir,"tile_cluts.68k"),"w") as f:
+
+    for c in fg_tile_clut:
+        bitplanelib.palette_dump(c,f,pformat=bitplanelib.PALETTE_FORMAT_ASMGNU)
 
 bitplanelib.palette_dump(palette,os.path.join(dump_dir,"colors.png"),pformat=bitplanelib.PALETTE_FORMAT_PNG)
 character_codes = []
