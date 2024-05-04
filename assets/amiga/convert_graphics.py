@@ -41,10 +41,17 @@ ripped_palette = """222,222,222,255
 """.splitlines()
 
 
-
+black = (0,0,0)
 # only 1 4 color palette, all rows use 4 colors per row
 # those colors can't be found in palette
-fake_4_color_palette = [(0,0,0),(0xE0,0,0),(0,0xE0,0),(0,0,0xE0)]
+# we also need to put those colors at specific locations on the 32 color range
+# (colors that hardware sprites don't use)
+fake_4_color_palette = [(12,12,12)]*32
+for i,c in zip([16,20,24],[(0xE0,0,0),(0,0xE0,0),(0,0,0xE0)]):
+    fake_4_color_palette[i] = c
+fake_4_color_palette[0] = black
+
+index_conv = {0:0,1:24,2:20,3:16}
 
 ST_NONE = 0
 ST_BOB = 1
@@ -295,14 +302,17 @@ with open(os.path.join(src_dir,"tile_cluts.68k"),"w") as f:
 bitplanelib.palette_dump(palette,os.path.join(dump_dir,"colors.png"),pformat=bitplanelib.PALETTE_FORMAT_PNG)
 character_codes = []
 
+
 if True:
     for k,chardat in enumerate(block_dict["fg_tile"]["data"]):
+        if k==128:
+            break   # no need for symmetry, cocktail mode crap
         img = Image.new('RGB',(8,8))
 
         d = iter(chardat)
         for i in range(8):
             for j in range(8):
-                v = next(d)
+                v = index_conv[next(d)]   # 0-3 to real index in 32 color palette
                 img.putpixel((j,i),fake_4_color_palette[v])
         character_codes.append(bitplanelib.palette_image2raw(img,None,fake_4_color_palette))
 
