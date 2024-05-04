@@ -37,8 +37,8 @@ all: $(AMIGASRC)/graphics.68k $(MAIN) $(WHDLOADER) $(WHDLOADER_CHIP)
 clean:
 	del $(OBJS) "$(MAIN)"
 	
-#$(AMIGASRC)/graphics.68k: $(ASSETS)/used_cluts.json $(ASSETS)/convert_graphics.py $(ASSETS)/../$(PROGNAME)_gfx.c $(ASSETS)/sprite_config.json
-#	cmd /c $(ASSETS)\convert_graphics.py
+$(AMIGASRC)/graphics.68k: $(ASSETS)/convert_graphics.py $(ASSETS)/../$(PROGNAME)_gfx.c
+	cmd /c $(ASSETS)\convert_graphics.py
 
 
 $(AMIGASRC)/sounds.68k: $(ASSETS)/convert_sounds.py $(ASSETS)/../sounds/$(PROGNAME)_conv.mod

@@ -76,11 +76,12 @@ OPT_ENABLE_DOUBLE_BUFFERING = 1
 _custom = 0xDFF000
 
 
-NB_PLAYFIELD_PLANES = 4
-TOTAL_NB_COLORS = 1<<NB_PLAYFIELD_PLANES
+NB_PLAYFIELD_PLANES = 5
+NB_BOBS_PLANES = 4
+TOTAL_NB_COLORS = 1<<NB_BOBS_PLANES
 NB_BYTES_PER_ROW = 40
 NB_ROWS = 36
-NB_LINES = NB_ROWS*8+8  | 288
+NB_LINES = NB_ROWS*8  | 288
 Y_MAX = NB_LINES
 
 NB_PLAYFIELD_LINES = NB_LINES
@@ -1245,14 +1246,14 @@ update_bobs:
 	* D0 and D1 are already set
 	move.l	d4,a0	| plane list (+ mask)
 	tst.b	d6
-	beq.b	13f
+	*beq.b	13f
 	* Y-flip: fetch mirrored planes
 	* note that there is no safety: if it's mirrored
 	* and mirror isn't declared when creating sprite, the engine
 	* will fetch the next bob (pretty visible when testing!!)
-	add.w	#(NB_PLAYFIELD_PLANES+1)*4,a0
+	*add.w	#(NB_BOBS_PLANES+1)*4,a0
 13:
-	move.l	(NB_PLAYFIELD_PLANES*4,a0),d2	| mask plane is after bob data
+	move.l	(NB_BOBS_PLANES*4,a0),d2	| mask plane is after bob data
 	beq.b	22f		| mask is zero: blank tile => skip
 	move.l	d2,a3
 	moveq	#0,d2	| no y-clip
@@ -1270,7 +1271,7 @@ update_bobs:
 	* check if bitplanes are zeroed
 	* note: only checks 4 bitplanes
 	* must be adapted if 5 bitplanes or more!
-	.ifne	NB_PLAYFIELD_PLANES-4
+	.ifne	NB_BOBS_PLANES-4
 	.error	"must adapt for nb bitplanes != 4"
 	.endif
 	st		d7		| default: all bitplanes are to be erased/restored
@@ -1361,7 +1362,7 @@ restore_16x_background_old:
 	move.l a1,bltdpt(a5)	|destination top (bottom) left corner
 	move.w  d4,bltsize(a5)	|rectangle size, starts blit
 
-	.rept	NB_PLAYFIELD_PLANES-2
+	.rept	NB_BOBS_PLANES-2
 	lea	(BG_SCREEN_PLANE_SIZE,a1),a1
     move.l  #0x01000000,d3    | minterm useD & rect clear (0xA) 
 	* optimize erase for remaining bitplanes
@@ -1483,7 +1484,7 @@ blit_planes_cookie_cut_16x_flipped:
 	move.w	d2,d5
 	move.w	d3,d4
 	neg.w	d4
-	moveq	#NB_PLAYFIELD_PLANES,d3
+	moveq	#NB_BOBS_PLANES,d3
     moveq  #4,d2       | 16 pixels + 2 shift bytes
     jra blit_planes_any_internal_cookie_cut
 
@@ -1502,7 +1503,7 @@ blit_planes_cookie_cut_16x:
     lea _custom,A5
 	move.w	d2,d5
 	move.w	d3,d4
-	moveq	#NB_PLAYFIELD_PLANES,d3
+	moveq	#NB_BOBS_PLANES,d3
     moveq  #4,d2       | 16 pixels + 2 shift bytes
 * < A5: custom
 * < D0.W,D1.W: x,y
@@ -2018,6 +2019,7 @@ platform_init:
     move.w #0x3881-8,diwstop(a5)
     move.w #0x0038,ddfstrt(a5)
     move.w #0x00D0,ddfstop(a5)
+	* using one extra bitplane for monoplanar chars (letters)
     move.w #0x200+(NB_PLAYFIELD_PLANES<<12)+BORDERBLANK,bplcon0(a5)
     move.w #BASE_BPLCON2_VALUE,bplcon2(a5)
 	* AGA-compatible ECS default values
@@ -2218,12 +2220,9 @@ osd_w_videoram:
 * should preserve all registers
 
 osd_w_colorram:
-	rts
-	
     .ifeq OPT_DISABLE_BG_LAYER
-	movem.l	d0-d7/a0-a3,-(a7)
+	movem.l	d0-d7/a0-a4,-(a7)
 	
-
 	
 	sub.w	#SCREEN_ADDRESS+0x400,d7
 	bcs.b	0f
@@ -2250,20 +2249,13 @@ osd_w_colorram:
 	move.b	d0,(a1)	| update logical grid
 
 
-	jbsr		update_bg_tile
+	jbsr		update_bg_color
 0:
-	movem.l	(a7)+,d0-d7/a0-a3
+	movem.l	(a7)+,d0-d7/a0-a4
     .endif | OPT_DISABLE_BG_LAYER
 	rts
 
-
-* d7: screen offset
-* d0: tile code
-*
-
-update_bg_tile:
-	and.w	#0xFF,d0	| mask up to 255
-
+compute_tile_xy:
 	cmp.w	#0x3C0,d7
 	bcc.b	0f
 	cmp.w	#0x40,d7
@@ -2291,17 +2283,59 @@ update_bg_tile:
 2:
 	move.w	d7,d3
 	lsr.w	#5,d3		| this is Y
-	add.w	#32,d3		| plus 2
+	add.w	#32,d3		| plus 32
 	and.w	#0x1F,d7	| this is X
 	neg.w	d7
 	add.w	#32,d7
 1:
+	rts
+	
+* d7: screen offset
+* d0: tile color code
+*
+
+update_bg_color:
+	and.w	#0x3F,d0	| mask up to 63
+
+	bsr		compute_tile_xy
+	cmp.w	#29,d7
+	bcc.b	0f				| above 28: ignore
+	subq	#1,d3
+	bmi.b	0f
+	* D3 contains Y row
+	lea		bg_color_table(pc),a0
+	add.w	d3,d3
+	add.w	d3,d3
+	move.l	(a0,d3.w),a0
+	lea		tile_cluts+2(pc),a1		| skip first color (black)
+	lsl.w	#3,d0
+	* set color on that row
+	move.w	(a1,d0.w),(2,a0)
+	move.w	(2,a1,d0.w),(6,a0)
+	move.w	(4,a1,d0.w),(10,a0)
+0:
+	rts
+	
+* d7: screen offset
+* d0: tile code
+*
+
+update_bg_tile:
+	and.w	#0xFF,d0	| mask up to 255
+
+	bsr		compute_tile_xy
+	cmp.w	#29,d7
+	jcc	0f				| above 28: ignore
 
 
 	lea		mulNB_BYTES_PER_ROW_table(pc),a0
+	* D3 = Y
 
-	moveq	#1,d4		| 2 bitplanes
-	
+
+	add.w	d3,d3
+	move.w	(a0,d3.w),d3	| times 40
+	lsl.w	#3,d3		| times 8
+	moveq	#5,d4		| 5 bitplanes
 	move.w	#BG_SCREEN_PLANE_SIZE,d5
 	
 	* we update the drawed bitplanes and also the backbuffer
@@ -2313,16 +2347,17 @@ update_bg_tile:
 	lea		bg_screen_data_2,a3
 	.endif
 	lea		bg_background_data,a2
-	* D3 = Y
 
-	add.w	d3,d3
-	move.w	(a0,d3.w),d3
-	lsl.w	#3,d3		| times 8
+	swap	d7
+	clr		d7
+	swap	d7
 	add.w	d3,d7
-	add.w	d7,a1
-	add.w	d7,a2
+
+	add.w	#BG_SCREEN_PLANE_SIZE*NB_BOBS_PLANES,d7  | last plane (5th here) first
+	add.l	d7,a1	| long add required!
+	add.l	d7,a2
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-	add.w	d7,a3
+	add.l	d7,a3
 	.endif
 	WAIT_BLIT
 
@@ -2336,13 +2371,19 @@ update_bg_tile:
 	add.w	d0,d0
 	move.l	(a0,d0.w),d0
 	jeq	2f
-	move.l	d0,a0		| pointer on char data
+	move.l	d0,a0		| pointer on char plane list (reversed)
 	
 	* just copy
 4:
+	move.l	(a0)+,d0	| pointer on bitplane or 0 or -1
+	bmi.b	0f			| -1 encountered, stop copying
+	beq.b	5f			| 0 encountered: skip that plane (maybe later we'll need to write 0)
+	* positive, non-null: it's a pointer on a bitplane
+	move.l	d0,a4
+	
 	.set	offset,0
 	.rept	8
-	move.b	(a0)+,d0
+	move.b	(a4)+,d0
 	move.b	d0,(offset,a1)	
 	move.b	d0,(offset,a2)
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
@@ -2350,10 +2391,11 @@ update_bg_tile:
 	.endif
 	.set	offset,offset+NB_BYTES_PER_ROW
 	.endr
-	add.w	d5,a1
-	add.w	d5,a2
+5:
+	sub.w	d5,a1
+	sub.w	d5,a2
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-	add.w	d5,a3
+	sub.w	d5,a3
 	.endif
 	dbf		d4,4b
 0:
@@ -2374,10 +2416,10 @@ update_bg_tile:
 	.endif
 	.set	offset,offset+NB_BYTES_PER_ROW
 	.endr
-	add.w	d5,a1
-	add.w	d5,a2
+	sub.w	d5,a1
+	sub.w	d5,a2
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-	add.w	d5,a3
+	sub.w	d5,a3
 	.endif
 	dbf		d4,111b
 2:
@@ -3069,7 +3111,7 @@ bg_color_table:
 	.long	color_row_27
 	.long	color_row_28
 	.set	row_offset,0
-	.rept	2
+	.rept	4
 	.long	color_row_29_plus+row_offset
 	.set	row_offset,row_offset+copper_8x8_row_size
 	.endr
@@ -3184,6 +3226,9 @@ blank_sprite:
 	.endm
 
 start_color = color+32
+default_color_1 = 0x0F00
+default_color_2 = 0x0F0
+default_color_3 = 0x0F
 
 	* ATM sprite colors are out of copperlist
 	
@@ -3229,9 +3274,9 @@ sprites:
 color_row_0:
 	.rept	27
 	* set 4 colors for that 8-high row: 16 bytes
-	.word	start_color,0 
-	.word	start_color+8,0 
-	.word	start_color+16,0   
+	.word	start_color,default_color_1
+	.word	start_color+8,default_color_2
+	.word	start_color+16,default_color_3   
 	* set sprite slots for stars: 32*8 bytes
 	.rept	8
 	.set	beampos,beampos+0x100
@@ -3239,9 +3284,9 @@ color_row_0:
 	.endr
 	.endr
 color_row_27:
-	.word	start_color,0 
-	.word	start_color+8,0 
-	.word	start_color+16,0   
+	.word	start_color,default_color_1 
+	.word	start_color+8,default_color_2 
+	.word	start_color+16,default_color_3     
 	.rept	3
 	.set	beampos,beampos+0x100
 	STAR_COPPER_ROW
@@ -3255,9 +3300,9 @@ color_row_27:
     .word   beampos,0xFFFE	
 	
 color_row_28:
-	.word	start_color,0 
-	.word	start_color+8,0 
-	.word	start_color+16,0
+	.word	start_color,default_color_1
+	.word	start_color+8,default_color_2  
+	.word	start_color+16,default_color_3  
 	.rept	8
 	.set	beampos,beampos+0x100
 	STAR_COPPER_ROW
@@ -3267,9 +3312,9 @@ color_row_28:
 	
 color_row_29_plus:
 	.rept	4
-	.word	start_color,0 
-	.word	start_color+8,0 
-	.word	start_color+16,0   
+	.word	start_color,default_color_1 
+	.word	start_color+8,default_color_2
+	.word	start_color+16,default_color_3
 	.rept	8
 	.set	beampos,beampos+0x100
 	STAR_COPPER_ROW

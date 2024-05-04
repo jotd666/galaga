@@ -300,8 +300,11 @@ with open(os.path.join(src_dir,"tile_cluts.68k"),"w") as f:
         bitplanelib.palette_dump(c,f,pformat=bitplanelib.PALETTE_FORMAT_ASMGNU)
 
 bitplanelib.palette_dump(palette,os.path.join(dump_dir,"colors.png"),pformat=bitplanelib.PALETTE_FORMAT_PNG)
-character_codes = []
 
+tile_plane_cache = {bytes(8):0}  # so empty line has index 0
+
+character_codes = []
+tile_index = 1
 
 if True:
     for k,chardat in enumerate(block_dict["fg_tile"]["data"]):
@@ -314,7 +317,22 @@ if True:
             for j in range(8):
                 v = index_conv[next(d)]   # 0-3 to real index in 32 color palette
                 img.putpixel((j,i),fake_4_color_palette[v])
-        character_codes.append(bitplanelib.palette_image2raw(img,None,fake_4_color_palette))
+        data = bitplanelib.palette_image2raw(img,None,fake_4_color_palette)
+        chunk_len,remainder = divmod(len(data),5)
+        if remainder:
+            raise Exception("tile bitmap not a multiple of 5!")
+
+        plane_list = []
+        for i in range(0,len(data),chunk_len):
+            plane = data[i:i+chunk_len]
+            idx = tile_plane_cache.get(plane)
+            if idx is None:
+                idx = tile_index
+                tile_plane_cache[plane] = tile_index
+                tile_index += 1
+            plane_list.append(idx)
+
+        character_codes.append(plane_list)
 
         if dump_tiles:
             scaled = ImageOps.scale(img,5,0)
@@ -468,13 +486,32 @@ with open(os.path.join(src_dir,"graphics.68k"),"w") as f:
     bitplanelib.dump_asm_bytes(hw_sprite_flag,f,mit_format=True)
 
     f.write("\ncharacter_table:\n")
-    for i,c in enumerate(character_codes):
+    for i,_ in enumerate(character_codes):
         f.write(f"\t.long\tchar_{i}\n")
-    for i,c in enumerate(character_codes):
-        if c is not None:
-            f.write(f"char_{i}:")
-            bitplanelib.dump_asm_bytes(c,f,mit_format=True)
 
+    for i,plane_list in enumerate(character_codes):
+        # now find the last (first) zero plane
+        for j,p in enumerate(plane_list):
+            if p:
+                break
+            else:
+                plane_list[j] = -1   # no more non-empty bitplanes
+
+        f.write(f"char_{i}:\n")
+        for p in reversed(plane_list):
+            f.write("\t.long\t")
+            if p == 0 or p == -1:
+                f.write(str(p))
+            else:
+                f.write(f"tile_plane_{p}")
+            f.write("\n")
+
+        #
+    tile_plane_cache.pop(bytes(8))  # array of zeroes isn't referenced
+
+    for k,idx in tile_plane_cache.items():
+        f.write(f"tile_plane_{idx}:")
+        bitplanelib.dump_asm_bytes(k,f,mit_format=True)
 
     f.write("sprite_table:\n")
 

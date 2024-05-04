@@ -1386,9 +1386,7 @@ f_update_sprites_0828:
 	
 	* update all sprite registers at the same time
 	* (it was done in cooperation with the other cpu)
-	
-	move.b	#0,0x200
-	
+		
 	lea	mrw_sprite_code_8B00,a0             	| [ld   hl,#mrw_sprite_code_8B00]
 	lea	sfr_sprite_code_8B80,a1             	| [ld   de,#sfr_sprite_code_8B80]
 	move.w	#0x80,d1                        	| [ld   bc,#0x0040] 64
@@ -10827,40 +10825,36 @@ db_obj_home_posn_rc:
 *-----------------------------------------------------------------------------
 c_sctrl_playfld_clr:
 	move.w	#0x8000+0x0040,d7           	| [ld   hl,#0x8000 + 0x0040]
-	           	| [ld   de,#0x8000 + 0x0041]
-	
-	move.w	#0x037F,d1                        	| [ld   bc,#0x037F] 895
-	                        	| [ld   bc,#0x037F] 895
+											| [ld   de,#0x8000 + 0x0041]
+	move.w	#0x037F,d1                      | [ld   bc,#0x037F] 895
 	move.b	#0x24,d0                      	| [ld   (hl),#0x24] clear Tile RAM with $24 (space)
 0:
-	jbsr	osd_w_videoram                              	| [ldir]
+	jbsr	osd_w_videoram 		        	| [ldir]
 	addq.w	#1,d7
 	dbf		d1,0b
 	move.w	#0x8440,d7          	| [ld   hl,#m_color_ram + 0x0040] clear Color RAM with $00
 	          	| [ld   de,#m_color_ram + 0x0041]
-	move.w	#0x037F,d1                        	| [ld   bc,#0x037F] 895
-	moveq	#0,d0
-	                             	| [ld   (hl),#0]
-	                              	| [ldir]
+	move.w	#0x037F,d1                | [ld   bc,#0x037F] 895
+	moveq	#0,d0							| [ld   (hl),#0]
 0:
-	jbsr	osd_w_colorram                              	| [ldir]
+	jbsr	osd_w_colorram                  | [$0178: ldir]
 	addq.w	#1,d7
 	dbf		d1,0b
 
 * HL==87bf
 	lea		0x87BF,a0
 * Set the color (red) of the topmost row: let the pointer in HL wrap
-* around to the top row fom where it left off from the loop above.
-	move.b	#0x04,d0                        	| [ld   a,#0x04]
-	move.b	#0x20,d1                        	| [ld   b,#0x20]
-	jbsr	rst_18_color                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+* around to the top row from where it left off from the loop above.
+	move.b	#0x04,d0                        	| [$017A: ld   a,#0x04]
+	move.b	#0x20,d1                        	| [$017C: ld   b,#0x20]
+	jbsr	rst_18_color                        | [$017E: rst  0x18] memset((HL), A=fill, B=ct)
 
 * HL==87df
 * Set color of 2nd row from top, again retaining pointer value from.
 * previous loop. Why $4E? I don't know but it ends up white.
-	move.b	#0x4E,d0                        	| [ld   a,#0x4E]
-	move.b	#0x20,d1                        	| [ld   b,#0x20]
-	jbsr	rst_18_color                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	move.b	#0x4E,d0                        	| [$017F: ld   a,#0x4E]
+	move.b	#0x20,d1                        	| [$0181: ld   b,#0x20]
+	jbsr	rst_18_color                        | [$0183: rst  0x18] memset((HL), A=fill, B=ct)
 
 	rts                                    	| [ret]
 * end

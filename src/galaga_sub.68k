@@ -1562,14 +1562,11 @@ f_08D3:
 
 * traverse the object-motion queue
 for__pool_idx_08E4:
-
-
 	btst.b	#0,(0x13,a2)                    	| [$08E4: bit  0,0x13(ix)] check for activated state
 	jeq	next__pool_idx_0dfb                     	| [jp   z,next__pool_idx_0dfb]
 
 	lea	b_bugs_flying_cnt,a0           	| [ld   hl,#b_bugs_flying_cnt] +=1
 	addq.b	#1,(a0)                         	| [inc  (hl)]
-
 	moveq	#0,d6
 	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] object identifier...8800[L]
 	lea	b_8800,a0                      	| [ld   h,#>b_8800]
@@ -1591,14 +1588,14 @@ for__pool_idx_08E4:
 
 mctl_fltpn_dspchr:
 * load a new flight segment if this one timed out, otherwise go directly to flite path handler and continue with same data-set
-	subq.b	#1,(0x0D,a2)                    	| [dec  0x0D(ix)] check for expiration of this data-set
-	jne	l_0C05_flite_pth_cont              	| [jp   nz,l_0C05_flite_pth_cont]
+	subq.b	#1,(0x0D,a2)                    	| [$0902: dec  0x0D(ix)] check for expiration of this data-set
+	jne	l_0C05_flite_pth_cont              		| [$0905: jp   nz,l_0C05_flite_pth_cont]
 
 * flight-path vector has expired... setup HL as pointer to next data token
-	move.b	(0x08,a2),d6                    	| [ld   l,0x08(ix)]
-	move.b	(0x09,a2),d5                    	| [ld   h,0x09(ix)]
+	move.b	(0x08,a2),d6                    	| [$0908: ld   l,0x08(ix)]
+	move.b	(0x09,a2),d5                    	| [$090B: ld   h,0x09(ix)]
 	LOAD_D5_16_FROM_D5D6
-	illegal
+	illegal		| reaches that point after "GAME OVER" but should not!
 	nop
 	nop
 	nop
