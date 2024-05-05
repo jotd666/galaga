@@ -141,7 +141,7 @@
 	.global		p_attrmode_sptiles
 	.global		pdb_demo_fghtrvctrs
 	.global		b_bugs_flying_cnt
-	.global		b_bugs_flying_nbr
+	.global		b_bugs_flying_nbr_9287
 	.global		b_bug_flyng_hits_p_round
 	.global		b_bug_que_idx_9289
 	.global		ds5_928A_captr_status
@@ -453,7 +453,7 @@ ds2_stg_chllg_rnd_attrib:   | attributes selected for hit all 8 bonus on challen
        ds.b     0x01       | sprite code and collision flag, ld to obj_collsn_notif[L]
 b_bugs_flying_cnt:
        ds.b     0x01       | count of flying pests in flite-q (current frame)
-b_bugs_flying_nbr:
+b_bugs_flying_nbr_9287:
        ds.b     0x01       | nbr of flying pests in flite-q (previous frame)
 
 b_bug_flyng_hits_p_round:

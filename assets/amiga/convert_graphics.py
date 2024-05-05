@@ -125,7 +125,7 @@ add_sprite_block(0x8,0x10,"boss_ship",[0,1])
 # I'd like to hack player ship into a sprite only for clut 2
 # but use a BOB for clut 9 (captured)
 #add_sprite_block(0,0x8,"ship",[2,9])
-add_sprite_block(0,0x8,"ship",9,sprite_type=ST_HW_SPRITE)
+add_sprite_block(0,0x8,"ship",9) #,sprite_type=ST_HW_SPRITE)
 add_sprite_block(0,0x8,"ship",2)
 add_sprite_block(0x10,0x18,"red_bee",2)
 add_sprite_block(0x18,0x20,"blue_bee",3)

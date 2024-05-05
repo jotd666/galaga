@@ -71,7 +71,7 @@ ONE_TICK = 1
 	.endif
 	
 
-OPT_ENABLE_DOUBLE_BUFFERING = 1
+OPT_ENABLE_DOUBLE_BUFFERING = 0
 
 _custom = 0xDFF000
 
@@ -88,8 +88,6 @@ NB_PLAYFIELD_LINES = NB_LINES
 
 BG_SCREEN_PLANE_SIZE = NB_BYTES_PER_ROW*NB_PLAYFIELD_LINES
 BG_SCREEN_SIZE =  BG_SCREEN_PLANE_SIZE*NB_PLAYFIELD_PLANES
-FG_SCREEN_PLANE_SIZE = BG_SCREEN_PLANE_SIZE
-FG_SCREEN_SIZE =  FG_SCREEN_PLANE_SIZE*NB_PLAYFIELD_PLANES
 
 NB_HOST_SPRITES = 8
 
@@ -104,7 +102,31 @@ SPRITE_CODE = 2
 SPRITE_CLUT = 3
 SPRITE_SIZEOF = 4
 
-
+	.ifdef	RELEASE
+	.macro	CHECK_BLITTER_BOUNDS
+	.endm
+	.else
+	* debug mode: check if blitter start address (in A1) at least
+	* is within the 4 first planes
+	.macro	CHECK_BLITTER_BOUNDS
+	movem.l	d0/a0-a2,-(a7)
+	move.l	bg_drawed_screen_ptr(pc),d0
+	sub.l	d0,a1
+	jpl		110f
+111:
+	move.l	a1,a0
+	move.l	bg_drawed_screen_ptr(pc),a2
+	lea		blitter_address_too_low_error(pc),a1
+	jbsr	osd_break
+	jra		112f
+110:
+	cmp.l	#BG_SCREEN_PLANE_SIZE*NB_PLAYFIELD_PLANES,a1
+	bcc.b	111b
+112:
+	movem.l	(a7)+,d0/a0-a2
+	.endm	
+	.endif
+	
 | write current PC value to some address
 .macro LOGPC	address
 	.ifndef	RELEASE
@@ -365,6 +387,8 @@ _user:
 	clr.b	controller_joypad_1
 
 	bsr		load_palette_in_copperlist
+	bsr		show_stars
+
 
 	jra		demo_game
 
@@ -719,6 +743,9 @@ _vblank:
 	btst	#5,d0
 	beq.b		1f
 
+	bsr		scroll_stars
+	lea		_custom,a5
+
 	* emergency system to skip a frame if needed!
 	tst.b	skip_screen_update
 	bne.b	0f
@@ -890,7 +917,7 @@ sprite_toggle:
 	
 update_hardware_sprites:
 	lea		sprite_buffer(pc),a0
-	lea		sprconf_codes,a0		| mockup!!
+	*lea		sprconf_codes,a0		| mockup!!
 
 	* clear host sprites
 	moveq	#NB_HOST_SPRITES-1,d0
@@ -1034,10 +1061,7 @@ update_hardware_sprites:
 	move.l	d0,(a5)
 	* set colors
 	lea		sprite_cluts+2,a6
-	cmp.w	#0x3,d3
-	bne		444f
-	move.B	#0,0x200
-444:
+
 	lsl.w	#3,d3		| clut times 8
 
 	add.w	d3,a6
@@ -1113,10 +1137,19 @@ compute_sprite_xy:
 	exg		d0,d1		| display is rotated 90 degrees!
 	
 	.ifndef	RELEASE
-	* mockup: apply delta
-	add.w	delta_x(pc),d0
-	add.w	delta_y(pc),d1
+	cmp.w	#0x200,d0
+	bcs.b	0f
+	cmp.w	#0x200,d1
+	bcs.b	0f
+	move.l	#sprite_buffer,d0
+	sub.l	a0,d0
+	lea		coordinates_out_of_range_error(pc),a1
+	jbsr	osd_break
+	illegal
+	
+0:
 	.endif
+	
 	rts
 	
 delta_x:
@@ -1145,9 +1178,9 @@ update_bobs:
 	move.w	(PREVIOUS_SPRITE_X,a4),d2
 	beq.b	11f		| x=0: inactive
 	cmp.w	d2,d0
-	bne.b	12f
+	bne.b	12f		| prev x != x: perform erase
 	cmp.w	(PREVIOUS_SPRITE_Y,a4),d1
-	bne.b	12f
+	bne.b	12f		| prev y != y: perform erase
 	* previous X and Y and current X Y are the same: compare code
 	* (we can ditch d0,d1 from now on)
 	moveq	#0,d2
@@ -1171,6 +1204,7 @@ update_bobs:
 	add.w	#SPRITE_X_CORRECTION,d0
 	.endif	
 
+
 	bsr		restore_16x_background
 11:
 	addq	#PREVIOUS_SPRITE_SIZE,a4
@@ -1193,7 +1227,6 @@ update_bobs:
 	tst.w	d0
 	jeq		211f
 
-	move.b	#1,0x200
 	
 	moveq	#0,d2
 	move.b	(TARGET_SPRITE_CODE,a0),d2
@@ -1238,6 +1271,7 @@ update_bobs:
 	bne.b	12f
 	* bob is valid but wrong clut
 	lsr		#2,d3
+	move.l	(a7),a0
 	move.w	#0xFF0,0xDFF180
 	bra.b	22f
 12:
@@ -1298,7 +1332,7 @@ update_bobs:
 	dbf		d7,1b
 	
 	rts
-	* rarer case: blit upside down (kong falling)
+	* rarer case: blit upside down
 14:
 	bsr		blit_planes_cookie_cut_16x_flipped	
 	bra.b	21b
@@ -1310,6 +1344,10 @@ update_bobs:
 
 
 restore_16x_background:
+	.ifndef	RELEASE
+	movem.l	d0/d1,-(a7)
+	.endif
+	
 	movem.l	d2-d7/a0-a5,-(a7)
 	moveq	#4,d2			| 32 bits blit
 	move.w	#NB_PLAYFIELD_PLANES,d3
@@ -1318,6 +1356,10 @@ restore_16x_background:
 	lea		_custom,a5
 	bsr.b	clear_planes_any_blitter_internal
 	movem.l	(a7)+,d2-d7/a0-a5
+
+	.ifndef	RELEASE
+	movem.l	(a7)+,d0/d1
+	.endif
 	rts
 	
 * < A5: custom
@@ -1396,12 +1438,14 @@ clear_planes_any_blitter_internal:
 	beq.b	4f
 	subq	#1,d3
 3:
+	CHECK_BLITTER_BOUNDS
 	move.l a1,bltdpt(a5)	|destination top left corner
 	move.w  d4,bltsize(a5)	|rectangle size, starts blit
 	lea		(BG_SCREEN_PLANE_SIZE,a1),a1
 	WAIT_BLIT
 	dbf		d3,3b
 4:
+	CHECK_BLITTER_BOUNDS
 	move.l a1,bltdpt(a5)	|destination top left corner
 	move.w  d4,bltsize(a5)	|rectangle size, starts blit
 	
@@ -1550,6 +1594,7 @@ process_1_plane:
 	move.l	d7,bltcon0(a5)	| sets con0 and con1: C-A+B->D cookie cut full
 	move.l	a4,bltbpt(a5)	|source graphic top left corner
 62:
+	CHECK_BLITTER_BOUNDS
  	move.l	a1,bltcpt(a5)	|pristine background top (bottom) left corner
 	move.l	a1,bltdpt(a5)	|destination top (bottom) left corner
 	move.w  d4,bltsize(a5)	|rectangle size, starts blit
@@ -2849,6 +2894,10 @@ amiga_sprite_slots:
 	ds.b	8
 
 	.ifndef	RELEASE
+blitter_address_too_low_error:
+	.asciz	"blitter address out of range, a0=offset, a2=screen addr"
+coordinates_out_of_range_error:
+	.asciz	"coordinates out of range, offset in d0, base in a0"
 sprite_allocation_error:
 	.asciz	"sprite allocation error"
 sprite_doesnt_exist_error:
@@ -3052,7 +3101,7 @@ bg_color_table:
 
 
 sprite_buffer:
-	ds.b	NB_TARGET_SPRITES*CURRENT_SPRITE_SIZE
+	.skip	3*128		| enough for 3 arrays of 128 bytes
 	
 bob_previous_positions_1:
 	ds.b	NB_TARGET_SPRITES*PREVIOUS_SPRITE_SIZE

@@ -77,8 +77,9 @@ j_Game_init_02d3:
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
 * galaga_interrupt_enable_1_w  seems to already be set, but we make sure anyway.
-	move.b	#1,d0                           	| [ld   a,#1]
-	jbsr	osd_interrupt_control                    	| [ld   (_sfr_6820),a] 1 ,,,enable IRQ1
+* JOTD: let's NOT enable it for now, wait for task table to be initialized
+	*move.b	#1,d0                           	| [ld   a,#1]
+	*jbsr	osd_interrupt_control                    	| [ld   (_sfr_6820),a] 1 ,,,enable IRQ1
 
 * The test grid is now cleared from screen. Due to odd organization of tile ram
 * it is done in 3 steps. 1 grid row is cleared from top and bottom (each grid
@@ -172,6 +173,11 @@ l_032A:
 	move.b	d0,ds_cpu0_task_actv_9000+0x1E       	| [ld   (ds_cpu0_task_actv_9000 + 0x1E),a] 0 ... just wrote $20 here see above
 	move.b	d0,ds_cpu1_task_actv+0x00       	| [ld   (ds_cpu1_task_actv + 0x00),a] 0 ... CPU1:f_05BE (empty task)
 
+	* JOTD: enable interrupts only now, as else there seems to exist a race condition
+	* between interrupt and this code, and interrupt may scan the tasks before they're initialized
+	* and crash or lockup the game
+	moveq	#1,d0
+	jbsr	osd_interrupt_control
 
 *=============================================================================
 * g_main_035a()
@@ -214,7 +220,6 @@ g_main_035a:
 	jbsr	rst_28                            	| [rst  0x28] memset(mctl_mpool,0,$$14 * 12)
 	jbsr	c_sctrl_sprite_ram_clr            	| [$0370: call c_sctrl_sprite_ram_clr] clear sprite mem etc.
 	jbsr	c_init_taskman_structs_1230       	| [$0373: call c_init_taskman_structs_1230]
-
 * allow attract-mode festivities to be skipped if credit available
 * if ( credit_cnt == 0 )  game_state = ATTRACT_MODE
 	                               	| 
@@ -750,7 +755,7 @@ j_058E_plyr_chg:
 * }} else {{
 *    while ( nbr_flying_bugs > 0 ) {
 l_0594:
-	move.b	b_bugs_flying_nbr,d0            	| [ld   a,(b_bugs_flying_nbr)] check if !=0 (ship destroyed, wait for bugs return to nest)
+	move.b	b_bugs_flying_nbr_9287,d0            	| [ld   a,(b_bugs_flying_nbr_9287)] check if !=0 (ship destroyed, wait for bugs return to nest)
 	                               	| [and  a]
 	jne	l_0594                             	| [jr   nz,l_0594]
 *    }
@@ -3328,35 +3333,34 @@ l_133A:
 c_133A:
 
 l_133A_while:
-	move.b	b_bugs_flying_nbr,d0            	| [ld   a,(b_bugs_flying_nbr)]
-	                               	| [and  a]
-	jne	l_133A_while                       	| [jr   nz,l_133A_while] wait for all bugs to stop flying
-
-	jbsr	draw_resv_ships                   	| [call draw_resv_ships] updates reserve ships in lower left corner (wipes CREDIT X)
+	move.b	b_bugs_flying_nbr_9287,d0           | [$133A: ld   a,(b_bugs_flying_nbr_9287)]
+										        | [$133D: and  a]
+	jne	l_133A_while                            | [$133E: jr   nz,l_133A_while] wait for all bugs to stop flying								        
+	jbsr	draw_resv_ships                     | [$1340: call draw_resv_ships] updates reserve ships in lower left corner (wipes CREDIT X)
 
 * put the ship out there
-												| [ld   hl,#0x0900 + 0x0006] two bytes, code 6, color 9
-	move.b	#9,ds_sprite_code_8B00+0x62          	| [ld   (ds_sprite_code_8B00 + 0x62),hl] = $0906 ... ship-1 code 6, color 9 (load 16-bits)
-	move.b	#6,ds_sprite_code_8B00+0x62+1          	| [ld   (ds_sprite_code_8B00 + 0x62),hl] = $0906 ... ship-1 code 6, color 9 (load 16-bits)
-	lea	ds_sprite_posn_9300+0x62,a0         	| [ld   hl,#ds_sprite_posn_9300 + 0x62] ship (1) position
+												| [$1343: ld   hl,#0x0900 + 0x0006] two bytes, code 6, color 9
+	move.b	#6,ds_sprite_code_8B00+0x62         | [$1346: ld   (ds_sprite_code_8B00 + 0x62),hl] = $0906 ... ship-1 code 6, color 9 (load 16-bits)
+	move.b	#9,ds_sprite_code_8B00+0x62+1       | [$1349: ld   (ds_sprite_code_8B00 + 0x62),hl] = $0906 ... ship-1 code 6, color 9 (load 16-bits)
+	lea	ds_sprite_posn_9300+0x62,a0         	| [$134C: ld   hl,#ds_sprite_posn_9300 + 0x62] ship (1) position
 
 *  if ( !_flip_screen )  A = $29,  C = 1
-	         	| [ld   a,(b_9215_flip_screen)]
-	          	| [and  #1]
+	         	                                | [ld   a,(b_9215_flip_screen)]
+	          	                                | [and  #1]
 	move.b	#0x29,d0                        	| [ld   a,#0x29]
 	move.b	#1,d2                           	| [ld   c,#1]
 	btst.b	#0,b_9215_flip_screen
-	jeq	l_135A                             	| [jr   z,l_135A]
+	jeq	l_135A                             	    | [jr   z,l_135A]
 *  else  A = $37,  C = 0
 	add.b	#0x0E,d0                         	| [add  a,#0x0E] screen is flipped in demo?????
 	subq.b	#1,d2                           	| [dec  c]
 l_135A:
-	move.b	#0x7A,(a0)+                      	| [ld   (hl),#0x7A] SPRPOSN.0[$62] ... sx
-	                           	| [inc  l]
-	move.b	d0,(a0)                         	| [ld   (hl),a] SPRPOSN.1[$62] ... sy<0:7>
-	COMPUTE_LSB_A0_D6		ds_sprite_posn_9300+0x62
+	move.b	#0x7A,(a0)+                      	| [$135A: ld   (hl),#0x7A] SPRPOSN.0[$62] ... sx
+	                           	                | [$135C: inc  l]
+	move.b	d0,(a0)                         	| [$135D: ld   (hl),a] SPRPOSN.1[$62] ... sy<0:7>
+	COMPUTE_LSB_A0_D6		ds_sprite_posn_9300
 
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
+	lea	ds_sprite_ctrl_9B00,a0              	| [$135E: ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
 	move.b	d2,(a0)                         	| [ld   (hl),c] SPRCTRL.1[n]:0 ... sy<8>
 	                           	| [dec  l]
@@ -4786,7 +4790,7 @@ l_1BB4:
 	move.b	ds_new_stage_parms+0x04,d0      	| [ld   a,(ds_new_stage_parms + 0x04)] max_bombers
 	move.b	d0,d2                           	| [ld   c,a]
 
-	move.b	b_bugs_flying_nbr,d0            	| [ld   a,(b_bugs_flying_nbr)]
+	move.b	b_bugs_flying_nbr_9287,d0            	| [ld   a,(b_bugs_flying_nbr_9287)]
 	cmp.b	d2,d0                            	| [cp   c]
 	jcs	l_1BC0                             	| [jr   c,l_1BC0]
 * maximum nbr of bugs already flying set slot-counter back to 1 since it can't be processed right now
@@ -4837,7 +4841,7 @@ l_1BE3_while:
 * ... ( L != bonus_bee_index ) then l_1BF0_found_one
 	move.b	d2,d0                           	| [ld   a,c] unstash A ... offset_to_bonus_bee
 	
-	COMPUTE_LSB_A0_D6		b_8800+0x08		| recompute offset from original a0
+	COMPUTE_LSB_A0_D6		b_8800		| recompute offset from original a0
 	cmp.b	d6,d0                            	| [cp   l]
 	jne	l_1BF0_found_one                   	| [jr   nz,l_1BF0_found_one]
 l_1BEB_next:
@@ -5431,7 +5435,6 @@ f_update_timers_1dd2:
 	beq.b	0f                               	| [...]
 	rts                                    		| [$1DD7: ret  nz] [...]
 0:
-	move.w	#0xF00,0xDFF180
 
 	lea	ds4_game_tmrs_92ac,a0             	| [$1DD8: ld   hl,#ds4_game_tmrs_92ac + 0] decrement each of the 4 game timers
 	move.b	#4,d1                           | [$1DDB: ld   b,#4]
@@ -6183,8 +6186,7 @@ l_2026:
 	jne	l_2041                             	| [jr   nz,l_2041]
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
-	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
+	move.b	(a0,d6.w),d0                         	| [ld   a,(hl)]
 	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -6228,10 +6230,8 @@ l_205E:
 	lea	ds_sprite_code_8B00+0x62,a0         	| [ld   hl,#ds_sprite_code_8B00 + 0x62] ship (1) sprite code
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	subq.b	#6,d0                           	| [sub  #6] glyphs 6 & 7 are both for upright ship... (7 is "wings closed" if captured)
+	lea	ds_sprite_posn_9300+0x62,a0             | [ld   h,#>ds_sprite_posn_9300]
 	move.b	d0,d2                           	| [ld   c,a] ... so we have 0 or possibly 1 here.
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
-	and.w	#0xFF,d6
-	add.w	d6,a0
 	jne	l_2075                             	| [jr   nz,l_2075]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	cmp.b	#0x71,d0                         	| [cp   #0x71]
@@ -6251,8 +6251,8 @@ l_2075:
 	rts                                    	| [ret  nz] [...]
 0:
  * both ships are now joined
-	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d0	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)] object locator for the captured ship
-	move.b	d0,d6                           	| [ld   l,a]
+	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d6	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)] object locator for the captured ship
+												| [ld   l,a]
 	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -6329,7 +6329,7 @@ l_20D1_update_ship_spin:
 	add.w	d6,a0
 	move.b	ds4_game_tmrs_92ac+1,d0              	| [ld   a,(ds4_game_tmrs_92ac + 1)]
 	move.b	d0,d4                           	| [ld   e,a]
-	move.b	b_bugs_flying_nbr,d0            	| [ld   a,(b_bugs_flying_nbr)]
+	move.b	b_bugs_flying_nbr_9287,d0            	| [ld   a,(b_bugs_flying_nbr_9287)]
 	or.b	d4,d0                             	| [or   e]
 	move.b	d0,ds5_928A_captr_status+0x03   	| [ld   (ds5_928A_captr_status + 0x03),a]
 	jbsr	c_2188_ship_spin                  	| [call c_2188_ship_spin] Base address in HL, retval in B
@@ -7997,7 +7997,7 @@ f_insert_attackers_2916:
 0:
 
 * if ( 0 != bugs_flying_nbr ) goto _set_tmr0
-	move.b	b_bugs_flying_nbr,d0            	| [ld   a,(b_bugs_flying_nbr)]
+	move.b	b_bugs_flying_nbr_9287,d0            	| [ld   a,(b_bugs_flying_nbr_9287)]
 	                               	| [and  a]
 	jne	l_294D_set_tmr0                    	| [jr   nz,l_294D_set_tmr0]
 
@@ -8237,7 +8237,7 @@ l_2A05:
 * all 8 of the last wave of bees are on screen now... waiting for them to get in position.
 * if (nbr_flying bugs > 0 ) return
 l_2A29_attack_waves_complete:
-	move.b	b_bugs_flying_nbr,d0            	| [ld   a,(b_bugs_flying_nbr)]
+	move.b	b_bugs_flying_nbr_9287,d0            	| [ld   a,(b_bugs_flying_nbr_9287)]
 	                               	| [and  a]
 	beq.b	0f                               	| [...]
 	rts                                    	| [ret  nz] [...]
@@ -9409,9 +9409,9 @@ l_36F2:
 	jbsr	osd_w_videoram                      	| [ld   (hl),#0x27]
 	addq.w	#1,d7                           	| [inc  hl]
 	move.b	#0x2B,d0
-	jbsr	osd_w_videoram                      	| [ld   (hl),#0x2B]
-	addq.w	#1,d7                           	| [inc  hl]
-	subq.b	#1,d1                           	| [...]
+	jbsr	osd_w_videoram                  | [ld   (hl),#0x2B]
+	addq.w	#1,d7                           | [inc  hl]
+	subq.b	#1,d1                           | [...]
 	jne	l_36F2                             	| [djnz l_36F2]
 
 * remainder of cross hatch pattern is copied, i.e.  *(0x8000 + DE) = *(0x8000 + HL)
@@ -9429,8 +9429,6 @@ l_36F2:
 
 
 
-	moveq	#1,d0
-	jbsr	osd_interrupt_control
 	
 	* JOTD: now init CPU1 from here
 	
@@ -11257,7 +11255,6 @@ galaga_reset:
 
 	move.w		#0x85C2,d7
 	move.b	#0,d0
-	jbsr	osd_break
 	jbsr	osd_w_colorram
 
 	moveq	#0x0e,d2                           	| [$199B: ld   c,a] C = 0x0D + A ... string index
