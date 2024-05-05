@@ -186,12 +186,16 @@ with open(os.path.join(this_dir,"..",f"{gamename}_gfx.c")) as f:
 # block_dict structure is as follows:
 # dict_keys(['fg_tile', 'sprite', 'palette', 'fg_tile_clut', 'sprite_clut'])
 
+def tile_rgb(x):
+    r,b,g = tiles_palette[x]  # in Mark rips, green & blue are swapped, like in some other games (Pengo)
+    return (r,g,b)
+
 # palette looks ok for tiles, thanks Mark!!
 tiles_palette = [tuple(x) for x in block_dict["palette"]["data"]]
 # palette is wrong for sprites. MAME gfxsave to the rescue!
 palette = [tuple(int(x) for x in line.split(",")[0:3]) for line in ripped_palette]
 sprite_clut = [[tuple(palette[x]) for x in clut] for clut in block_dict["sprite_clut"]["data"]]
-fg_tile_clut = [[tuple(tiles_palette[x]) for x in clut] for clut in block_dict["fg_tile_clut"]["data"]]
+fg_tile_clut = [[tile_rgb(x) for x in clut] for clut in block_dict["fg_tile_clut"]["data"]]
 
 
 def replace_color(img,color,replacement_color):

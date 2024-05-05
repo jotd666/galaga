@@ -21,6 +21,21 @@
 *    ATTRACT, READY-TO-PLAY, PLAY, HIGH SCORE INITIAL, and SELF-TEST."
 *
 *
+* video:
+* status screen (2 first rows)
+* 0x83DD: top leftmost visible character (line 0)
+* 0x83C2: top rightmost visible character (83C0 & 83C1 are not visible) (line 0)
+* 0x83FD: leftmost visible character (line 1)
+* 0x83E2: rightmost visible character (83E0 & 83E1 are not visible) (line 1)
+*
+* playfield
+*
+*
+* 
+* status screen (2 last rows)
+* 0x803D: bottom left visible character (line 35)
+* 0x8022: bottom right visible character (8020 & 8021 are not visible) (line 35)
+
 	.global		galaga_reset
 	.global		galaga_irq
 
@@ -10335,6 +10350,7 @@ rst_00_cpu0:
 *   Entry point to display string function at _139A
 * IN:
 *   If set Cy flag, indicates to _139A to expect a position encoded string
+*   D2: index of string
 * OUT:
 *  HL == final offset in video ram (some code actually uses this!)
 *-----------------------------------------------------------------------------
@@ -11200,9 +11216,34 @@ galaga_mock:
 	addq.w	#1,d7
 	dbf		d1,0b
 	
-	dc.w	0x60FE
+	rts
 	
+*VIDEO_TEST = 0
+
 galaga_reset:
+	.ifdef		VIDEO_TEST
+	bsr		galaga_mock
+	dc.w	0x60FE
+	bsr		c_textout_1uphighscore_onetime
+	move.w	#0x8000+0x03E0+0x400+0x10,d7      	| score value 2nd row
+	move.b	#0x4E,d0
+	jbsr	osd_w_colorram
+	move.w		#0x87CB,d7
+	move.b	#4,d0
+	jbsr	osd_w_colorram
+
+	move.w		#0x85C2,d7
+	move.b	#0,d0
+	jbsr	osd_break
+	jbsr	osd_w_colorram
+
+	moveq	#0x0e,d2                           	| [$199B: ld   c,a] C = 0x0D + A ... string index
+	jbsr	string_out_pe_30                    | [$199C: rst  0x30] string_out_pe ("GALAGA", "--SCORE--", etc)
+	dc.w	0x60FE
+	.endif
+
+
+
 CPU0_RESET:
 * set interrupt mode
 	*im   1
