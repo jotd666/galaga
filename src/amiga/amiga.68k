@@ -1162,7 +1162,6 @@ update_bobs:
 12:
 	move.w	(PREVIOUS_SPRITE_X,a4),d0	
 	move.w	(PREVIOUS_SPRITE_Y,a4),d1	
-
 	
 	* clear 16x16 area where the sprite was
 	.ifne	SPRITE_Y_CORRECTION
@@ -1171,7 +1170,7 @@ update_bobs:
 	.ifne	SPRITE_X_CORRECTION
 	add.w	#SPRITE_X_CORRECTION,d0
 	.endif	
-	*move.b	(ACTIVE_BITPLANE_MASK,a4),d2
+
 	bsr		restore_16x_background
 11:
 	addq	#PREVIOUS_SPRITE_SIZE,a4
@@ -1181,9 +1180,7 @@ update_bobs:
 	* game takes its source from 3 different tables, indexed the same way!
 	* we gathered the tables so they can be accessed with only one address register
 	* each table is 128 bytes long (64*2)
-	
-	*lea		sprconf_codes,a0		| mockup!!
-	
+		
 	lea		bob_table,a4
 	move.l	bob_previous_drawed_sprites(pc),a6
 	moveq	#NB_TARGET_SPRITES-1,d7
@@ -1196,6 +1193,7 @@ update_bobs:
 	tst.w	d0
 	jeq		211f
 
+	move.b	#1,0x200
 	
 	moveq	#0,d2
 	move.b	(TARGET_SPRITE_CODE,a0),d2
@@ -1305,81 +1303,11 @@ update_bobs:
 	bsr		blit_planes_cookie_cut_16x_flipped	
 	bra.b	21b
 	
-* what: blits 32x16 background data on bg plane, no horizontal shifting (erase)
-* then erases the 3 other planes
+* what: erases the 4 planes used for BOBs
 * args:
 * < D0: X (rounded to smaller 8-multiple)
 * < D1: Y
 
-* trashes: D0-D1
-
-restore_16x_background_old:
-	movem.l	d2-d7/a0-a5,-(a7)
-	move.b	d2,d7					| plane restore bits in d7
-	lea		bg_background_data,a0		| copy of tiles
-	lea		_custom,a5
-	move.l	bg_drawed_screen_ptr(pc),a1
-	* adjust offset X: X//8
-	lsr.w	#3,d0
-	lea		mulNB_BYTES_PER_ROW_table(pc),a4
-	add.w	d1,d1
-	* add Y offset: Y*40
-	add.w	(a4,d1.w),d0
-	* same offset for source and destination
-	add.w	d0,a1
-	add.w	d0,a0
-	
-	moveq	#16,d4		| height
-    move.l  #0x09f00000,d3    | A->D copy, ascending mode
-	moveq	#4,d2			| 32 bits blit
-	move.w	#NB_BYTES_PER_ROW,d1		| blit modulo
-
-    sub.w   d2,d1       | blit modulo
-    lsl.w   #6,d4
-    lsr.w   #1,d2		| blit width
-    add.w   d2,d4       | blit height
-	
-    * always the same settings
-
-    * now just wait for blitter ready to write all registers
-	WAIT_BLIT
-    
-    * blitter registers set
-
-	move.l d3,bltcon0(a5)	| sets con0 and con1
-
-    move.w  d1,bltamod(a5)	|A modulo
-    move.w  d1,bltdmod(a5)	|D modulo
-							
-	move.l a0,bltapt(a5)	|source graphic top left corner
-	move.l a1,bltdpt(a5)	|destination top (bottom) left corner
-	move.w  d4,bltsize(a5)	|rectangle size, starts blit
-	
-	lea	(BG_SCREEN_PLANE_SIZE,a0),a0
-	lea	(BG_SCREEN_PLANE_SIZE,a1),a1
-	WAIT_BLIT
-	* second bitplane
-	move.l a0,bltapt(a5)	|source graphic top left corner
-	move.l a1,bltdpt(a5)	|destination top (bottom) left corner
-	move.w  d4,bltsize(a5)	|rectangle size, starts blit
-
-	.rept	NB_BOBS_PLANES-2
-	lea	(BG_SCREEN_PLANE_SIZE,a1),a1
-    move.l  #0x01000000,d3    | minterm useD & rect clear (0xA) 
-	* optimize erase for remaining bitplanes
-	lsr.b	#1,d7
-	jcc		202f
-	WAIT_BLIT
-	* now simply erase the 3 other planes
-	move.l d3,bltcon0(a5)	
-	move.l a1,bltdpt(a5)	|destination top left corner
-	move.w  d4,bltsize(a5)	|rectangle size, starts blit
-202:
-	.endr
-	
-	
-	movem.l	(a7)+,d2-d7/a0-a5
-	rts
 
 restore_16x_background:
 	movem.l	d2-d7/a0-a5,-(a7)
@@ -2340,7 +2268,7 @@ update_bg_tile:
 	add.w	d3,d3
 	move.w	(a0,d3.w),d3	| times 40
 	lsl.w	#3,d3		| times 8
-	moveq	#5,d4		| 5 bitplanes
+	moveq	#NB_PLAYFIELD_PLANES-1,d4		| 5 bitplanes
 	move.w	#BG_SCREEN_PLANE_SIZE,d5
 	
 	* we update the drawed bitplanes and also the backbuffer

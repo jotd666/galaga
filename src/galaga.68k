@@ -1750,80 +1750,79 @@ str_0974:
 *-----------------------------------------------------------------------------
 f_credit_game_state_management_0977:
 * if ( io_input[0] == $bb )
-	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] check for bb ... Service Switch On indication in credit mode
-	cmp.b	#0xBB,d0                         	| [cp   #0xBB]
-	jeq	jp_RAM_test                        	| [jp   z,jp_RAM_test]
+	move.b	ds3_99B5_io_input+0x00,d0       	| [$0977: ld   a,(ds3_99B5_io_input + 0x00)] check for bb ... Service Switch On indication in credit mode
+	cmp.b	#0xBB,d0                         	| [$097A: cp   #0xBB]
+	jeq	jp_RAM_test                        	    | [$097C: jp   z,jp_RAM_test]
 
 * if ( game_state != IN_GAME_MODE )  // goto update freeplay_or_credit
-	move.b	b8_9201_game_state,d0           	| [ld   a,(b8_9201_game_state)] if ( IN_GAME )
-	cmp.b	#3,d0                            	| [cp   #3] game_state==IN_GAME
-	jne	l_099F_update_freeplay_or_credit   	| [jr   nz,l_099F_update_freeplay_or_credit]
+	move.b	b8_9201_game_state,d0           	| [$097F: ld   a,(b8_9201_game_state)] if ( IN_GAME )
+	cmp.b	#3,d0                            	| [$0982: cp   #3] game_state==IN_GAME
+	jne	l_099F_update_freeplay_or_credit   	    | [$0984: jr   nz,l_099F_update_freeplay_or_credit]
 
 * else // update timer
-	lea	b32_99E6_gametime_secs_bcd+3,a0	| [ld   hl,#b32_99E6_gametime_secs_bcd + 3] least-sig. digit increments 1/60th of second
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	move.b	#1,d7                           	| [add  a,#1]
+	lea	b32_99E6_gametime_secs_bcd+3,a0	        | [$0986: ld   hl,#b32_99E6_gametime_secs_bcd + 3] least-sig. digit increments 1/60th of second
+	move.b	(a0),d0                         	| [$0989: ld   a,(hl)]
+	move.b	#1,d7                           	| [$098A: add  a,#1]
 	CLEAR_XC_FLAGS
 	abcd	d7,d0								| add+daa
        * if ( ct == $60 ) ct=0
-	cmp.b	#0x60,d0                         	| [cp   #0x60] if A==60, Cy is not set...
-	jne	l_0992_update_counter              	| [jr   nz,l_0992_update_counter]
-	clr.b	d0                               	| [xor  a]
+	cmp.b	#0x60,d0                         	| [$098D: cp   #0x60] if A==60, Cy is not set...
+	jne	l_0992_update_counter              	    | [$098F: jr   nz,l_0992_update_counter]
+	clr.b	d0                               	| [$0991: xor  a]
 
       * update 4 bytes of the timer (BCD count 0 - 99.99.99.60)
 l_0992_update_counter:
-	move.b	#4,d1                           	| [ld   b,#4]
-
-	INVERT_XC_FLAGS                        	| [ccf] ... compliment Cy (provides Cy into 1's place if A==60...
+	move.b	#4,d1                           	| [$0992: ld   b,#4]
+	INVERT_XC_FLAGS                        	    | [$0994: ccf] ... compliment Cy (provides Cy into 1's place if A==60...
 l_0995:
-	move.b	d0,(a0)                         	| [ld   (hl),a] Update 60'ths digit.
-	                           	| [dec  l]
- 	move.b	-(a0),d0                         	| [ld   a,(hl)] note, last iteration, reads from 99e5, but then exits the loop.
+	move.b	d0,(a0)                         	| [$0995: ld   (hl),a] Update 60'ths digit.
+	                           	                | [$0996: dec  l]
+ 	move.b	-(a0),d0                         	| [$0997: ld   a,(hl)] note, last iteration, reads from 99e5, but then exits the loop.
 	moveq	#0,d7
-	abcd	d7,d0						| adc  a,#0 + daa ...carry into 1's, 10's, or 100's place.
+	abcd	d7,d0						        | adc  a,#0 + daa ...carry into 1's, 10's, or 100's place.
 
 	subq.b	#1,d1                           	| [...]
-	jne	l_0995                             	| [djnz l_0995]
+	jne	l_0995                             	    | [djnz l_0995]
 
-	jra	l_09E1_update_game_state           	| [jr  l_09E1_update_game_state] skip display of "CREDIT" when in Game Mode
+	jra	l_09E1_update_game_state           	    | [jr  l_09E1_update_game_state] skip display of "CREDIT" when in Game Mode
 
 l_099F_update_freeplay_or_credit:
 
 	move.b	b8_99B8_credit_cnt,d0           	| [ld   a,(b8_99B8_credit_cnt)] if free-play == $A0  i.e. > 99 (BCD)
 	cmp.b	#0xA0,d0                         	| [cp   #0xA0]
 
-	lea	0x8000+0x0000+0x3C,a1      	| [ld   de,#0x8000 + 0x0000 + 0x3C] dest of "C" of "CREDIT"
+	lea	0x8000+0x0000+0x3C,a1      	| [$09A4: ld   de,#0x8000 + 0x0000 + 0x3C] dest of "C" of "CREDIT"
 
 * if (credit_cnt == 0xA0 )  // goto puts_freeplay ...  i.e. > 99 (BCD)
-	jeq	l_09D9_puts_freeplay               	| [jr   z,l_09D9_puts_freeplay] skip credits status
-
+	jeq	l_09D9_puts_freeplay               	    | [$09A7: jr   z,l_09D9_puts_freeplay] skip credits status
 * else if (credit_cnt < 0xA0 )  // do credit update display
-	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] io_input[credit_count]
-
-       * puts "credit"
-	lea	str_09CA+6-1,a0                	| [ld   hl,#str_09CA + 6 - 1] source of 'C' in reversed string
-	move.w	#0x06,d1                        	| [ld   bc,#0x0006] strlen(strCredit) 6
-	jbsr		lddr
+	move.b	ds3_99B5_io_input,d0       	| [$09A9: ld   a,(ds3_99B5_io_input + 0x00)] io_input[credit_count]
+       * puts "CREDIT"
+	lea	str_09CA+6-1,a0                	        | [$09AC: ld   hl,#str_09CA + 6 - 1] source of 'C' in reversed string
+	move.w	#0x06,d1                        	| [$09AF: ld   bc,#0x0006] strlen(strCredit) 6
+	jbsr		lddr_video                            | [$09B2: lddr]
        * leave the "space" following the 'T'
 	subq.w	#1,a1                           	| [dec  e] de-- advances one cell to the right (note: bottom row, so not de-20!)
-
+	move.l	a1,d7
+	
        * if bcd_credit_ct > 9, then rotate "10's" nibble into lower nibble and display it.
 	move.b	d0,d2                           	| [ld   c,a] save temp hw credit count
 	rol.b	#4,d0                            	| [rlca] * 4
 	and.b	#0x0F,d0                         	| [and  #0x0F] only upper digit of BCD credit cnt
 	jeq	l_09C0_putc_ones_place_digit       	| [jr   z,l_09C0_putc_ones_place_digit]
 
-	move.b	d0,(a1)                         	| [ld   (de),a] putc 10's place digit.
-	subq.w	#1,a1                           	| [dec  e] next character position to the right ... 1's place digit
+	jbsr	osd_w_videoram                  	| [ld   (de),a] putc 10's place digit.
+	subq.w	#1,d7                           	| [dec  e] next character position to the right ... 1's place digit
 
 l_09C0_putc_ones_place_digit:
 	move.b	d2,d0                           	| [ld   a,c] reload saved hw count
 	and.b	#0x0F,d0                         	| [and  #0x0F] only lower digit of BCD credit cnt
-	move.b	d0,(a1)                         	| [ld   (de),a] putc 1's place digit.
+	jbsr	osd_w_videoram                         	| [ld   (de),a] putc 1's place digit.
        * one more space to be sure two cells are covered.
 	                           	| [dec  e]
 	move.b	#0x24,d0                        	| [ld   a,#0x24]
-	move.b	d0,-(a1)                         	| [ld   (de),a]
+	subq.w	#1,d7
+	jbsr	osd_w_videoram                         	| [ld   (de),a]
 
 	jra	l_09E1_update_game_state           	| [jr   l_09E1_update_game_state]
 
@@ -1840,7 +1839,7 @@ str_09D0:
 l_09D9_puts_freeplay:
 	lea	str_09D0+9-1,a0                	| [ld   hl,#str_09D0 + 9 - 1] load src (last byte) of string "FREE PLAY"
 	move.w	#0x09,d1                        	| [ld   bc,#0x0009] 9
-	jbsr	lddr
+	jbsr	lddr_video
 
 l_09E1_update_game_state:
 
@@ -3788,6 +3787,9 @@ f_ship_demo_controls_1700:
 	move.b	(a1),d0                         	| [ld   a,(de)]
 	rol.b	#3,d0                            	| [rlca] * 3
 	and.b	#0x07,d0                         	| [and  #0x07]
+	
+	CHECK_D0W_UPPER_BOUND	6
+	
 	lea	d_1713,a0                      	| [ld   hl,#d_1713] &table
 	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
 	                       	| [ld   a,(hl)]
@@ -3802,6 +3804,7 @@ d_1713:
 	.long case_1766
 	.long case_1734
 	.long case_172D
+
 
 * boss+wingmen nearly to fighter
 case_171F:  | 0x02
@@ -3881,8 +3884,9 @@ l_1772:
 	move.l	a1,pdb_demo_fghtrvctrs          	| [ld   (pdb_demo_fghtrvctrs),de] += 1
 * A = (*_demo_fghtrvctrs >> 5) & 0x07|
 	rol.b	#3,d0                            	| [rlca] * 3
-	and.b	#0x07,d0                         	| [and  #0x07]
+	and.w	#0x07,d0                         	| [and  #0x07]
 * switch(...)
+	CHECK_D0W_UPPER_BOUND	7
 	lea	d_1786,a0                      	| [ld   hl,#d_1786]
 	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A (pointer from index)
 	move.l	(a0),a0                       	| [ld   a,(hl)]
@@ -3900,6 +3904,7 @@ d_1786:
 	.long case_17AE  | 5
 	.long case_179C  | 6 -> $Cx
 
+	
 * load index/position of target alien
 case_1794:
 * ds_9200_glbls[0x09] = *_demo_fghtrvctrs << 1 & 0x7E
@@ -3960,6 +3965,7 @@ f_manage_attract_mode_17B2:
 * switch( demo_idx )
 	move.b	ds_9200_glbls+0x03,d0           	| [ld   a,(ds_9200_glbls + 0x03)] demo state variable (jp to "switch-case")
 	lea	d_17C3_jptbl,a0                	| [ld   hl,#d_17C3_jptbl] table_base
+	CHECK_D0W_UPPER_BOUND	0xF
 	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
 	move.l	(a0),a0                        	| [ld   e,(hl)]
 	                        	| [inc  hl]
@@ -4800,6 +4806,7 @@ l_1BC0:
 
 * switch(A)
 	lea	d_1BD1,a0                      	| [ld   hl,#d_1BD1]
+	CHECK_D0W_UPPER_BOUND	3
 	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
 	                       	| [ld   a,(hl)]
 	                       	| [inc  hl]
@@ -6982,16 +6989,19 @@ l_23EF:
 	moveq	#0,d0
 	move.b	(a1),d0                         	| [ld   a,(de)]
 * test for $80 (inactive status)
-	asl.b	#1,d0                            	| [sla  a] test for bit-7
-	jcs	l_2416                             	| [jr   c,l_2416] DE+=4
+	tst.b	d0                            	| [sla  a] test for bit-7
+	jmi	l_2416                             	| [jr   c,l_2416] DE+=4
+
 
 	lea	d_23FF_jp_tbl,a0               	| [ld   hl,#d_23FF_jp_tbl]
-	asl.b	#1,d0
+	and.w	#0xFF,d0
+	CHECK_D0W_UPPER_BOUND	10
+	asl.b	#2,d0
 	                         	| [rst  0x10] HL += A
 	                        	| [ld   a,(hl)]
 	                       	| [inc  hl]
 	                       	| [ld   h,(hl)]
-	move.l	(a0),a0                      	| [ld   l,a]
+	move.l	(a0,d0.w),a0                      	| [ld   l,a]
 	jra	(a0)                               	| [jp   (hl)]
 
 d_23FF_jp_tbl:
@@ -11110,7 +11120,6 @@ l_0259:
 * D0: start task
 	moveq	#0,d2
 	move.b	d0,d2                           	| [$00272: ld   c,a] A == 0 ... initialize index into Task Enable Table
-
 l_while_zero_0273:
 * while ( 0 == A = *(task_activ_tbl + C) )  C++   ... loop until non-zero: assumes we will find a valid entry in the table!
 	lea	ds_cpu0_task_actv_9000,a0           	| [$0273: ld   hl,#ds_cpu0_task_actv_9000]
@@ -11121,6 +11130,12 @@ l_while_zero_0273:
 	                               	| [and  a]
 	jne	l_0280_nonzero_tbl_entry           	| [jr   nz,l_0280_nonzero_tbl_entry]
 	addq.b	#1,d2                           	| [inc  c]
+	cmp.b	#0x20,d2
+	* JOTD: probably race condition between interrupt and non-interrupt code
+	* if no task is active then try again
+	* this avoids that the game finds non-zero index too far in the table => crash
+	jne	l_while_zero_0273
+	moveq	#0,d2
 	jra	l_while_zero_0273                       	| [jr   l_while_zero]
 
 l_0280_nonzero_tbl_entry:
@@ -11132,7 +11147,7 @@ l_0280_nonzero_tbl_entry:
 	moveq	#0,d0
 
 	move.b	d2,d0                           	| [ld   a,c] index
-
+	CHECK_D0W_UPPER_BOUND	0x20
 	asl.b	#2,d0                            	| [sla  a] <<=2 ... sizeof 16-bit function pointer
 	move.l	(a0,d0.w),a1                         	| [add  a,l]
 	                                         	| [ld   l,a]
@@ -11221,6 +11236,14 @@ galaga_mock:
 *VIDEO_TEST = 0
 
 galaga_reset:
+	.ifndef		RELEASE
+	tst.b	break_at_startup_flag
+	beq.b	0f
+	
+	jbsr	osd_break
+0:
+	.endif
+	
 	.ifdef		VIDEO_TEST
 	bsr		galaga_mock
 	dc.w	0x60FE

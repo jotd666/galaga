@@ -1,0 +1,47 @@
+SPRITES STRATEGY:
+
+- using first 4 bitplanes for BOBs, with full palette dedicated to them, no
+  dynamic colors possible (copperlist already too complicated)
+- mockup of 40+ sprites
+- 1/2 HW sprites for ship, 2 for lasers
+- 1 sprite for stars (takes a slot of 2 sprites!)
+- 2 sprites for explosions?
+- sprite multiplexing is that realistic given the complexity of copperlist?
+  maybe possible for swarm? tricky
+  
+TILES STRATEGY:
+
+The tiles are scarce but their color model and placement often get in the way
+of BOBs. It wastes a lot of time to try to refresh those tiles when a BOB passes
+over some.
+
+We noticed that
+* when a line is colored, all chars are of the same color (notable
+  exception: when entering high score, we'll handle that in a corner case
+* chars are mostly mono-planar (except for flags & lives: 3 colors + black)
+  
+So we can:
+- use an extra 5th plane only for letters, adjusting palette so mono-planar
+  letters use only that plane.
+- use a per-row (8 pixels) copper effect to change used colors dynamically like in Galaxian
+- for multi-color tiles, use other planes, but manage to encode tiles
+  on 2/3 bitplanes only so the colors used are 16 20 24 (sprites don't use them),
+  which allow to display letters in different colors (highscore entering, special case)
+  and also flags & life tiles
+- hardware sprites can be used without color conflicts as we're using their transparent colors
+  only (color 16, 20, 24... which have no effect on sprites)
+- first 4 bitplanes can be used almost without conflicts. Just maybe redraw
+  lives & flags each time or if sprite goes past them
+- tractor beam are multi-color tiles, but the ship is a HW sprite so we get away with it
+  (or we can systematically redraw them if they are present, once again corner cases)
+
+This allows to draw & erase BOBs without having to care about the background: better blitter speed!
+Also handles tile/sprites colors, allowing to use 16 exclusive colors for BOBs, making
+a 32 color game but with only 16 color blitter bandwidth.
+
+reuses part of the Galaxian port code for dynamic color rows, only with different colors
+
+STARFIELD:
+
+reuses the Galaxian port code, which multiplexes sprite 7 and changes positions so
+it scrolls. Makes a pretty complex copperlist.

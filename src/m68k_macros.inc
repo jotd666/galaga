@@ -94,7 +94,22 @@
 	movem.w	(a7)+,d7
     .endm
 
-
+	.ifdef	RELEASE
+	.macro  CHECK_D0W_UPPER_BOUND	max
+	.endm
+	.else
+	.macro  CHECK_D0W_UPPER_BOUND	max
+	cmp.w	#\max,d0
+	bcs.b	0f
+	lea		check_d0w_upper_bound_error,a1
+	move.w	d0,d1
+	move.w	#\max,d2
+	jbsr	osd_break
+	illegal
+0:	
+	.endm
+	.endif
+	
 	.macro	LOAD_D1_16_FROM_D1D2
 	and.l	#0xFFFF,d1
 	lsl.w	#8,d1
@@ -125,6 +140,8 @@
 	.endm
 
 	.ifndef	RELEASE
+check_d0w_upper_bound_error:
+	.asciz	"jump table index too high D1 >= D2!"
 compute_lsb_a0_d6_base_mismatch_msg:
 	.asciz	"compute_lsb_a0_d6_base_mismatch"
 compute_lsb_a1_d4_base_mismatch_msg:

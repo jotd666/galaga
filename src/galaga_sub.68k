@@ -441,7 +441,6 @@ jp_0513_rst38:
 	*and.b	#0x02,d0                         	| [and  #0x02] freeze_ctrl_dsw (6j)
 	*jeq	l_0575                             	| [jp   z,l_0575] if paused, goto 0575 // done
 
-	move.w	#0,0x201
 * frame_cntr++
 	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
 	addq.b	#1,d0                           	| [inc  a]

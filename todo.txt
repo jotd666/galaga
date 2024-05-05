@@ -1,7 +1,3 @@
-- mockup of 40+ sprites
-- 1/2 HW sprites for ship, 2 for lasers
-- 1 sprite for stars (takes a slot of 2 sprites!)
-- 2 sprites for explosions?
 
 - where is bmbr_boss_pool+1 read???
 db_2A3C: table+bits to rework & understand how it's read
@@ -9,32 +5,11 @@ flv tables: -base to handle
 
 - only bosses are displayed properly, bees aren't displayed anymore (regression?)
 - generate sprite_cluts
-- handle color cluts (w_colorram is going to change the whole line with copper!!!)
-  only exception is: when score is entered, letters can be of different colors in a row
-  else they're of the same color! => display letters on the 5th plane: doesn't work
-  wrong copper row selected or something...
 - debug rld,rrd (called after intro)
 - yellow flashes
-- CREDIT not displayed!
+- CREDIT displayed but wrong color, possibly wrong row too
 - remove red timer flashes, maybe speedup using F10?
 
-- tiles strategy: mega hack (which should work!!). We noticed
-  * when a line is colored, all chars are of the same color (notable
-    exception: when entering high score)
-  * chars are mostly mono-planar (except for flags & lives: 3 colors + black)
-  
-=> this calls for:
-   - extra 5th plane only for letters
-   - copper effect to change used colors dynamically
-   - for multi-color tiles, use other planes, but manage to encode tiles
-     on 2 bitplanes only so the colors used are 16 20 24 (sprites don't use them)
-	 which allow to display letters in different colors (highscore entering, special case)
-	 and also flags & life tiles
-   - special case for namco logo which seem to be on a different color?
-   - hardware sprites can be used without color conflicts
-   - first 4 bitplanes can be used almost without conflicts. Just maybe redraw
-     lives & flags each time or if sprite goes past them
-   - tractor beam are multi-color tiles, but the ship is a HW sprite so we get away with it
 	 
 
   

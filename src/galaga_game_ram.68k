@@ -306,7 +306,7 @@ b_best5_name5:
 ds_9000_RAM1:
 
 ds_cpu0_task_actv_9000:
-       ds.b     0x20
+       .skip     0x20
 
 ds_cpu1_task_actv:
        ds.b     0x08
