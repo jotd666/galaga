@@ -115,12 +115,13 @@ SPRITE_SIZEOF = 4
 	jpl		110f
 111:
 	move.l	a1,a0
+	move.l	#BG_SCREEN_PLANE_SIZE*NB_BOBS_PLANES,d1
 	move.l	bg_drawed_screen_ptr(pc),a2
 	lea		blitter_address_too_low_error(pc),a1
 	jbsr	osd_break
 	jra		112f
 110:
-	cmp.l	#BG_SCREEN_PLANE_SIZE*NB_PLAYFIELD_PLANES,a1
+	cmp.l	#BG_SCREEN_PLANE_SIZE*NB_BOBS_PLANES,a1
 	bcc.b	111b
 112:
 	movem.l	(a7)+,d0/a0-a2
@@ -1171,6 +1172,7 @@ update_bobs:
 	* clear previous positions
 	moveq	#NB_TARGET_SPRITES-1,d7
 1:
+
 	* we have to compute current sprite x & y
 	bsr		compute_sprite_xy
 
@@ -1208,13 +1210,14 @@ update_bobs:
 	bsr		restore_16x_background
 11:
 	addq	#PREVIOUS_SPRITE_SIZE,a4
-	addq	#CURRENT_SPRITE_SIZE,a3
+	addq	#CURRENT_SPRITE_SIZE,a0
 	dbf		d7,1b
 	
 	* game takes its source from 3 different tables, indexed the same way!
 	* we gathered the tables so they can be accessed with only one address register
 	* each table is 128 bytes long (64*2)
 		
+	move.l	a3,a0
 	lea		bob_table,a4
 	move.l	bob_previous_drawed_sprites(pc),a6
 	moveq	#NB_TARGET_SPRITES-1,d7
@@ -1350,7 +1353,7 @@ restore_16x_background:
 	
 	movem.l	d2-d7/a0-a5,-(a7)
 	moveq	#4,d2			| 32 bits blit
-	move.w	#NB_PLAYFIELD_PLANES,d3
+	move.w	#NB_BOBS_PLANES,d3
 	move.l	bg_drawed_screen_ptr(pc),a1
 	move.w	#16,d4
 	lea		_custom,a5
