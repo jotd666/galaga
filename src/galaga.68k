@@ -3806,7 +3806,7 @@ d_1713:
 	.long case_1766
 	.long case_171F
 	.long case_1766
-	.long case_1734
+	.long case_drives_sim_inputs_1734
 	.long case_172D
 
 
@@ -3827,15 +3827,15 @@ case_171F:  | 0x02
 
 * appearance of first enemy formation in Demo
 case_172D:  | 0x05
-	jbsr	c_1F0F                            	| [call c_1F0F] init sprite objects for rockets
+	jbsr	c_init_rocket_sprites_1F0F                            	| [call c_init_rocket_sprites_1F0F] init sprite objects for rockets
 	move.l	pdb_demo_fghtrvctrs,a1      	| [ld   de,(pdb_demo_fghtrvctrs)] trampled DE so reload it
 
 * drives the simulated inputs to the fighter in training mode
-case_1734:  | 0x04
+case_drives_sim_inputs_1734:  | 0x04
 	move.b	(a1),d0                         	| [ld   a,(de)] *pdb_demo_fghtrvctrs
 
 	lea	ds_plyr_actv+_b_2ship,a0       	| [ld   hl,#ds_plyr_actv +_b_2ship]
-	move.b	(a0),d4                         	| [ld   e,(hl)] setup E for c_1F92
+	move.b	(a0),d4                         	| [ld   e,(hl)] setup E for c_skip_real_io_input_1F92
 
 	btst.b	#0,d0                           	| [bit  0,a]
 	jne	l_1741                             	| [jr   nz,l_1741]
@@ -3861,7 +3861,7 @@ l_1741:
 0:
 	move.b	#2,d0                           	| [ld   a,#2] left
 l_1755:
-	jbsr	c_1F92                            	| [call c_1F92]
+	jbsr	c_skip_real_io_input_1F92                            	| [call c_skip_real_io_input_1F92]
 	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
 	and.b	#0x03,d0                         	| [and  #0x03]
 	beq.b	0f                               	| [...]
@@ -3872,7 +3872,7 @@ l_1755:
 	beq.b	0f                               	| [...]
 	rts                                    	| [ret  nz] [...]
 0:
-	jbsr	c_1F0F                            	| [call c_1F0F] init sprite objects for rockets ...training mode, ship about to shoot?
+	jbsr	c_init_rocket_sprites_1F0F                            	| [call c_init_rocket_sprites_1F0F] init sprite objects for rockets ...training mode, ship about to shoot?
 
 case_1766:  | 0x00, 0x01, 0x03
 	move.l	pdb_demo_fghtrvctrs,a1      	| [ld   de,(pdb_demo_fghtrvctrs)]
@@ -5786,10 +5786,10 @@ f_read_fire_button_1f04:
 	rts                                    	| [ret  nz] active low input [...]
 0:
 * else
-       * call c_1F0F
+       * call c_init_rocket_sprites_1F0F
 
 *=============================================================================
-* c_1F0F()
+* c_init_rocket_sprites_1F0F()
 *  Description:
 *   Intialize sprite objects for rockets.
 *   rocket sprite.cclr[n].b0 is initialized by c_game_or_demo_init
@@ -5799,7 +5799,7 @@ f_read_fire_button_1f04:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_1F0F:
+c_init_rocket_sprites_1F0F:
 * if ( 0 != sprite[ RCKT0 ].sX ) ...
 	lea	ds_sprite_posn_9300+0x64,a0         	| [ld   hl,#ds_sprite_posn_9300 + 0x64] ROCKET_0
 	lea	b_92A0+0x04,a1                 	| [ld   de,#b_92A0 + 0x04] rockt_attribute[0]
@@ -5990,10 +5990,10 @@ f_controller_io_and_ship_movement_1f85:
 	lea	ds3_99B5_io_input,a0      	| [ld   h,#>ds3_99B5_io_input + 0x00] MSB
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 
-*      call c_1F92
+*      call c_skip_real_io_input_1F92
 
 *=============================================================================
-* c_1F92()
+* c_skip_real_io_input_1F92()
 *  Description:
 *   Skip real IO input in the demo.
 *
@@ -6014,7 +6014,7 @@ f_controller_io_and_ship_movement_1f85:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_1F92:
+c_skip_real_io_input_1F92:
 * if ( ( A & 0x0A ) == $0A ... inputs are active low, neither left or right active
 	and.b	#0x0A,d0                         	| [and  #0x0A]
 	cmp.b	#0x0A,d0                         	| [cp   #0x0A]
@@ -6369,18 +6369,18 @@ f_tractor_beam_captures_ship_20f2:
 	rts                                    	| [ret  z] [...]
 0:
 	* jotd: ds_sprite_posn_9300: 9300, only msb is loaded means that offset 0x62 must be added
-	lea	ds_sprite_posn_9300+0x62,a0              	| [ld   h,#>ds_sprite_posn_9300]
-	lea	ds_sprite_posn_9300,a1              	| [ld   h,#>ds_sprite_posn_9300]
+	lea	ds_sprite_posn_9300+0x62,a0             | [ld   h,#>ds_sprite_posn_9300]
+	lea	ds_sprite_posn_9300,a1
 	moveq	#0,d4
-	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d4	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)] object index of capturing boss i.e. 30 34 36 32
-	add.w	d4,a1                           	| [ld   e,a]
-												| [ld   d,h]
-	move.b	(a1),d0                         	| [ld   a,(de)] get capturing boss column position position
-	cmp.b	(a0),d0                          	| [cp   (hl)] compare to ship position
-	jeq	l_211A_move_ship_row               	| [jr   z,l_211A_move_ship_row] if equal
-	jpl	l_2119_handle_ship_left            	| [jp   p,l_2119_handle_ship_left]
-	subq.b	#1,(a0)                         	| [dec  (hl)] move ship left one step
-	jra	l_211A_move_ship_row               	| [jr   l_211A_move_ship_row]
+	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d4	| [$210A: ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)] object index of capturing boss i.e. 30 34 36 32
+	add.w	d4,a1                           	| [$210D: ld   e,a]
+												| [$210E: ld   d,h]
+	move.b	(a1),d0                         	| [$210F: ld   a,(de)] get capturing boss column position position
+	cmp.b	(a0),d0                          	| [$2110: cp   (hl)] compare to ship position
+	jeq	l_211A_move_ship_row               	    | [$2111: jr   z,l_211A_move_ship_row] if equal
+	jpl	l_2119_handle_ship_left            	    | [$2113: jp   p,l_2119_handle_ship_left]
+	subq.b	#1,(a0)                         	| [$2116: dec  (hl)] move ship left one step
+	jra	l_211A_move_ship_row               	    | [$2117: jr   l_211A_move_ship_row]
 
 l_2119_handle_ship_left:
 	addq.b	#1,(a0)                         	| [inc  (hl)] move ship right one step
@@ -6422,7 +6422,7 @@ l_2139:
 l_2141_connected:
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds5_928A_captr_status+0x03   	| [ld   (ds5_928A_captr_status + 0x03),a] 0
-	addq.b	#1,d0                           	| [inc  a] huh?
+												| [inc  a] huh?
 	move.b	#7,d0                           	| [ld   a,#7] color map of redship
 	move.b	d0,ds_sprite_code_8B00+0x63          	| [ld   (ds_sprite_code_8B00 + 0x63),a]
 	rts                                    	| [ret]
@@ -6446,8 +6446,9 @@ l_2151:
 
 * the ship is in the beam but then shoots the boss
 l_215D:
-	lea	ds_sprite_posn_9300+0x62,a0              	| [ld   h,#>ds_sprite_posn_9300]
-	addq.w	#1,a0                           	| [inc  l]
+	* l is 0x62, add 1 to skip inc
+	lea	ds_sprite_posn_9300+0x62+1,a0              	| [ld   h,#>ds_sprite_posn_9300]
+												| [inc  l]
 	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
 	                               	| [and  a]
 	jeq	l_216D                             	| [jr   z,l_216D]
@@ -11240,6 +11241,9 @@ galaga_reset:
 	
 	jbsr	osd_break
 0:
+	move.l	#sfr_sprite_code_8B80,0x100
+	move.l	#sfr_sprite_posn_9380,0x104
+	move.l	#sfr_sprite_ctrl_9B80,0x108
 	.endif
 	
 	.ifdef		VIDEO_TEST

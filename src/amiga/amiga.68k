@@ -45,7 +45,8 @@ SPRITE_BLOCK_OFFSET = 128			| len of each sprite info table
 
 PREVIOUS_SPRITE_X = 0
 PREVIOUS_SPRITE_Y = 2
-PREVIOUS_SPRITE_CODE = 4
+ACTIVE_BITPLANE_MASK = 4   | for optimized bitplane erase
+PREVIOUS_SPRITE_CODE = 5
 
 TARGET_SPRITE_X_1 = 1+SPRITE_BLOCK_OFFSET
 TARGET_SPRITE_X_2 = 1+SPRITE_BLOCK_OFFSET*2
@@ -54,7 +55,6 @@ TARGET_SPRITE_CODE = 0
 TARGET_SPRITE_ATTRIBUTES = SPRITE_BLOCK_OFFSET*2
 TARGET_SPRITE_Y = SPRITE_BLOCK_OFFSET
 
-ACTIVE_BITPLANE_MASK = 4   | for optimized bitplane erase
 
 
 	.ifdef	RELEASE
@@ -873,13 +873,15 @@ osd_break:
 
 	
 * < A0: pointer on sprite shadow zone
+* we made sure that all 3 zones are contiguous
+* (tilecode+color, x+y, attributes+x msb)
 
 
 osd_update_sprites:
 	lea		sprite_buffer(pc),a1
-	move.w	#NB_TARGET_SPRITES-1,d7
+	move.w	#(NB_TARGET_SPRITES*3)-1,d7
 0:
-	move.l	(a0)+,(a1)+
+	move.w	(a0)+,(a1)+
 	dbf		d7,0b
 	rts
 
@@ -1115,7 +1117,7 @@ compute_sprite_xy:
 	move.b	(TARGET_SPRITE_X_1,a0),d0  | sprite X low (amiga Y)
 	sub.w	#40,d0
 	move.b	(TARGET_SPRITE_X_2,a0),d1
-	and.b	#3,d1
+	and.b	#3,d1		| 3 seems not possible as X would be too big
 	lsl.w	#8,d1		| times 0x100
 	add.w	d1,d0
 	beq		2f
@@ -1179,6 +1181,7 @@ update_bobs:
 	moveq	#0,d2
 	move.w	(PREVIOUS_SPRITE_X,a4),d2
 	beq.b	11f		| x=0: inactive
+
 	cmp.w	d2,d0
 	bne.b	12f		| prev x != x: perform erase
 	cmp.w	(PREVIOUS_SPRITE_Y,a4),d1
@@ -1189,7 +1192,7 @@ update_bobs:
 	move.b	(PREVIOUS_SPRITE_CODE,a4),d2
 	tst.b	(a2,d2.w)					| is this sprite a HW sprite?
 	bne.b	11f		| hardware sprite: no need to restore background either!
-	move.b	(TARGET_SPRITE_CODE,a3),d0
+	move.b	(TARGET_SPRITE_CODE,a0),d0
 	and.b	#0x7F,d0
 	cmp.b	d0,d2
 	beq.b	11f			| same X,Y and code: skip erase 
@@ -1205,7 +1208,6 @@ update_bobs:
 	.ifne	SPRITE_X_CORRECTION
 	add.w	#SPRITE_X_CORRECTION,d0
 	.endif	
-
 
 	bsr		restore_16x_background
 11:
@@ -1233,6 +1235,7 @@ update_bobs:
 	
 	moveq	#0,d2
 	move.b	(TARGET_SPRITE_CODE,a0),d2
+
 	bclr	#7,d2		| discard last bit
 	move.b	d2,(PREVIOUS_SPRITE_CODE,a6)
 	
@@ -1295,12 +1298,14 @@ update_bobs:
 	moveq	#0,d2	| no y-clip
 	move.w	#16,d3	| height = 16 for all bobs
 
+
 	.ifne	SPRITE_Y_CORRECTION
 	add.w	#SPRITE_Y_CORRECTION,d1
 	.endif
 	.ifne	SPRITE_X_CORRECTION
 	add.w	#SPRITE_X_CORRECTION,d0
 	.endif
+
 
 	movem.l	d7/a5,-(a7)
 
@@ -3104,7 +3109,7 @@ bg_color_table:
 
 
 sprite_buffer:
-	.skip	3*128		| enough for 3 arrays of 128 bytes
+	.skip	3*NB_TARGET_SPRITES*2		| enough for 3 arrays of 128 bytes
 	
 bob_previous_positions_1:
 	ds.b	NB_TARGET_SPRITES*PREVIOUS_SPRITE_SIZE
