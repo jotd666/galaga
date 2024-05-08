@@ -3,11 +3,13 @@
 db_2A3C: table+bits to rework & understand how it's read
 flv tables: -base to handle
 
-- intro: ship moving but wrong Y, no shots, no enemies attacking
+- intro: ship moving but no shots, no enemies attacking: debug f_update_objects_23dd
+
+- possible issue at l_1F1E as exg a0,a1 but d4 used?? 
 - ACTIVE_BITPLANE_MASK not implemented
-- generate sprite_cluts
+- generate sprite_cluts for hw sprite
 - debug rld,rrd (called after intro)
-- CREDIT displayed but wrong color, possibly wrong row too
+- CREDIT displayed but wrong color, wrong row too, in windowed HIGHSCORE too low
 - remove red timer flashes, maybe speedup using F10?
 
 	 

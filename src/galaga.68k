@@ -72,7 +72,7 @@ j_Game_init_02d3:
 * memset($92ca,$ff,$10) ... bmbr_boss_slots[] is only 12 bytes, so this initialization would
 * include b_CPU1_in_progress + b_CPU2_in_progress + 2 unused bytes
 	subq.b	#1,d0                           	| [dec  a] = $FF
-	lea	bmbr_boss_pool,a0              	| [ld   hl,#bmbr_boss_pool] memset( ... , $FF, $10 )
+	lea	bmbr_boss_pool_92ca,a0              	| [ld   hl,#bmbr_boss_pool_92ca] memset( ... , $FF, $10 )
 	move.b	#0x10,d1                        	| [ld   b,#0x10]
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
@@ -987,7 +987,7 @@ l_0699_special_bonus:
 	move.b	#7,d1                           	| [ld   b,#7]
 l_069B_while_b:
 l_069B_while_fcnt:
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x0F,d0                         	| [and  #0x0F]
 	jne	l_069B_while_fcnt                  	| [jr   nz,l_069B_while_fcnt]
 
@@ -1002,7 +1002,7 @@ l_06A9:
 	movem.w	(sp)+,d1/d2                    	| [pop  bc]
 
 l_06AC_while_fcnt:
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x0F,d0                         	| [and  #0x0F]
 	jeq	l_06AC_while_fcnt                  	| [jr   z,l_06AC_while_fcnt]
 
@@ -1627,8 +1627,8 @@ d_0909:
 *  ...
 *-----------------------------------------------------------------------------
 f_blink_players_text_0935:
-*  A = ds3_92A0_frame_cts[0] / 16
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+*  A = ds3_frame_cts_92A0[0] / 16
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	rol.b	#4,d0                            	| [rlca] * 4
 
 *=============================================================================
@@ -2268,7 +2268,7 @@ c_1000:
 	move.l	a0,-(sp)                        	| [push hl]
 	jbsr	osd_get_random                           	| [ld   a,r]
 	move.b	d0,d5                           	| [ld   h,a]
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	add.b	d5,d0                            	| [add  a,h]
 	move.b	d0,d6                           	| [ld   l,a]
 	lea	db_obj_home_posn_rc,a0         	| [ld   h,#>db_obj_home_posn_rc]
@@ -2863,11 +2863,11 @@ c_build_token_1:
 *	scs	d7                              	| [ex   af,af']
 *         ^^^ review: wrong if carry is needed or D7 used in between!
 ** set the delay count 8 ... preserve frame count
-*	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+*	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 *	add.b	#8,d0                            	| [add  a,#8]
 *	move.b	d0,d4                           	| [ld   e,a]
 *l_120B:
-*	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+*	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 *	sub.b	d4,d0                            	| [sub  e]
 *	jne	l_120B                             	| [jr   nz,l_120B]
 *
@@ -3320,7 +3320,7 @@ c_player_respawn:
 l_133A:
 
 *=============================================================================
-* c_133A()
+* c_fghtr_onscreen_133A()
 *  Description:
 *   Demo mode (f_manage_attract_mode_17B2) ...
 *   ...while (bug/bee flys home) ...ship hit, waiting for flying bug to re-nest
@@ -3330,7 +3330,7 @@ l_133A:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_133A:
+c_fghtr_onscreen_133A:
 
 l_133A_while:
 	move.b	b_bugs_flying_nbr_9287,d0           | [$133A: ld   a,(b_bugs_flying_nbr_9287)]
@@ -3812,7 +3812,7 @@ d_1713:
 
 * boss+wingmen nearly to fighter
 case_171F:  | 0x02
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x0F,d0                         	| [and  #0x0F]
 	beq.b	0f                               	| [...]
 	rts                                    	| [ret  nz] [...]
@@ -3862,7 +3862,7 @@ l_1741:
 	move.b	#2,d0                           	| [ld   a,#2] left
 l_1755:
 	jbsr	c_skip_real_io_input_1F92                            	| [call c_skip_real_io_input_1F92]
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x03,d0                         	| [and  #0x03]
 	beq.b	0f                               	| [...]
 	rts                                    	| [ret  nz] [...]
@@ -4013,8 +4013,8 @@ l_17EC:
 
 * 07: just cleared screen from training mode, delay ~1 sec before puts("game over")
 case_delay_before_game_over_17F5:
-* if ( ( ds3_92A0_frame_cts[0] & 0x1F ) == 0x1F )
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+* if ( ( ds3_frame_cts_92A0[0] & 0x1F ) == 0x1F )
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x1F,d0                         	| [and  #0x1F]
 	cmp.b	#0x1F,d0                         	| [cp   #0x1F]
 	beq.b	0f                               	| [...]
@@ -4029,7 +4029,7 @@ case_delay_before_game_over_17F5:
 
 * 10: enable fighter control demo
 case_1808:
-	jbsr	c_133A                            	| [call c_133A]
+	jbsr	c_fghtr_onscreen_133A                            	| [call c_fghtr_onscreen_133A]
 
 	lea	d_181F,a0                      	| [ld   hl,#d_181F]
 	move.l	a0,pdb_demo_fghtrvctrs          	| [ld   (pdb_demo_fghtrvctrs),hl] &d_181F[0]
@@ -4075,7 +4075,7 @@ case_init_demo_1852:
 	lea	d_1887,a0                      	| [ld   hl,#d_1887]
 	move.l	a0,pdb_demo_fghtrvctrs          	| [ld   (pdb_demo_fghtrvctrs),hl] &d_1887[0]
 	jbsr	stg_init_env                      	| [call stg_init_env]
-	jbsr	c_133A                            	| [call c_133A] apparently erases some stuff from screen?
+	jbsr	c_fghtr_onscreen_133A                            	| [call c_fghtr_onscreen_133A] apparently erases some stuff from screen?
 
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 1 ... glbl_enemy_enbl, one time init for demo
@@ -4138,50 +4138,52 @@ case_wait_for_fighter_task_18D1:
 case_init_7_aliens_for_training_mode_18D9:
 	move.b	#7,d1                           	| [ld   b,#7] 4 bosses + 3 moths
 l_18DB_while:
-	jbsr	c_sprite_tiles_displ_128C              	| [call c_sprite_tiles_displ_128C] updates offset of pointer to _attrmode_sptiles[0]
+	jbsr	c_sprite_tiles_displ_128C           | [call c_sprite_tiles_displ_128C] updates offset of pointer to _attrmode_sptiles[0]
 	subq.b	#1,d1                           	| [...]
-	jne	l_18DB_while                       	| [djnz l_18DB_while]
+	jne	l_18DB_while                       	    | [djnz l_18DB_while]
 
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_plyr_actv+_b_nships       	| [ld   (ds_plyr_actv +_b_nships),a] 0
-	move.b	d0,ds_cpu0_task_actv_9000+0x05       	| [ld   (ds_cpu0_task_actv_9000 + 0x05),a] 0 ... f_misc_gameplay_events_0857 uses tmr[2]
-	jbsr	c_133A                            	| [call c_133A] fghtr_onscreen()
+	clr.b	d0                               	| [$18E0: xor  a]
+	move.b	d0,ds_plyr_actv+_b_nships       	| [$18E1: ld   (ds_plyr_actv +_b_nships),a] 0
+	move.b	d0,ds_cpu0_task_actv_9000+0x05      | [$18E4: ld   (ds_cpu0_task_actv_9000 + 0x05),a] 0 ... f_misc_gameplay_events_0857 uses tmr[2]
+	jbsr	c_fghtr_onscreen_133A               | [$18E7: call c_fghtr_onscreen_133A] fghtr_onscreen()
 
 * set inits and override defaults of bomber timers (note f_misc_gameplay_events_0857 disabled above)
-	move.w	#0xFF0D,d5                      	| [ld   hl,#0xFF0D]
-	LOAD_D5D6_FROM_D5_16
-       * tmrs_init[0x06] = 0xFF
-	*move.b	d6,b_92C0+0x05                  	| [ld   (b_92C0 + 0x05),hl] demo ... timrs[0x06] = $FF
-	move.b	d5,b_92C0+0x06                  	| [ld   (b_92C0 + 0x05),hl] demo ... timrs[0x06] = $FF
-	move.b	d6,b_92C0+0x04                  	| [ld   (b_92C0 + 0x04),hl] demo ... timrs
-	move.b	d5,b_92C0+0x05                  	| [ld   (b_92C0 + 0x04),hl] demo ... timrs
-       * tmrs[0x02] = 0xFF
-	*move.b	d6,b_92C0+0x01                  	| [ld   (b_92C0 + 0x01),hl] demo ... timrs_ini[0x06] = $FF
-	move.b	d5,b_92C0+0x02                  	| [ld   (b_92C0 + 0x01),hl] demo ... timrs_ini[0x06] = $FF
-	move.b	d6,b_92C0+0x00                  	| [ld   (b_92C0 + 0x00),hl] demo ... timrs_ini
-	move.b	d5,b_92C0+0x01                  	| [ld   (b_92C0 + 0x00),hl] demo ... timrs_ini
 
-	lea	d_1928,a0                      	| [ld   hl,#d_1928] demo fighter vectors
-	move.l	a0,pdb_demo_fghtrvctrs          	| [ld   (pdb_demo_fghtrvctrs),hl] &d_1928[0] ... demo fighter vectors
+
+	move.b	#0xFF,d5                      	| [$18EA: ld   hl,#0xFF0D]
+	move.b	#0x0D,d6                      	| [$18EA: ld   hl,#0xFF0D]
+       * tmrs_init[0x06] = 0xFF
+	*move.b	d6,b_92C0+0x05                  	| [$18ED: ld   (b_92C0 + 0x05),hl] demo ... timrs[0x06] = $FF
+	move.b	d5,b_92C0+0x06                  	| [$18ED: ld   (b_92C0 + 0x05),hl] demo ... timrs[0x06] = $FF
+	move.b	d6,b_92C0+0x04                  	| [$18F0: ld   (b_92C0 + 0x04),hl] demo ... timrs
+	move.b	d5,b_92C0+0x05                  	| [$18F0: ld   (b_92C0 + 0x04),hl] demo ... timrs
+       * tmrs[0x02] = 0xFF
+	*move.b	d6,b_92C0+0x01                  	| [$18F3: ld   (b_92C0 + 0x01),hl] demo ... timrs_ini[0x06] = $FF
+	move.b	d5,b_92C0+0x02                  	| [$18F3: ld   (b_92C0 + 0x01),hl] demo ... timrs_ini[0x06] = $FF
+	move.b	d6,b_92C0+0x00                  	| [$18F6: ld   (b_92C0 + 0x00),hl] demo ... timrs_ini
+	move.b	d5,b_92C0+0x01                  	| [$18F6: ld   (b_92C0 + 0x00),hl] demo ... timrs_ini
+
+* now: 92C0  0D FF FF xx 0D FF FF
+
+	lea	d_1928,a0                      			| [$18F9: ld   hl,#d_1928] demo fighter vectors
+	move.l	a0,pdb_demo_fghtrvctrs          	| [$18FC: ld   (pdb_demo_fghtrvctrs),hl] &d_1928[0] ... demo fighter vectors
 
 * memset($92ca,$00,$10)
-	clr.b	d0                               	| [xor  a]
-	move.b	#0x10,d1                        	| [ld   b,#0x10]
-	lea	bmbr_boss_pool,a0              	| [ld   hl,#bmbr_boss_pool] memset( ... , 0, $10 )
-	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
-
-	move.b	d0,ds_plyr_actv+_b_2ship        	| [ld   (ds_plyr_actv +_b_2ship),a] 0: not double fighter
-	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 0: glbl_enemy_enbl (demo)
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 1 ... force bomber-boss wingman for training mode
-	move.b	d0,ds_cpu0_task_actv_9000+0x10       	| [ld   (ds_cpu0_task_actv_9000 + 0x10),a] 1: f_manage_bomber_attacks_1b65 ... manage bomber attack
-	move.b	d0,ds_cpu0_task_actv_9000+0x0B       	| [ld   (ds_cpu0_task_actv_9000 + 0x0B),a] 1: f_update_enemy_status_1db3 ... check enemy status at 9200
-	move.b	d0,ds_cpu0_task_actv_9000+0x03       	| [ld   (ds_cpu0_task_actv_9000 + 0x03),a] 1: f_ship_demo_controls_1700 ... fighter control in training/demo mode
-
-	*move.b	_sfr_dsw4,d0                    	| [ld   a,(_sfr_dsw4)] DSWA ... SOUND IN ATTRACT MODE: _fx[0x17]
-	*ror.b	#1,d0                            	| [rrca]
-	*and.b	#0x01,d0                         	| [and  #0x01]
-	moveq	#1,d0			| force sound in attract mode
+	clr.b	d0                               	| [$18FF: xor  a]
+	move.b	#0x10,d1                        	| [$1900: ld   b,#0x10]
+	lea	bmbr_boss_pool_92ca,a0              	| [$1902: ld   hl,#bmbr_boss_pool_92ca] memset( ... , 0, $10 )
+	jbsr	rst_18                            	| [$1905: rst  0x18] memset((HL), A=fill, B=ct)
+	move.b	d0,ds_plyr_actv+_b_2ship        	| [$1906: ld   (ds_plyr_actv +_b_2ship),a] 0: not double fighter
+	move.b	d0,ds_9200_glbls+0x0B           	| [$1909: ld   (ds_9200_glbls + 0x0B),a] 0: glbl_enemy_enbl (demo)
+	addq.b	#1,d0                           	| [$190C: inc  a]
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [$190D: ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 1 ... force bomber-boss wingman for training mode
+	move.b	d0,ds_cpu0_task_actv_9000+0x10      | [$1910: ld   (ds_cpu0_task_actv_9000 + 0x10),a] 1: f_manage_bomber_attacks_1b65 ... manage bomber attack
+	move.b	d0,ds_cpu0_task_actv_9000+0x0B      | [$1913: ld   (ds_cpu0_task_actv_9000 + 0x0B),a] 1: f_update_enemy_status_1db3 ... check enemy status at 9200
+	move.b	d0,ds_cpu0_task_actv_9000+0x03      | [$1916: ld   (ds_cpu0_task_actv_9000 + 0x03),a] 1: f_ship_demo_controls_1700 ... fighter control in training/demo mode
+	*move.b	_sfr_dsw4,d0                    	| [$1919: ld   a,(_sfr_dsw4)] DSWA ... SOUND IN ATTRACT MODE: _fx[0x17]
+	*ror.b	#1,d0                            	| [$191C: rrca]
+	*and.b	#0x01,d0                         	| [$191D: and  #0x01]
+	moveq	#1,d0								| force sound in attract mode
 	move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] from DSWA "sound in attract mode" ... 0 == enable CPU-sub2 process
 
 	jbsr	c_game_or_demo_init               	| [call c_game_or_demo_init]
@@ -4715,7 +4717,7 @@ f_manage_bomber_attacks_1b65:
 * check the queue for boss+wing mission ... parameters are queue'd by case boss launcher
 l_1B75:
 	move.b	#4,d1                           	| [ld   b,#4]
-	lea	bmbr_boss_pool,a0              	| [ld   hl,#bmbr_boss_pool] check 4 groups of 3 bytes
+	lea	bmbr_boss_pool_92ca,a0              	| [ld   hl,#bmbr_boss_pool_92ca] check 4 groups of 3 bytes
 l_1B7A:
 	move.b	(a0),d0                         	| [ld   a,(hl)] .b0: valid object index if slot active, otherwise $FF
 	addq.b	#1,d0                           	| [inc  a] 0 if boss_wing_slots[n*4].b0 == $ff
@@ -4725,15 +4727,15 @@ l_1B7A:
 	jne	l_1B7A                             	| [djnz l_1B7A]
 
        * insert a 1/4 sec delay before trying next bomber
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x0F,d0                         	| [and  #0x0F]
 	jeq	l_1BA8                             	| [jr   z,l_1BA8]
 	rts                                    	| [ret]
 
 * launching element of boss+wing mission
-* A == bmbr_boss_pool[L].obj_idx + 1
+* A == bmbr_boss_pool_92ca[L].obj_idx + 1
 l_1B8B:
-	move.b	#0xFF,(a0)                      	| [ld   (hl),#0xFF] bmbr_boss_pool[ n * 3 + 0 ] = $ff
+	move.b	#0xFF,(a0)                      	| [ld   (hl),#0xFF] bmbr_boss_pool_92ca[ n * 3 + 0 ] = $ff
 	subq.b	#1,d0                           	| [dec  a] undo increment of boss_wing_slots[n].idx
 	lea	b_8800,a1                      	| [ld   d,#>b_8800]
 	moveq	#0,d4
@@ -5053,10 +5055,10 @@ j_1CAE:
 	roxl.b	#1,d0                           	| [rla] Cy into bit-0
  	ror.b	#1,d0                            	| [rrca] flag in Cy and in bit-7
 	scs	d7                              	| [ex   af,af'] stash Cy for rotation flag
-	move.b	d0,bmbr_boss_pool+0             	| [ld   (bmbr_boss_pool + 0),a] object/index of bomber boss
+	move.b	d0,bmbr_boss_pool_92ca+0             	| [ld   (bmbr_boss_pool_92ca + 0),a] object/index of bomber boss
 	move.l	a3,d5
 	sub.l	#db_flv_0411,d5			| relative start address TODO not sure
-	MOVE_TO_VAR	d5,bmbr_boss_pool+1             	| [ld   (bmbr_boss_pool + 1),iy] flight vector of bomber boss
+	MOVE_TO_VAR	d5,bmbr_boss_pool_92ca+1             	| [ld   (bmbr_boss_pool_92ca + 1),iy] flight vector of bomber boss
 
 	addq.b	#1,d1                           	| [inc  b] `dec b` in c_1D03
 
@@ -5082,7 +5084,7 @@ j_1CAE:
 	cmp.b	#2,d0                            	| [cp   #2]
 	jeq	l_1CE3                             	| [jr   z,l_1CE3]
 
-	lea	bmbr_boss_pool+1*3+0,a1        	| [ld   de,#bmbr_boss_pool + 1 * 3 + 0] 4 groups of 3 bytes
+	lea	bmbr_boss_pool_92ca+1*3+0,a1        	| [ld   de,#bmbr_boss_pool_92ca + 1 * 3 + 0] 4 groups of 3 bytes
 	
 * if (1 == ixl) ... setup 1 escort, else setup 2 escorts
 	subq.b	#1,d0                           	| [dec  a]
@@ -5093,7 +5095,7 @@ l_1CE0:
 
 * if rogue fighter for this boss !STAND_BY then return
 l_1CE3:
-	move.b	bmbr_boss_pool,d0         	| [ld   a,(bmbr_boss_pool + 0 * 3 + 0)] obj/index (setup from function arguments above)
+	move.b	bmbr_boss_pool_92ca,d0         	| [ld   a,(bmbr_boss_pool_92ca + 0 * 3 + 0)] obj/index (setup from function arguments above)
 	and.b	#0x07,d0                         	| [and  #0x07] object/index of captured fighter i.e. 00 04 06 02
 	move.b	d0,d6                           	| [ld   l,a]
 * check for 0
@@ -5109,7 +5111,7 @@ l_1CE3:
 	move.b	d6,d2                           	| [ld   c,l] object/index of rogue-fighter e.g. $00, $02, $04, $06
 
 * find available slot (don't know how many are occupied by wingmen?)
-	lea	bmbr_boss_pool+0*3+0,a0        	| [ld   hl,#bmbr_boss_pool + 0 * 3 + 0] reset pointer, search for obj_idx==$FF
+	lea	bmbr_boss_pool_92ca+0*3+0,a0        	| [ld   hl,#bmbr_boss_pool_92ca + 0 * 3 + 0] reset pointer, search for obj_idx==$FF
 l_1CF2_while:
 	addq.w	#3,a0                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -5182,7 +5184,7 @@ l_1D0D:
 * skipping the setup section (rogue fighter)
 * IN:
 *  A  - object/index of red bomber wingman, captured ship etc.
-*  HL - index to bmbr_boss_pool[]
+*  HL - index to bmbr_boss_pool_92ca[]
 *  IY - pointer to flight vector data
 *  Cy - rotation flag
 * OUT:
@@ -5280,14 +5282,14 @@ l_1D5E:
 * The call expects the frame count in A, but here it is overkill because the
 * subroutine is only using bits 0-3 ("A % 4") and updates half of the objects
 * on each odd count.
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0xFC,d0                         	| [and  #0xFC] force A%4 == 0
 	addq.b	#1,d0                           	| [inc  a] force A%4 == 1
 	move.w	d0,-(sp)                        	| [push af]
-	jbsr	c_23E0                            	| [call c_23E0]
+	jbsr	f_update_objects_23e0                            	| [call f_update_objects_23e0]
 	move.w	(sp)+,d0                        	| [pop  af]
 	addq.b	#2,d0                           	| [add  a,#2] force A%4 = 3
-	jbsr	c_23E0                            	| [call c_23E0]
+	jbsr	f_update_objects_23e0                            	| [call f_update_objects_23e0]
 
 	rts                                    	| [ret]
 
@@ -5430,7 +5432,7 @@ l_1DC1_make_him_dead:
 *-----------------------------------------------------------------------------
 f_update_timers_1dd2:
 *  if ( frame_cts[2] & 0x01 ) return ... divides the 4 Hz timer by 2 ... why not just use frame_cts[1]
-	move.b	ds3_92A0_frame_cts+2,d0         	| [$1DD2: ld   a,(ds3_92A0_frame_cts + 2)] [2]: 4 Hz timer
+	move.b	ds3_frame_cts_92A0+2,d0         	| [$1DD2: ld   a,(ds3_frame_cts_92A0 + 2)] [2]: 4 Hz timer
 	and.b	#0x01,d0                         	| [$1DD5: and  #0x01]
 	beq.b	0f                               	| [...]
 	rts                                    		| [$1DD7: ret  nz] [...]
@@ -5464,7 +5466,7 @@ l_1DE2:
 *-----------------------------------------------------------------------------
 f_pulsating_swarm_movement_1de6:
 *  if ( frame_count % 4 != 0 ) return
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld  a,(ds3_92A0_frame_cts + 0)] frame_ct%4 ... ... (provides 15Hz timer)
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld  a,(ds3_frame_cts_92A0 + 0)] frame_ct%4 ... ... (provides 15Hz timer)
 	and.b	#0x03,d0                         	| [and  #0x03]
 	beq.b	0f                               	| [...]
 	rts                                    	| [ret  nz] [...]
@@ -5653,7 +5655,7 @@ d_1E64_bitmap_tables:
 f_bomb_position_updater_1ea4:
 * Determine y-increment: each frame alternates 2 or 3 pixels-per-frame
 * increment to provide the average Y velocity, and negated for inverted screen.
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x01,d0                         	| [and  #0x01]
 	addq.b	#2,d0                           	| [add  a,#2]
 	move.b	d0,d1                           	| [ld   b,a]
@@ -6642,7 +6644,7 @@ l_221A:
 *-----------------------------------------------------------------------------
 f_boss_starts_tractor_beam_2222:
 *  if ( frame_count % 4 != 0 ) goto 2257
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)] frame_ct%4 ... (provides 15Hz timer)
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)] frame_ct%4 ... (provides 15Hz timer)
 	move.b	d0,d2                           	| [ld   c,a]
 	and.b	#0x03,d0                         	| [and  #0x03]
 	jne	l_2257                             	| [jr   nz,l_2257]
@@ -6955,12 +6957,12 @@ d_23A1:
 *  ...
 *-----------------------------------------------------------------------------
 f_update_objects_23dd:
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 
-* c_23E0
+* f_update_objects_23e0
 
 *=============================================================================
-* c_23E0()
+* f_update_objects_23e0()
 *  Description:
 *   Implementation of f_update_objects_23dd()
 *   See comments for f_update_objects_23dd() above.
@@ -6969,7 +6971,7 @@ f_update_objects_23dd:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_23E0:
+f_update_objects_23e0:
 * check if even or odd frame
 	btst.b	#0,d0                           	| [bit  0,a]
 	jeq	l_2596_even_frame                  	| [jp   z,l_2596_even_frame]
@@ -6980,42 +6982,41 @@ c_23E0:
 	move.b	d0,d4                           	| [ld   e,a] E==0 if frame 1, E==2 if frame 3
 
 	move.b	b_bugs_actv_cnt,d0              	| [ld   a,(b_bugs_actv_cnt)]
-	move.b	d0,ixl					| [ld   ixl,a] use as "local" variable for object counter
+	move.b	d0,ixl								| [ld   ixl,a] use as "local" variable for object counter
 
 	move.b	#32,d1                          	| [ld   b,#32] size of object set / 2
 l_23EF:
-	lea	b_8800,a1                      	| [ld   d,#>b_8800]
+	lea	b_8800,a1                      			| [ld   d,#>b_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	moveq	#0,d0
-	move.b	(a1),d0                         	| [ld   a,(de)]
+	move.b	(a1),d0                         | [ld   a,(de)]
 * test for $80 (inactive status)
 	tst.b	d0                            	| [sla  a] test for bit-7
 	jmi	l_2416                             	| [jr   c,l_2416] DE+=4
 
 
-	lea	d_23FF_jp_tbl,a0               	| [ld   hl,#d_23FF_jp_tbl]
+	lea	d_23FF_jp_tbl,a0        | [$23F6: ld   hl,#d_23FF_jp_tbl]
 	and.w	#0xFF,d0
 	CHECK_D0W_UPPER_BOUND	10
-	asl.b	#2,d0
-	                         	| [rst  0x10] HL += A
-	                        	| [ld   a,(hl)]
-	                       	| [inc  hl]
-	                       	| [ld   h,(hl)]
-	move.l	(a0,d0.w),a0                      	| [ld   l,a]
-	jra	(a0)                               	| [jp   (hl)]
+	asl.b	#2,d0				| [$23F9: rst  0x10] HL += A
+	                        	| [$23FA: ld   a,(hl)]
+	                       	    | [$23FB: inc  hl]
+	                       	    | [$23FC: ld   h,(hl)]
+	move.l	(a0,d0.w),a0        | [$23FD: ld   l,a]
+	jra	(a0)                    | [$23FE: jp   (hl)]
 
 d_23FF_jp_tbl:
-	.long case_2416 | 80: inactive object (already tested for 0x80 so this .db is a placeholder)
-	.long case_2488 | 01: assimilated into the collective and resting peacefully.
-	.long case_245F | 02: rotating back into position in the collective
-	.long case_254D | 03: state progression ... 7's to 3's, and then 9's, 2's, and finally 1's
-	.long case_24B2 | 04: nearly fatally shot
-	.long case_2535 | 05: showing a score bitmap for a bonus hit
-	.long case_254D | 06  disable this one and the borg runs out of nukes
-	.long case_2590 | 07: once for each orc as he is spawning (new stage)
-	.long case_243C | 08: shot my damn ship (DE==8862 ... 8863 counts down from $0F for all steps of explosion)
-	.long case_2422 | 09: ... after getting to the loop spot, or anytime on a diving attack.
+	.long case_inactive_2416                    | 80: inactive object (already tested for 0x80 so this is a placeholder)
+	.long case_assimilated_into_collective_2488 | 01: assimilated into the collective and resting peacefully.
+	.long case_rotating_into_collective_245F    | 02: rotating back into position in the collective
+	.long case_state_progression_254D           | 03: state progression ... 7's to 3's, and then 9's, 2's, and finally 1's
+	.long case_nearly_fatally_shot_24B2         | 04: nearly fatally shot
+	.long case_show_score_2535                  | 05: showing a score bitmap for a bonus hit
+	.long case_state_progression_254D           | 06: disable this one and the borg runs out of nukes
+	.long case_spawning_orc_2590                | 07: once for each orc as he is spawning (new stage)
+	.long case_shot_captured_ship_243C          | 08: shot my damn ship (DE==8862 ... 8863 counts down from $0F for all steps of explosion)
+	.long case_diving_attack_or_loop_2422       | 09: ... after getting to the loop spot, or anytime on a diving attack.
 
 l_2413:
 	subq.b	#1,d4                           	| [dec  e] reset index/pointer to b0
@@ -7023,7 +7024,7 @@ l_2413:
 l_2414_inc_active:
 	addq.b	#1,ixl                          	| [inc  ixl] b_bugs_actv_cnt++
 
-case_2416:
+case_inactive_2416:
 l_2416:
 	move.b	#4,d0                           	| [ld   a,#4]
 	add.b	d4,d0                            	| [add  a,e]
@@ -7037,13 +7038,13 @@ l_2416:
 	rts                                    	| [ret]
 
 * 09: diving
-case_2422:
+case_diving_attack_or_loop_2422:
 	move.b	d4,d6                           	| [ld   l,e]
-	lea	db_obj_home_posn_rc,a0         	| [ld   h,#>db_obj_home_posn_rc]
+	lea	db_obj_home_posn_rc,a0         			| [ld   h,#>db_obj_home_posn_rc]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0)+,d2                         	| [ld   c,(hl)] row position index
-	                           	| [inc  l]
+												| [inc  l]
 	move.b	(a0),d6                         	| [ld   l,(hl)] column position index
 	lea	ds_hpos_loc_offs_9900,a0            	| [ld   h,#>ds_hpos_loc_offs_9900] .b0
 	and.w	#0xFF,d6
@@ -7072,7 +7073,7 @@ case_2422:
 	jra	l_2413                             	| [jp   l_2413] reset index to .b0 and continue
 
 * 08: destruction of the ship
-case_243C:
+case_shot_captured_ship_243C:
 	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
 	move.b	d4,d6                           	| [ld   l,e]
 	and.w	#0xFF,d6
@@ -7107,7 +7108,7 @@ l_2451:
 	jra	l_2416                             	| [jp   l_2416]
 
 * 02: reached home and rotating into resting position
-case_245F:
+case_rotating_into_collective_245F:
 	move.b	d4,d6                           	| [ld   l,e]
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
@@ -7148,18 +7149,18 @@ l_2483:
 	jra	l_249B                             	| [jr   l_249B]
 
 * 01: assimilated into the collective
-case_2488:
+case_assimilated_into_collective_2488:
 	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
 	move.b	d4,d6                           	| [ld   l,e]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 * alternate between tile code 6 and 7 every 1/2 sec: rotate bit-1 of 4 Hz timer into Cy
 * and then rl the Cy into bit-0 of sprite code
-	move.b	ds3_92A0_frame_cts+2,d0         	| [ld   a,(ds3_92A0_frame_cts + 2)]
+	move.b	ds3_frame_cts_92A0+2,d0         	| [ld   a,(ds3_frame_cts_92A0 + 2)]
 	move.b	(a0),d7
 	ror.b	#1,d7                          	| [rrc  (hl)]
 	CLEAR_XC_FLAGS
-	roxr.b	#2,d0                            	| [rrca] * 2
+	roxr.b	#2,d0                           | [$2490: rrca] * 2
 	roxl.b	#1,d7                         	| [rl   (hl)]
 	move.b	d7,(a0)
 	move.b	ds_9200_glbls+0x0B,d0           	| [ld   a,(ds_9200_glbls + 0x0B)] update stuff if enemy enable set
@@ -7196,7 +7197,7 @@ l_249B:
 	jra	l_2413                             	| [jp   l_2413] reset index to .b0 and continue
 
 * 04: rckt_hit_hdlr
-case_24B2:
+case_nearly_fatally_shot_24B2:
 	move.b	d4,d6                           	| [ld   l,e] will be used below!
 	addq.w	#1,a1                           	| [inc  e] .b1
 	addq.b	#1,d4                           	| [inc  e] .b1
@@ -7341,7 +7342,7 @@ l_2529:
 	jra	l_2416                             	| [jp   l_2416]
 
 * 05: shot boss, showing the score bitmap
-case_2535:
+case_show_score_2535:
 * pointer to b8800_obj_status[ L ] from DE
 * b8800_obj_status[ L ].obj_idx-- ... count for score bitmap
 	lea		b_8800,a0
@@ -7369,7 +7370,7 @@ case_2535:
 	jra	l_2416                             	| [jp   l_2416]
 
 * 3 or 6: terminate cylons or bombs that have gone past the sides or bottom of screen
-case_254D:
+case_state_progression_254D:
 	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300] read directly from SFRs (not buffer RAM)
 	move.b	d4,d6                           	| [ld   l,e] object offset
 	and.w	#0xFF,d6
@@ -7436,7 +7437,7 @@ l_2582_kill_bug_q_slot:
 	jra	l_2578_mk_obj_inactive             	| [jp   l_2578_mk_obj_inactive]
 
 * 07: once for each orc as he is spawning (new stage)
-case_2590:
+case_spawning_orc_2590:
 	move.b	#3,d0                           	| [ld   a,#3]
 	move.b	d0,(a1)                         	| [ld   (de),a] disposition = 3 ... from 7 (spawning)
 	jra	l_2414_inc_active                  	| [jp   l_2414_inc_active]
@@ -8048,7 +8049,7 @@ l_2953_next_pair:
 	btst.b	#7,d0                           	| [bit  7,a]
 	jne	l_295E                             	| [jr   nz,l_295E]
 * then ...
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x07,d0                         	| [and  #0x07]
 	beq.b	0f                               	| [...]
 	rts                                    	| [ret  nz] [...]
@@ -8098,7 +8099,7 @@ l_2980:
 	lea	b_8800,a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#7,(a0)+                         	| [ld   (hl),#7] 8800[L].l ... disposition = "spawning" ... i.e. case_2590
+	move.b	#7,(a0)+                         	| [ld   (hl),#7] 8800[L].l ... disposition = "spawning" ... i.e. case_spawning_orc_2590
 
 * store the slot index (offset) for this object
 	                           	| [inc  l]
@@ -8298,7 +8299,7 @@ db_2A6C:
 f_lateral_movement_at_round_start_2a90:
 
 *  if ( frame_cnt % 4 != 0 ) return
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	subq.b	#1,d0                           	| [dec  a] why -1 ?
 	and.b	#0x03,d0                         	| [and  #0x03]
 	beq.b	0f                               	| [...]
@@ -8557,14 +8558,14 @@ l_30B5_next_char_selectn:
 	jbsr	c_plyr_initials_entry_hilite_line 	| [call c_plyr_initials_entry_hilite_line]
 
 * get time 0 from frame counter
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	move.b	d0,d2                           	| [ld   c,a]
 
 * jp here to return from section _stick_right
 l_30BF_dlg_proc:
 l_30BF_frame_sync:
 	jbsr	c_32ED_top5_dlg_endproc           	| [call c_32ED_top5_dlg_endproc] checks coin-in once per frame
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	cmp.b	d2,d0                            	| [cp   c]
 	jeq	l_30BF_frame_sync                  	| [jr   z,l_30BF_frame_sync]
 
@@ -8795,9 +8796,9 @@ j_314C_select_char:
 	jbsr	c_plyr_initials_entry_hilite_line 	| [call c_plyr_initials_entry_hilite_line]
 
 	move.b	#76,d0                          	| [ld   a,#76]
-	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] :=$4C
+	move.b	d0,ds3_frame_cts_92A0+0         	| [ld   (ds3_frame_cts_92A0 + 0),a] :=$4C
 l_3179:
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	                               	| [and  a]
 	jne	l_3179                             	| [jr   nz,l_3179]
 	rts                                    	| [ret]
@@ -11075,7 +11076,7 @@ jp_Task_man_0237:
 * $A000-$A005 starfield scroll speed (only bit 0 is significant)
 *	move.b	_sfr_dsw5,d0                    	| [ld   a,(_sfr_dsw5)] DSWA: freeze video
 *	move.b	d0,d3                           	| [ld   d,a]
-*	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+*	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 *	and.b	#0x1C,d0                         	| [and  #0x1C] 0000XXX0
 *	move.b	d0,d2                           	| [ld   c,a]
 *	ror.b	#1,d0                            	| [rrca] 00000XXX
