@@ -10,43 +10,7 @@
 	.include "structs.inc"
 	.include	"m68k_macros.inc"
 	
-	.global	p_flv_base
 
-	.global	db_flv_atk_red
-	.global	db_flv_001d
-	.global	db_flv_017b
-	.global	db_flv_020b
-	.global	db_flv_025d
-	.global	db_flv_02d9
-	.global	db_flv_0fda
-	.global	db_flv_0067
-	.global	db_flv_01b0
-	.global	db_flv_021b
-	.global	db_flv_0279
-	.global	db_flv_02fb
-	.global	db_flv_0ff0
-	.global	db_flv_009f
-	.global	db_flv_01e8
-	.global	db_flv_022b
-	.global	db_flv_029e
-	.global	db_flv_031d
-	.global	db_flv_022b
-	.global	db_flv_00d4
-	.global	db_flv_01f5
-	.global	db_flv_0241
-	.global	db_flv_02ba
-	.global	db_flv_0333
-	.global	db_flv_025d
-	.global db_flv_0411
-	.global	db_flv_cboss
-	.global db_fltv_rogefgter
-	.global db_flv_atk_yllw
-	.global db_flv_00f1
-	
-	.global db_04EA
-	.global db_0473
-	.global db_04AB
-	.global db_0454
 
 	.global galaga1_reset
 	.global galaga1_irq
@@ -170,8 +134,10 @@ db_flv_00d4:
 db_flv_00f1:
 	.byte 0x12,0x18,0x17,0x12,0x00,0x80,0xff
 * this is probably fill
-
-
+	.align	2
+flv_rom_table:
+		.include	"flv_table.68k"
+		
 * Copy of home position LUT from task_man
 sprt_fmtn_hpos:
 	.byte 0x14,0x06,0x14,0x0c,0x14,0x08,0x14,0x0a,0x1c,0x00,0x1c,0x12,0x1e,0x00,0x1e,0x12
@@ -275,7 +241,7 @@ db_flv_0333:
 	.byte 0x23,0x08,0x20,0x23,0x00,0x16,0x23,0xe0,0x0c,0x23,0x02,0x0b
 	.byte 0x23,0x11,0x0c,0x23,0x02,0x0b,0x23,0xe0,0x0c,0x23,0x00,0x16,0x23,0x08,0x20,0xff
 
-db_flv_atk_yllw:
+db_flv_atk_yllw_034F:
 	.byte 0x12,0x18,0x1e
 p_flv_0352:
 	.byte 0x12,0x00,0x34,0x12,0xfb,0x26
@@ -301,7 +267,7 @@ p_flv_037c:
 p_flv_039e:
 	.byte 0x12,0xf8,0x10,0x12,0x00,0x40,0xfb,0x12,0x00,0xff,0xff
 
-db_flv_atk_red:
+db_flv_atk_red_03a9:
 	.byte 0x12,0x18,0x1d
 p_flv_03ac:
 	.byte 0x12,0x00,0x28,0x12,0xfa,0x02,0xf3
@@ -346,7 +312,7 @@ p_flv_0430:
 	.byte 0x23,0x04,0x1a,0x23,0x03,0x1d,0x23,0x1a,0x25,0x23,0x03,0x10,0x23,0xfd,0x48,0xfd
 	.word p_flv_0420-p_flv_base
 
-db_fltv_rogefgter:
+db_flv_rogefgter_0444:
 	.byte 0x12,0x18,0x14,0x12,0x03,0x2a,0x12,0x10,0x40,0x12,0x01,0x20,0x12,0xfe,0x78,0xff
 
 db_0454: | capture mode boss
@@ -357,7 +323,7 @@ db_0454: | capture mode boss
 	.word p_flv_040c-p_flv_base
 	.byte 0xfd
 	.word p_flv_0425-p_flv_base
-db_flv_cboss:
+db_flv_cboss_046B:
 	.byte 0x12,0x18,0x14,0xfb
 	.byte 0x12,0x00,0xff,0xff
 db_0473:
@@ -478,7 +444,7 @@ l_0537:
 	MOVE_TO_VAR	d5,ds3_frame_cts_92A0+1         	| [ld   (ds3_frame_cts_92A0 + 1),hl] [1]: 32-frame ... ~2Hz timer
 
 * flag = ( num_bugs < param07 ) && ds_cpu0_task_actv_9000[0x15]
-	move.b	ds_new_stage_parms+0x07,d0      	| [ld   a,(ds_new_stage_parms + 0x07)] number of aliens left when continous bombing can start
+	move.b	ds_new_stage_parms_99c0+0x07,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x07)] number of aliens left when continous bombing can start
 	move.b	d0,d4                           	| [ld   e,a]
 	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
 	cmp.b	d4,d0                            	| [cp   e]
@@ -1593,12 +1559,26 @@ mctl_fltpn_dspchr:
 * flight-path vector has expired... setup HL as pointer to next data token
 	move.b	(0x08,a2),d6                    	| [$0908: ld   l,0x08(ix)]
 	move.b	(0x09,a2),d5                    	| [$090B: ld   h,0x09(ix)]
-	LOAD_D5_16_FROM_D5D6
-	illegal		| reaches that point after "GAME OVER" but should not!
-	nop
-	nop
-	nop
-
+	LOAD_D5_16_FROM_D5D6						| pointer in subcpu ROM
+	lea		flv_rom_table(pc),a0
+	.ifndef		RELEASE
+	cmp.w	#0x046c,d5
+	bcs.b	0f
+	jbsr	osd_break
+	illegal
+	.word	1861
+0:
+	.endif
+	add.w	d5,d5
+	add.w	d5,d5
+	move.l	(a0,d5.w),d5
+	bpl.b	0f
+	lsr.w	#4,d5
+	illegal
+	.word	1866
+0:
+	move.l	d5,a0		| jotd: real pointer from low sub-cpu ROM address
+	
 * this label allows reading the next token after doing state-selection
 j_090E_flite_path_init:
 	move.b	(a0),d0                         	| [ld   a,(hl)] data_set[n + 0]
@@ -1657,13 +1637,13 @@ case_0942:  | 0x0A
 
 * continuous-bombing mode
 case_094E:  | 0X10 (0xEF)
-	move.b	ds_new_stage_parms+0x09,d0      	| [ld   a,(ds_new_stage_parms + 0x09)] jumps the pointer on/after stage 8
+	move.b	ds_new_stage_parms_99c0+0x09,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x09)] jumps the pointer on/after stage 8
 	                               	| [and  a]
 	jra	l_0959                             	| [jp   l_0959]
 
 * attack wave
 case_0955:  | 0x0F
-	move.b	ds_new_stage_parms+0x08,d0      	| [ld   a,(ds_new_stage_parms + 0x08)] jumps the pointer on/after stage 8
+	move.b	ds_new_stage_parms_99c0+0x08,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x08)] jumps the pointer on/after stage 8
 	                               	| [and  a]
 
 l_0959:
@@ -2943,7 +2923,7 @@ f_0ECA:
 
 
 
-* additional challenge stage data (see db_2A3C)
+* additional challenge stage data (see db 2A3C)
 db_flv_0fda:
 	.byte 0x23,0x00,0x1B,0x23,0xF0,0x40,0x23,0x00,0x09,0x23,0x05,0x11
 	.byte 0x23,0x00,0x10,0x23,0x10,0x40,0x23,0x04,0x30,0xFF

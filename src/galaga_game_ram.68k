@@ -189,7 +189,7 @@
 	.global		b8_99B8_credit_cnt
 	.global		ds_99B9_star_ctrl
 	.global		b8_ship_collsn_detectd_status
-	.global		ds_new_stage_parms
+	.global		ds_new_stage_parms_99c0
 	.global		ds20_99E0
 	.global		ds10_99E0_mchn_data
 	.global		b16_99E0_ttl_plays_bcd
@@ -658,7 +658,7 @@ ds_99B9_star_ctrl:
 b8_ship_collsn_detectd_status:
       ds.b    1
 
-ds_new_stage_parms:
+ds_new_stage_parms_99c0:
        ds.b     0x0A       | each byte stores 1 nibble of bytes $0 thru $A of table dw_2C65[] (new stage)
        ds.b     0x01       | bonus-bee when bug count reaches $0A (0 for challenge stage)
 

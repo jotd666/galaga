@@ -1463,14 +1463,14 @@ f_misc_gameplay_events_0857:
 	cmp.b	#0x3C,d0                         	| [cp   #0x3C]
 	jcc	l_0865                             	| [jr   nc,l_0865]
 * increases allowable max_bombers after a time
-	move.b	ds_new_stage_parms+0x05,d0      	| [ld   a,(ds_new_stage_parms + 0x05)]
-	move.b	d0,ds_new_stage_parms+0x04      	| [ld   (ds_new_stage_parms + 0x04),a] new_stage_parms[4] = new_stage_parms[5] ... max bombers
+	move.b	ds_new_stage_parms_99c0+0x05,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x05)]
+	move.b	d0,ds_new_stage_parms_99c0+0x04      	| [ld   (ds_new_stage_parms_99c0 + 0x04),a] new_stage_parms[4] = new_stage_parms[5] ... max bombers
 
 * set bomb drop enable flags
 l_0865:
 	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
 	move.b	d0,d2                           	| [ld   c,a] parameter to c_08BE
-	move.b	ds_new_stage_parms+0x00,d0      	| [ld   a,(ds_new_stage_parms + 0x00)] set bomb drop enable flags
+	move.b	ds_new_stage_parms_99c0+0x00,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x00)] set bomb drop enable flags
 	lea	d_0909+0*4,a0                  	| [ld   hl,#d_0909 + 0 * 4]
 	jbsr	c_08BE                            	| [call c_08BE] A==new_stage_parms[0], HL==d_0909, C==num_bugs_on_scrn
 	move.b	d0,b_92C0+0x08                  	| [ld   (b_92C0 + 0x08),a] = c_08BE() ... bomb drop enable flags
@@ -1482,7 +1482,7 @@ l_0865:
 	jeq	l_0888                             	| [jr   z,l_0888]
 
 * then ... set default start values for bomber launch timers in continuous bombing state
-* this will also happen momentarily at start of round until bugs_actv_nbr exceeds ds_new_stage_parms[0x07]
+* this will also happen momentarily at start of round until bugs_actv_nbr exceeds ds_new_stage_parms_99c0[0x07]
 	lea	b_92C0+0x04,a0                 	| [ld   hl,#b_92C0 + 0x04] memset( b_92C0_4, 2, 3 )
 	move.b	#2,d0                           	| [ld   a,#2]
 	move.b	#3,d1                           	| [ld   b,#3]
@@ -1494,17 +1494,17 @@ l_0865:
 
 l_0888:
 * ... else after bugs_actv_nbr exceeds parameter_7 until continous bombing begins
-	move.b	ds_new_stage_parms+0x01,d0      	| [ld   a,(ds_new_stage_parms + 0x01)]
+	move.b	ds_new_stage_parms_99c0+0x01,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x01)]
 	lea	d_0909+8*4,a0                  	| [ld   hl,#d_0909 + 8 * 4] offset the data pointer
 	jbsr	c_08BE                            	| [call c_08BE] A==new_stage_parms[1], HL==d_0929, C==num_bugs_on_scrn
 	move.b	d0,b_92C0+0x04                  	| [ld   (b_92C0 + 0x04),a] c_08BE() ... boss alien default bomber timer
 
-	move.b	ds_new_stage_parms+0x02,d0      	| [ld   a,(ds_new_stage_parms + 0x02)]
+	move.b	ds_new_stage_parms_99c0+0x02,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x02)]
 	lea	d_08CD,a0                      	| [ld   hl,#d_08CD]
 	jbsr	c_08AD                            	| [call c_08AD] A==new_stage_parms[2], HL==d_08CD
 	move.b	d0,b_92C0+0x05                  	| [ld   (b_92C0 + 0x05),a] c_08AD() ... red alien default bomber timer
 
-	move.b	ds_new_stage_parms+0x03,d0      	| [ld   a,(ds_new_stage_parms + 0x03)]
+	move.b	ds_new_stage_parms_99c0+0x03,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x03)]
 	lea	d_08EB,a0                      	| [ld   hl,#d_08EB]
 	jbsr	c_08AD                            	| [call c_08AD] A==new_stage_parms[3], HL==d_08EB
 	move.b	d0,b_92C0+0x06                  	| [ld   (b_92C0 + 0x06),a] c_08AD() ... yellow alien default bomber timer
@@ -1516,7 +1516,7 @@ l_0888:
 *  Description:
 *  for f_misc_gameplay_events_0857
 * IN:
-*  A == ds_new_stage_parms[2] or [3]
+*  A == ds_new_stage_parms_99c0[2] or [3]
 *  B == ds4_game_tmrs_92ac[2]
 *  HL == d_08CD or d_08EB
 * OUT:
@@ -1547,7 +1547,7 @@ l_08BC:
 *  Description:
 *   for f_misc_gameplay_events_0857
 * IN:
-*  D0==ds_new_stage_parms + 0x00 or ds_new_stage_parms + 0x01
+*  D0==ds_new_stage_parms_99c0 + 0x00 or ds_new_stage_parms_99c0 + 0x01
 *  D2==bugs_actv_nbr
 *  A0== pointer _0909, _0929
 * OUT:
@@ -2458,7 +2458,7 @@ c_1083:
 *   Setup motion for diving attackers.
 * IN:
 *   HL == &b_8800[n]
-*   DE == pointer to table in cpu-sub1 code space
+*   DE == pointer to table in cpu-sub1 code space (D3/D4)
 *   A' ==
 *        bit-0: set by c_1083 and c_1079
 *        bit-7: flag set for negative rotation angle
@@ -2484,9 +2484,7 @@ l_1094:
 
 l_10A0_got_one:
 	movem.w	(sp)+,d3/d4                    	    | [$10A0: pop  de] pointer to table
-	move.l	a1,d3
-	sub.l	#p_flv_base,d3
-	LOAD_D3D4_FROM_D3_16
+	LOAD_D3_16_FROM_D3D4
 	move.b	d4,(0x08,a2)                    	| [$10A1: ld   0x08(ix),e] data pointer lsb
 	move.b	d3,(0x09,a2)                    	| [$10A4: ld   0x09(ix),d] data pointer msb
 	move.b	#1,(0x0D,a2)                    	| [$10A7: ld   0x0D(ix),#1] expiration counter
@@ -4004,7 +4002,7 @@ case_end_of_demo_17E1:
 * else break
 	rts                                    	| [ret]
 l_17EC:
-	jbsr	c_mach_hiscore_show               	| [call c_mach_hiscore_show]
+	jbsr	c_mach_hiscore_show_3214               	| [call c_mach_hiscore_show_3214]
 	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
 	move.b	d0,ds4_game_tmrs_92ac+3              	| [ld   (ds4_game_tmrs_92ac + 3),a] $0A ... after displ hi-score tbl
 	rts                                    	| [ret]
@@ -4080,8 +4078,8 @@ case_init_demo_1852:
 	move.b	d0,ds_plyr_actv+_b_atk_wv_enbl  	| [ld   (ds_plyr_actv +_b_atk_wv_enbl),a] 1 ... 0 when respawning player ship
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_wingm	| [ld   (ds_plyr_actv +_b_bmbr_boss_wingm),a] 1 ... for demo, force the bomber-boss into wingman-mode
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_new_stage_parms+0x04      	| [ld   (ds_new_stage_parms + 0x04),a] 2 ... max_bombers (demo)
-	move.b	d0,ds_new_stage_parms+0x05      	| [ld   (ds_new_stage_parms + 0x05),a] 2 ... increases max bombers in certain conditions (demo)
+	move.b	d0,ds_new_stage_parms_99c0+0x04      	| [ld   (ds_new_stage_parms_99c0 + 0x04),a] 2 ... max_bombers (demo)
+	move.b	d0,ds_new_stage_parms_99c0+0x05      	| [ld   (ds_new_stage_parms_99c0 + 0x05),a] 2 ... increases max bombers in certain conditions (demo)
 	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
 
 * demo fighter vectors demo level before capture
@@ -4505,7 +4503,7 @@ l_1A6A_ship_in_position:
 f_clone_attack_manager_1A80:
 * check parameter for condition to enable the bonus-bee feature.
 * if ( num_bugs > num_bugs_for_bonus_bee ) then return
-	move.b	ds_new_stage_parms+0x0A,d0      	| [ld   a,(ds_new_stage_parms + 0x0A)] bonus-bee when bug count reaches this
+	move.b	ds_new_stage_parms_99c0+0x0A,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x0A)] bonus-bee when bug count reaches this
 	move.b	d0,d2                           	| [ld   c,a]
 	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
 	cmp.b	d2,d0                            	| [cp   c]
@@ -4753,14 +4751,13 @@ l_1B8B:
 
 * pointer to object data
 	addq.w	#1,a0                           	| [$1B97: inc  l]
-	* a0 points to 92CB or something
+	* a0 points to 92CB or something, loads subcpu 16 bit ROM address in D3/D4
+	* it doesn't need to point on anything as this cpu doesn't access ROM
  	move.b	(a0)+,d4                         	| [$1B98: ld   e,(hl)] e.g. 92CA[].b1, lsb of pointer to data
 	                           	                | [$1B99: inc  l]
 	move.b	(a0),d3                         	| [$1B9A: ld   d,(hl)] e.g. 92CA[].b2, msb of pointer to data
-	* read relative address of flight path
 	LOAD_D3_16_FROM_D3D4
-	move.l	d3,a1
-	add.l	#p_flv_base,a1			| add absolute address base
+	
 * reload A
 	exg	d0,d7                              	    | [ex   af,af']
  	move.b	d0,d6                           	| [ld   l,a] byte-0 of boss_wing_slots[n*3] ... object index/offset
@@ -4787,7 +4784,7 @@ l_1BAD:
 
 l_1BB4:
 * if (bugs_flying_nbr >= max_flying_bugs_this_rnd) then ...
-	move.b	ds_new_stage_parms+0x04,d0      		| [ld   a,(ds_new_stage_parms + 0x04)] max_bombers
+	move.b	ds_new_stage_parms_99c0+0x04,d0      		| [ld   a,(ds_new_stage_parms_99c0 + 0x04)] max_bombers
 	move.b	d0,d2                           		| [ld   c,a]
 	move.b	b_bugs_flying_nbr_9287,d0            	| [ld   a,(b_bugs_flying_nbr_9287)]
 	cmp.b	d2,d0                            		| [cp   c]
@@ -4799,9 +4796,9 @@ l_1BB4:
 * else ... launch another bombing excursion
 l_1BC0:
 * b_92C0_0[n] =  b_92C0_0[n + 4] ... set next timeout for this bomber type
-	bset.b	#2,d6                           	| [set  2,l] offset += 4
-	move.b	(a0),d0                         	| [ld   a,(hl)] $92C0[n+4]
-	bclr.b	#2,d6                           	| [res  2,l]
+	                           	| [set  2,l] offset += 4
+	move.b	(4,a0),d0                         	| [ld   a,(hl)] $92C0[n+4]
+	                           	| [res  2,l]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 
 	move.b	d1,d0                           	| [ld   a,b] ... b from loop l_1bad above decremented from 3
@@ -4826,7 +4823,7 @@ d_1BD1:
 case_bmbr_yellow:
 	move.b	#20,d1                          	| [ld   b,#20] number of yellow aliens
 	lea	b_8800+0x08,a0                 	| [ld   hl,#b_8800 + 0x08] $08-$2E
-	lea	db_flv_atk_yllw,a1             	| [ld   de,#db_flv_atk_yllw]
+	move.w	#db_flv_atk_yllw_034F,d3             	| [ld   de,#db_flv_atk_yllw]
 
 * this section common to both bee and moth launcher, check for next one, skip if already active
 l_1BDF:
@@ -4859,7 +4856,7 @@ l_1BF0_found_one:
 case_bmbr_red_1BF7:
 	move.b	#16,d1                          	| [$1BF7: ld   b,#16] number of red aliens
 	lea	b_8800+0x40,a0                 			| [$1BF9: ld   hl,#b_8800 + 0x40] red moths $40-$5E
-	lea	db_flv_atk_red,a1              			| [$1BFC: ld   de,#db_flv_atk_red]
+	move.w	#db_flv_atk_red_03a9,d3              			| [$1BFC: ld   de,#db_flv_atk_red]
 	jra	l_1BDF                             		| [$1BFF: jr   l_1BDF] common to red and yellow alien
 
 * boss launcher... only enable capture-mode for every other one ( %2 )
@@ -5024,11 +5021,11 @@ l_1C94:
 	move.l	(sp)+,a0                        	| [pop  hl] will return to task manager eventually
 
 j_1CA0:
-	lea	db_flv_0411,a3                 	| [ld   iy,#db_flv_0411]
+	move.w	#db_flv_0411,d5                 	| [ld   iy,#db_flv_0411]
 	move.b	ds_9200_glbls+0x0B,d0           	| [ld   a,(ds_9200_glbls + 0x0B)] enemy enable, select data ptr boss launch: if (0), iy=$00F1, else iy=$0411
 	                               	| [and  a]
 	jne	l_1CAE                             	| [jr   nz,l_1CAE]
-	lea	db_flv_00f1,a3                 	| [ld   iy,#db_flv_00f1] training-mode
+	move.w	#db_flv_00f1,d5                 	| [ld   iy,#db_flv_00f1] training-mode
 
 l_1CAE:
 
@@ -5039,6 +5036,7 @@ l_1CAE:
 *    b, c: not used when escort selection skipped (ixl == 2)
 *    ixl:  2==solo/capture boss is valid and will skip escort selection ...
 *            ... in addition to 0 -> 2 escorts, 1 -> 1 escort
+*    d5 (was iy): pointer on flv data (subcpu address)
 *-----------------------------------------------------------------------------
 j_1CAE:
 	COMPUTE_LSB_A1_D4	b_8800
@@ -5050,9 +5048,8 @@ j_1CAE:
 	roxl.b	#1,d0                           	| [$1CB2: rla] Cy into bit-0
  	ror.b	#1,d0                            	| [$1CB3: rrca] flag in Cy and in bit-7
 	scs	d7                              	    | [ex   af,af'] stash Cy for rotation flag
+	jbsr	osd_break
 	move.b	d0,bmbr_boss_pool_92ca+0            | [ld   (bmbr_boss_pool_92ca + 0),a] object/index of bomber boss
-	move.l	a3,d5
-	sub.l	#p_flv_base,d5						| relative start address TODO not sure
 	MOVE_TO_VAR	d5,bmbr_boss_pool_92ca+1		| [ld   (bmbr_boss_pool_92ca + 1),iy] flight vector of bomber boss
 
 	addq.b	#1,d1                           	| [inc  b] `dec b` in c_1D03
@@ -5193,8 +5190,7 @@ l_1D16:
 	scs	d7                              	| [ex   af,af']
 	move.b	d0,(a0)+                         	| [ld   (hl),a] &boss_wing_slots[n + 0]
 
-	move.l	a3,d5
-	sub.l	#p_flv_base,d5		| TODO check which base???
+	* store sub-cpu ROM address that is in D5.W
 	LOAD_D5D6_FROM_D5_16
 	                           	| [inc  l]
 	                         	| [ld   a,iyl]
@@ -5210,7 +5206,7 @@ l_1D16:
 * Movement of captured rogue ship... out of section at l_1C83
 *-----------------------------------------------------------------------------
 l_1D25:
-	lea	db_fltv_rogefgter,a1           	| [ld   de,#db_fltv_rogefgter]
+	move.w	#db_flv_rogefgter_0444,d3           	| [ld   de,#db_fltv_rogefgter]
 	jbsr	c_1083                            	| [call c_1083] rogue fighter
 	rts                                    	| [ret]
 
@@ -6608,7 +6604,7 @@ l_21EC:
 0:
 
 * in position
-	move.b	ds_new_stage_parms+0x06,d0      	| [ld   a,(ds_new_stage_parms + 0x06)] plyr_state_actv[0x0A] ... ship capture status
+	move.b	ds_new_stage_parms_99c0+0x06,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x06)] plyr_state_actv[0x0A] ... ship capture status
 	move.b	d0,ds_plyr_actv+_b_captr_flag   	| [ld   (ds_plyr_actv +_b_captr_flag),a] new_stage_parms[ 6 ]
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,(0x0C,a2)                    	| [ld   0x0C(ix),a] 0
@@ -6811,7 +6807,8 @@ l_2305:
 	lea	ds_bug_motion_que_9100,a0           	| [ld   h,#>ds_bug_motion_que_9100] bug_flite_que[plyr.cboss_slot].p08 = &db_046B[0] ... pointer to flite data
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	lea	db_flv_cboss,a1                	| [ld   de,#db_flv_cboss]
+	move.w	#db_flv_cboss_046B,d3                	| [ld   de,#db_flv_cboss]
+	LOAD_D3D4_FROM_D3_16
 	move.b	d4,(a0)+                         	| [ld   (hl),e]
 	                           	| [inc  l]
 	move.b	d3,(a0)                         	| [ld   (hl),d]
@@ -8255,12 +8252,12 @@ l_2A29_attack_waves_complete:
 * bits 0:12  - pointer to data tables for flying pattern control.
 * bits 13:15 - selection index into lut 2A6C.
 db_2A3C:
-	.long db_flv_001d + 0x0000, db_flv_0067 + 0x2000, db_flv_009f + 0x4000, db_flv_00d4 + 0x2000
-	.long db_flv_017b + 0x0000, db_flv_01b0 + 0x6000, db_flv_01e8 + 0x0000, db_flv_01f5 + 0x2000
-	.long db_flv_020b + 0x0000, db_flv_021b + 0x2000, db_flv_022b + 0x8000, db_flv_0241 + 0x2000
-	.long db_flv_025d + 0x8000, db_flv_0279 + 0x2000, db_flv_029e + 0x0000, db_flv_02ba + 0x2000
-	.long db_flv_02d9 + 0x0000, db_flv_02fb + 0x2000, db_flv_031d + 0x0000, db_flv_0333 + 0x2000
-	.long db_flv_0fda + 0x0000, db_flv_0ff0 + 0x2000, db_flv_022b + 0xA000, db_flv_025d + 0xA000
+	.word db_flv_001d + 0x0000, db_flv_0067 + 0x2000, db_flv_009f + 0x4000, db_flv_00d4 + 0x2000
+	.word db_flv_017b + 0x0000, db_flv_01b0 + 0x6000, db_flv_01e8 + 0x0000, db_flv_01f5 + 0x2000
+	.word db_flv_020b + 0x0000, db_flv_021b + 0x2000, db_flv_022b + 0x8000, db_flv_0241 + 0x2000
+	.word db_flv_025d + 0x8000, db_flv_0279 + 0x2000, db_flv_029e + 0x0000, db_flv_02ba + 0x2000
+	.word db_flv_02d9 + 0x0000, db_flv_02fb + 0x2000, db_flv_031d + 0x0000, db_flv_0333 + 0x2000
+	.word db_flv_0fda + 0x0000, db_flv_0ff0 + 0x2000, db_flv_022b + 0xA000, db_flv_025d + 0xA000
 
 * bits 13:15 from above provide bits<1:3> of the index
 * bit-6 of _stg_dat provide bits<1> of the index (second set of 3-bytes in each pair)
@@ -8514,9 +8511,9 @@ l_3073:
 	move.b	d0,b_8A00+0x10                  	| [ld   (b_8A00 + 0x10),a] $49 ... lower address byte of first character of name entry in tile-ram
 
 	lea	s_327F_enter_your_initials,a0  	| [ld   hl,#s_327F_enter_your_initials]
-	jbsr	c_text_out_ce                     	| [call c_text_out_ce] "ENTER YOUR INITIALS !"
+	jbsr	c_text_out_ce_3328                     	| [call c_text_out_ce_3328] "ENTER YOUR INITIALS !"
 	jbsr	c_text_out                        	| [call c_text_out] "SCORE  NAME"          HL==3298
-	jbsr	c_text_out_ce                     	| [call c_text_out_ce] "TOP 5"                HL==32AB
+	jbsr	c_text_out_ce_3328                     	| [call c_text_out_ce_3328] "TOP 5"                HL==32AB
 
 	lea	0x8000+0x0300+0x09,a1      	| [ld   de,#0x8000 + 0x0300 + 0x09]
 	move.l	b_8A00,a0              	| [ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
@@ -8532,7 +8529,7 @@ l_3073:
 	add.w	d3,d7                            	| [add  hl,de]
 	jbsr	osd_w_videoram                      	| [ld   (hl),#0x0A]
 
-	jbsr	c_puts_top5scores                 	| [call c_puts_top5scores]
+	jbsr	c_puts_top5scores_321d                 	| [call c_puts_top5scores_321d]
 	jbsr	c_plyr_initials_entry_hilite_line 	| [call c_plyr_initials_entry_hilite_line]
 
 * wait 2 seconds
@@ -8548,7 +8545,7 @@ l_30AA:
 
 * jp here from section _314C
 l_30B5_next_char_selectn:
-	jbsr	c_puts_top5scores                 	| [call c_puts_top5scores]
+	jbsr	c_puts_top5scores_321d                 	| [call c_puts_top5scores_321d]
 	jbsr	c_plyr_initials_entry_hilite_line 	| [call c_plyr_initials_entry_hilite_line]
 
 * get time 0 from frame counter
@@ -8786,7 +8783,7 @@ j_314C_select_char:
 	jeq	l_30B5_next_char_selectn           	| [jp   nc,l_30B5_next_char_selectn]
 
 * after 3rd character has been accepted, update the display and wait for the music to time out.
-	jbsr	c_puts_top5scores                 	| [call c_puts_top5scores] selected character appears in the name under TOP 5
+	jbsr	c_puts_top5scores_321d                 	| [call c_puts_top5scores_321d] selected character appears in the name under TOP 5
 	jbsr	c_plyr_initials_entry_hilite_line 	| [call c_plyr_initials_entry_hilite_line]
 
 	move.b	#76,d0                          	| [ld   a,#76]
@@ -8950,10 +8947,10 @@ l_3208:
 l_320E:
 * table digit == $24
 	cmp.b	(a0),d0                          	| [cp   (hl)] ptr to plyr1 score or plyr2 score on screen
-	jeq	l_3208                             	| [jr   z,l_3208] if both spaces, jp to next
+	jeq	l_3208                             		| [jr   z,l_3208] if both spaces, jp to next
 * score digit != $24 ...
 	clr.b	d0                               	| [xor  a] "table digit"
-	jra	l_3206                             	| [jr   l_3206]
+	jra	l_3206                             		| [jr   l_3206]
 
 *=============================================================================
 * hiscore_heroes()
@@ -8963,10 +8960,10 @@ l_320E:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_mach_hiscore_show:
-	lea	str_3345,a0                    	| [ld   hl,#str_3345] 'GALACTIC HEROES'
-	jbsr	c_text_out_ce                     	| [call c_text_out_ce]
-	jbsr	c_text_out_ce                     	| [call c_text_out_ce] 'BEST 5'  hl==335c
+c_mach_hiscore_show_3214:
+	lea	str_3345,a0                    			| [$3214: ld   hl,#str_3345] 'GALACTIC HEROES'
+	jbsr	c_text_out_ce_3328                  | [$3217: call c_text_out_ce_3328]
+	jbsr	c_text_out_ce_3328                  | [$321A: call c_text_out_ce_3328] 'BEST 5'  hl==335c
 
 *=============================================================================
 * hiscore_scrn()
@@ -8979,8 +8976,8 @@ c_mach_hiscore_show:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_puts_top5scores:
-	lea	s_32B4_score_name,a0           	| [ld   hl,#s_32B4_score_name]
+c_puts_top5scores_321d:
+	lea	s_32B4_score_name,a0           			| [ld   hl,#s_32B4_score_name]
 	jbsr	c_text_out                        	| [call c_text_out] puts 'SCORE     NAME' below 'TOP 5'
 	move.b	#1,d1                           	| [ld   b,#1] starting index for c_3231
 	jbsr	c_3231                            	| [call c_3231] '1ST............'
@@ -8992,7 +8989,7 @@ c_puts_top5scores:
 * c_3231()
 *  Description:
 *   Setting lines for hi-score table. 1st,2nd,3rd,and 4th are by calling the
-*   function. 5th is by allowing execution to fall through from c_puts_top5scores.
+*   function. 5th is by allowing execution to fall through from c_puts_top5scores_321d.
 *   Each call to 3270 offsets DE for the next column (-$20) and advanced HL.
 * IN:
 *  B=rank (1 to 5)
@@ -9015,8 +9012,8 @@ c_3231:
 	move.b	d1,d0                           	| [ld   a,b] B=numerical score placement
 	move.b	d0,(a1)                         	| [ld   (de),a] putc '5' of '5TH' on screen.
 	jbsr	c_3273                            	| [call c_3273] DE:-=$20
-	jbsr	c_3270                            	| [call c_3270] putc 'T' of '5TH' on screen.
-	jbsr	c_3270                            	| [call c_3270] putc 'H' of '5TH' on screen.
+	jbsr	c_put_initial_3270                  | [call c_put_initial_3270] putc 'T' of '5TH' on screen.
+	jbsr	c_put_initial_3270                  | [call c_put_initial_3270] putc 'H' of '5TH' on screen.
 	jbsr	c_3273                            	| [call c_3273] DE:-=$20
 	jbsr	c_3273                            	| [call c_3273] DE:-=$20
 	move.b	(a0),d0                         	| [ld   a,(hl)] const ptr to score (lo-byte)
@@ -9031,14 +9028,14 @@ c_3231:
 	move.l	d5,a1			| screen address
 	jbsr	string_copy_3275                            	| [call string_copy_3275] puts 'XXXXX' of 5th place on screen.
 	move.b	d4,d0                           	| [ld   a,e]
-	sub.b	#0x20*6,d0                        	| [sub  #0x20 * 6] advance column ptr right 6 characters.
-	jcc	l_3260                             	| [jr   nc,l_3260]
-	subq.b	#1,d3                           	| [dec  d] when not jr?
+	sub.b	#0x20*6,d0                        	| [$325A: sub  #0x20 * 6] advance column ptr right 6 characters.
+	jcc	l_3260                             		| [$325D: jr   nc,l_3260]
+	subq.b	#1,d3                           	| [$325F: dec  d] when not jr?
 l_3260:
-	move.b	d0,d4                           	| [ld   e,a]
-	move.l	(sp)+,a0                        	| [pop  hl]
-	move.b	(a0)+,d0                         	| [ld   a,(hl)]
-	                           	| [inc  hl]
+	move.b	d0,d4                           	| [$325C: ld   e,a]
+	move.l	(sp)+,a0                        	| [$3260: pop  hl]
+	move.b	(a0)+,d0                         	| [$3261: ld   a,(hl)]
+												| [$3262: inc  hl]
 	illegal
 	nop
 	nop
@@ -9046,14 +9043,14 @@ l_3260:
 	move.b	(a0),d5                         	| [ld   h,(hl)]
 	move.b	d0,d6                           	| [ld   l,a]
 	* pointer in d5/D6...
-	jbsr	c_3270                            	| [call c_3270] putc 1st initial
-	jbsr	c_3270                            	| [call c_3270] putc 2nd initial
-	jbsr	c_3270                            	| [call c_3270] putc 3rd initial
+	jbsr	c_put_initial_3270                            	| [call c_put_initial_3270] putc 1st initial
+	jbsr	c_put_initial_3270                            	| [call c_put_initial_3270] putc 2nd initial
+	jbsr	c_put_initial_3270                            	| [call c_put_initial_3270] putc 3rd initial
 	addq.b	#1,d1                           	| [inc  b]
 	rts                                    	| [ret]
 
 *=============================================================================
-* c_3270()
+* c_put_initial_3270()
 *  Description:
 * IN:
 *  HL=character to "putc".
@@ -9061,7 +9058,7 @@ l_3260:
 * OUT:
 *  Increments HL (useful for multi-character strings)
 *-----------------------------------------------------------------------------
-c_3270:
+c_put_initial_3270:
 	move.b	(a0)+,d0                         	| [ld   a,(hl)]
 	jbsr	write_videoram_to_a1                         	| [ld   (de),a]
 	                           	| [inc  hl]
@@ -9113,7 +9110,7 @@ s_327F_enter_your_initials:
 * "ENTER YOUR INITIALS !"
 	.long 0x8000 + 0x0320 + 0x04
 	.byte 0x15
-	.byte 0x04                                   | color code (c_text_out_ce)
+	.byte 0x04                                   | color code (c_text_out_ce_3328)
 	.byte 0x0E,0x17,0x1D,0x0E,0x1B,0x24,0x22,0x18,0x1E,0x1B,0x24,0x12,0x17,0x12,0x1D,0x12,0x0A,0x15,0x1C,0x24,0x2C
 * "SCORE       NAME" (after l_3073, in cyan ... not color encoded)
 	.long 0x8000 + 0x02E0 + 0x07
@@ -9122,10 +9119,10 @@ s_327F_enter_your_initials:
 * "TOP 5" (32AB)
 	.long 0x8000 + 0x0240 + 0x10
 	.byte 0x05
-	.byte 0x04                                   | color code (c_text_out_ce)
+	.byte 0x04                                   | color code (c_text_out_ce_3328)
 	.byte 0x1D,0x18,0x19,0x24,0x05
 s_32B4_score_name:
-* "SCORE     NAME" (c_puts_top5scores)
+* "SCORE     NAME" (c_puts_top5scores_321d)
 	.long 0x8000 + 0x0280 + 0x12
 	.byte 0x0E
 	.byte 0x1C,0x0C,0x18,0x1B,0x0E,0x24,0x24,0x24,0x24,0x24,0x17,0x0A,0x16,0x0E
@@ -9264,7 +9261,7 @@ l_3321:
 	rts                                    	| [ret]
 
 *=============================================================================
-* c_text_out_ce()
+* c_text_out_ce_3328()
 *  Description:
 *   Text out, color attribute encoded. Text blocks are length-encoded.
 *   Used by game_over.
@@ -9273,7 +9270,7 @@ l_3321:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_text_out_ce:
+c_text_out_ce_3328:
 	move.b	(a0),d4                         	| [ld   e,(hl)] LSB
 	addq.w	#1,a0                           	| [inc  hl]
 	move.b	(a0),d3                         	| [ld   d,(hl)] MSB
@@ -9431,6 +9428,11 @@ l_36F2:
 	
 	jbsr	galaga1_reset
 
+	* some vars that game initializes during system tests and which the
+	* game relies on!!
+	
+	move.b	#0xEA,ds_new_stage_parms_99c0+0x05
+	
 	
 	jra	j_Game_init_02d3                        	| [jp   j_Game_init_02d3]
 
@@ -10544,7 +10546,7 @@ l_2C0B:
 	move.b	d4,d0                           	| [ld   a,e] adj_stg_cnt * 5
 	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A ... offset into lut
 
-	lea	ds_new_stage_parms,a1          	| [ld   de,#ds_new_stage_parms]
+	lea	ds_new_stage_parms_99c0,a1          	| [ld   de,#ds_new_stage_parms_99c0]
 	move.b	#5,d1                           	| [ld   b,#5]
 l_2C23:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -10564,7 +10566,7 @@ l_2C23:
 	subq.b	#1,d1                           	| [...]
 	jne	l_2C23                             	| [djnz l_2C23]
 
-* set ds_new_stage_parms[0x0A] ... number of remaining aliens for enable clone-attack
+* set ds_new_stage_parms_99c0[0x0A] ... number of remaining aliens for enable clone-attack
 	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] new stage setup
 * if ( stage_ctr < 3 )  A = 0 ...
 	cmp.b	#3,d0                            	| [cp   #3]
@@ -10581,7 +10583,7 @@ l_2C3F:
 	move.b	#0x0A,d0                        	| [ld   a,#0x0A] non-challenge stage
 
 l_2C46:
-	move.b	d0,(a1)                         	| [ld   (de),a] ds_new_stage_parms[$A]
+	move.b	d0,(a1)                         	| [ld   (de),a] ds_new_stage_parms_99c0[$A]
 
 * 16 02 02 i.e. start of round defaults for yellow, red, boss bomber timers
 	move.b	#0x02,d1                        	| [ld   bc,#0x0216] 534
@@ -11205,6 +11207,8 @@ d_strScore:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
+	.include	"flv_defs.inc"
+
 	.include	"galaga_tiles.s"
 	
 galaga_mock:
