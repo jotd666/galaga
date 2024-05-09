@@ -1660,10 +1660,7 @@ l_0959:
 												| [inc  hl]
 	move.b	(a0),d5                         	| [ld   h,(hl)]
 	move.b	d0,d6                           	| [ld   l,a]
-	LOAD_D5_16_FROM_D5D6
-	lea		galaga_sub_rom,a0
-	add.w	d5,a0
-	jra	l_0B8C                             	| [jp   l_0B8C] skips inc hl ($0B8C), update $08, $09, $0D, break
+	jra	l_0B8C                             		| [jp   l_0B8C] skips inc hl ($0B8C), update $08, $09, $0D, break
 
 l_0963:
 * skip loading new address
@@ -2111,9 +2108,8 @@ case_0B87:  | 0x07
 	move.b	0x0138>>1,(0x01,a2)             	| [ld   0x01(ix),#0x0138>>1] sY<15:8> ... $0138==312 ... $0138/2=$9C
 l_0B8B:
 	addq.w	#1,a0                           	| [inc  hl] data pointer
+	CONVERT_SUBROM_A0_TO_D5D6
 l_0B8C:
-	illegal
-	dc.w	2127
 	move.b	d6,(0x08,a2)                    	| [ld   0x08(ix),l] .b00
 	move.b	d5,(0x09,a2)                    	| [ld   0x09(ix),h] .b01
 	addq.b	#1,(0x0D,a2)                    	| [inc  0x0D(ix)]
@@ -2220,7 +2216,7 @@ l_0C1B:
 	sub.b	(0x07,a2),d0                     | [sub  0x07(ix)] detection of homespot... (ix)0x03-(ix)0x07 == 0
 	jeq	l_0E08_imhome                      	| [jp   z,l_0E08_imhome]
 	jpl	l_0C29                             	| [jp   p,l_0C29] check overflow
-	neg.b	d0                               | [neg] negate if overflow (gets absolute value)
+	neg.b	d0                              | [neg] negate if overflow (gets absolute value)
 l_0C29:
 	subq.b	#1,d0                           | [dec  a]
 	jeq	l_0E08_imhome                      	| [jp   z,l_0E08_imhome]
@@ -2269,7 +2265,7 @@ l_0C5C:
 * check for overflow out of LSB from addition (subtraction) result, sneaky ... xor sets S flag if bit-7 is toggled hi
 	roxr.b	#1,d0                           	| [rra]
 	eor.b	d1,d0                            	| [xor  b] b from (ix)0x0C
-	jpl	l_0C63                             	| [jp   p,l_0C63]
+	jpl	l_0C63                             		| [jp   p,l_0C63]
 	move.b	d3,d0                           	| [ld   a,d] from (ix)0x05
 	add.b	d6,d0                            	| [add  a,l]
 	jra		0f
@@ -2287,9 +2283,9 @@ l_0C63:
 l_0C6D:
 * ... select vertical tile if within 15 degrees of 90 or 270
 	add.b	#21,d0                           	| [add  a,#21] 1024 / ( 6 * 4 ) == 42
-	jcc	l_0C75                             	| [jr   nc,l_0C75]
+	jcc	l_0C75                             		| [jr   nc,l_0C75]
 	move.b	#6,d1                           	| [ld   b,#6] vertical orientation, wings open (7 is wings closed)
-	jra	l_0C81                             	| [jr   l_0C81]
+	jra	l_0C81                             		| [jr   l_0C81]
 l_0C75:
 * divide by 42 ...42 counts per step of rotation (with 24 steps in the circle, 1 step is 15 degrees)
 * Here's the math: A * ( 1/2 + 1/4 ) * ( 1/32 )
@@ -2344,11 +2340,9 @@ l_0CA7:
 
 	move.l	a0,-(sp)                        	| [push hl] &mrw_sprite[L].ctrl.b0
 
-	move.l	a2,a0                        	| [push ix]
-										| [pop  hl] &bug_motion_que[n].b00
-
+	move.l	a2,a0                        		| [push ix]
+												| [pop  hl] &bug_motion_que[n].b00
 	move.b	d0,d1                           	| [ld   b,a] (ix)0x0A or (ix)0x0B
-
 	move.b	d3,d0                           	| [ld   a,d] saved from (ix)0x05  ( from C46 )
 	and.b	#0x03,d0                         	| [and  #0x03]
 	move.b	d0,d3                           	| [ld   d,a]
@@ -2363,10 +2357,10 @@ l_0CA7:
 	CLEAR_XC_FLAGS
 	roxl.b	#1,d4                            	| [rlc  e] e saved from (ix)0x04   ( from C46 )
 	roxl.b	#1,d3                           	| [rl   d]
-	movem.w	d3/d4,-(sp)                    	| [push de] adjusted rotation angle, restores to HL below .....
+	movem.w	d3/d4,-(sp)                    		| [push de] adjusted rotation angle, restores to HL below .....
 	eor.b	d3,d0                            	| [xor  d]
 	ror.b	#1,d0                            	| [rrca] xor result in A<0>
-	jcs	l_0CBF                             	| [jr   c,l_0CBF] check for Cy shifted into bit7 from rrca
+	jcs	l_0CBF                             		| [jr   c,l_0CBF] check for Cy shifted into bit7 from rrca
 	addq.b	#2,d6                           	| [inc  l] * 2
 
 l_0CBF:
@@ -2379,13 +2373,13 @@ l_0CBF:
 	addq.b	#1,d3                           	| [inc  d]
 	move.b	d1,d0                           	| [ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix)
 	btst.b	#2,d3                           	| [bit  2,d]
-	jeq	l_0CC7                             	| [jr   z,l_0CC7]
+	jeq	l_0CC7                             		| [jr   z,l_0CC7]
 	neg.b	d0                               	| [neg] negate primary component for 135-305 degrees
 l_0CC7:
 * A is actually bits<15:7> of addend (.b00/.b02 in fixed point, 9.7)
 	move.b	d0,d2                           	| [ld   c,a] from 0x0A(ix) or 0x0B(ix)
 	asr.b	#1,d2                            	| [sra  c] sign extend, "bit-8" into Cy
-	jcc	l_0CD0                             	| [jr   nc,l_0CD0]
+	jcc	l_0CD0                             		| [jr   nc,l_0CD0]
 	move.b	(a0),d0                         	| [ld   a,(hl)] b00 or b02, depends on "jr   c,l_0CBF"
 	add.b	#0x80,d0                         	| [add  a,#0x80] add carry-out from sra
 	move.b	d0,(a0)                         	| [ld   (hl),a]
@@ -2413,7 +2407,7 @@ l_0CE3:
 	move.b	d1,d0                           	| [ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix)
 	move.b	d5,d1                           	| [ld   b,h] msb of adjusted angle
 	clr.b	d5                               	| [ld   h,#0]
-	jbsr	mul_16_0E97                            	| [call mul_16_0E97] HL = L * A
+	jbsr	mul_16_0E97                         | [call mul_16_0E97] HL = L * A
 
 *             . 90          - angle in degrees
 *             1                         	| 0        - quadrant derived from 10-bit angle
@@ -2443,16 +2437,16 @@ l_0CE3:
 l_0CFA:
 	exg	a1,a0                              	| [ex   de,hl] reload the pointer from DE
 * *HL += *DE (D5/D6 still holds mul result, exg doesn't affect that)
-	move.b	d6,d0                           	| [ld   a,e] lsb of mul result
-	add.b	(a0),d0                          	| [add  a,(hl)]
-	move.b	d0,(a0)+                         	| [ld   (hl),a]  .b00 or .b02
-	                           	| [inc  l]
-	move.b	d3,d0                           	| [ld   a,d] msb of mul result
+	move.b	d6,d0                           | [ld   a,e] lsb of mul result
+	add.b	(a0),d0                         | [add  a,(hl)]
+	move.b	d0,(a0)+                        | [ld   (hl),a]  .b00 or .b02
+											| [inc  l]
+	move.b	d3,d0                           | [ld   a,d] msb of mul result
 	move.b	(a0),d7
-	addx.b	d7,d0				| 	adc  a,(hl)                                ;  .b01 or .b03
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+	addx.b	d7,d0							| 	adc  a,(hl)                                ;  .b01 or .b03
+	move.b	d0,(a0)                         | [ld   (hl),a]
 
-	move.l	(sp)+,a0                        	| [pop  hl] &mrw_sprite.ctrl[L].b1
+	move.l	(sp)+,a0                        | [pop  hl] &mrw_sprite.ctrl[L].b1
 
 * almost done ... update the sprite x/y positions
 l_0D03_flite_pth_posn_set:
@@ -2464,7 +2458,6 @@ l_0D03_flite_pth_posn_set:
 	COMPUTE_LSB_A0_D6 ds_sprite_ctrl_9B00
 
 	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(0x03,a2),d3                    	| [ld   d,0x03(ix)] bits<1:6> of x pixel ... could load directly to A
 * set Cy from .b02<7>
@@ -2473,9 +2466,8 @@ l_0D03_flite_pth_posn_set:
 	SET_X_FROM_C
 	move.b	d3,d0                           	| [ld   a,d] (ix)0x03
 	roxl.b	#1,d0                           	| [rla] rotate Cy into A<0> (.b02<7>)
-
 	btst.b	#0,d2                           	| [bit  0,c] test flip screen
-	jeq	l_0D1A                             	| [jr   z,l_0D1A]
+	jeq	l_0D1A                             		| [jr   z,l_0D1A]
 	add.b	#0x0D,d0                         	| [add  a,#0x0D] flipped
 	not.b	d0                               	| [cpl]
 l_0D1A:
@@ -2483,59 +2475,52 @@ l_0D1A:
 	jeq	l_0D23                             	| [jr   z,l_0D23]
 	add.b	(0x11,a2),d0                     	| [add  a,0x11(ix)] heading home (add x-offset ... already bits<7:0>)
 l_0D23:
-	move.b	d0,(a0)+                         	| [ld   (hl),a] &sprite[n].posn.x
-
+	move.b	d0,(a0)+                         	| [$0D23: ld   (hl),a] &sprite[n].posn.x
 * extract y-coord and adjust for homing if needed
-	                           	| [inc  l] sprite[n].posn.sy<0:7>
-	move.b	(0x01,a2),d1                    	| [ld   b,0x01(ix)]
+												| [$0D24: inc  l] sprite[n].posn.sy<0:7>
+	move.b	(0x01,a2),d1                    	| [$0D25: ld   b,0x01(ix)]
 * set Cy from .b00<7>
-	move.b	#0x7F,d0                        	| [ld   a,#0x7F]
-	cmp.b	(0x00,a2),d0                     	| [cp   0x00(ix)]
+	move.b	#0x7F,d0                        	| [$0D28: ld   a,#0x7F]
+	cmp.b	(a2),d0                     		| [$0D2A: cp   0x00(ix)]
 	SET_X_FROM_C
-	roxl.b	#1,d4                           	| [rl   e] rotate Cy into E<0>
-	move.b	d1,d0                           	| [ld   a,b] (ix)0x01
-
-	btst.b	#0,d2                           	| [bit  0,c] test flip screen
-	jne	l_0D38                             	| [jr   nz,l_0D38]
-	add.b	#0x4F,d0          			| [add  a,#(<(-0x0160 - 0x02))>>1] not flipped ... lsb of result, right-shift 1
-	scs		d7
-	not.b	d0                               	| [cpl]
-	subq.b	#1,d4                           	| [dec  e] compliment bit-0 of 9-bit integer portion
-	* reapply X flag from add operation
-	CLEAR_XC_FLAGS
-	tst.b	d7
-	beq.b	l_0D38
-	SET_XC_FLAGS
+	roxl.b	#1,d4                           	| [$0D2D: rl   e] rotate Cy into E<0>
+	move.b	d1,d0                           	| [$0D2F: ld   a,b] (ix)0x01
+	btst.b	#0,d2                           	| [$0D30: bit  0,c] test flip screen
+	jne	l_0D38                             		| [$0D32: jr   nz,l_0D38]
+	subq.b	#1,d4                           	| [$0D37: dec  e] compliment bit-0 of 9-bit integer portion
+	add.b	#0x4F,d0          					| [$0D34: add  a,#(<(-0x0160 - 0x02))>>1] not flipped ... lsb of result, right-shift 1
+	not.b	d0                               	| [$0D36: cpl]
 l_0D38:
 * E<0> <- Cy <- 7 6 5 4 3 2 1 0 <- Cy <- E<0>
 	
-	roxr.b	#1,d4                           	| [rr   e] bit-0 of 9-bit integer portion into Cy
-	roxl.b	#1,d0                           	| [rla] Cy (bit0) into lsb, bit8 into Cy
-	roxl.b	#1,d4                           	| [rl   e] bit8 from Cy into E<0> (bit8 of sprite_y)
-
-	btst.b	#6,(0x13,a2)                    	| [bit  6,0x13(ix)] if !z, add  a,(ix)0x12
-	jeq	l_0D50                             	| [jr   z,l_0D50]
+	roxr.b	#1,d4                           	| [$0D38: rr   e] bit-0 of 9-bit integer portion into Cy
+	roxl.b	#1,d0                           	| [$0D3A: rla] Cy (bit0) into lsb, bit8 into Cy
+	roxl.b	#1,d4                           	| [$0D3B: rl   e] bit8 from Cy into E<0> (bit8 of sprite_y)
+	btst.b	#6,(0x13,a2)                    	| [$0D3D: bit  6,0x13(ix)] if !z, add  a,(ix)0x12
+	jeq	l_0D50                             		| [$0D41: jr   z,l_0D50]
 * r16.word += mctl_mpool[mpidx].b12
-	add.b	(0x12,a2),d0                     	| [add  a,0x12(ix)] heading home (step y coord)
-	move.b	d0,d3                           	| [ld   d,a] stash bits<7:0> of sum
-	roxr.b	#1,d0                           	| [rra] somehow the rest of this propogates bit9 of the sum into E<0>
+	add.b	(0x12,a2),d0                     	| [$0D43: add  a,0x12(ix)] heading home (step y coord)
+	move.b	d0,d3                           	| [$0D46: ld   d,a] stash bits<7:0> of sum
+	roxr.b	#1,d0                           	| [$0D47: rra] somehow the rest of this propogates bit9 of the sum into E<0>
 	move.b	(0x12,a2),d7
-	eor.b	d7,d0                            	| [xor  0x12(ix)]
-	rol.b	#1,d0                            	| [rlca]
-	jcc	l_0D50                             	| [jr   nc,l_0D50]
-	addq.b	#1,d4                           	| [inc  e]
-l_0D50:
-	move.b	d3,d0                           	| [ld   a,d]
-	move.b	d0,(a0)                         	| [ld   (hl),a] sprite[n].posn.sy<7:0>
+	eor.b	d7,d0                            	| [$0D48: xor  0x12(ix)]
+	rol.b	#1,d0                            	| [$0D4B: rlca]
+	scs		d7
+	move.b	d3,d0                           	| [$0D4C: ld   a,d]
+	tst.b	d7
+	jne		l_0D50                             	| [$0D4D: jr   nc,l_0D50]
+	addq.b	#1,d4                           	| [$0D4F: inc  e]
+l_0D50:                                            
+	move.b	d0,(a0)                         	| [$0D51: ld   (hl),a] sprite[n].posn.sy<7:0>
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sprite[n].posn.sy<8>
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d7
-	ror.b	#1,d7                          	| [rrc  (hl)]
+	ror.b	#1,d7                          		| [rrc  (hl)]
 	CLEAR_XC_FLAGS
-	roxr.b	#1,d4                            	| [rrc  e]
-	roxl.b	#1,d7                         	| [rl   (hl)] sprite[n].posn.sy<8>
+	roxr.b	#1,d4                         		| [rrc  e]
+	roxl.b	#1,d7                         		| [rl   (hl)] sprite[n].posn.sy<8>
     move.b	d7,(a0)
 
 
@@ -2569,10 +2554,10 @@ l_0D50:
 l_0D82:
 	move.b	(a0),d0                         	| [ld   a,(hl)] _objs[BOMB0].state
 	cmp.b	#0x80,d0                         	| [cp   #0x80] INACTIVE
-	jeq	l_0D8D_got_a_bullet                	| [jr   z,l_0D8D_got_a_bullet]
+	jeq	l_0D8D_got_a_bullet                		| [jr   z,l_0D8D_got_a_bullet]
 	addq.b	#2,d6                           	| [inc  l] * 2
 	subq.b	#1,d1                           	| [...]
-	jne	l_0D82                             	| [djnz l_0D82]
+	jne	l_0D82                             		| [djnz l_0D82]
 
 	jra	l_0DF5_next_superloop_and_reload_0E	| [jr   l_0DF5_next_superloop_and_reload_0E]
 
@@ -2588,15 +2573,15 @@ l_0D8D_got_a_bullet:
 	COMPUTE_LSB_A1_D4	ds_sprite_ctrl_9B00
 	lea	ds_sprite_posn_9300,a1              	| [ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d4
-	add.w	d4,a1                          	| [ld   d,h] weird msb change
-											| [dec  e] ... E from &sprite.ctrl[L].b1
+	add.w	d4,a1                          		| [ld   d,h] weird msb change
+												| [dec  e] ... E from &sprite.ctrl[L].b1
 * sprite.posn[BOMB0 + n].b0 = sprite.posn[e].b0
 	move.b	(-1,a1),d0                         	| [ld   a,(de)] bomber.x
 	move.b	d0,d2                           	| [ld   c,a]
 	move.b	d0,(a0)+                         	| [ld   (hl),a] bomb.x
 * sprite.posn[BOMB0 + n].b1 = sprite.posn[e].b1 // y<7:0>
-	                           	| [inc  e]
-	                           	| [inc  l]
+												| [inc  e]
+												| [inc  l]
 	move.b	(a1),d0                         	| [ld   a,(de)] bomber.y<7:0>
 	move.b	d0,d1                           	| [ld   b,a]
 	move.b	d0,(a0)                         	| [ld   (hl),a] bomb.y<7:0>
@@ -2605,14 +2590,14 @@ l_0D8D_got_a_bullet:
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	lea	ds_sprite_ctrl_9B00,a1                   	| [ld   d,h]
+	lea	ds_sprite_ctrl_9B00,a1                  | [ld   d,h]
 	add.w	d4,a1								| d4 is still valid lsb
 	move.b	(a1),d0                         	| [ld   a,(de)] bomber.y<8> (in :0 ... ctrl in :1)
 	move.b	(a0),d7
-	ror.b	#1,d7                          	| [rrc  (hl)] bomb.ctrl.b1<0> to Cy
+	ror.b	#1,d7                          		| [rrc  (hl)] bomb.ctrl.b1<0> to Cy
 	CLEAR_XC_FLAGS
 	roxr.b	#1,d0                            	| [rrca] bomber.y<8> from A<0> to Cy
-	roxl.b	#1,d7                         	| [rl   (hl)] sY<8> from Cy to bomb.ctrl.b1<0>
+	roxl.b	#1,d7                         		| [rl   (hl)] sY<8> from Cy to bomb.ctrl.b1<0>
     move.b	d7,(a0)
 	rol.b	#1,d0                            	| [rlca] restore A with sY<8> left in Cy
 	roxr.b	#1,d1                           	| [rr   b] bomber.y<8:1>

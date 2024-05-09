@@ -1,6 +1,6 @@
 
 - intro: ship moving but no shots, no enemies attacking:
-  attack is wrong and ends up crashing after next__pool_idx_0dfb: return to "in the woods"
+  attack is wrong: wrong boss attacking, and going up!!
   
 
 - possible issue at l_1F1E as exg a0,a1 but d4 used?? 
