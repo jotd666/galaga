@@ -147,14 +147,14 @@
 	.global		ds5_928A_captr_status
 	.global		ds_bug_collsn_hit_mult
 	.global		b_92A0
-	.global		ds3_92A0_frame_cts
+	.global		ds3_frame_cts_92A0
 	.global		b_bugs_actv_cnt
 	.global		b_bugs_actv_nbr
 	.global		w_bug_flying_hit_cnt
 	.global		ds4_game_tmrs_92ac
 	.global		b_92B0
 	.global		b_92C0
-	.global		bmbr_boss_pool
+	.global		bmbr_boss_pool_92ca
 	.global		b_CPU1_in_progress
 	.global		b_CPU2_in_progress
 	.global		pb_attk_wav_IDs
@@ -474,7 +474,7 @@ ds_bug_collsn_hit_mult:
 
 b_92A0:
 
-ds3_92A0_frame_cts:
+ds3_frame_cts_92A0:
        ds.b     0x03       | 3 bytes .... sub1:l_0537
 * b8_92A3:
        ds.b     0x01       | ship.dX_flag
@@ -511,7 +511,7 @@ b_92C0:
        ds.b     0x01
        ds.b     0x01  | ?
 
-bmbr_boss_pool:
+bmbr_boss_pool_92ca:
 * 12 bytes in 4 groups of 3 ... slots for boss+wing missions
        ds.b     0x0C
 

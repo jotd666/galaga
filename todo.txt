@@ -3,7 +3,8 @@
 db_2A3C: table+bits to rework & understand how it's read
 flv tables: -base to handle
 
-- intro: ship moving but no shots, no enemies attacking: debug f_update_objects_23dd
+- intro: ship moving but no shots, no enemies attacking:
+  1BA8 called ok, but 1BB4 not called
 
 - possible issue at l_1F1E as exg a0,a1 but d4 used?? 
 - ACTIVE_BITPLANE_MASK not implemented

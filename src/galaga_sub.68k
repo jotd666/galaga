@@ -417,9 +417,9 @@ p_flv_0502:
 *  Description:
 *    RST $0038 handler.
 *    The first part uses vsync signal to develop clock references.
-*      ds3_92A0_frame_cts[0]: 60Hz (base rate)
-*      ds3_92A0_frame_cts[1]:  2Hz (div 32)
-*      ds3_92A0_frame_cts[2]:  4Hz (div 16)
+*      ds3_frame_cts_92A0[0]: 60Hz (base rate)
+*      ds3_frame_cts_92A0[1]:  2Hz (div 32)
+*      ds3_frame_cts_92A0[2]:  4Hz (div 16)
 *    The counters are not reset in the course of the game operation.
 *
 *    For efficiency, bit masking is used instead of division so the real base
@@ -442,13 +442,13 @@ jp_0513_rst38:
 	*jeq	l_0575                             	| [jp   z,l_0575] if paused, goto 0575 // done
 
 * frame_cntr++
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds3_92A0_frame_cts+0         	| [ld   (ds3_92A0_frame_cts + 0),a] +=1
+	move.b	d0,ds3_frame_cts_92A0+0         	| [ld   (ds3_frame_cts_92A0 + 0),a] +=1
 
 * L==t[1], H==t[2]
 
-	MOVE_TO_REG	ds3_92A0_frame_cts+1,d5     	| [ld   hl,(ds3_92A0_frame_cts + 1)] load 16-bits
+	MOVE_TO_REG	ds3_frame_cts_92A0+1,d5     	| [ld   hl,(ds3_frame_cts_92A0 + 1)] load 16-bits
 	LOAD_D5D6_FROM_D5_16
 
 * if ( cnt % 20 == 1 ) ... update 4Hz (H) only
@@ -475,7 +475,7 @@ l_0537:
 	* having to store the previous value
 	
 	LOAD_D5_16_FROM_D5D6
-	MOVE_TO_VAR	d5,ds3_92A0_frame_cts+1         	| [ld   (ds3_92A0_frame_cts + 1),hl] [1]: 32-frame ... ~2Hz timer
+	MOVE_TO_VAR	d5,ds3_frame_cts_92A0+1         	| [ld   (ds3_frame_cts_92A0 + 1),hl] [1]: 32-frame ... ~2Hz timer
 
 * flag = ( num_bugs < param07 ) && ds_cpu0_task_actv_9000[0x15]
 	move.b	ds_new_stage_parms+0x07,d0      	| [ld   a,(ds_new_stage_parms + 0x07)] number of aliens left when continous bombing can start
@@ -2342,7 +2342,7 @@ l_0C81:
 	move.b	d0,(a0)                         	| [ld   (hl),a] mrw_sprite[L].ctrl.b0 = A & 0x03
 
 * choose x or y displacement vector to apply on this update
-	move.b	ds3_92A0_frame_cts+0,d0         	| [ld   a,(ds3_92A0_frame_cts + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x01,d0                         	| [and  #0x01]
 	jeq	l_0CA4                             	| [jr   z,l_0CA4]
 	move.b	(0x0A,a2),d0                    	| [ld   a,0x0A(ix)]
