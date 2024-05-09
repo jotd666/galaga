@@ -2484,7 +2484,7 @@ l_1094:
 
 l_10A0_got_one:
 	movem.w	(sp)+,d3/d4                    	    | [$10A0: pop  de] pointer to table
-	LOAD_D3_16_FROM_D3D4
+	LOAD_D3D4_FROM_D3_16
 	move.b	d4,(0x08,a2)                    	| [$10A1: ld   0x08(ix),e] data pointer lsb
 	move.b	d3,(0x09,a2)                    	| [$10A4: ld   0x09(ix),d] data pointer msb
 	move.b	#1,(0x0D,a2)                    	| [$10A7: ld   0x0D(ix),#1] expiration counter
@@ -5048,10 +5048,9 @@ j_1CAE:
 	roxl.b	#1,d0                           	| [$1CB2: rla] Cy into bit-0
  	ror.b	#1,d0                            	| [$1CB3: rrca] flag in Cy and in bit-7
 	scs	d7                              	    | [ex   af,af'] stash Cy for rotation flag
-	jbsr	osd_break
 	move.b	d0,bmbr_boss_pool_92ca+0            | [ld   (bmbr_boss_pool_92ca + 0),a] object/index of bomber boss
 	MOVE_TO_VAR	d5,bmbr_boss_pool_92ca+1		| [ld   (bmbr_boss_pool_92ca + 1),iy] flight vector of bomber boss
-
+	
 	addq.b	#1,d1                           	| [inc  b] `dec b` in c_1D03
 
 * plyr_actv.bmbr_boss_scode[]

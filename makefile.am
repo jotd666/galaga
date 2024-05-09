@@ -30,7 +30,7 @@ WHDASM = vasmm68k_mot -DDATETIME -I$(HDBASE)/amiga39_JFF_OS/include -I$(WHDBASE)
 # leave MAIN_OBJ first
 #OBJS = $(MAIN_OBJ) sounds.o $(PROGNAME).o vbr.o graphics.o ReadJoyPad.o ptplayer.o 
 #OBJS = $(MAIN_OBJ) $(PROGNAME)_mock.o vbr.o graphics.o ReadJoyPad.o ptplayer.o 
-OBJS = $(MAIN_OBJ) $(PROGNAME)_ram.o $(PROGNAME).o $(PROGNAME)_shared.o $(PROGNAME)_sub.o vbr.o graphics.o ReadJoyPad.o ptplayer.o 
+OBJS = $(MAIN_OBJ) $(PROGNAME)_ram.o $(PROGNAME).o $(PROGNAME)_shared.o $(PROGNAME)_sub.o $(PROGNAME)_sub_rom.o vbr.o graphics.o ReadJoyPad.o ptplayer.o 
 #all: $(AMIGASRC)/graphics.68k $(AMIGASRC)/sounds.68k $(MAIN) $(WHDLOADER) $(WHDLOADER_CHIP)
 all: $(AMIGASRC)/graphics.68k $(MAIN) $(WHDLOADER) $(WHDLOADER_CHIP)
 
@@ -53,6 +53,8 @@ $(PROGNAME).o: $(PROGNAME).68k $(PROGNAME).inc m68k_macros.inc
 	$(ASM) $(PROGNAME).68k -o $(PROGNAME).o
 $(PROGNAME)_sub.o: $(PROGNAME)_sub.68k $(PROGNAME).inc
 	$(ASM) $(PROGNAME)_sub.68k -o $(PROGNAME)_sub.o
+$(PROGNAME)_sub_rom.o: $(PROGNAME)_sub_rom.68k
+	$(ASM) $(PROGNAME)_sub_rom.68k -o $(PROGNAME)_sub_rom.o
 $(PROGNAME)_shared.o: $(PROGNAME)_shared.68k $(PROGNAME).inc
 	$(ASM) $(PROGNAME)_shared.68k -o $(PROGNAME)_shared.o
 $(PROGNAME)_mock.o: $(PROGNAME)_mock.68k $(PROGNAME).inc $(PROGNAME)_ram.68k $(PROGNAME)_game_ram.68k

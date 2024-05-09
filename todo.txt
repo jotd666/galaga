@@ -1,10 +1,7 @@
 
-- where is bmbr_boss_pool+1 read???
-db_2A3C: table+bits to rework & understand how it's read
-flv tables: -base to handle
-
 - intro: ship moving but no shots, no enemies attacking:
-  1BA8 called ok, but 1BB4 not called
+  attack is wrong and ends up crashing after next__pool_idx_0dfb: return to "in the woods"
+  
 
 - possible issue at l_1F1E as exg a0,a1 but d4 used?? 
 - ACTIVE_BITPLANE_MASK not implemented
