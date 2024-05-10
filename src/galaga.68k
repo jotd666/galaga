@@ -2486,15 +2486,15 @@ l_10A0_got_one:
 	move.b	d4,(0x08,a2)                    	| [$10A1: ld   0x08(ix),e] data pointer lsb
 	move.b	d3,(0x09,a2)                    	| [$10A4: ld   0x09(ix),d] data pointer msb
 	move.b	#1,(0x0D,a2)                    	| [$10A7: ld   0x0D(ix),#1] expiration counter
-	move.b	#0x01,(0x04,a2)               	    | [$10AB: ld   0x04(ix),#<0x0100] msb, 0x0100 (90 degrees)
-	move.b	#0x00,(0x05,a2)               	    | [$10AF: ld   0x05(ix),#>0x0100] lsb
+	move.b	#0x00,(0x04,a2)               	    | [$10AB: ld   0x04(ix),#<0x0100] msb, 0x0100 (90 degrees)
+	move.b	#0x01,(0x05,a2)               	    | [$10AF: ld   0x05(ix),#>0x0100] lsb
 	move.b	d6,d2                           	| [$10B3: ld   c,l] stash index to obj_status[], sprite etc.
 	move.b	d2,(0x10,a2)                    	| [$10B4: ld   0x10(ix),c] index of object, sprite etc.
 	exg		d0,d7                              	| [$10B7: ex   af,af'] unstash d0
 	move.b	d0,d3                           	| [$10B8: ld   d,a] function parameter from A' to 0x13(ix)
 	move.b	#9,(a0)+                         	| [$10B9: ld   (hl),#9] obj_status[l].state ... disposition = diving attack
 	jbsr	read_ixl_into_d0                    | [$10BB: ld   a,ixl]
-												| [$10BD: inc  l]
+	*addq.b	#1,d6								| [$10BD: inc  l] [a0 coherence]
 	move.b	d0,(a0)                         	| [$10BE: ld   (hl),a] obj_status[L].idx ... index into flying que
 	move.b	b_9215_flip_screen,d0           	| [$10BF: ld   a,(b_9215_flip_screen)]
 	move.b	d0,d4                           	| [$10C2: ld   e,a]
@@ -2505,10 +2505,9 @@ l_10A0_got_one:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0)+,d2                         	| [ld   c,(hl)] sprite_x
-	                           	| [inc  l]
+	addq.b	#1,d6								| [inc  l] [a0 coherence]
 	move.b	(a0),d1                         	| [ld   b,(hl)] sprite_y<7:0>
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprite_y<8>
 	CLEAR_XC_FLAGS

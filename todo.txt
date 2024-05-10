@@ -1,7 +1,7 @@
 
 - intro: ship moving but no shots, no enemies attacking:
   attack is wrong: wrong boss attacking, and going up!!
-  $0C83: sprite offset $30 should be $36 (set by 10B4)
+  $0C83:sub: set sprite x/y
 
 - possible issue at l_1F1E as exg a0,a1 but d4 used?? 
 - ACTIVE_BITPLANE_MASK not implemented

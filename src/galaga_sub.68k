@@ -2246,56 +2246,54 @@ l_0C3E:
 
 * load DE with local copy of rotation value and go ahead and update pool slot
 l_0C46:
-	move.b	(0x0C,a2),d1                    	| [ld   b,0x0C(ix)] add to (ix)0x04
-	move.b	(0x04,a2),d0                    	| [ld   a,0x04(ix)]
-	move.b	d0,d4                           	| [ld   e,a] need this later ...
-	add.b	d1,d0                            	| [add  a,b] need this below for rra ...
-	move.b	d0,(0x04,a2)                    	| [ld   0x04(ix),a] .b04 += .b0C
-
-	move.b	(0x05,a2),d3                    	| [ld   d,0x05(ix)] need this later ...
+	move.b	(0x0C,a2),d1                    	| [$0C46: ld   b,0x0C(ix)] add to (ix)0x04
+	move.b	(0x04,a2),d0                    	| [$0C49: ld   a,0x04(ix)]
+	move.b	d0,d4                           	| [$0C4C: ld   e,a] need this later ...
+	add.b	d1,d0                            	| [$0C4D: add  a,b] need this below for rra ...
+	move.b	d0,(0x04,a2)                    	| [$0C4E: ld   0x04(ix),a] .b04 += .b0C
+	move.b	(0x05,a2),d3                    	| [$0C51: ld   d,0x05(ix)] need this later ...
 
 * sign of subtrahend determines signedness of carry
-	move.b	#1,d6                           	| [ld   l,#1]
-	btst.b	#7,d1                           	| [bit  7,b] (ix)0x0C
-	jeq	l_0C5C                             	| [jr   z,l_0C5C]
-	move.b	#-1,d6                          	| [ld   l,#-1]
+	move.b	#1,d6                           	| [$0C54: ld   l,#1]
+	btst.b	#7,d1                           	| [$0C56: bit  7,b] (ix)0x0C
+	jeq	l_0C5C                             	    | [$0C58: jr   z,l_0C5C]
+	st.b	d6                          	    | [$0C5A: ld   l,#-1]
 
 l_0C5C:
-	CLEAR_XC_FLAGS
 * check for overflow out of LSB from addition (subtraction) result, sneaky ... xor sets S flag if bit-7 is toggled hi
-	roxr.b	#1,d0                           	| [rra]
-	eor.b	d1,d0                            	| [xor  b] b from (ix)0x0C
-	jpl	l_0C63                             		| [jp   p,l_0C63]
-	move.b	d3,d0                           	| [ld   a,d] from (ix)0x05
-	add.b	d6,d0                            	| [add  a,l]
+	roxr.b	#1,d0                           	| [$0C5C: rra]
+	eor.b	d1,d0                            	| [$0C5D: xor  b] b from (ix)0x0C
+	jpl	l_0C63                             		| [$0C5F: jp   p,l_0C63]
+	move.b	d3,d0                           	| [$0C5E: ld   a,d] from (ix)0x05
+	add.b	d6,d0                            	| [$0C62: add  a,l]
 	jra		0f
 l_0C63:
-	move.b	d3,d0                           	| [ld   a,d] from (ix)0x05
+	move.b	d3,d0                           	| [$0C5E: ld   a,d] from (ix)0x05
 0:
-	move.b	d0,(0x05,a2)                    	| [ld   0x05(ix),a] bits <8:9>
+	move.b	d0,(0x05,a2)                    	| [$0C63: ld   0x05(ix),a] bits <8:9>
 
 * determine_sprite_code
-	move.b	d4,d0                           	| [ld   a,e] from previous (ix)0x04
-	move.b	d3,d2                           	| [ld   c,d] from previous (ix)0x05 ... need this later ...
-	btst.b	#0,d2                           	| [bit  0,c]
-	jeq	l_0C6D                             	| [jr   z,l_0C6D]
-	not.b	d0                               	| [cpl] invert bits 7:0 in quadrant 1 and 3 ...
+	move.b	d4,d0                           	| [$0C66: ld   a,e] from previous (ix)0x04
+	move.b	d3,d2                           	| [$0C67: ld   c,d] from previous (ix)0x05 ... need this later ...
+	btst.b	#0,d2                           	| [$0C68: bit  0,c]
+	jeq	l_0C6D                             	    | [$0C6A: jr   z,l_0C6D]
+	not.b	d0                               	| [$0C6C: cpl] invert bits 7:0 in quadrant 1 and 3 ...
 l_0C6D:
 * ... select vertical tile if within 15 degrees of 90 or 270
-	add.b	#21,d0                           	| [add  a,#21] 1024 / ( 6 * 4 ) == 42
-	jcc	l_0C75                             		| [jr   nc,l_0C75]
-	move.b	#6,d1                           	| [ld   b,#6] vertical orientation, wings open (7 is wings closed)
-	jra	l_0C81                             		| [jr   l_0C81]
+	add.b	#21,d0                           	| [$0C6D: add  a,#21] 1024 / ( 6 * 4 ) == 42
+	jcc	l_0C75                             		| [$0C6F: jr   nc,l_0C75]
+	move.b	#6,d1                           	| [$0C71: ld   b,#6] vertical orientation, wings open (7 is wings closed)
+	jra	l_0C81                             		| [$0C73: jr   l_0C81]
 l_0C75:
 * divide by 42 ...42 counts per step of rotation (with 24 steps in the circle, 1 step is 15 degrees)
 * Here's the math: A * ( 1/2 + 1/4 ) * ( 1/32 )
-	lsr.b	#1,d0                            	| [srl  a]
-	move.b	d0,d1                           	| [ld   b,a]
-	lsr.b	#1,d1                            	| [srl  b]
-	add.b	d1,d0                            	| [add  a,b]
-	rol.b	#3,d0                            	| [rlca] rlca * 3 ... 1/32 * 3
-	and.b	#0x07,d0                         	| [and  #0x07]
-	move.b	d0,d1                           	| [ld   b,a]
+	lsr.b	#1,d0                            	| [$0C75: srl  a]
+	move.b	d0,d1                           	| [$0C77: ld   b,a]
+	lsr.b	#1,d1                            	| [$0C78: srl  b]
+	add.b	d1,d0                            	| [$0C7A: add  a,b]
+	rol.b	#3,d0                            	| [$0C7B: rlca] rlca * 3 ... 1/32 * 3
+	and.b	#0x07,d0                         	| [$0C7E: and  #0x07]
+	move.b	d0,d1                           	| [$0C80: ld   b,a]
 
 l_0C81:
 	lea	ds_sprite_code_8B00,a0              	| [$0C81: ld   h,#>ds_sprite_code_8B00]
@@ -2337,13 +2335,13 @@ l_0CA7:
 
 * compute increment and update selected coordinate
 
-	move.l	a0,-(sp)                        	| [push hl] &mrw_sprite[L].ctrl.b0
-	move.l	a2,a0                        		| [push ix]
-												| [pop  hl] &bug_motion_que[n].b00
-	move.b	d0,d1                           	| [ld   b,a] (ix)0x0A or (ix)0x0B
-	move.b	d3,d0                           	| [ld   a,d] saved from (ix)0x05  ( from C46 )
-	and.b	#0x03,d0                         	| [and  #0x03]
-	move.b	d0,d3                           	| [ld   d,a]
+	move.l	a0,-(sp)                        	| [$0CAB: push hl] &mrw_sprite[L].ctrl.b0
+	move.l	a2,a0                        		| [$0CAC: push ix]
+												| [$0CAE: pop  hl] &bug_motion_que[n].b00
+	move.b	d0,d1                           	| [$0CAF: ld   b,a] (ix)0x0A or (ix)0x0B
+	move.b	d3,d0                           	| [$0CB0: ld   a,d] saved from (ix)0x05  ( from C46 )
+	and.b	#0x03,d0                         	| [$0CB1: and  #0x03]
+	move.b	d0,d3                           	| [$0CB3: ld   d,a]
 
 *         90          - angle in degrees
 *       1                               	| 0        - quadrant derived from 10-bit angle
@@ -2353,13 +2351,13 @@ l_0CA7:
 * xor bit-7 with bit-8 ... test for orientation near 0 or 180
 * i.e. < xx80 in quadrant 0 & 2, and >= xx80 in quadrant 1 & 3
 	CLEAR_XC_FLAGS
-	roxl.b	#1,d4                            	| [rlc  e] e saved from (ix)0x04   ( from C46 )
-	roxl.b	#1,d3                           	| [rl   d]
-	movem.w	d3/d4,-(sp)                    		| [push de] adjusted rotation angle, restores to HL below .....
-	eor.b	d3,d0                            	| [xor  d]
-	ror.b	#1,d0                            	| [rrca] xor result in A<0>
-	jcs	l_0CBF                             		| [jr   c,l_0CBF] check for Cy shifted into bit7 from rrca
-	addq.w	#2,a0                           	| [inc  l] * 2
+	roxl.b	#1,d4                            	| [$0CB4: rlc  e] e saved from (ix)0x04   ( from C46 )
+	roxl.b	#1,d3                           	| [$0CB6: rl   d]
+	movem.w	d3/d4,-(sp)                    		| [$0CB8: push de] adjusted rotation angle, restores to HL below .....
+	eor.b	d3,d0                            	| [$0CB9: xor  d]
+	ror.b	#1,d0                            	| [$0CBA: rrca] xor result in A<0>
+	jcs	l_0CBF                             		| [$0CBB: jr   c,l_0CBF] check for Cy shifted into bit7 from rrca
+	addq.w	#2,a0                           	| [$0CBD: inc  l] * 2
 
 l_0CBF:
 * .b04+.b05 is angle in 10-bits. bits<9:7> together give the quadrant and fraction of 90
@@ -2368,19 +2366,19 @@ l_0CBF:
 * 1 0  0 - 4   Remembering they have been <<1, it means the lowest bit was
 * 1 0  1 - 5   .b04<7> (degree 0-89) and the upper 2 bits were .b05<1:0> (quadrant)
 * 1 1  0 - 6   Taking the quadrant and angle together, the range is 135-304 degrees.
-	addq.b	#1,d3                           	| [inc  d]
-	move.b	d1,d0                           	| [ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix)
-	btst.b	#2,d3                           	| [bit  2,d]
-	jeq	l_0CC7                             		| [jr   z,l_0CC7]
-	neg.b	d0                               	| [neg] negate primary component for 135-305 degrees
+	addq.b	#1,d3                           	| [$0CBF: inc  d]
+	move.b	d1,d0                           	| [$0CC0: ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix)
+	btst.b	#2,d3                           	| [$0CC2: bit  2,d]
+	jeq	l_0CC7                             		| [$0CC3: jr   z,l_0CC7]
+	neg.b	d0                               	| [$0CC5: neg] negate primary component for 135-305 degrees
 l_0CC7:
 * A is actually bits<15:7> of addend (.b00/.b02 in fixed point, 9.7)
-	move.b	d0,d2                           	| [ld   c,a] from 0x0A(ix) or 0x0B(ix)
-	asr.b	#1,d2                            	| [sra  c] sign extend, "bit-8" into Cy
-	jcc	l_0CD0                             		| [jr   nc,l_0CD0]
-	move.b	(a0),d0                         	| [ld   a,(hl)] b00 or b02, depends on "jr   c,l_0CBF"
-	add.b	#0x80,d0                         	| [add  a,#0x80] add carry-out from sra
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+	move.b	d0,d2                           	| [$0CC7: ld   c,a] from 0x0A(ix) or 0x0B(ix)
+	asr.b	#1,d2                            	| [$0CC8: sra  c] sign extend, "bit-8" into Cy
+	jcc	l_0CD0                             		| [$0CCA: jr   nc,l_0CD0]
+	move.b	(a0),d0                         	| [$0CCC: ld   a,(hl)] b00 or b02, depends on "jr   c,l_0CBF"
+	add.b	#0x80,d0                         	| [$0CCD: add  a,#0x80] add carry-out from sra
+	move.b	d0,(a0)                         	| [$0CCF: ld   (hl),a]
 l_0CD0:                         	
 												| [$0CD0: inc  l]
 	move.b	(1,a0),d0                         	| [$0CD1: ld   a,(hl)] b01 or b03, depends on "jr   c,l_0CBF"
@@ -2388,24 +2386,24 @@ l_0CD0:
 	move.b	d0,(1,a0)                         	| [$0CD3: ld   (hl),a]
 
 * stash the pointer to .b0/.b2 in DE (previous DE into HL but no longer used)
-												| [dec  l]
-	exg	a1,a0                              		| [ex   de,hl] save a0 in a1
-	move.b	d4,d0                           	| [ld   a,e]
-	eor.b	#0x02,d0                         	| [xor  #0x02] toggle x/y pointer, .b00 or .b02
-	move.b	d0,d4                           	| [ld   e,a]
+												| [$0CD4: dec  l]
+	exg	a1,a0                              		| [$0CD5: ex   de,hl] save a0 in a1
+	move.b	d4,d0                           	| [$0CD6: ld   a,e]
+	eor.b	#0x02,d0                         	| [$0CD7: xor  #0x02] toggle x/y pointer, .b00 or .b02
+	move.b	d0,d4                           	| [$0CD9: ld   e,a]
 
 * test L<0> (pushed/popped from left-shifted DE above .. but this would be .b04<7> before left-shift?)
-	movem.w	(sp)+,d5/d6                        	| [pop  hl] ..... adjusted rotation angle from push DE above
-	lsr.b	#1,d6                            	| [srl  l] revert to unshifted, but did not retain bit-7
-	jcc	l_0CE3                             	| [jr   nc,l_0CE3] bit<0> into Cy (which was actually bit<7>
-	move.b	d6,d0                           	| [ld   a,l]
-	eor.b	#0x7F,d0                         	| [xor  #0x7F] compliment bits<6:0>
-	move.b	d0,d6                           	| [ld   l,a]
+	movem.w	(sp)+,d5/d6                        	| [$0CDA: pop  hl] ..... adjusted rotation angle from push DE above
+	lsr.b	#1,d6                            	| [$0CDB: srl  l] revert to unshifted, but did not retain bit-7
+	jcc	l_0CE3                             	    | [$0CDD: jr   nc,l_0CE3] bit<0> into Cy (which was actually bit<7>
+	move.b	d6,d0                           	| [$0CDF: ld   a,l]
+	eor.b	#0x7F,d0                         	| [$0CE0: xor  #0x7F] compliment bits<6:0>
+	move.b	d0,d6                           	| [$0CE2: ld   l,a]
 l_0CE3:
-	move.b	d1,d0                           	| [ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix)
-	move.b	d5,d1                           	| [ld   b,h] msb of adjusted angle
-	clr.b	d5                               	| [ld   h,#0]
-	jbsr	mul_16_0E97                         | [call mul_16_0E97] HL = L * A
+	move.b	d1,d0                           	| [$0CE3: ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix)
+	move.b	d5,d1                           	| [$0CE4: ld   b,h] msb of adjusted angle
+	clr.b	d5                               	| [$0CE5: ld   h,#0]
+	jbsr	mul_16_0E97                         | [$0CE7: call mul_16_0E97] HL = L * A
 
 *             . 90          - angle in degrees
 *             1                         	| 0        - quadrant derived from 10-bit angle
@@ -2422,45 +2420,43 @@ l_0CE3:
 *     q 1  1   0  -> 100 -> 011
 *       1  1   1  -> 101 -> 100  x  .
 
-	move.b	d1,d0                           	| [ld   a,b] msb of adjusted angle
-	eor.b	#0x02,d0                         	| [xor  #0x02]
-	subq.b	#1,d0                           	| [dec  a]
-	btst.b	#2,d0                           	| [bit  2,a]
-	jeq	l_0CFA                             	| [jr   z,l_0CFA]
-	move.w	d5,d1                           	| [ld   b,h]
-	                           	| [ld   c,l]
-	                      	| [ld   hl,#0x0000] 0
-	                               	| [and  a] clear carry
-	neg.w	d1                            	| [sbc  hl,bc] negate BC ... can't use "neg" since it is 16-bit
+	move.b	d1,d0                           | [$0CEA: ld   a,b] msb of adjusted angle
+	eor.b	#0x02,d0                        | [$0CEB: xor  #0x02]
+	subq.b	#1,d0                           | [$0CED: dec  a]
+	btst.b	#2,d0                           | [$0CEE: bit  2,a]
+	jeq	l_0CFA                             	| [$0CF0: jr   z,l_0CFA]
+	move.w	d5,d1                           | [$0CF2: ld   b,h]
+											| [$0CF3: ld   c,l]
+											| [$0CF4: ld   hl,#0x0000] 0
+											| [$0CF7: and  a] clear carry
+	neg.w	d1                            	| [$0CF8: sbc  hl,bc] negate BC ... can't use "neg" since it is 16-bit
 l_0CFA:
-	exg	a1,a0                              	| [ex   de,hl] reload the pointer from DE
+	exg	a1,a0                              	| [$0CFA: ex   de,hl] reload the pointer from DE
 * *HL += *DE (D5/D6 still holds mul result, exg doesn't affect that)
-	move.b	d6,d0                           | [ld   a,e] lsb of mul result
-	add.b	(a0),d0                         | [add  a,(hl)]
-	move.b	d0,(a0)+                        | [ld   (hl),a]  .b00 or .b02
-											| [inc  l]
-	move.b	d3,d0                           | [ld   a,d] msb of mul result
+	move.b	d6,d0                           | [$0CFB: ld   a,e] lsb of mul result
+	add.b	(a0),d0                         | [$0CFC: add  a,(hl)]
+	move.b	d0,(a0)+                        | [$0CFD: ld   (hl),a]  .b00 or .b02
+											| [$0CFE: inc  l]
+	move.b	d3,d0                           | [$0CFF: ld   a,d] msb of mul result
 	move.b	(a0),d7
-	addx.b	d7,d0							| 	adc  a,(hl)                                ;  .b01 or .b03
-	move.b	d0,(a0)                         | [ld   (hl),a]
-
-	move.l	(sp)+,a0                        | [pop  hl] &mrw_sprite.ctrl[L].b1
+	addx.b	d7,d0							| [$0D00: adc  a,(hl)] .b01 or .b03
+	move.b	d0,(a0)                         | [$0D01: ld   (hl),a]
+	move.l	(sp)+,a0                        | [$0D02: pop  hl] &mrw_sprite.ctrl[L].b1
 
 * almost done ... update the sprite x/y positions
 l_0D03_flite_pth_posn_set:
 *	move.b	b_9215_flip_screen,d0           	| [$0D03: ld   a,(b_9215_flip_screen)]
 *	move.b	d0,d2                           	| [$0D06: ld   c,a]
-
 * extract x-coord and adjust for homing if needed
 * fixed point 9.7 in .b02.b03 - left shift integer portion into A ... carry in to <0> from .b02<7>
 	COMPUTE_LSB_A0_D6 ds_sprite_ctrl_9B00
 
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	lea	ds_sprite_posn_9300,a0              	| [$0D07: ld   h,#>ds_sprite_posn_9300]
 	add.w	d6,a0
-	move.b	(0x03,a2),d3                    	| [ld   d,0x03(ix)] bits<1:6> of x pixel ... could load directly to A
+	move.b	(0x03,a2),d3                    	| [$0D09: ld   d,0x03(ix)] bits<1:6> of x pixel ... could load directly to A
 * set Cy from .b02<7>
-	move.b	#0x7F,d0                        	| [ld   a,#0x7F]
-	cmp.b	(0x02,a2),d0                     	| [cp   0x02(ix)]
+	move.b	#0x7F,d0                        	| [$0D0C: ld   a,#0x7F]
+	cmp.b	(0x02,a2),d0                     	| [$0D0E: cp   0x02(ix)]
 	SET_X_FROM_C
 	move.b	d3,d0                           	| [$0D11: ld   a,d] (ix)0x03
 	roxl.b	#1,d0                           	| [$0D12: rla] rotate Cy into A<0> (.b02<7>)
@@ -2473,6 +2469,7 @@ l_0D03_flite_pth_posn_set:
 	jeq	l_0D23                             	    | [$0D1E: jr   z,l_0D23]
 	add.b	(0x11,a2),d0                     	| [$0D20: add  a,0x11(ix)] heading home (add x-offset ... already bits<7:0>)
 l_0D23:
+	move.b	d0,0x200
 	move.b	d0,(a0)+                         	| [$0D23: ld   (hl),a] &sprite[n].posn.x
 * extract y-coord and adjust for homing if needed
 	addq.b	#1,d6								| [$0D24: inc  l] sprite[n].posn.sy<0:7> [a0 coherence]
@@ -2506,9 +2503,10 @@ l_0D38:
 	scs		d7
 	move.b	d3,d0                           	| [$0D4C: ld   a,d]
 	tst.b	d7
-	jne		l_0D50                             	| [$0D4D: jr   nc,l_0D50]
+	jeq		l_0D50                             	| [$0D4D: jr   nc,l_0D50]
 	addq.b	#1,d4                           	| [$0D4F: inc  e]
-l_0D50:                                            
+l_0D50:   
+	move.b	d0,0x201
 	move.b	d0,(a0)                         	| [$0D51: ld   (hl),a] sprite[n].posn.sy<7:0>
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sprite[n].posn.sy<8>
@@ -2524,30 +2522,27 @@ l_0D50:
 
 * Once the timer in $0E is reached, then check conditions to enable bomb drop.
 * If bomb is disabled for any reason, the timer is restarted.
-	subq.b	#1,(0x0E,a2)                    	| [dec  0x0E(ix)] countdown to enable a bomb
-	jne	next__pool_idx_0dfb                     	| [jp   nz,next__pool_idx_0dfb]
+	subq.b	#1,(0x0E,a2)                    	| [$0D59: dec  0x0E(ix)] countdown to enable a bomb
+	jne	next__pool_idx_0dfb                     | [$0D5C: jp   nz,next__pool_idx_0dfb]
 	move.b	(0x0F,a2),d0
-	lsr.b	#1,d0                     	| [srl  0x0F(ix)] these bits enable bombing
+	lsr.b	#1,d0                     			| [$0D5F: srl  0x0F(ix)] these bits enable bombing
 	scs		d7
 	move.b	d0,(0x0F,a2)
 	tst.b	d7
-	jne	l_0DF5_next_superloop_and_reload_0E	| [jp   nc,l_0DF5_next_superloop_and_reload_0E]
-	
-	move.b	(0x01,a2),d0                    	| [ld   a,0x01(ix)] if .cy.pair.b1 > $4C
-	cmp.b	#152>>1,d0			| cp   #152>>1                               ; 0x4C
-	jcs	l_0DF5_next_superloop_and_reload_0E	| [jp   c,l_0DF5_next_superloop_and_reload_0E]
-
-	move.b	ds_cpu0_task_actv_9000+0x15,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x15)] f_1F04 ...fire button input
-	                               	| [and  a]
-	jeq	l_0DF5_next_superloop_and_reload_0E	| [jp   z,l_0DF5_next_superloop_and_reload_0E]
-
-	move.b	ds4_game_tmrs_92ac+1,d0              	| [ld   a,(ds4_game_tmrs_92ac + 1)]
-	                               	| [and  a]
-	jne	l_0DF5_next_superloop_and_reload_0E	| [jp   nz,l_0DF5_next_superloop_and_reload_0E]
+	jeq		l_0DF5_next_superloop_and_reload_0E	| [$0D63: jp   nc,l_0DF5_next_superloop_and_reload_0E]
+	move.b	(0x01,a2),d0                    	| [$0D66:ld   a,0x01(ix)] if .cy.pair.b1 > $4C
+	cmp.b	#152>>1,d0							| [$0D69:cp   #152>>1]
+	jcs	l_0DF5_next_superloop_and_reload_0E		| [$0D6B:jp   c,l_0DF5_next_superloop_and_reload_0E]
+	move.b	ds_cpu0_task_actv_9000+0x15,d0      | [$0D6E:ld   a,(ds_cpu0_task_actv_9000 + 0x15)] f_1F04 ...fire button input
+												| [$0D71:and  a]
+	jeq	l_0DF5_next_superloop_and_reload_0E		| [$0D72:jp   z,l_0DF5_next_superloop_and_reload_0E]
+	move.b	ds4_game_tmrs_92ac+1,d0             | [$0D75:ld   a,(ds4_game_tmrs_92ac + 1)]
+												| [$0D78:and  a]
+	jne	l_0DF5_next_superloop_and_reload_0E		| [$0D79:jp   nz,l_0DF5_next_superloop_and_reload_0E]
 
 * check for available bomb ... bombs are rendered inactive at l_0815
-	exg	a1,a0                              	| [ex   de,hl] &sprite.ctrl[bmbr].b1 to DE ...
-	lea	b_8800+0x68,a0                 	| [ld   hl,#b_8800 + 0x68] bomb0 object/index
+	exg	a1,a0                              		| [ex   de,hl] &sprite.ctrl[bmbr].b1 to DE ...
+	lea	b_8800+0x68,a0                 			| [ld   hl,#b_8800 + 0x68] bomb0 object/index
 	move.b	#8,d1                           	| [ld   b,#8] check 8 positions
 l_0D82:
 	move.b	(a0),d0                         	| [ld   a,(hl)] _objs[BOMB0].state
