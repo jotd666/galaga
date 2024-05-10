@@ -1431,7 +1431,7 @@ l_0852:
 * captured ship is diving
 
 	movem.l	a0/d6,-(sp)                        	| [push hl] stash the boss object locator e.g. b_8830
-	exg	a1,a0                              	| [ex   de,hl] HL := &sprt_mctl_objs[ ].b0
+	exg	a1,a0                              	| 	[ex   de,hl] HL := &sprt_mctl_objs[ ].b0
 	addq.w	#1,a0                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprt_mctl_objs[ HL ].mctl_idx
 	add.b	#0x13,d0                         	| [add  a,#0x13] mctl_mpool[n].b13
@@ -2223,7 +2223,7 @@ l_0C29:
 
 
 l_0C2D_flite_pth_step:
-* if ( b13 & 0x20 && ( b01 == b06       	|| (b01 - b06) == 1|| (b06 - b01) == 1 ) ...
+* if ( b13 & 0x20 && ( b01 == b06 || (b01 - b06) == 1|| (b06 - b01) == 1 ) ...
 	btst.b	#5,(0x13,a2)                    	| [bit  5,0x13(ix)] check if bee or boss dive
 	jeq	l_0C46                             	| [jr   z,l_0C46]
 	move.b	(0x01,a2),d0                    	| [ld   a,0x01(ix)] 0C33 boss: launched out of position, bee movement, 0x01(ix) counting down
@@ -2298,20 +2298,19 @@ l_0C75:
 	move.b	d0,d1                           	| [ld   b,a]
 
 l_0C81:
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
+	lea	ds_sprite_code_8B00,a0              	| [$0C81: ld   h,#>ds_sprite_code_8B00]
 	moveq	#0,d6
-	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] mrw_sprite[L].cclr.b0
+	move.b	(0x10,a2),d6                    	| [$0C83: ld   l,0x10(ix)] mrw_sprite[L].cclr.b0
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	and.b	#0xF8,d0                         	| [and  #0xF8] base sprite code (multiple of 8)
-	or.b	d1,d0                             	| [or   b]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+	move.b	(a0),d0                         	| [$0C86: ld   a,(hl)]
+	and.b	#0xF8,d0                         	| [$0C87: and  #0xF8] base sprite code (multiple of 8)
+	or.b	d1,d0                             	| [$0C89: or   b]
+	move.b	d0,(a0)                         	| [$0C8A: ld   (hl),a]
 
 * determine_sprite_ctrl( C )
 * 0: flipx - flip about the X axis, i.e. "up/down"
 * 1: flipy - flip about the Y axis, i.e. "left/right"
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	d2,d0                           	| [ld   a,c] d saved from (ix)0x05 above
 	ror.b	#1,d2                            	| [rrc  c]
@@ -2476,7 +2475,7 @@ l_0D03_flite_pth_posn_set:
 l_0D23:
 	move.b	d0,(a0)+                         	| [$0D23: ld   (hl),a] &sprite[n].posn.x
 * extract y-coord and adjust for homing if needed
-												| [$0D24: inc  l] sprite[n].posn.sy<0:7>
+	addq.b	#1,d6								| [$0D24: inc  l] sprite[n].posn.sy<0:7> [a0 coherence]
 	move.b	(0x01,a2),d1                    	| [$0D25: ld   b,0x01(ix)]
 * set Cy from .b00<7>
 	move.b	#0x7F,d0                        	| [$0D28: ld   a,#0x7F]
