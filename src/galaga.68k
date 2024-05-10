@@ -2500,32 +2500,31 @@ l_10A0_got_one:
 	move.b	d0,d4                           	| [$10C2: ld   e,a]
 
 * insert sprite Y coord into pool structure
-	move.b	d2,d6                           	| [ld   l,c] restore index to obj_status[], sprite etc. (dec l just as good, no?)
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	move.b	d2,d6                           	| [$10C3: ld   l,c] restore index to obj_status[], sprite etc. (dec l just as good, no?)
+	lea	ds_sprite_posn_9300,a0              	| [$10C4: ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0)+,d2                         	| [ld   c,(hl)] sprite_x
-	addq.b	#1,d6								| [inc  l] [a0 coherence]
-	move.b	(a0),d1                         	| [ld   b,(hl)] sprite_y<7:0>
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
+	move.b	(a0)+,d2                         	| [$10C6: ld   c,(hl)] sprite_x
+	addq.b	#1,d6								| [$10C7: inc  l] [a0 coherence]
+	move.b	(a0),d1                         	| [$10C8: ld   b,(hl)] sprite_y<7:0>
+	lea	ds_sprite_ctrl_9B00,a0              	| [$10C9: ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)] sprite_y<8>
+	move.b	(a0),d0                         	| [$10CB: ld   a,(hl)] sprite_y<8>
 	CLEAR_XC_FLAGS
-	roxr.b	#1,d0                            	| [rrca] sY<8> into Cy
-	roxr.b	#1,d1                           	| [rr   b] sY<8> from Cy to b<7> and sY<0> to Cy
-
-	btst.b	#0,d4                           	| [bit  0,e] test flipped screen
-	jne	l_10DC                             	| [jr   nz,l_10DC]
+	roxr.b	#1,d0                            	| [$10CC: rrca] sY<8> into Cy
+	roxr.b	#1,d1                           	| [$10CD: rr   b] sY<8> from Cy to b<7> and sY<0> to Cy
+	btst.b	#0,d4                           	| [$10CF: bit  0,e] test flipped screen
+	jne	l_10DC                             		| [$10D1: jr   nz,l_10DC]
 * not flipped screen
 * 160 - sprite_y + 1 ... backwards math since sY<8:1> already loaded in B, and this is only for flipped screen
-	scs	d7                              	| [ex   af,af'] stash Cy ... sY<:0>
-	move.b	d1,d0                           	| [ld   a,b]
-	add.b	#0x50,d0                 	| [add  a,#<(-0x0160 >> 1)] adjust addend for scale factor 2
-	neg.b	d0                               	| [neg]
-	move.b	d0,d1                           	| [ld   b,a]
-	tst.b	d7                              	| [ex   af,af'] un-stash Cy
-	* re-set X flag from d7 stashed value
-	beq.b	0f							  	| [ccf] sY<:0> = Cy ^ 1
+	scs	d7                              		| [$10D3: ex   af,af'] stash Cy ... sY<:0>
+	move.b	d1,d0                           	| [$10D4: ld   a,b]
+	add.b	#0x50,d0                 			| [$10D5: add  a,#<(-0x0160 >> 1)] adjust addend for scale factor 2
+	neg.b	d0                               	| [$10D7: neg]
+	move.b	d0,d1                           	| [$10D9: ld   b,a]
+	tst.b	d7                              	| [$10DA: ex   af,af'] un-stash Cy
+	* re-set X flag from d7 stashed value, then set opposite X flag
+	bne.b	0f							  		| [$10DB: ccf] sY<:0> = Cy ^ 1
 	SET_XC_FLAGS
 	bra.b	2f
 0:
@@ -2534,38 +2533,36 @@ l_10A0_got_one:
 * insert sprite X coord into pool structure
 l_10DC:
 * rescale sY<8:0> to fixed-point 9.7
-	move.b	d1,(0x01,a2)                    	| [ld   0x01(ix),b] sY<8:1> ... fixed point 9.7
+	move.b	d1,(0x01,a2)                    	| [$10DC: ld   0x01(ix),b] sY<8:1> ... fixed point 9.7
 * sY<:0> from Cy into A<7> ... fixed point 9.7 (LSB)
-	roxr.b	#1,d0                           	| [rra]
-	and.b	#0x80,d0                         	| [and  #0x80]
-	move.b	d0,(a2)                    	| [ld   0x00(ix),a] sY<0> ... fixed point 9.7
-
-	move.b	d2,d0                           	| [ld   a,c] sprite_x
-	btst.b	#0,d4                           	| [bit  0,e] test flipped screen
-	jeq	l_10ED                             	| [jr   z,l_10ED]
+	roxr.b	#1,d0                           	| [$10DF: rra]
+	and.b	#0x80,d0                         	| [$10E0: and  #0x80]
+	move.b	d0,(a2)                    			| [$10E2: ld   0x00(ix),a] sY<0> ... fixed point 9.7
+	move.b	d2,d0                           	| [$10E5: ld   a,c] sprite_x
+	btst.b	#0,d4                           	| [$10E6: bit  0,e] test flipped screen
+	jeq	l_10ED                             		| [$10E8: jr   z,l_10ED]
 * flipped screen
 	add.b	#0x0D,d0                         	| [add  a,#0x0D] if flipped screen
 	not.b	d0                               	| [cpl]
 
 l_10ED:
-	lsr.b	#1,d0                            	| [srl  a]
-	move.b	d0,(0x03,a2)                    	| [ld   0x03(ix),a] sX<8:1>
-	roxr.b	#1,d0                           	| [rra] Cy into A<8:>
-	and.b	#0x80,d0                         	| [and  #0x80]
-	move.b	d0,(0x02,a2)                    	| [ld   0x02(ix),a] sX<:0> ... now scaled fixed point 9.7
-	move.b	d3,(0x13,a2)                    	| [ld   0x13(ix),d] function argument (A') sets bit-0 and bit-7
-	move.b	#0x1E,(0x0E,a2)                 	| [ld   0x0E(ix),#0x1E] bomb drop counter
+	lsr.b	#1,d0                            	| [$10ED: srl  a]
+	move.b	d0,(0x03,a2)                    	| [$10EF: ld   0x03(ix),a] sX<8:1>
+	roxr.b	#1,d0                           	| [$10F2: rra] Cy into A<8:>
+	and.b	#0x80,d0                         	| [$10F3: and  #0x80]
+	move.b	d0,(0x02,a2)                    	| [$10F5: ld   0x02(ix),a] sX<:0> ... now scaled fixed point 9.7
+	move.b	d3,(0x13,a2)                    	| [$10F8: ld   0x13(ix),d] function argument (A') sets bit-0 and bit-7
+	move.b	#0x1E,(0x0E,a2)                 	| [$10FB: ld   0x0E(ix),#0x1E] bomb drop counter
 
 * if (flying_bug_attck_condtn)  bug_motion_que[n].b0F = bomb_drop_enbl_flags
-	move.b	ds_9200_glbls+0x0B,d0           	| [ld   a,(ds_9200_glbls + 0x0B)] if ( !0 ), load  b_92C0[0x08] ... bomb drop enable flags
-	                               	| [and  a]
-	jeq	l_1108                             	| [jr   z,l_1108]
-	move.b	b_92C0+0x08,d0                  	| [ld   a,(b_92C0 + 0x08)] bomb drop enable flags
-* else bug_motion_que[n].b0F = 0
+	move.b	ds_9200_glbls+0x0B,d0           	| [$10FF: ld   a,(ds_9200_glbls + 0x0B)] if ( !0 ), load  b_92C0[0x08] ... bomb drop enable flags
+												| [$1102: and  a]
+	jeq	l_1108                             		| [$1103: jr   z,l_1108]
+	move.b	b_92C0+0x08,d0                  	| [$1105: ld   a,(b_92C0 + 0x08)] bomb drop enable flags
+* else bug_motion_que[n].b0F = 0                    
 l_1108:
-	move.b	d0,(0x0F,a2)                    	| [ld   0x0F(ix),a] 0 or b_92C0[$08] ... bomb drop enable flags
-
-	rts                                    	| [ret]
+	move.b	d0,(0x0F,a2)                    	| [$1108: ld   0x0F(ix),a] 0 or b_92C0[$08] ... bomb drop enable flags
+	rts                                    		| [$110B: ret]
 
 *=============================================================================
 * c_player_active_switch()

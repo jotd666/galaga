@@ -2433,11 +2433,11 @@ l_0CE3:
 l_0CFA:
 	exg	a1,a0                              	| [$0CFA: ex   de,hl] reload the pointer from DE
 * *HL += *DE (D5/D6 still holds mul result, exg doesn't affect that)
-	move.b	d6,d0                           | [$0CFB: ld   a,e] lsb of mul result
+	move.b	d6,d0                           | [$0CFB: ld   a,e] lsb of mul result (d4 <=> d6)
 	add.b	(a0),d0                         | [$0CFC: add  a,(hl)]
 	move.b	d0,(a0)+                        | [$0CFD: ld   (hl),a]  .b00 or .b02
 											| [$0CFE: inc  l]
-	move.b	d3,d0                           | [$0CFF: ld   a,d] msb of mul result
+	move.b	d5,d0                           | [$0CFF: ld   a,d] msb of mul result (d3 <=> d5)
 	move.b	(a0),d7
 	addx.b	d7,d0							| [$0D00: adc  a,(hl)] .b01 or .b03
 	move.b	d0,(a0)                         | [$0D01: ld   (hl),a]
@@ -2482,7 +2482,7 @@ l_0D23:
 	move.b	d1,d0                           	| [$0D2F: ld   a,b] (ix)0x01
 	btst.b	#0,d2                           	| [$0D30: bit  0,c] test flip screen
 	jne	l_0D38                             		| [$0D32: jr   nz,l_0D38]
-	subq.b	#1,d4                           	| [$0D37: dec  e] compliment bit-0 of 9-bit integer portion
+	subq.b	#1,d4                           	| [$0D37: dec  e] comliment bit-0 of 9-bit integer portion (done before add)
 	add.b	#0x4F,d0          					| [$0D34: add  a,#(<(-0x0160 - 0x02))>>1] not flipped ... lsb of result, right-shift 1
 	not.b	d0                               	| [$0D36: cpl]
 l_0D38:
