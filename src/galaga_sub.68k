@@ -444,7 +444,7 @@ jp_0513_rst38:
 	                           	| [ld   h,a]
 
 * update both 4Hz and 2Hz
-	addq.b	#1,d6                           	| [inc  l] t[1] = L++ ... 2Hz
+	addq.b	#1,d6                           	| [inc  l] t[1] = L++ ... 2Hz [a0 unrelated]
 l_0536:
 	addq.b	#1,d5                           	| [inc  h] t[2] = H++ ... 4Hz
 l_0537:
@@ -902,7 +902,7 @@ while_06B7:
 
 	move.b	(a0),d2                         	| [ld   c,(hl)]
 	subq.w	#1,a0                           	| [dec  l]
-	subq.b	#1,d6                           	| [dec  l]
+	subq.b	#1,d6                           	| [dec  l] [a0 coherence]
 	CLEAR_XC_FLAGS
 	roxr.b	#1,d2                            	| [rrc  c]
 	roxr.b	#1,d0                           	| [rra]
@@ -918,7 +918,7 @@ while_06B7:
 	sne	d7                              	| [ex   af,af']
 	jra	hitd_dspchr                        	| [jp   hitd_dspchr] return to 'call hitd_det_fghtr'
 l_06F0:
-	addq.b	#2,d6                           	| [inc  l] * 2
+	addq.b	#2,d6                           	| [inc  l] * 2  [a0 coherence]
 	subq.b	#1,d1                           	| [...]
 	jne	while_06B7                         	| [djnz while_06B7]
 
@@ -1144,7 +1144,7 @@ l_076A_while_object:
 
 * check Y coordinate ... sY<8:1> in A
 	addq.w	#1,a0                           	| [inc  l]
-	addq.b	#1,d6                           	| [inc  l] follow index
+	addq.b	#1,d6                           	| [inc  l] [a0 coherence]
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sprite.sy<8>
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -1191,7 +1191,7 @@ l_07A4:
 	jcs	hitd_dspchr_rckt                   	| [jr   c,hitd_dspchr_rckt]
 
 l_07B4_next_object:
-	addq.b	#2,d6                           	| [inc  l] * 2
+	addq.b	#2,d6                           	| [inc  l] * 2 [a0 coherence]
 	subq.b	#1,d1                           	| [...]
 	jne	l_076A_while_object                	| [djnz l_076A_while_object]
 
@@ -1251,7 +1251,7 @@ hitd_dspchr:
 	move.b	d0,(a1)                         	| [ld   (de),a]
 
 	addq.w	#1,a0                           	| [inc  l]
-	addq.b	#1,d6                           	| [inc  l]
+	addq.b	#1,d6                           	| [inc  l] [a0 coherence]
 	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00] sprite.cclr.b1 ...
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -1352,7 +1352,7 @@ l_081E_hdl_flyng_bug:
 	movem.l	a0/d6,-(sp)                        	| [push hl]
 	exg		d0,d7                              	| [ex   af,af'] re-stash parameter
 	addq.w	#1,a0                           	| [inc  l]
-	addq.b	#1,d6                           	| [inc  l]
+	addq.b	#1,d6                           	| [inc  l]  [a0 coherence]
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprt_mctl_objs[L].mctl_idx
 
 	lea	ds_bug_motion_que_9100,a0           	| [ld   h,#>ds_bug_motion_que_9100] bug_motion_que[A].b13 = 0 (release this slot)
@@ -1447,7 +1447,7 @@ l_0852:
 	add.w	d6,a0
 	move.b	#9,(a0)                         	| [ld   (hl),#9] color map 9 for white ship
 	subq.w	#1,a0                           	| [dec  l]
-	subq.b	#1,d6                           	| [dec  l] follow
+	subq.b	#1,d6                           	| [dec  l] [a0 coherence]
 	move.b	d6,d0                           	| [ld   a,l]
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] updated object locator token of rescued ship   (token was 1)
 	lea	b_8800,a0                      	| [ld   h,#>b_8800] the captured ship object becomes inactive (0)
@@ -2327,19 +2327,18 @@ l_0C81:
 	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x01,d0                         	| [and  #0x01]
 	jeq	l_0CA4                             	| [jr   z,l_0CA4]
-	move.b	(0x0A,a2),d0                    	| [ld   a,0x0A(ix)]
+	move.b	(0x0A,a2),d0                    | [ld   a,0x0A(ix)]
 	jra	l_0CA7                             	| [jr   l_0CA7]
 l_0CA4:
-	move.b	(0x0B,a2),d0                    	| [ld   a,0x0B(ix)]
+	move.b	(0x0B,a2),d0                    | [ld   a,0x0B(ix)]
 
 l_0CA7:
-	                               	| [and  a] if zero, start of tractor beam and we can skip this crap
+											| [and  a] if zero, start of tractor beam and we can skip this crap
 	jeq	l_0D03_flite_pth_posn_set          	| [jp   z,l_0D03_flite_pth_posn_set] 2 "parameters": HL, and E (e saved from (ix)0x04)
 
 * compute increment and update selected coordinate
 
 	move.l	a0,-(sp)                        	| [push hl] &mrw_sprite[L].ctrl.b0
-
 	move.l	a2,a0                        		| [push ix]
 												| [pop  hl] &bug_motion_que[n].b00
 	move.b	d0,d1                           	| [ld   b,a] (ix)0x0A or (ix)0x0B
@@ -2361,7 +2360,7 @@ l_0CA7:
 	eor.b	d3,d0                            	| [xor  d]
 	ror.b	#1,d0                            	| [rrca] xor result in A<0>
 	jcs	l_0CBF                             		| [jr   c,l_0CBF] check for Cy shifted into bit7 from rrca
-	addq.b	#2,d6                           	| [inc  l] * 2
+	addq.w	#2,a0                           	| [inc  l] * 2
 
 l_0CBF:
 * .b04+.b05 is angle in 10-bits. bits<9:7> together give the quadrant and fraction of 90
@@ -2450,8 +2449,8 @@ l_0CFA:
 
 * almost done ... update the sprite x/y positions
 l_0D03_flite_pth_posn_set:
-	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
-	move.b	d0,d2                           	| [ld   c,a]
+*	move.b	b_9215_flip_screen,d0           	| [$0D03: ld   a,(b_9215_flip_screen)]
+*	move.b	d0,d2                           	| [$0D06: ld   c,a]
 
 * extract x-coord and adjust for homing if needed
 * fixed point 9.7 in .b02.b03 - left shift integer portion into A ... carry in to <0> from .b02<7>
@@ -2464,16 +2463,16 @@ l_0D03_flite_pth_posn_set:
 	move.b	#0x7F,d0                        	| [ld   a,#0x7F]
 	cmp.b	(0x02,a2),d0                     	| [cp   0x02(ix)]
 	SET_X_FROM_C
-	move.b	d3,d0                           	| [ld   a,d] (ix)0x03
-	roxl.b	#1,d0                           	| [rla] rotate Cy into A<0> (.b02<7>)
-	btst.b	#0,d2                           	| [bit  0,c] test flip screen
-	jeq	l_0D1A                             		| [jr   z,l_0D1A]
-	add.b	#0x0D,d0                         	| [add  a,#0x0D] flipped
-	not.b	d0                               	| [cpl]
-l_0D1A:
-	btst.b	#6,(0x13,a2)                    	| [bit  6,0x13(ix)] if !z, add  a,(ix)0x11 ... relative offset
-	jeq	l_0D23                             	| [jr   z,l_0D23]
-	add.b	(0x11,a2),d0                     	| [add  a,0x11(ix)] heading home (add x-offset ... already bits<7:0>)
+	move.b	d3,d0                           	| [$0D11: ld   a,d] (ix)0x03
+	roxl.b	#1,d0                           	| [$0D12: rla] rotate Cy into A<0> (.b02<7>)
+*	btst.b	#0,d2                           	| [$0D13: bit  0,c] test flip screen
+*	jeq	l_0D1A                             		| [$0D15: jr   z,l_0D1A]
+*	add.b	#0x0D,d0                         	| [$0D17: add  a,#0x0D] flipped
+*	not.b	d0                               	| [$0D19: cpl]
+*l_0D1A:
+	btst.b	#6,(0x13,a2)                    	| [$0D1A: bit  6,0x13(ix)] if !z, add  a,(ix)0x11 ... relative offset
+	jeq	l_0D23                             	    | [$0D1E: jr   z,l_0D23]
+	add.b	(0x11,a2),d0                     	| [$0D20: add  a,0x11(ix)] heading home (add x-offset ... already bits<7:0>)
 l_0D23:
 	move.b	d0,(a0)+                         	| [$0D23: ld   (hl),a] &sprite[n].posn.x
 * extract y-coord and adjust for homing if needed
@@ -2555,7 +2554,7 @@ l_0D82:
 	move.b	(a0),d0                         	| [ld   a,(hl)] _objs[BOMB0].state
 	cmp.b	#0x80,d0                         	| [cp   #0x80] INACTIVE
 	jeq	l_0D8D_got_a_bullet                		| [jr   z,l_0D8D_got_a_bullet]
-	addq.b	#2,d6                           	| [inc  l] * 2
+	addq.w	#2,a0                           	| [inc  l] * 2
 	subq.b	#1,d1                           	| [...]
 	jne	l_0D82                             		| [djnz l_0D82]
 
