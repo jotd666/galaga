@@ -2510,8 +2510,8 @@ l_10A0_got_one:
 	lea	ds_sprite_ctrl_9B00,a0              	| [$10C9: ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$10CB: ld   a,(hl)] sprite_y<8>
-	CLEAR_XC_FLAGS
-	roxr.b	#1,d0                            	| [$10CC: rrca] sY<8> into Cy
+	ror.b	#1,d0                            	| [$10CC: rrca] sY<8> into Cy
+	SET_X_FROM_C
 	roxr.b	#1,d1                           	| [$10CD: rr   b] sY<8> from Cy to b<7> and sY<0> to Cy
 	btst.b	#0,d4                           	| [$10CF: bit  0,e] test flipped screen
 	jne	l_10DC                             		| [$10D1: jr   nz,l_10DC]
@@ -5036,7 +5036,8 @@ j_1CAE:
 	
 * objects 32 & 36 are on right side (bit-1 set): set flag in bit-7 to indicate negative rotation
 	move.b	d4,d0                           	| [$1CAE: ld   a,e] object/index of bomber
-	roxr.b	#2,d0                            	| [$1CAF: rrca] * 2
+	ror.b	#2,d0                            	| [$1CAF: rrca] * 2
+	SET_X_FROM_C
 	move.b	d4,d0                           	| [$1CB1: ld   a,e]
 	roxl.b	#1,d0                           	| [$1CB2: rla] Cy into bit-0
  	ror.b	#1,d0                            	| [$1CB3: rrca] flag in Cy and in bit-7
@@ -6584,9 +6585,9 @@ f_boss_diving_down_to_capture_ship_21cb:
 	neg.b	d0                               	| [neg]
 l_21EC:
 	move.b	d0,(0x0C,a2)                    	| [ld   0x0C(ix),a] 12 or -12 if (ix)0x05:0 set
-	CLEAR_XC_FLAGS
 	move.b	(0x05,a2),d0                    	| [ld   a,0x05(ix)]
-	roxr.b	#1,d0                            	| [rrca]
+	ror.b	#1,d0                            	| [rrca]
+	SET_X_FROM_C
 	move.b	(0x04,a2),d0                    	| [ld   a,0x04(ix)]
 	roxr.b	#1,d0                           	| [rra]
 	sub.b	#0x78,d0                         	| [sub  #0x78]
@@ -6636,11 +6637,11 @@ f_boss_starts_tractor_beam_2222:
 	neg.b	d0                               	| [neg]
 	sub.b	#0x18,d0                         	| [sub  #0x18]
 	move.b	#0x21,d5                        	| [ld   h,#0x21]
-	CLEAR_XC_FLAGS
-	roxl.b	#1,d0                            	| [rlca]
+	rol.b	#1,d0                            	| [rlca]
+	SET_X_FROM_C
 	roxl.b	#1,d5                           	| [rl   h]
-	CLEAR_XC_FLAGS
-	roxl.b	#1,d0                            	| [rlca]
+	rol.b	#1,d0                            	| [rlca]
+	SET_X_FROM_C
 	roxl.b	#1,d5                           	| [rl   h]
 	and.b	#0xE0,d0                         	| [and  #0xE0]
 	add.b	#0x15,d0                         	| [add  a,#0x15]
@@ -6898,11 +6899,11 @@ c_238A:
 	neg.b	d0                               	| [neg]
 	add.b	#0x10,d0                         	| [add  a,#0x10]
 	move.b	#0x20,d3                        	| [ld   d,#0x20]
-	CLEAR_XC_FLAGS
-	roxl.b	#1,d0                            	| [rlca]
+	rol.b	#1,d0                            	| [rlca]
+	SET_X_FROM_C
 	roxl.b	#1,d3                           	| [rl   d]
-	CLEAR_XC_FLAGS
-	roxl.b	#1,d0                            	| [rlca]
+	rol.b	#1,d0                            	| [rlca]
+	SET_X_FROM_C
 	roxl.b	#1,d3                           	| [rl   d]
 
 	and.b	#0xE0,d0                         	| [and  #0xE0]
@@ -7142,8 +7143,8 @@ case_assimilated_into_collective_2488:
 	move.b	ds3_frame_cts_92A0+2,d0         	| [ld   a,(ds3_frame_cts_92A0 + 2)]
 	move.b	(a0),d7
 	ror.b	#1,d7                          	| [rrc  (hl)]
-	CLEAR_XC_FLAGS
-	roxr.b	#2,d0                           | [$2490: rrca] * 2
+	ror.b	#2,d0                           | [$2490: rrca] * 2
+	SET_X_FROM_C
 	roxl.b	#1,d7                         	| [rl   (hl)]
 	move.b	d7,(a0)
 	move.b	ds_9200_glbls+0x0B,d0           	| [ld   a,(ds_9200_glbls + 0x0B)] update stuff if enemy enable set
@@ -7372,8 +7373,8 @@ case_state_progression_254D:
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprite_posn.y<8>
 	subq.w	#1,a0                           	| [dec  l]
 	subq.b	#1,d6                           	| [dec  l] [a0 coherence]
-	CLEAR_XC_FLAGS
-	roxr.b	#1,d0                            	| [rrca] sprite_posn.y<8> into Cy
+	ror.b	#1,d0                            	| [rrca] sprite_posn.y<8> into Cy
+	SET_X_FROM_C
 	move.b	d2,d0                           	| [ld   a,c]
 	roxr.b	#1,d0                           	| [rra] sprite_posn.y<8:1> in A
 	cmp.b	#22>>1,d0			| cp   #22 >> 1                              | 0x0B
@@ -7918,8 +7919,8 @@ l_28E9:
 	move.b	#8,ixl		| ld   ixl,#8
 
 l_28F5:
-	CLEAR_XC_FLAGS
-	roxl.b	#1,d2                            	| [rlc  c]
+	rol.b	#1,d2                            	| [rlc  c]
+	SET_X_FROM_C
 	move.b	ixh,d0                         	| [ld   a,ixh] base sprite-code parameter
 	roxr.b	#1,d0                           	| [rra]
 	move.b	d0,(a0)                         	| [ld   (hl),a]

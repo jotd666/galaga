@@ -819,8 +819,8 @@ hitd_fghtr_notif:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	CLEAR_XC_FLAGS
-	roxr.b	#1,d0                            	| [rrca] y<8> -> Cy
+	ror.b	#1,d0                            	| [rrca] y<8> -> Cy
+	SET_X_FROM_C
 	roxr.b	#1,d1                           	| [rr   b] Cy -> b<7>
 	move.b	d1,ixh			| ld   ixh,b                                 ; y<15:8> of fixed-point
 	subq.w	#1,a0                           	| [dec  l]
@@ -903,8 +903,8 @@ while_06B7:
 	move.b	(a0),d2                         	| [ld   c,(hl)]
 	subq.w	#1,a0                           	| [dec  l]
 	subq.b	#1,d6                           	| [dec  l] [a0 coherence]
-	CLEAR_XC_FLAGS
-	roxr.b	#1,d2                            	| [rrc  c]
+	ror.b	#1,d2                            	| [rrc  c]
+	SET_X_FROM_C
 	roxr.b	#1,d0                           	| [rra]
 	sub.b	ixh,d0                           	| [sub  ixh]
 	subq.b	#4,d0                           	| [sub  #4]
@@ -1027,7 +1027,8 @@ l_0729:
 * compliment sy:8  (handles both overflow and underflow situation)
 	CLEAR_XC_FLAGS
 	move.b	(a0),d7
-	roxr.b	#1,d7                          	| [rrc  (hl)]
+	ror.b	#1,d7                          	| [rrc  (hl)]
+	SET_X_FROM_C
 	INVERT_XC_FLAGS                      	| [ccf]
 	roxl.b	#1,d7                         	| [rl   (hl)]
     move.b	d7,(a0)
@@ -1039,8 +1040,8 @@ l_0738:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)] rocket.sy<7:0>
-	CLEAR_XC_FLAGS
-	roxr.b	#1,d2                            	| [rrc  c] rotate bit-8 into Cy
+	ror.b	#1,d2                            	| [rrc  c] rotate bit-8 into Cy
+	SET_X_FROM_C
 	roxr.b	#1,d0                           	| [rra] rotate bit-8 from Cy into A
 	jbsr	read_ixh_into_d0		| ld   ixh,a                                 ; stash sy<8:1> for hit-detection parameter
 
@@ -2251,7 +2252,6 @@ l_0C46:
 	add.b	d1,d0                            	| [$0C4D: add  a,b] need this below for rra ...
 	move.b	d0,(0x04,a2)                    	| [$0C4E: ld   0x04(ix),a] .b04 += .b0C
 	move.b	(0x05,a2),d3                    	| [$0C51: ld   d,0x05(ix)] need this later ...
-
 * sign of subtrahend determines signedness of carry
 	move.b	#1,d6                           	| [$0C54: ld   l,#1]
 	btst.b	#7,d1                           	| [$0C56: bit  7,b] (ix)0x0C
@@ -2313,8 +2313,8 @@ l_0C81:
 	ror.b	#1,d2                            	| [rrc  c]
 	eor.b	d2,d0                            	| [xor  c] bit0 xor with bit1 ...
 	addq.b	#1,d0                           	| [inc  a] ... add 1 ... now have bit1
-	CLEAR_XC_FLAGS
-	roxr.b	#1,d2                            	| [rrc  c] bit <1> ...
+	ror.b	#1,d2                            	| [rrc  c] bit <1> ...
+	SET_X_FROM_C
 	roxl.b	#1,d0                           	| [rla] ... into <0>
 	and.b	#0x03,d0                         	| [and  #0x03] <0> flip up/down  <1> flip l/r, double-x/double-y bits not used
 	move.b	d0,(a0)                         	| [ld   (hl),a] mrw_sprite[L].ctrl.b0 = A & 0x03
@@ -2349,8 +2349,8 @@ l_0CA7:
 *         270
 * xor bit-7 with bit-8 ... test for orientation near 0 or 180
 * i.e. < xx80 in quadrant 0 & 2, and >= xx80 in quadrant 1 & 3
-	CLEAR_XC_FLAGS
-	roxl.b	#1,d4                            	| [$0CB4: rlc  e] e saved from (ix)0x04   ( from C46 )
+	rol.b	#1,d4                            	| [$0CB4: rlc  e] e saved from (ix)0x04   ( from C46 )
+	SET_X_FROM_C
 	roxl.b	#1,d3                           	| [$0CB6: rl   d]
 	movem.w	d3/d4,-(sp)                    		| [$0CB8: push de] adjusted rotation angle, restores to HL below .....
 	eor.b	d3,d0                            	| [$0CB9: xor  d]
@@ -2432,12 +2432,14 @@ l_0CE3:
 	neg.w	d1                            	| [$0CF8: sbc  hl,bc] negate BC ... can't use "neg" since it is 16-bit
 l_0CFA:
 	exg	a1,a0                              	| [$0CFA: ex   de,hl] reload the pointer from DE (saved at 0CD5)
-* *HL += *DE (D5/D6 still holds mul result, exg doesn't affect that)
-	move.b	d6,d0                           | [$0CFB: ld   a,e] lsb of mul result (d4 <=> d6)
+* *HL += *DE	
+	exg	d3,d5								| [$0CFA: ex   de,hl]
+	exg	d4,d6								| [$0CFA: ex   de,hl]
+	move.b	d4,d0                           | [$0CFB: ld   a,e] lsb of mul result
 	add.b	(a0),d0                         | [$0CFC: add  a,(hl)]
 	move.b	d0,(a0)+                        | [$0CFD: ld   (hl),a]  .b00 or .b02
 											| [$0CFE: inc  l]
-	move.b	d5,d0                           | [$0CFF: ld   a,d] msb of mul result (d3 <=> d5)
+	move.b	d3,d0                           | [$0CFF: ld   a,d] msb of mul result
 	move.b	(a0),d7
 	addx.b	d7,d0							| [$0D00: adc  a,(hl)] .b01 or .b03
 	move.b	d0,(a0)                         | [$0D01: ld   (hl),a]
@@ -2447,6 +2449,7 @@ l_0CFA:
 l_0D03_flite_pth_posn_set:
 *	move.b	b_9215_flip_screen,d0           	| [$0D03: ld   a,(b_9215_flip_screen)]
 *	move.b	d0,d2                           	| [$0D06: ld   c,a]
+	moveq	#0,d2
 * extract x-coord and adjust for homing if needed
 * fixed point 9.7 in .b02.b03 - left shift integer portion into A ... carry in to <0> from .b02<7>
 	COMPUTE_LSB_A0_D6 ds_sprite_ctrl_9B00
@@ -2460,11 +2463,11 @@ l_0D03_flite_pth_posn_set:
 	SET_X_FROM_C
 	move.b	d3,d0                           	| [$0D11: ld   a,d] (ix)0x03
 	roxl.b	#1,d0                           	| [$0D12: rla] rotate Cy into A<0> (.b02<7>)
-*	btst.b	#0,d2                           	| [$0D13: bit  0,c] test flip screen
-*	jeq	l_0D1A                             		| [$0D15: jr   z,l_0D1A]
-*	add.b	#0x0D,d0                         	| [$0D17: add  a,#0x0D] flipped
-*	not.b	d0                               	| [$0D19: cpl]
-*l_0D1A:
+												| [$0D13: bit  0,c] test flip screen
+												| [$0D15: jr   z,l_0D1A]
+												| [$0D17: add  a,#0x0D] flipped
+												| [$0D19: cpl]
+					
 	btst.b	#6,(0x13,a2)                    	| [$0D1A: bit  6,0x13(ix)] if !z, add  a,(ix)0x11 ... relative offset
 	jeq	l_0D23                             	    | [$0D1E: jr   z,l_0D23]
 	add.b	(0x11,a2),d0                     	| [$0D20: add  a,0x11(ix)] heading home (add x-offset ... already bits<7:0>)
@@ -2480,8 +2483,8 @@ l_0D23:
 	SET_X_FROM_C
 	roxl.b	#1,d4                           	| [$0D2D: rl   e] rotate Cy into E<0>
 	move.b	d1,d0                           	| [$0D2F: ld   a,b] (ix)0x01
-	btst.b	#0,d2                           	| [$0D30: bit  0,c] test flip screen
-	jne	l_0D38                             		| [$0D32: jr   nz,l_0D38]
+*	btst.b	#0,d2                           	| [$0D30: bit  0,c] test flip screen
+*	jne	l_0D38                             		| [$0D32: jr   nz,l_0D38]
 	subq.b	#1,d4                           	| [$0D37: dec  e] comliment bit-0 of 9-bit integer portion (done before add)
 	add.b	#0x4F,d0          					| [$0D34: add  a,#(<(-0x0160 - 0x02))>>1] not flipped ... lsb of result, right-shift 1
 	not.b	d0                               	| [$0D36: cpl]
@@ -2514,8 +2517,8 @@ l_0D50:
 	add.w	d6,a0
 	move.b	(a0),d7
 	ror.b	#1,d7                          		| [rrc  (hl)]
-	CLEAR_XC_FLAGS
-	roxr.b	#1,d4                         		| [rrc  e]
+	ror.b	#1,d4                         		| [rrc  e]
+	SET_X_FROM_C
 	roxl.b	#1,d7                         		| [rl   (hl)] sprite[n].posn.sy<8>
     move.b	d7,(a0)
 
@@ -2588,8 +2591,8 @@ l_0D8D_got_a_bullet:
 	move.b	(a1),d0                         	| [ld   a,(de)] bomber.y<8> (in :0 ... ctrl in :1)
 	move.b	(a0),d7
 	ror.b	#1,d7                          		| [rrc  (hl)] bomb.ctrl.b1<0> to Cy
-	CLEAR_XC_FLAGS
-	roxr.b	#1,d0                            	| [rrca] bomber.y<8> from A<0> to Cy
+	ror.b	#1,d0                            	| [rrca] bomber.y<8> from A<0> to Cy
+	SET_X_FROM_C
 	roxl.b	#1,d7                         		| [rl   (hl)] sY<8> from Cy to bomb.ctrl.b1<0>
     move.b	d7,(a0)
 	rol.b	#1,d0                            	| [rlca] restore A with sY<8> left in Cy
