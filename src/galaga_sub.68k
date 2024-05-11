@@ -2020,11 +2020,11 @@ case_0B16:  | 0x01
 	addq.b	#1,d0                           	| [inc  a]
 	subq.b	#1,d0                           	| [dec  a]
 	scs	d7
-	jne	l_0B2A                             	| [jr   nz,l_0B2A]
+	jne	l_0B2A                             		| [jr   nz,l_0B2A]
 	move.b	#0x80,d0                        	| [ld   a,#0x80]
 l_0B2A:
 	tst.b	d7
-	jne	l_0B30                             	| [jr   c,l_0B30]
+	jne	l_0B30                             		| [jr   c,l_0B30]
 	neg.b	d0                               	| [neg]
 	add.b	#0xF2,d0                         	| [add  a,#0xF2]
 l_0B30:
@@ -2110,56 +2110,55 @@ l_0B8B:
 	addq.w	#1,a0                           	| [inc  hl] data pointer
 	CONVERT_SUBROM_A0_TO_D5D6
 l_0B8C:
-	move.b	d6,(0x08,a2)                    	| [ld   0x08(ix),l] .b00
-	move.b	d5,(0x09,a2)                    	| [ld   0x09(ix),h] .b01
-	addq.b	#1,(0x0D,a2)                    	| [inc  0x0D(ix)]
-
-	jra	next__pool_idx_0dfb                     	| [jp   next__pool_idx_0dfb]
+	move.b	d6,(0x08,a2)                    	| [$0B8C: ld   0x08(ix),l] .b00
+	move.b	d5,(0x09,a2)                    	| [$0B8F: ld   0x09(ix),h] .b01
+	addq.b	#1,(0x0D,a2)                    	| [$0B92: inc  0x0D(ix)]
+	jra	next__pool_idx_0dfb                     | [$0B95: jp   next__pool_idx_0dfb]
 
 * in an attack convoy ... changing direction
 case_0B98:  | 0x08
 * if (0x38 != (0x38 & ds_bug_motion_que_9100[b_bug_que_idx_9289].b10))  hl += 3 ...
-	move.b	(0x10,a2),d0                    	| [ld   a,0x10(ix)] offset of object ...8800[L]
-	and.b	#0x38,d0                         	| [and  #0x38]
-	cmp.b	#0x38,d0                         	| [cp   #0x38] "transient"? ($38, $3A, $3C, $3E)
+	move.b	(0x10,a2),d0                    	| [$0B98: ld   a,0x10(ix)] offset of object ...8800[L]
+	and.b	#0x38,d0                         	| [$0B9B: and  #0x38]
+	cmp.b	#0x38,d0                         	| [$0B9D: cp   #0x38] "transient"? ($38, $3A, $3C, $3E)
 
 * from case_0BD1 ... if (1 == cont_bmb_flag && 0 == task_actv[0x1D]) then ... HL += 3
 l_0B9F:
-	jeq	l_0B46                             	| [jp   z,l_0B46] load next ptr ... _flite_path_init
+	jeq	l_0B46                             		| [$0B9F: jp   z,l_0B46] load next ptr ... _flite_path_init
 * ptr to data table inc 3x ... (2 incs to skip address in table e.g. $0024?)
-	addq.w	#3,a0                           	| [inc  hl] * 3
-	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
+	addq.w	#3,a0                           	| [$0BA2: inc  hl] * 3
+	jra	j_090E_flite_path_init             		| [$0BA5: jp   j_090E_flite_path_init]
 
 * one red moth left in "free flight mode"
 case_0BA8:  | 0x09
-	addq.w	#1,a0                           	| [inc  hl] ptr to data table
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	btst.b	#7,(0x13,a2)                    	| [bit  7,0x13(ix)]
-	jeq	l_0BB4                             	| [jr   z,l_0BB4]
-	add.b	#0x80,d0                         	| [add  a,#0x80]
-	neg.b	d0                               	| [neg]
+	addq.w	#1,a0                           	| [$0BA8: inc  hl] ptr to data table
+	move.b	(a0),d0                         	| [$0BA9: ld   a,(hl)]
+	btst.b	#7,(0x13,a2)                    	| [$0BAA: bit  7,0x13(ix)]
+	jeq	l_0BB4                             		| [$0BAE: jr   z,l_0BB4]
+	add.b	#0x80,d0                         	| [$0BB0: add  a,#0x80]
+	neg.b	d0                               	| [$0BB2: neg]
 l_0BB4:
-	clr.b	d2                               	| [ld   c,#0] stage 4 ...
-	asl.b	#1,d0                            	| [sla  a]
-	roxl.b	#1,d2                           	| [rl   c]
-	asl.b	#1,d0                            	| [sla  a]
-	roxl.b	#1,d2                           	| [rl   c]
-	move.b	d0,(0x04,a2)                    	| [ld   0x04(ix),a]
-	move.b	d2,(0x05,a2)                    	| [ld   0x05(ix),c]
-	move.b	#0x1E,(0x0E,a2)                 	| [ld   0x0E(ix),#0x1E] bomb drop counter
-	move.b	b_92C0+0x08,d0                  	| [ld   a,(b_92C0 + 0x08)] bomb drop enable flags
-	move.b	d0,(0x0F,a2)                    	| [ld   0x0F(ix),a] b_92C0[$08] ... bomb drop enable flags
-	jra	l_0B8B                             	| [jp   l_0B8B] inc hl and finalize
+	clr.b	d2                               	| [$0BB4: ld   c,#0] stage 4 ...
+	asl.b	#1,d0                            	| [$0BB6: sla  a]
+	roxl.b	#1,d2                           	| [$0BB8: rl   c]
+	asl.b	#1,d0                            	| [$0BBA: sla  a]
+	roxl.b	#1,d2                           	| [$0BBC: rl   c]
+	move.b	d0,(0x04,a2)                    	| [$0BBE: ld   0x04(ix),a]
+	move.b	d2,(0x05,a2)                    	| [$0BC1: ld   0x05(ix),c]
+	move.b	#0x1E,(0x0E,a2)                 	| [$0BC4: ld   0x0E(ix),#0x1E] bomb drop counter
+	move.b	b_92C0+0x08,d0                  	| [$0BC8: ld   a,(b_92C0 + 0x08)] bomb drop enable flags
+	move.b	d0,(0x0F,a2)                    	| [$0BCB: ld   0x0F(ix),a] b_92C0[$08] ... bomb drop enable flags
+	jra	l_0B8B                             		| [$0BCE: jp   l_0B8B] inc hl and finalize
 
 * homing, red transit to top, yellow from off-screen at bottom or skip if in continuous mode
 case_0BD1:  | 0x05
 * if (1 == cont_bmb_flag && 0 == task_actv[0x1D]) then pD += 3 else pD = *(pHL)
-	move.b	b_92A0+0x0A,d0                  	| [ld   a,(b_92A0 + 0x0A)] continuous bombing flag, test for reload data pointer
-	move.b	d0,d2                           	| [ld   c,a]
-	move.b	ds_cpu0_task_actv_9000+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x1D)] f_2000 (destroyed boss that captured ship) test for reload data pointer
-	subq.b	#1,d0                           	| [dec  a]
-	and.b	d2,d0                            	| [and  c]
-	jra	l_0B9F                             	| [jr   l_0B9F] load next ptr or skip
+	move.b	b_92A0+0x0A,d0                  	| [$0BD1: ld   a,(b_92A0 + 0x0A)] continuous bombing flag, test for reload data pointer
+	move.b	d0,d2                           	| [$0BD4: ld   c,a]
+	move.b	ds_cpu0_task_actv_9000+0x1D,d0      | [$0BD5: ld   a,(ds_cpu0_task_actv_9000 + 0x1D)] f_2000 (destroyed boss that captured ship) test for reload data pointer
+	subq.b	#1,d0                           	| [$0BD8: dec  a]
+	and.b	d2,d0                            	| [$0BD9: and  c]
+	jra	l_0B9F                             		| [$0BDA: jr   l_0B9F] load next ptr or skip
 
 
 * Continue in the same state, but a new data set needs to be
@@ -2203,39 +2202,39 @@ l_0C05_flite_pth_cont:
 * transitions to the next segment of the flight pattern
 * if (    (b01==b06 || (b01-b06)==1|| (b06-b01)==1)
 *      && (b03==b07 || (b03-b07)==1|| (b07-b03)==1) ) ...
-	move.b	(0x01,a2),d0                    | [ld   a,0x01(ix)]
-	sub.b	(0x06,a2),d0                    | [sub  0x06(ix)] (ix)0x01 - (ix)0x06
-	jeq	l_0C1B                             	| [jr   z,l_0C1B]
-	jpl	l_0C18                             	| [jp   p,l_0C18] check overflow
-	neg.b	d0                              | [neg] negate if overflow (gets absolute value)
+	move.b	(0x01,a2),d0                    | [$0C0B: ld   a,0x01(ix)]
+	sub.b	(0x06,a2),d0                    | [$0C0E: sub  0x06(ix)] (ix)0x01 - (ix)0x06
+	jeq	l_0C1B                             	| [$0C11: jr   z,l_0C1B]
+	jpl	l_0C18                             	| [$0C13: jp   p,l_0C18] check overflow
+	neg.b	d0                              | [$0C16: neg] negate if overflow (gets absolute value)
 l_0C18:
-	subq.b	#1,d0                           | [dec  a]
-	jne	l_0C2D_flite_pth_step              	| [jr   nz,l_0C2D_flite_pth_step]
+	subq.b	#1,d0                           | [$0C18: dec  a]
+	jne	l_0C2D_flite_pth_step              	| [$0C19: jr   nz,l_0C2D_flite_pth_step]
 l_0C1B:
-	move.b	(0x03,a2),d0                    | [ld   a,0x03(ix)] detection of homespot... (ix)0x03-(ix)0x07 == 0
-	sub.b	(0x07,a2),d0                     | [sub  0x07(ix)] detection of homespot... (ix)0x03-(ix)0x07 == 0
-	jeq	l_0E08_imhome                      	| [jp   z,l_0E08_imhome]
-	jpl	l_0C29                             	| [jp   p,l_0C29] check overflow
-	neg.b	d0                              | [neg] negate if overflow (gets absolute value)
+	move.b	(0x03,a2),d0                    | [$0C1B: ld   a,0x03(ix)] detection of homespot... (ix)0x03-(ix)0x07 == 0
+	sub.b	(0x07,a2),d0                    | [$0C1E: sub  0x07(ix)] detection of homespot... (ix)0x03-(ix)0x07 == 0
+	jeq	l_0E08_imhome                      	| [$0C21: jp   z,l_0E08_imhome]
+	jpl	l_0C29                             	| [$0C24: jp   p,l_0C29] check overflow
+	neg.b	d0                              | [$0C27: neg] negate if overflow (gets absolute value)
 l_0C29:
-	subq.b	#1,d0                           | [dec  a]
-	jeq	l_0E08_imhome                      	| [jp   z,l_0E08_imhome]
+	subq.b	#1,d0                           | [$0C29: dec  a]
+	jeq	l_0E08_imhome                      	| [$0C2A: jp   z,l_0E08_imhome]
 
 
 l_0C2D_flite_pth_step:
 * if ( b13 & 0x20 && ( b01 == b06 || (b01 - b06) == 1|| (b06 - b01) == 1 ) ...
-	btst.b	#5,(0x13,a2)                    	| [bit  5,0x13(ix)] check if bee or boss dive
-	jeq	l_0C46                             	| [jr   z,l_0C46]
-	move.b	(0x01,a2),d0                    	| [ld   a,0x01(ix)] 0C33 boss: launched out of position, bee movement, 0x01(ix) counting down
-	sub.b	(0x06,a2),d0                     	| [sub  0x06(ix)] origin home position y (bits 15:8)
-	jeq	l_0C3E                             	| [jr   z,l_0C3E]
-	addq.b	#1,d0                           	| [inc  a]
-	jne	l_0C46                             	| [jr   nz,l_0C46]
+	btst.b	#5,(0x13,a2)                    | [$0C2D: bit  5,0x13(ix)] check if bee or boss dive
+	jeq	l_0C46                             	| [$0C31: jr   z,l_0C46]
+	move.b	(0x01,a2),d0                    | [$0C33: ld   a,0x01(ix)] 0C33 boss: launched out of position, bee movement, 0x01(ix) counting down
+	sub.b	(0x06,a2),d0                    | [$0C36: sub  0x06(ix)] origin home position y (bits 15:8)
+	jeq	l_0C3E                             	| [$0C39: jr   z,l_0C3E]
+	addq.b	#1,d0                           | [$0C3B: inc  a]
+	jne	l_0C46                             	| [$0C3C: jr   nz,l_0C46]
 * ... then ...
 l_0C3E:
 * set it up to expire on next step
-	move.b	#1,(0x0D,a2)                    	| [ld   0x0D(ix),#1] bee dived down and begins loop around, boss reached position to start beam
-	bclr.b	#5,(0x13,a2)                    	| [res  5,0x13(ix)] (ix)0x0D == 1
+	move.b	#1,(0x0D,a2)                    | [$0C42: ld   0x0D(ix),#1] bee dived down and begins loop around, boss reached position to start beam
+	bclr.b	#5,(0x13,a2)                    | [$0C46: res  5,0x13(ix)] (ix)0x0D == 1
 
 * advance the rotation angle. Step-size in .b0C and 10-bit angle in .b04+.b05
 *               90          - angle in degrees
@@ -2387,10 +2386,11 @@ l_0CD0:
 
 * stash the pointer to .b0/.b2 in DE (previous DE into HL but no longer used)
 												| [$0CD4: dec  l]
+	COMPUTE_LSB_A0_D6	ds_bug_motion_que_9100 	| extract lsb from a0
 	exg	a1,a0                              		| [$0CD5: ex   de,hl] save a0 in a1
-	move.b	d4,d0                           	| [$0CD6: ld   a,e]
+	move.b	d6,d0                           	| [$0CD6: ld   a,e] should be d4 but we swapped
 	eor.b	#0x02,d0                         	| [$0CD7: xor  #0x02] toggle x/y pointer, .b00 or .b02
-	move.b	d0,d4                           	| [$0CD9: ld   e,a]
+	move.b	d0,d4                           	| [$0CD9: ld   e,a] put back in d4
 
 * test L<0> (pushed/popped from left-shifted DE above .. but this would be .b04<7> before left-shift?)
 	movem.w	(sp)+,d5/d6                        	| [$0CDA: pop  hl] ..... adjusted rotation angle from push DE above
@@ -2431,7 +2431,7 @@ l_0CE3:
 											| [$0CF7: and  a] clear carry
 	neg.w	d1                            	| [$0CF8: sbc  hl,bc] negate BC ... can't use "neg" since it is 16-bit
 l_0CFA:
-	exg	a1,a0                              	| [$0CFA: ex   de,hl] reload the pointer from DE
+	exg	a1,a0                              	| [$0CFA: ex   de,hl] reload the pointer from DE (saved at 0CD5)
 * *HL += *DE (D5/D6 still holds mul result, exg doesn't affect that)
 	move.b	d6,d0                           | [$0CFB: ld   a,e] lsb of mul result (d4 <=> d6)
 	add.b	(a0),d0                         | [$0CFC: add  a,(hl)]

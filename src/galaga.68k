@@ -8432,46 +8432,46 @@ l_300C:
 0:
 
 	lea	b_best5_score4+0x05,a1         	| [ld   de,#b_best5_score4 + 0x05]
-	jbsr	c_31F7_chk_score_rank             	| [call c_31F7_chk_score_rank] score > 4th place?
+	jbsr	c_31F7_chk_score_rank       | [call c_31F7_chk_score_rank] score > 4th place?
 	scs		d7
-	move.b	#5,d0                           	| [ld   a,#5]
+	move.b	#5,d0                       | [ld   a,#5]
 	tst.b	d7
-	jeq	l_3047                             	| [jr   nc,l_3047]
+	jeq	l_3047                          | [jr   nc,l_3047]
 
 	lea	b_best5_score3+0x05,a1         	| [ld   de,#b_best5_score3 + 0x05]
-	jbsr	c_31F7_chk_score_rank             	| [call c_31F7_chk_score_rank] score > 4th place?
+	jbsr	c_31F7_chk_score_rank       | [call c_31F7_chk_score_rank] score > 4th place?
 	scs		d7
-	move.b	#4,d0                           	| [ld   a,#4]
+	move.b	#4,d0                       | [ld   a,#4]
 	tst.b	d7
-	jeq	l_3047                             	| [jr   nc,l_3047]
+	jeq	l_3047                          | [jr   nc,l_3047]
 
 	lea	b_best5_score2+0x05,a1         	| [ld   de,#b_best5_score2 + 0x05]
-	jbsr	c_31F7_chk_score_rank             	| [call c_31F7_chk_score_rank] score > 3th place?
+	jbsr	c_31F7_chk_score_rank       | [call c_31F7_chk_score_rank] score > 3th place?
 	scs		d7
-	move.b	#3,d0                           	| [ld   a,#3]
+	move.b	#3,d0                       | [ld   a,#3]
 	tst.b	d7
-	jeq	l_3047                             	| [jr   nc,l_3047]
+	jeq	l_3047                          | [jr   nc,l_3047]
  
 	lea	b_best5_score1+0x05,a1         	| [ld   de,#b_best5_score1 + 0x05]
-	jbsr	c_31F7_chk_score_rank             	| [call c_31F7_chk_score_rank] score > 2th place?
+	jbsr	c_31F7_chk_score_rank       | [call c_31F7_chk_score_rank] score > 2th place?
 	scs		d7
-	move.b	#2,d0                           	| [ld   a,#2]
+	move.b	#2,d0                       | [ld   a,#2]
 	tst.b	d7
-	jeq	l_3047                             	| [jr   nc,l_3047]
-	st.b	d0                                	| [ld   a,#0xFF]
-	*move.b	d0,0x9AA0+0x0C                  	| [ld   (0x9AA0 + 0x0C),a] special tune for 1st place
-	move.b	#1,d0                           	| [ld   a,#1]
-	jra	l_304A                             	| [jr   l_304A]
+	jeq	l_3047                          | [jr   nc,l_3047]
+	st.b	d0                          | [ld   a,#0xFF]
+	*move.b	d0,0x9AA0+0x0C              | [ld   (0x9AA0 + 0x0C),a] special tune for 1st place
+	move.b	#1,d0                       | [ld   a,#1]
+	jra	l_304A                          | [jr   l_304A]
 l_3047:
-	*move.b	d0,0x9AA0+0x10                  	| [ld   (0x9AA0 + 0x10),a] select the tune
+	*move.b	d0,0x9AA0+0x10              | [ld   (0x9AA0 + 0x10),a] select the tune
 
 l_304A:
 * set the jp address for the subroutine.
-	move.b	d0,b_8A00+0x11                  	| [ld   (b_8A00 + 0x11),a] 1==1ST place etc.
+	move.b	d0,b_8A00+0x11              | [ld   (b_8A00 + 0x11),a] 1==1ST place etc.
 	lea	d_31A6,a0                      	| [ld   hl,#d_31A6] jp table address
-	subq.b	#1,d0                           	| [dec  a]
-	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
-	jbsr	c_3118_insert_top5_score          	| [call c_3118_insert_top5_score]
+	subq.b	#1,d0                       | [dec  a]
+	jbsr	add_4_times_d0_to_a0_0008   | [rst  0x08] HL += 2A
+	jbsr	c_3118_insert_top5_score    | [call c_3118_insert_top5_score]
 
 * insert new player name in table.
 * data: 0,3,6,9,12 (12 for first place)
