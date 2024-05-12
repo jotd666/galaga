@@ -1,61 +1,15 @@
 
-- intro: ship moving but no shots, no enemies attacking:
-  attack is wrong: wrong boss attacking, and going up!!
-  $0C83:sub: set sprite x/y
 
-- possible issue at l_1F1E as exg a0,a1 but d4 used?? 
 - ACTIVE_BITPLANE_MASK not implemented
 - generate sprite_cluts for hw sprite
 - debug rld,rrd (called after intro)
 - CREDIT displayed but wrong color, wrong row too, in windowed HIGHSCORE too low
 - remove red timer flashes, maybe speedup using F10?
-
-	 
-sub:
-
-C51: before x/y
-D23: x computation
-D51: y computation
-
-x/y seq
-
-C4 C4 B4 C4 B4 D4
-B7 B5 C6 B4 C5 C7
-
-bpset C51:sub
+- no shots in demo: check sub 0704 rckt_man
+- orientation of attacking sprites wrong: mirrored+flipped, we should support
+  attributes!!
 
 trace cpu with regs:
 
 trace galaga.tr,,,{tracelog "A=%02X, B=%02X, C=%02X, D=%02X, E=%02X, H=%02X, L=%02X, IX=%04X ",a,b,c,d,e,h,l,ix}
 
-check regs second time D23, D51
-
-D23
----------- GALAGA.TR
-A=C4, B=00, C=00, D=62, E=00, H=93, L=36, IX=9100 0D23: ld   (hl),a
-A=C4, B=01, C=00, D=62, E=2E, H=93, L=36, IX=9100 0D23: ld   (hl),a
-A=B4, B=00, C=00, D=5A, E=00, H=93, L=58, IX=9114 0D23: ld   (hl),a
-A=C4, B=01, C=00, D=62, E=2F, H=93, L=36, IX=9100 0D23: ld   (hl),a
-A=B4, B=01, C=00, D=5A, E=17, H=93, L=58, IX=9114 0D23: ld   (hl),a
-A=D4, B=00, C=00, D=6A, E=00, H=93, L=52, IX=9128 0D23: ld   (hl),a
-A=C5, B=01, C=00, D=62, E=8E, H=93, L=36, IX=9100 0D23: ld   (hl),a
-A=B4, B=01, C=00, D=5A, E=5E, H=93, L=58, IX=9114 0D23: ld   (hl),a
-
-D51
-
-A=B7, B=55, C=00, D=62, E=FE, H=93, L=37, IX=9100 0D51: ld   h,$9B
-A=B5, B=56, C=00, D=62, E=5A, H=93, L=37, IX=9100 0D51: ld   h,$9B
-A=C6, B=4D, C=00, D=5A, E=00, H=93, L=59, IX=9114 0D51: ld   h,$9B
-A=B4, B=56, C=00, D=62, E=5E, H=93, L=37, IX=9100 0D51: ld   h,$9B
-A=C5, B=4E, C=00, D=5A, E=2C, H=93, L=59, IX=9114 0D51: ld   h,$9B
-A=C7, B=4D, C=00, D=6A, E=FE, H=93, L=53, IX=9128 0D51: ld   h,$9B
-A=B2, B=57, C=00, D=62, E=1C, H=93, L=37, IX=9100 0D51: ld   h,$9B
-
-
-D51 6th time
-A=C7, B=4D, C=00, D=6A, E=FE, H=93, L=53, IX=9128 0D51: ld   h,$9B
-but port: D0 = C5, D1 = 4E
-
-because CD3 6th time
-A=4D, B=01, C=00, D=03, E=00, H=91, L=29, IX=9128 0CD3: ld   (hl),a
-but port: D1 = 3 hence D2 = 1

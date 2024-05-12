@@ -2420,7 +2420,6 @@ c_divmod:
 *  ...
 *-----------------------------------------------------------------------------
 c_1079:
-	move.w	#0x1079,0x100
 	COMPUTE_LSB_A0_D6	b_8800
 	move.b	d6,d0                           	| [ld   a,l]
 
@@ -2444,7 +2443,6 @@ c_1079:
 *  ...
 *-----------------------------------------------------------------------------
 c_diving_movement_1083:
-	move.w	#0x1083,0x100
 * set A:bit-7 if L:bit-1 != 0 ... creature originating on right side
 	move.b	d6,d0                           	| [$1083: ld   a,l]
 	ror.b	#2,d0                            	| [$1084: rrca] * 2
@@ -2466,7 +2464,6 @@ c_diving_movement_1083:
 *
 *-----------------------------------------------------------------------------
 setup_motion_for_attackers_108a:
-	move.w	#0x108a,0x100
 	movem.w	d3/d4,-(sp)                    	    | [$108a: push de]
 
 * find an available data structure or quit
@@ -3780,122 +3777,116 @@ _l_15f1: | end area
 f_ship_demo_controls_1700:
 * labels for "case" blocks in _1713
 * switch( *_demo_fghtrvctrs >> 5) & 0x07 )
-	move.l	pdb_demo_fghtrvctrs,a1      	| [ld   de,(pdb_demo_fghtrvctrs)] cases for switch
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	rol.b	#3,d0                            	| [rlca] * 3
-	and.b	#0x07,d0                         	| [and  #0x07]
-	
+	move.l	pdb_demo_fghtrvctrs_9282,a1      	    | [$1700: ld   de,(pdb_demo_fghtrvctrs_9282)] cases for switch
+	move.b	(a1),d0                     			| [$1704: ld   a,(de)]
+	rol.b	#3,d0                       			| [$1705: rlca] * 3
+	and.b	#0x07,d0                    			| [$1708: and  #0x07]
 	CHECK_D0W_UPPER_BOUND	6
-	
-	lea	d_1713,a0                      	| [ld   hl,#d_1713] &table
-	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
-	                       	| [ld   a,(hl)]
-	                       	| [inc  hl]
-	                       	| [ld   h,(hl)]
-	move.l	(a0),a0                       	| [ld   l,a]
-	jra	(a0)                               	| [jp   (hl)]
+	lea	d_1713,a0                      				| [$170A: ld   hl,#d_1713] &table
+	jbsr	add_4_times_d0_to_a0_0008   			| [$170D: rst  0x08] HL += 2A
+													| [$170E: ld   a,(hl)]
+													| [$170F: inc  hl]
+													| [$1710: ld   h,(hl)]
+	move.l	(a0),a0         						| [$1711: ld   l,a]
+	jra	(a0)                						| [$1712: jp   (hl)]
 d_1713:
-	.long case_1766
-	.long case_1766
-	.long case_171F
-	.long case_1766
+	.long case_demo_1766
+	.long case_demo_1766
+	.long case_boss_wingmen_near_171F
+	.long case_demo_1766
 	.long case_drives_sim_inputs_1734
 	.long case_172D
 
 
 * boss+wingmen nearly to fighter
-case_171F:  | 0x02
-	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
-	and.b	#0x0F,d0                         	| [and  #0x0F]
+case_boss_wingmen_near_171F:  | 0x02
+	move.b	ds3_frame_cts_92A0+0,d0         	| [$171F: ld   a,(ds3_frame_cts_92A0 + 0)]
+	and.b	#0x0F,d0                         	| [$1722: and  #0x0F]
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    		| [$1724: ret  nz] [...]
 0:
-
-	lea	ds_9200_glbls+0x07,a0          	| [ld   hl,#ds_9200_glbls + 0x07] timer, training mode, far-right boss turned blue
-	subq.b	#1,(a0)                         	| [dec  (hl)]
+	lea	ds_9200_glbls+0x07,a0          			| [$1725: ld   hl,#ds_9200_glbls + 0x07] timer, training mode, far-right boss turned blue
+	subq.b	#1,(a0)                         	| [$1728: dec  (hl)]
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    		| [$1729: ret  nz] [...]
 0:
-	jra	case_1766                          	| [jp   case_1766] training mode, far-right boss exploding
+	jra	case_demo_1766                          		| [$172A: jp   case_demo_1766] training mode, far-right boss exploding
 
 * appearance of first enemy formation in Demo
 case_172D:  | 0x05
-	jbsr	c_init_rocket_sprites_1F0F                            	| [call c_init_rocket_sprites_1F0F] init sprite objects for rockets
-	move.l	pdb_demo_fghtrvctrs,a1      	| [ld   de,(pdb_demo_fghtrvctrs)] trampled DE so reload it
+	jbsr	c_init_rocket_sprites_1F0F      	| [$172D: call c_init_rocket_sprites_1F0F] init sprite objects for rockets
+	move.l	pdb_demo_fghtrvctrs_9282,a1    | [$1730: ld   de,(pdb_demo_fghtrvctrs_9282)] trampled DE so reload it
 
 * drives the simulated inputs to the fighter in training mode
 case_drives_sim_inputs_1734:  | 0x04
-	move.b	(a1),d0                         	| [ld   a,(de)] *pdb_demo_fghtrvctrs
-
-	lea	ds_plyr_actv+_b_2ship,a0       	| [ld   hl,#ds_plyr_actv +_b_2ship]
-	move.b	(a0),d4                         	| [ld   e,(hl)] setup E for c_skip_real_io_input_1F92
-
-	btst.b	#0,d0                           	| [bit  0,a]
-	jne	l_1741                             	| [jr   nz,l_1741]
-	and.b	#0x0A,d0                         	| [and  #0x0A]
-	jra	l_1755                             	| [jr   l_1755]
+	move.b	(a1),d0                         | [$1734: ld   a,(de)] *pdb_demo_fghtrvctrs_9282
+	lea	ds_plyr_actv+_b_2ship,a0       		| [$1735: ld   hl,#ds_plyr_actv +_b_2ship]
+	move.b	(a0),d4                         | [$1738: ld   e,(hl)] setup E for c_skip_real_io_input_1F92
+	btst.b	#0,d0                           | [$1739: bit  0,a]
+	jne	l_1741                             	| [$173B: jr   nz,l_1741]
+	and.b	#0x0A,d0                        | [$173D: and  #0x0A]
+	jra	l_1755                             	| [$173F: jr   l_1755]
 
 l_1741:
-	move.b	ds_9200_glbls+0x09,d0           	| [ld   a,(ds_9200_glbls + 0x09)] object/index of targeted alien
-	move.b	d0,d6                           	| [ld   l,a]
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	move.b	ds_9200_glbls+0x09,d0           	| [$1741: ld   a,(ds_9200_glbls + 0x09)] object/index of targeted alien
+	move.b	d0,d6                           	| [$1744: ld   l,a]
+	lea	ds_sprite_posn_9300,a0              	| [$1745: ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-
-	move.b	ds_sprite_posn_9300+0x62,d0          	| [ld   a,(ds_sprite_posn_9300 + 0x62)] ship (1) position
-	sub.b	(a0),d0                          	| [sub  (hl)]
+	move.b	ds_sprite_posn_9300+0x62,d0         | [$1747: ld   a,(ds_sprite_posn_9300 + 0x62)] ship (1) position
+	sub.b	(a0),d0                          	| [$174A: sub  (hl)]
+	* jotd: had to handle Z and C flags separately as there are some "ld" instructions in between
 	jne		0f
-	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
-	jra	l_1755                             	| [jr   z,l_1755]
+	move.b	#0x0A,d0                        	| [$174B: ld   a,#0x0A]
+	jra	l_1755                             		| [$174D: jr   z,l_1755]
 0:
 	jcc		0f
-	move.b	#0x08,d0                        	| [ld   a,#0x08] right
-	jra	l_1755                             	| [jr   c,l_1755]
+	move.b	#0x08,d0                        	| [$174F: ld   a,#0x08] right
+	jra	l_1755                             		| [$1751: jr   c,l_1755]
 0:
-	move.b	#2,d0                           	| [ld   a,#2] left
+	move.b	#2,d0                           	| [$1753: ld   a,#2] left
 l_1755:
-	jbsr	c_skip_real_io_input_1F92                            	| [call c_skip_real_io_input_1F92]
-	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
-	and.b	#0x03,d0                         	| [and  #0x03]
+	jbsr	c_skip_real_io_input_1F92           | [$1755: call c_skip_real_io_input_1F92]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [$1758: ld   a,(ds3_frame_cts_92A0 + 0)]
+	and.b	#0x03,d0                         	| [$175B: and  #0x03]
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    		| [$175D: ret  nz] [...]
 0:
-	lea	ds_9200_glbls+0x07,a0          	| [ld   hl,#ds_9200_glbls + 0x07] timer, training mode, far-right boss exploding
-	subq.b	#1,(a0)                         	| [dec  (hl)]
+	lea	ds_9200_glbls+0x07,a0          			| [$175E: ld   hl,#ds_9200_glbls + 0x07] timer, training mode, far-right boss exploding
+	subq.b	#1,(a0)                         	| [$1761: dec  (hl)]
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    		| [$1762: ret  nz] [...]
 0:
-	jbsr	c_init_rocket_sprites_1F0F                            	| [call c_init_rocket_sprites_1F0F] init sprite objects for rockets ...training mode, ship about to shoot?
+	jbsr	c_init_rocket_sprites_1F0F          | [$1763: call c_init_rocket_sprites_1F0F] init sprite objects for rockets ...training mode, ship about to shoot?
 
-case_1766:  | 0x00, 0x01, 0x03
-	move.l	pdb_demo_fghtrvctrs,a1      	| [ld   de,(pdb_demo_fghtrvctrs)]
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	and.b	#0xC0,d0                         	| [and  #0xC0] 0x80 fires shot ... 0xC0 is end of sequence
-	cmp.b	#0x80,d0                         	| [cp   #0x80]
-	jne	l_1772                             	| [jr   nz,l_1772]
-	addq.w	#1,a1                           	| [inc  de] firing shot ... advance to next token
+case_demo_1766:  | 0x00, 0x01, 0x03
+	move.l	pdb_demo_fghtrvctrs_9282,a1    		| [$1766: ld   de,(pdb_demo_fghtrvctrs_9282)]
+	move.b	(a1),d0                         	| [$176A: ld   a,(de)]
+	and.b	#0xC0,d0                         	| [$176B: and  #0xC0] 0x80 fires shot ... 0xC0 is end of sequence
+	cmp.b	#0x80,d0                         	| [$176D: cp   #0x80]
+	jne	l_1772                             		| [$176F: jr   nz,l_1772]
+	addq.w	#1,a1                           	| [$1771: inc  de] firing shot ... advance to next token
 l_1772:
-	addq.w	#1,a1                           	| [inc  de]
-
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	move.l	a1,pdb_demo_fghtrvctrs          	| [ld   (pdb_demo_fghtrvctrs),de] += 1
+	addq.w	#1,a1                           	| [$1772: inc  de]
+	move.b	(a1),d0                         	| [$1773: ld   a,(de)]
+	move.l	a1,pdb_demo_fghtrvctrs_9282    		| [$1774: ld   (pdb_demo_fghtrvctrs_9282),de] += 1
 * A = (*_demo_fghtrvctrs >> 5) & 0x07|
-	rol.b	#3,d0                            	| [rlca] * 3
-	and.w	#0x07,d0                         	| [and  #0x07]
+	rol.b	#3,d0                            	| [$1778: rlca] * 3
+	and.w	#0x07,d0                         	| [$177B: and  #0x07]
 * switch(...)
 	CHECK_D0W_UPPER_BOUND	7
-	lea	d_1786,a0                      	| [ld   hl,#d_1786]
-	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A (pointer from index)
-	move.l	(a0),a0                       	| [ld   a,(hl)]
-	                       	| [inc  hl]
-	                       	| [ld   h,(hl)]
-	                       	| [ld   l,a]
-	jra	(a0)                               	| [jp   (hl)] 1784
+	lea	d_1786,a0                      			| [$177D: ld   hl,#d_1786]
+	jbsr	add_4_times_d0_to_a0_0008           | [$1780: rst  0x08] HL += 2A (pointer from index)
+	move.l	(a0),a0                       		| [$1781: ld   a,(hl)]
+												| [$1782: inc  hl]
+												| [$1783: ld   h,(hl)]
+												| [$1784: ld   l,a]
+	jra	(a0)          					        | [$1785: jp   (hl)] 1784
 
 d_1786:
 	.long case_1794  | 0
 	.long case_1794  | 1 -> $2x
-	.long case_17A1  | 2 -> $4x
+	.long case_ship_shoots_demo_17A1  | 2 -> $4x
 	.long case_17A8  | 3
 	.long case_17AE  | 4 -> $8x
 	.long case_17AE  | 5
@@ -3905,39 +3896,39 @@ d_1786:
 * load index/position of target alien
 case_1794:
 * ds_9200_glbls[0x09] = *_demo_fghtrvctrs << 1 & 0x7E
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	rol.b	#1,d0                            	| [rlca] rotate bits<6:1> into place
-	and.b	#0x7E,d0                         	| [and  #0x7E] mask out Cy rlca'd into <:0>
-	move.b	d0,ds_9200_glbls+0x09           	| [ld   (ds_9200_glbls + 0x09),a] index/position of of target alien
-	rts                                    	| [ret]
+	move.b	(a1),d0                         	| [$1794: ld   a,(de)]
+	rol.b	#1,d0                            	| [$1795: rlca] rotate bits<6:1> into place
+	and.b	#0x7E,d0                         	| [$1796: and  #0x7E] mask out Cy rlca'd into <:0>
+	move.b	d0,ds_9200_glbls+0x09           	| [$1798: ld   (ds_9200_glbls + 0x09),a] index/position of of target alien
+	rts                                    		| [$179B: ret]
 
 * $C0: last token, shot-and-hit far-left boss in training mode (second hit)
 case_179C:
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x03       	| [ld   (ds_cpu0_task_actv_9000 + 0x03),a] 0 ... f_ship_demo_controls_1700() end of fighter control sequence
-	rts                                    	| [ret]
+	clr.b	d0                               	| [$179C: xor  a]
+	move.b	d0,ds_cpu0_task_actv_9000+0x03      | [$179D: ld (ds_cpu0_task_actv_9000 + 0x03),a] 0 ... f_ship_demo_controls_1700() end of fighter control sequence
+	rts                                    		| [$17A0: ret]
 
 * $4x: shoot-and-hit far-right or far-left boss (once) in training mode
-case_17A1:
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	and.b	#0x1F,d0                         	| [and  #0x1F]
+case_ship_shoots_demo_17A1:
+	move.b	(a1),d0                         	| [$17A1: ld   a,(de)]
+	and.b	#0x1F,d0                         	| [$17A2: and  #0x1F]
 l_17A4:
-	move.b	d0,ds_9200_glbls+0x07           	| [ld   (ds_9200_glbls + 0x07),a] demo timer
-	rts                                    	| [ret]
+	move.b	d0,ds_9200_glbls+0x07           	| [$17A4: ld   (ds_9200_glbls + 0x07),a] demo timer
+	rts                                    		| [$17A7: ret]
 
 * when?
 case_17A8:
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	and.b	#0x1F,d0                         	| [and  #0x1F]
-	move.b	d0,d2                           	| [ld   c,a]
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe
-	rts                                    	| [ret]
+	move.b	(a1),d0                         	| [$17A8: ld   a,(de)]
+	and.b	#0x1F,d0                         	| [$17A9: and  #0x1F]
+	move.b	d0,d2                           	| [$17AB: ld   c,a]
+	jbsr	string_out_pe_30                    | [$17AC: rst  0x30] string_out_pe
+	rts                                    		| [$17AD: ret]
 
 * $8x: prior to each fighter shot in training mode?
 case_17AE:
-	addq.w	#1,a1                           	| [inc  de]
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	jra	l_17A4                             	| [jr   l_17A4]
+	addq.w	#1,a1                           	| [$17AE: inc  de]
+	move.b	(a1),d0                         	| [$17AF: ld   a,(de)]
+	jra	l_17A4                             		| [$17B0: jr   l_17A4]
 
 *=============================================================================
 * f_manage_attract_mode_17B2()
@@ -4025,7 +4016,7 @@ case_1808:
 	jbsr	c_fghtr_onscreen_133A                            	| [call c_fghtr_onscreen_133A]
 
 	lea	d_181F,a0                      	| [ld   hl,#d_181F]
-	move.l	a0,pdb_demo_fghtrvctrs          	| [ld   (pdb_demo_fghtrvctrs),hl] &d_181F[0]
+	move.l	a0,pdb_demo_fghtrvctrs_9282          	| [ld   (pdb_demo_fghtrvctrs_9282),hl] &d_181F[0]
 
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,ds_cpu0_task_actv_9000+0x03       	| [ld   (ds_cpu0_task_actv_9000 + 0x03),a] 1  (f_ship_demo_controls_1700 ... fighter control in training/demo mode)
@@ -4066,7 +4057,7 @@ case_init_demo_1852:
 	move.b	d0,ds_plyr_actv+_b_not_chllg_stg	| [ld   (ds_plyr_actv +_b_not_chllg_stg),a] 1  (0 if challenge stage ...see new_stg_game_only)
 
 	lea	d_1887,a0                      	| [ld   hl,#d_1887]
-	move.l	a0,pdb_demo_fghtrvctrs          	| [ld   (pdb_demo_fghtrvctrs),hl] &d_1887[0]
+	move.l	a0,pdb_demo_fghtrvctrs_9282          	| [ld   (pdb_demo_fghtrvctrs_9282),hl] &d_1887[0]
 	jbsr	stg_init_env                      	| [call stg_init_env]
 	jbsr	c_fghtr_onscreen_133A                            	| [call c_fghtr_onscreen_133A] apparently erases some stuff from screen?
 
@@ -4159,7 +4150,7 @@ l_18DB_while:
 * now: 92C0  0D FF FF xx 0D FF FF
 
 	lea	d_1928,a0                      			| [$18F9: ld   hl,#d_1928] demo fighter vectors
-	move.l	a0,pdb_demo_fghtrvctrs          	| [$18FC: ld   (pdb_demo_fghtrvctrs),hl] &d_1928[0] ... demo fighter vectors
+	move.l	a0,pdb_demo_fghtrvctrs_9282          	| [$18FC: ld   (pdb_demo_fghtrvctrs_9282),hl] &d_1928[0] ... demo fighter vectors
 
 * memset($92ca,$00,$10)
 	clr.b	d0                               	| [$18FF: xor  a]
@@ -5792,101 +5783,98 @@ f_read_fire_button_1f04:
 *-----------------------------------------------------------------------------
 c_init_rocket_sprites_1F0F:
 * if ( 0 != sprite[ RCKT0 ].sX ) ...
-	lea	ds_sprite_posn_9300+0x64,a0         	| [ld   hl,#ds_sprite_posn_9300 + 0x64] ROCKET_0
-	lea	b_92A0+0x04,a1                 	| [ld   de,#b_92A0 + 0x04] rockt_attribute[0]
+	lea	ds_sprite_posn_9300+0x64,a0         	| [$1F0F: ld   hl,#ds_sprite_posn_9300 + 0x64] ROCKET_0
+	lea	b_92A0+0x04,a1                 			| [$1F12: ld   de,#b_92A0 + 0x04] rockt_attribute[0]
 	move.w	#0xA4,d4
-	clr.b	d0                               	| [xor  a]
-	tst.b	(a0)                          	| [cp   (hl)] if (0)
-	jeq	l_1F1E                             	| [jr   z,l_1F1E]
+	clr.b	d0                               	| [$1F15: xor  a]
+	tst.b	(a0)                          		| [$1F16: cp   (hl)] if (0)
+	jeq	shot_slot_free_1f1e  		       		| [$1F17: jr   z,shot_slot_free_1f1e]
 
 * ... then ... if ( 0 != sprite[ RCKT1 ].sX )  return
-	lea		ds_sprite_posn_9300+0x66,a0        	| [ld   l,#<ds_sprite_posn_9300 + 0x66] ROCKET_1
-	addq.w	#1,a1                           	| [inc  e] rockt_attribute[1]
-	addq.w	#1,d4                           	| [inc  e] [a1 coherence]
-	tst.b	(a0)                          	| [cp   (hl)] if (0 != sprite[RCKT1].sX)  ret
+	lea		ds_sprite_posn_9300+0x66,a0        	| [$1F19: ld   l,#<ds_sprite_posn_9300 + 0x66] ROCKET_1
+	addq.w	#1,a1                           	| [$1F1B: inc  e] rockt_attribute[1]
+	addq.w	#1,d4                           	| [$1F1B: inc  e] [a1 coherence]
+	tst.b	(a0)                          		| [$1F1C: cp   (hl)] if (0 != sprite[RCKT1].sX)  ret
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    		| [$1F1D: ret  nz] [...]
 0:
 
-l_1F1E:
+shot_slot_free_1f1e:
 * save pointer to attribute, and stash 'offsetof( RCKT_X )' in E
-
-	movem.w	d3/d4,-(sp)                    	| [push de] &rockt_attribute[n].posn.b0
-	move.l	a1,-(sp)                        	| [push de] &rockt_attribute[n].posn.b0
-	exg	a1,a0                              	| [ex   de,hl]
-
-	lea	ds_sprite_ctrl_9B00+0x62+1,a0       	| [ld   hl,#ds_sprite_ctrl_9B00 + 0x62 + 1] sprite.ctrl[FIGHTR].b1
-	lea	ds_sprite_ctrl_9B00,a1                           	| [ld   d,h]
-	addq.w	#1,d4                           	| [inc  e] sprite[RCKT_X].ctrl.b1 [a1 coherence]
-    add.w	d4,a1
-
-	btst.b	#2,(a0)                         	| [bit  2,(hl)] sprite.ctrl[FIGHTR].b1<2> ... ?
-	jeq	l_1F2B                             	| [jr   z,l_1F2B]
-
-	move.l	(sp)+,a1                        	| [pop  de]
-	movem.w	(sp)+,d3/d4                    	| [pop  de]
-	rts                                    	| [ret]
+	movem.w	d3/d4,-(sp)                    		| [$1F1E: push de] &rockt_attribute[n].posn.b0
+	move.l	a1,-(sp)                        	| [$1F1E: push de] &rockt_attribute[n].posn.b0
+	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
+	exg	d6,d4                              		| [$1F1F: ex   de,hl]
+	lea	ds_sprite_ctrl_9B00+0x62+1,a0       	| [$1F20: ld   hl,#ds_sprite_ctrl_9B00 + 0x62 + 1] sprite.ctrl[FIGHTR].b1
+	lea	ds_sprite_ctrl_9B00,a1              	| [$1F23: ld   d,h]
+	addq.b	#1,d4                           	| [$1F24: inc  e] sprite[RCKT_X].ctrl.b1 [a1 coherence]
+    add.w	d4,a1	
+	btst.b	#2,(a0)                         	| [$1F25: bit  2,(hl)] sprite.ctrl[FIGHTR].b1<2> ... ?
+	jeq	l_1F2B                             		| [$1F27: jr   z,l_1F2B]
+	move.l	(sp)+,a1                        	| [$1F29: pop  de]
+	movem.w	(sp)+,d3/d4                    		| [$1F29: pop  de]
+	rts                                    		| [$1F2A: ret]
 
 
 l_1F2B:
-* sprite.ctrl[RCKT+n].b1 = sprite.ctrl[SHIP].b1 ... ship.sY, bit-8
-	jbsr	ldd                               	| [ldd] e.g. *(9B65--) = *(9B63--)
+	jbsr	osd_break
 
+* sprite.ctrl[RCKT+n].b1 = sprite.ctrl[SHIP].b1 ... ship.sY, bit-8
+	jbsr	ldd                               	| [$1F2B: ldd] e.g. *(9B65--) = *(9B63--)
+	subq.b	#1,d4								| [a1 coherence]
 	COMPUTE_LSB_A0_D6	ds_sprite_ctrl_9B00
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	lea	ds_sprite_posn_9300,a0              	| [$1F2D: ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	lea	ds_sprite_posn_9300,a1                      	| [ld   d,h] stash it
+	lea	ds_sprite_posn_9300,a1                  | [$1F2F: ld   d,h] stash it
 	add.w	d4,a1
 * sprite.posn[RCKT+n].b0 = sprite.posn[SPR_IDX_SHIP].b0  ... ship.sX
-	jbsr	ldi                               	| [ldi] e.g. *(9B64++) = *(9B62++)
+	jbsr	ldi                               	| [$1F30: ldi] e.g. *(9B64++) = *(9B62++)
 * sprite.posn[RCKT+n].b1 = sprite.posn[SPR_IDX_SHIP].b1  ... ship.sY, bit 0-7
-	jbsr	ldd                               	| [ldd] e.g. *(9B65--) = *(9B63--)
-	* after both ldi/ldd calls a1/d4 is as before calls
+	jbsr	ldd                               	| [$1F32: ldd] e.g. *(9B65--) = *(9B63--)
+	* after both ldi/ldd calls a1/d4/a0/d6 are as before calls
 
 * B = sprite.ctrl[SHIP].b0
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
+	lea	ds_sprite_ctrl_9B00,a0              	| [$1F34: ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	lea	ds_sprite_ctrl_9B00,a1                           	| [ld   d,h]
+	lea	ds_sprite_ctrl_9B00,a1                  | [$1F36: ld   d,h]
 	add.w	d4,a1
-	move.b	(a0),d1                         	| [ld   b,(hl)] sprite.ctrl[FGHTR].b0: normally 0 (not doubled or flipped)
+	move.b	(a0),d1                         	| [$1F37: ld   b,(hl)] sprite.ctrl[FGHTR].b0: normally 0 (not doubled or flipped)
                                                   * stash in B ... see l_1F5E below
-	exg	a1,a0                              	| [ex   de,hl] HL := sprite.ctrl[RCKT].b0
-	exg	d4,d6                              	| [ex   de,hl] HL := sprite.ctrl[RCKT].b0
+	exg	a1,a0                              		| [$1F38: ex   de,hl] HL := sprite.ctrl[RCKT].b0
+	exg	d4,d6                              		| [$1F38: ex   de,hl] HL := sprite.ctrl[RCKT].b0
 	
 * sprite.ctrl[RCKT].b0.dblw = (two_ship << 3 )
-	move.b	ds_plyr_actv+_b_2ship,d0        	| [ld   a,(ds_plyr_actv +_b_2ship)]
-	and.b	#0x01,d0                         	| [and  #0x01] make sure its only bit-0 I guess ?
-	rol.b	#3,d0                            	| [rlca] * 3
+	move.b	ds_plyr_actv+_b_2ship,d0        	| [$1F39: ld   a,(ds_plyr_actv +_b_2ship)]
+	and.b	#0x01,d0                         	| [$1F3C: and  #0x01] make sure its only bit-0 I guess ?
+	rol.b	#3,d0                            	| [$1F3E: rlca] * 3
 
 * sprite.ctrl[SHIP].b0 ... typically 0, unless ship is spinning
-	or.b	d1,d0                             	| [or   b] .ctrl[RCKT].b0|= .ctrl[SHIP].b0
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+	or.b	d1,d0                             	| [$1F41: or   b] .ctrl[RCKT].b0|= .ctrl[SHIP].b0
+	move.b	d0,(a0)                         	| [$1F42: ld   (hl),a]
 
 * determine rocket sprite code based on ship sprite code, which ranges from 6 (upright orientation)
 * down to the 90 degree rotation. Rocket code can be 30, 31, or 33 (360, 315, or 90 degree).
 * rocket sprite 32 is also 360 or 0 degree but not used ? (unless its the 2nd rocket, which is done by sprite doubling).
-	lea	ds_sprite_code_8B00,a1              	| [ld   d,#>ds_sprite_code_8B00]
+	lea	ds_sprite_code_8B00,a1              	| [$1F43: ld   d,#>ds_sprite_code_8B00]
 	add.w	d4,a1
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	lea	ds_sprite_code_8B00,a0                           	| [ld   h,d]
+	move.b	(a1),d0                         	| [$1F45: ld   a,(de)]
+	lea	ds_sprite_code_8B00,a0                  | [$1F46: ld   h,d]
 	add.w	d6,a0
-	and.b	#0x07,d0                         	| [and  #0x07] fighter sprite codes are $00...$07
-
-	move.b	#0x30,d2                        	| [ld   c,#0x30] code $30 ... 360 degree default orientation
+	and.b	#0x07,d0                         	| [$1F47: and  #0x07] fighter sprite codes are $00...$07
+	move.b	#0x30,d2                        	| [$1F49: ld   c,#0x30] code $30 ... 360 degree default orientation
 * if ( A >= 5 ) then  ... code = $30
-	cmp.b	#5,d0                            	| [cp   #5]
-	jcc	l_1F56_set_rocket_sprite_code      	| [jr   nc,l_1F56_set_rocket_sprite_code]
+	cmp.b	#5,d0                            	| [$1F4B: cp   #5]
+	jcc	l_1F56_set_rocket_sprite_code      		| [$1F4D: jr   nc,l_1F56_set_rocket_sprite_code]
 * else ( A >= 2 ) then .. code = $31
-	addq.b	#1,d2                           	| [inc  c] code $31 ... 45 degree rotation
-	cmp.b	#2,d0                            	| [cp   #2]
-	jcc	l_1F56_set_rocket_sprite_code      	| [jr   nc,l_1F56_set_rocket_sprite_code]
+	addq.b	#1,d2                           	| [$1F4F: inc  c] code $31 ... 45 degree rotation
+	cmp.b	#2,d0                            	| [$1F50: cp   #2]
+	jcc	l_1F56_set_rocket_sprite_code      		| [$1F52: jr   nc,l_1F56_set_rocket_sprite_code]
 * else  ... code = $33
-	addq.b	#2,d2                           	| [inc  c] code $32 is skipped (also 360) * 2
-
+	addq.b	#2,d2                           	| [$1F54: inc  c] code $32 is skipped (also 360) * 2
 l_1F56_set_rocket_sprite_code:
-	move.b	d2,(a0)                         	| [ld   (hl),c]
+	move.b	d2,(a0)                         	| [$1F56: ld   (hl),c]
 
 
 * Displacement in both X and Y axis must be computed in order to launch rockets
@@ -5914,7 +5902,7 @@ l_1F56_set_rocket_sprite_code:
 
 * if ( A >= 4 ) ...
 	cmp.b	#4,d0                            	| [cp   #4] A == sprite.cclr[SHIP].b0|
-	jcs	l_1F5E                             	| [jr   c,l_1F5E]
+	jcs	l_1F5E                             		| [jr   c,l_1F5E]
 
 * ... dS = 7 - ( code + 1 ) + 0x40
 	not.b	d0                               	| [cpl]
@@ -5924,39 +5912,33 @@ l_1F56_set_rocket_sprite_code:
 l_1F5E:
 	asl.b	#1,d0                            	| [sla  a] "orientation" bit into bit-7 ...
 	move.b	d0,d2                           	| [ld   c,a] ... and displacement << 1  into bits 1:2
-
 * sprite.ctrl bits ...  flipx into bit:5, flipy into bit:6
-	move.b	d1,d0                           	| [ld   a,b] sprite.ctrl[SHIP].b0
-	ror.b	#3,d0                            	| [rrca] * 3
-	and.b	#0x60,d0                         	| [and  #0x60] mask of rotated SPRCTRL[0]:0 and SPRCTRL[0]:1 bits
-	move.b	d0,d1                           	| [ld   b,a]
-
-	                               	| [and  a]
-	move.b	d1,d0                           	| [ld   a,b] flipx/flipy bits (0x60)
-	tst.b	b_9215_flip_screen           	| [ld   a,(b_9215_flip_screen)]
-	jne	l_1F71                             	| [jr   nz,l_1F71]
-	eor.b	#0x60,d0                         	| [xor  #0x60] screen not flipped so invert those bits
+	move.b	d1,d0                           	| [1F61: ld   a,b] sprite.ctrl[SHIP].b0
+	ror.b	#3,d0                            	| [1F62: rrca] * 3
+	and.b	#0x60,d0                         	| [1F65: and  #0x60] mask of rotated SPRCTRL[0]:0 and SPRCTRL[0]:1 bits
+	move.b	d0,d1                           	| [1F67: ld   b,a]
+												| [1F68: and  a]
+	*move.b	d1,d0                           	| [1F6C: ld   a,b] flipx/flipy bits (0x60)
+*	tst.b	b_9215_flip_screen           		| [1F68: ld   a,(b_9215_flip_screen)]
+*	jne	l_1F71                             		| [1F6D: jr   nz,l_1F71]
+	eor.b	#0x60,d0                         	| [1F6F: xor  #0x60] screen not flipped so invert those bits
 
 l_1F71:
-	or.b	d2,d0                             	| [or   c] bit7=orientation, bit6=flipY, bit5=flipX, 1:2=displacement
-	move.l	(sp)+,a1                        	| [pop  de] pointer to rocket attribute
-	movem.w	(sp)+,d3/d4                    	| [pop  de] pointer to rocket attribute
-	move.b	d0,(a1)                         	| [ld   (de),a]
-
+	or.b	d2,d0                             	| [1F71: or   c] bit7=orientation, bit6=flipY, bit5=flipX, 1:2=displacement
+	move.l	(sp)+,a1                        	| [1F72: pop  de] pointer to rocket attribute
+	movem.w	(sp)+,d3/d4                    		| [1F72: pop  de] pointer to rocket attribute
+	move.b	d0,(a1)                         	| [1F73: ld   (de),a]
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
-	lea	b_8800,a0                      	| [ld   h,#>b_8800] disposition = 6 ... active rocket object
+	lea	b_8800,a0                      			| [1F74: $1F74: ld   h,#>b_8800] disposition = 6 ... active rocket object
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#6,(a0)                         	| [ld   (hl),#6] L == offsetof(rocket)
-
-	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,b_9AA0+0x0F                  	| [ld   (b_9AA0 + 0x0F),a] 1 ... sound-fx count/enable registers, shot-sound
-
-	MOVE_TO_REG	ds_plyr_actv+_w_shot_ct,d5  	| [ld   hl,(ds_plyr_actv +_w_shot_ct)]
-	addq.w	#1,d5                           	| [inc  hl]
-	MOVE_TO_VAR	d5,ds_plyr_actv+_w_shot_ct      	| [ld   (ds_plyr_actv +_w_shot_ct),hl] game shots fired count ++
-
-	rts                                    	| [ret]
+	move.b	#6,(a0)                         	| [$1F76: ld   (hl),#6] L == offsetof(rocket)
+	move.b	#1,d0                           	| [$1F78: ld   a,#1]
+	move.b	d0,b_9AA0+0x0F                  	| [$1F7A: ld   (b_9AA0 + 0x0F),a] 1 ... sound-fx count/enable registers, shot-sound
+	MOVE_TO_REG	ds_plyr_actv+_w_shot_ct,d5  	| [$1F7D: ld   hl,(ds_plyr_actv +_w_shot_ct)]
+	addq.w	#1,d5                           	| [$1F80: inc  hl]
+	MOVE_TO_VAR	d5,ds_plyr_actv+_w_shot_ct      | [$1F81: ld   (ds_plyr_actv +_w_shot_ct),hl] game shots fired count ++
+	rts                                    		| [$1F84: ret]
 * end 1F04
 
 *=============================================================================
@@ -9430,7 +9412,8 @@ l_36F2:
 	* game relies on!!
 	
 	move.b	#0xEA,ds_new_stage_parms_99c0+0x05
-	
+	move.w	#0xEAF5,d5
+	MOVE_TO_VAR	d5,ds_plyr_actv+_w_shot_ct
 	
 	jra	j_Game_init_02d3                        	| [jp   j_Game_init_02d3]
 

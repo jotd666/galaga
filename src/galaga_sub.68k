@@ -934,16 +934,15 @@ l_06F0:
 *  ...
 *-----------------------------------------------------------------------------
 f_06F5:
-	lea	b_92A0+0x04+0,a1               	| [ld   de,#b_92A0 + 0x04 + 0] rocket "attribute"
-	lea	ds_sprite_posn_9300+0x64,a0         	| [ld   hl,#ds_sprite_posn_9300 + 0x64] rocket
-	jbsr	rckt_man                          	| [call rckt_man]
-
-	lea	b_92A0+0x04+1,a1               	| [ld   de,#b_92A0 + 0x04 + 1] rocket "attribute"
-	lea	ds_sprite_posn_9300+0x66,a0         	| [ld   hl,#ds_sprite_posn_9300 + 0x66] rocket
-       * call rckt_man
+	lea	b_92A0+0x04+0,a1               			| [$06F5: ld   de,#b_92A0 + 0x04 + 0] rocket "attribute"
+	lea	ds_sprite_posn_9300+0x64,a0         	| [$06F8: ld   hl,#ds_sprite_posn_9300 + 0x64] rocket
+	jbsr	rckt_man_0704                          	| [$06FB: call rckt_man_0704]
+	lea	b_92A0+0x04+1,a1               			| [$06FE: ld   de,#b_92A0 + 0x04 + 1] rocket "attribute"
+	lea	ds_sprite_posn_9300+0x66,a0         	| [$0701: ld   hl,#ds_sprite_posn_9300 + 0x66] rocket
+       * call rckt_man_0704
 
 *=============================================================================
-* rckt_man()
+* rckt_man_0704()
 *  Description:
 *    rocket motion and hit-detection manager
 * IN:
@@ -954,12 +953,12 @@ f_06F5:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-rckt_man:
+rckt_man_0704:
 * if (0 == rocket.posn[hl].x<7:0>) return
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	| [and  a]
+	move.b	(a0),d0                         	| [$0704: ld   a,(hl)]
+												| [and  a]
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] [...]
+	rts                                    		| [ret  z] [...]
 0:
 
 * else ...
@@ -982,21 +981,21 @@ rckt_man:
 
 l_0713:
 * if ( ! flipY ) then  dX = ~A
-	btst.b	#6,d1                           	| [bit  6,b] flipY: inverted...
-	jeq	l_0719                             	| [jr   z,l_0719]
-	neg.b	d0                               	| [neg] .. NOT flipY...negate X offset (non-flipped sprite is leftfacing)
+	btst.b	#6,d1                           	| [$0713: bit  6,b] flipY: inverted...
+	jeq	l_0719                             		| [$0715: jr   z,l_0719]
+	neg.b	d0                               	| [$0717: neg] .. NOT flipY...negate X offset (non-flipped sprite is leftfacing)
 
 l_0719:
 * add new dX
-	add.b	(a0),d0                          	| [add  a,(hl)] dX is 0 unless the ship is spinning/captured
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+	add.b	(a0),d0                          	| [$0719: add  a,(hl)] dX is 0 unless the ship is spinning/captured
+	move.b	d0,(a0)                         	| [$071A: ld   (hl),a]
 
 * if (mrw_sprite.posn[hl].b0 >= 240) ... one test for X limits ($F0) or < 0 ($FF)
-	cmp.b	#0xF0,d0                         	| [cp   #0xF0]
-	jcc	l_0763_disable_rocket              	| [jr   nc,l_0763_disable_rocket]
+	cmp.b	#0xF0,d0                         	| [$071B: cp   #0xF0]
+	jcc	l_0763_disable_rocket              		| [$071D: jr   nc,l_0763_disable_rocket]
 
 * rocket.sX passed to hitd_det_rckt
-	move.b	d0,ixl		| ld   ixl,a
+	move.b	d0,ixl								| [$071F: ld   ixl,a]
 
 
 * NOW onto sY...............
@@ -2397,7 +2396,6 @@ l_0CD0:
 	move.b	(1,a0),d0                         	| [$0CD1: ld   a,(hl)] b01 or b03, depends on "jr   c,l_0CBF"
 	addx.b	d2,d0								| [$0CD2: adc  a,c]                                   ; add with carry-out from addition into lsb
 	move.b	d0,(1,a0)                         	| [$0CD3: ld   (hl),a]
-	move.w #0X0CD3,0x100
 
 * stash the pointer to .b0/.b2 in DE (previous DE into HL but no longer used)
 												| [$0CD4: dec  l]

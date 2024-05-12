@@ -139,7 +139,7 @@
 	.global		ds8_9280_tmp_IO_parms
 	.global		ds3_9288_tmp_IO_data
 	.global		p_attrmode_sptiles
-	.global		pdb_demo_fghtrvctrs
+	.global		pdb_demo_fghtrvctrs_9282
 	.global		b_bugs_flying_cnt
 	.global		b_bugs_flying_nbr_9287
 	.global		b_bug_flyng_hits_p_round
@@ -446,7 +446,7 @@ ds3_9288_tmp_IO_data:
 *-----------------------------------------------------------------------------
 p_attrmode_sptiles:
 	ds.l    1       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
-pdb_demo_fghtrvctrs:
+pdb_demo_fghtrvctrs_9282:
 	ds.l     1       | f_ship_demo_controls_1700, tracks state of demo mode by setting an offset to the data table
 ds2_stg_chllg_rnd_attrib:   | attributes selected for hit all 8 bonus on challenge round convoy i.e. score, sprite tile
        ds.b     0x01       | hit-count, add to collsn_hit_mult[0x0F]
