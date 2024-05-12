@@ -1586,12 +1586,12 @@ mctl_fltpn_dspchr:
 	
 * this label allows reading the next token after doing state-selection
 j_090E_flite_path_init:
-	move.b	(a0),d0                         	| [ld   a,(hl)] data_set[n + 0]
+	move.b	(a0),d0                         	| [$090E: ld   a,(hl)] data_set[n + 0]
 
 * get next token and check if ordinary data or state-selection
 * if (token < 0xEF) ... then skip processing of jp-table
-	cmp.b	#0xEF,d0                         	| [cp   #0xEF]
-	jcs	l_0BDC_flite_pth_load              	| [jp   c,l_0BDC_flite_pth_load] if token < $ef, continue to flight-path handler
+	cmp.b	#0xEF,d0                         	| [$090F: cp   #0xEF]
+	jcs	l_flite_pth_load_0BDC              		| [$0911: jp   c,l_flite_pth_load_0BDC] if token < $ef, continue to flight-path handler
 
 * else ...
 *  complimented token indexes into jp-tbl for selection of next state
@@ -1599,17 +1599,17 @@ j_090E_flite_path_init:
 * the current data pointer could be copied from HL into 92FA,92FB or loaded directly from ix($08)ix($09) by handler
 *
 
-	move.l	a0,-(sp)                        	| [push hl] ptr to data table
-	not.b	d0                               	| [cpl]
+	move.l	a0,-(sp)                        	| [$0914: push hl] ptr to data table
+	not.b	d0                               	| [$0915: cpl]
 	CHECK_D0W_UPPER_BOUND	0x11
-	lea	d_0920_jp_tbl,a0               	| [ld   hl,#d_0920_jp_tbl]
-	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
-	move.l	(a0),(4,a7)         	| [ld   a,(hl)]
-		                      	| [inc  hl]
-	                             	| [ld   h,(hl)]
-	                             	| [ld   l,a]
-	move.l	(sp)+,a0       	| [ex   (sp),hl] restore HL and goto stacked address in one-fell-swoop.. sneaky!
-	rts                                    	| [ret]
+	lea	d_0920_jp_tbl,a0               			| [$0916: ld   hl,#d_0920_jp_tbl]
+	jbsr	add_4_times_d0_to_a0_0008           | [$0919: rst  0x08] HL += 2A
+	move.l	(a0),(4,a7)         				| [$091A: ld   a,(hl)]
+												| [$091B: inc  hl]
+												| [$091C: ld   h,(hl)]
+												| [$091D: ld   l,a]
+	move.l	(sp)+,a0       						| [$091E: ex   (sp),hl] restore HL and goto stacked address in one-fell-swoop.. sneaky!
+	rts                                    		| [$091F: ret]
 
 d_0920_jp_tbl:
 	.long case_0E49_make_object_inactive
@@ -1992,7 +1992,7 @@ l_0ACD:
 	move.b	d3,d2                           	| [ld   c,d] C is not used?
 
 	move.l	(sp)+,a1                        	| [pop  de] abs row pix coord & abs col pix coord >> 1
-	movem.w	(sp)+,d3/d4                    	| [pop  de] abs row pix coord & abs col pix coord >> 1
+	movem.w	(sp)+,d3/d4                    		| [pop  de] abs row pix coord & abs col pix coord >> 1
 
 	jbsr	c_0E5B                            	| [call c_0E5B] HL = mctl_rotn_hp(DE, H, L)
 	lsr.b	#1,d5                            	| [srl  h]
@@ -2005,7 +2005,7 @@ l_0ACD:
 
 	move.l	(sp)+,a0                        	| [pop  hl] ptr to data table
 	addq.w	#1,a0                           	| [inc  hl]
-	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
+	jra	j_090E_flite_path_init             		| [jp   j_090E_flite_path_init]
 
 * attack elements that break formation to attack ship (level 3+)
 case_0B16:  | 0x01
@@ -2164,7 +2164,7 @@ case_0BD1:  | 0x05
 
 * Continue in the same state, but a new data set needs to be
 * initialized before continuing on to flight-path handler.
-l_0BDC_flite_pth_load:
+l_flite_pth_load_0BDC:
 
 * HL == ds_flying_queue[loop_cnt].pdat
 * A == *ds_flying_queue[loop_cnt].pdat
@@ -2307,30 +2307,30 @@ l_0C81:
 * determine_sprite_ctrl( C )
 * 0: flipx - flip about the X axis, i.e. "up/down"
 * 1: flipy - flip about the Y axis, i.e. "left/right"
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
+	lea	ds_sprite_ctrl_9B00,a0              	| [$0C8B: ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
-	move.b	d2,d0                           	| [ld   a,c] d saved from (ix)0x05 above
-	ror.b	#1,d2                            	| [rrc  c]
-	eor.b	d2,d0                            	| [xor  c] bit0 xor with bit1 ...
-	addq.b	#1,d0                           	| [inc  a] ... add 1 ... now have bit1
-	ror.b	#1,d2                            	| [rrc  c] bit <1> ...
+	move.b	d2,d0                           	| [$0C8D: ld   a,c] d saved from (ix)0x05 above
+	ror.b	#1,d2                            	| [$0C8E: rrc  c]
+	eor.b	d2,d0                            	| [$0C90: xor  c] bit0 xor with bit1 ...
+	addq.b	#1,d0                           	| [$0C91: inc  a] ... add 1 ... now have bit1
+	ror.b	#1,d2                            	| [$0C92: rrc  c] bit <1> ...
 	SET_X_FROM_C
-	roxl.b	#1,d0                           	| [rla] ... into <0>
-	and.b	#0x03,d0                         	| [and  #0x03] <0> flip up/down  <1> flip l/r, double-x/double-y bits not used
-	move.b	d0,(a0)                         	| [ld   (hl),a] mrw_sprite[L].ctrl.b0 = A & 0x03
+	roxl.b	#1,d0                           	| [$0C94: rla] ... into <0>
+	and.b	#0x03,d0                         	| [$0C95: and  #0x03] <0> flip up/down  <1> flip l/r, double-x/double-y bits not used
+	move.b	d0,(a0)                         	| [$0C97: ld   (hl),a] mrw_sprite[L].ctrl.b0 = A & 0x03
 
 * choose x or y displacement vector to apply on this update
-	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
-	and.b	#0x01,d0                         	| [and  #0x01]
-	jeq	l_0CA4                             	| [jr   z,l_0CA4]
-	move.b	(0x0A,a2),d0                    | [ld   a,0x0A(ix)]
-	jra	l_0CA7                             	| [jr   l_0CA7]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [$0C98: ld   a,(ds3_frame_cts_92A0 + 0)]
+	and.b	#0x01,d0                         	| [$0C9B: and  #0x01]
+	jeq	l_0CA4                             		| [$0C9D: jr   z,l_0CA4]
+	move.b	(0x0A,a2),d0                    	| [$0C9F: ld   a,0x0A(ix)]
+	jra	l_0CA7                             		| [$0CA2: jr   l_0CA7]
 l_0CA4:
-	move.b	(0x0B,a2),d0                    | [ld   a,0x0B(ix)]
+	move.b	(0x0B,a2),d0                    	| [$0CA4: ld   a,0x0B(ix)]
 
 l_0CA7:
-											| [and  a] if zero, start of tractor beam and we can skip this crap
-	jeq	l_0D03_flite_pth_posn_set          	| [jp   z,l_0D03_flite_pth_posn_set] 2 "parameters": HL, and E (e saved from (ix)0x04)
+												| [$0CA7: and  a] if zero, start of tractor beam and we can skip this crap
+	jeq	l_0D03_flite_pth_posn_set          		| [$0CA8: jp   z,l_0D03_flite_pth_posn_set] 2 "parameters": HL, and E (e saved from (ix)0x04)
 
 * compute increment and update selected coordinate
 
@@ -2388,9 +2388,11 @@ l_0CD0:
 												| [$0CD4: dec  l]
 	COMPUTE_LSB_A0_D6	ds_bug_motion_que_9100 	| extract lsb from a0
 	exg	a1,a0                              		| [$0CD5: ex   de,hl] save a0 in a1
-	move.b	d6,d0                           	| [$0CD6: ld   a,e] should be d4 but we swapped
+	exg		d5,d3								| [$0CD5: ex   de,hl] useful?
+	exg		d6,d4								| [$0CD5: ex   de,hl]
+	move.b	d6,d0                           	| [$0CD6: ld   a,e]
 	eor.b	#0x02,d0                         	| [$0CD7: xor  #0x02] toggle x/y pointer, .b00 or .b02
-	move.b	d0,d4                           	| [$0CD9: ld   e,a] put back in d4
+	move.b	d0,d4                           	| [$0CD9: ld   e,a]
 
 * test L<0> (pushed/popped from left-shifted DE above .. but this would be .b04<7> before left-shift?)
 	movem.w	(sp)+,d5/d6                        	| [$0CDA: pop  hl] ..... adjusted rotation angle from push DE above
@@ -2402,8 +2404,10 @@ l_0CD0:
 l_0CE3:
 	move.b	d1,d0                           	| [$0CE3: ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix)
 	move.b	d5,d1                           	| [$0CE4: ld   b,h] msb of adjusted angle
-	clr.b	d5                               	| [$0CE5: ld   h,#0]
-	jbsr	mul_16_0E97                         | [$0CE7: call mul_16_0E97] HL = L * A
+	clr.w	d5                               	| [$0CE5: ld   h,#0]
+	move.b	d6,d5
+	and.w	#0xFF,D0                            | [$0CE7: call mul_16_0E97] HL = L * A	
+	mulu	d0,d5
 
 *             . 90          - angle in degrees
 *             1                         	| 0        - quadrant derived from 10-bit angle
@@ -2425,12 +2429,13 @@ l_0CE3:
 	subq.b	#1,d0                           | [$0CED: dec  a]
 	btst.b	#2,d0                           | [$0CEE: bit  2,a]
 	jeq	l_0CFA                             	| [$0CF0: jr   z,l_0CFA]
-	move.w	d5,d1                           | [$0CF2: ld   b,h]
+											| [$0CF2: ld   b,h]
 											| [$0CF3: ld   c,l]
 											| [$0CF4: ld   hl,#0x0000] 0
 											| [$0CF7: and  a] clear carry
-	neg.w	d1                            	| [$0CF8: sbc  hl,bc] negate BC ... can't use "neg" since it is 16-bit
+	neg.w	d5                            	| [$0CF8: sbc  hl,bc] negate BC ... can't use "neg" since it is 16-bit
 l_0CFA:
+	LOAD_D5D6_FROM_D5_16
 	exg	a1,a0                              	| [$0CFA: ex   de,hl] reload the pointer from DE (saved at 0CD5)
 * *HL += *DE	
 	exg	d3,d5								| [$0CFA: ex   de,hl]
@@ -2831,10 +2836,9 @@ l_0E93:
 *    HL = HL * A
 * IN:
 *  A
-*  HL (only L is significant)
+*  D5/D6 (only D6 is significant)
 * OUT:
-*  H
-*  L
+*  D5.W
 * PRESERVES:
 *  DE
 *-----------------------------------------------------------------------------
@@ -2843,7 +2847,6 @@ mul_16_0E97:
 	LOAD_D5_16_FROM_D5D6
 	and.w	#0xFF,D0
 	mulu	d0,d5
-	LOAD_D5D6_FROM_D5_16
 	rts                                    	| [ret]
 
 

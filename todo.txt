@@ -50,3 +50,12 @@ A=B4, B=56, C=00, D=62, E=5E, H=93, L=37, IX=9100 0D51: ld   h,$9B
 A=C5, B=4E, C=00, D=5A, E=2C, H=93, L=59, IX=9114 0D51: ld   h,$9B
 A=C7, B=4D, C=00, D=6A, E=FE, H=93, L=53, IX=9128 0D51: ld   h,$9B
 A=B2, B=57, C=00, D=62, E=1C, H=93, L=37, IX=9100 0D51: ld   h,$9B
+
+
+D51 6th time
+A=C7, B=4D, C=00, D=6A, E=FE, H=93, L=53, IX=9128 0D51: ld   h,$9B
+but port: D0 = C5, D1 = 4E
+
+because CD3 6th time
+A=4D, B=01, C=00, D=03, E=00, H=91, L=29, IX=9128 0CD3: ld   (hl),a
+but port: D1 = 3 hence D2 = 1
