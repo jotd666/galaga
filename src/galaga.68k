@@ -2420,6 +2420,7 @@ c_divmod:
 *  ...
 *-----------------------------------------------------------------------------
 c_1079:
+	move.w	#0x1079,0x100
 	COMPUTE_LSB_A0_D6	b_8800
 	move.b	d6,d0                           	| [ld   a,l]
 
@@ -2443,6 +2444,7 @@ c_1079:
 *  ...
 *-----------------------------------------------------------------------------
 c_diving_movement_1083:
+	move.w	#0x1083,0x100
 * set A:bit-7 if L:bit-1 != 0 ... creature originating on right side
 	move.b	d6,d0                           	| [$1083: ld   a,l]
 	ror.b	#2,d0                            	| [$1084: rrca] * 2
@@ -2464,6 +2466,7 @@ c_diving_movement_1083:
 *
 *-----------------------------------------------------------------------------
 setup_motion_for_attackers_108a:
+	move.w	#0x108a,0x100
 	movem.w	d3/d4,-(sp)                    	    | [$108a: push de]
 
 * find an available data structure or quit
@@ -4610,33 +4613,34 @@ l_1B00:
 	lea	b_9200_obj_collsn_notif,a0     	        | [ld   h,#>b_9200_obj_collsn_notif]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	btst.b	#7,d0                           	| [bit  7,a]
-	jne	l_1B54_getout                      	    | [jr   nz,l_1B54_getout] make sure he's not dead
-	move.b	ds_plyr_actv+_b_bbee_clr_b,d0   	| [ld   a,(ds_plyr_actv +_b_bbee_clr_b)]
-	subq.b	#4,d0                           	| [sub  #4] convert color 4,5,or 6 to index from 0
-	lea	d_1B59,a0                      	        | [ld   hl,#d_1B59]
-	jbsr	add_2_times_d0_to_a0_0008           | [rst  0x08] HL += 2A
-	lea	ds3_99B0_X3attackcfg,a1        	        | [ld   de,#ds3_99B0_X3attackcfg] setup X3 attacker, write 3 bytes...
+	move.b	(a0),d0                         	| [$1B0C: ld   a,(hl)]
+	btst.b	#7,d0                           	| [$1B0D: bit  7,a]
+	jne	l_1B54_getout                      	    | [$1B0F: jr   nz,l_1B54_getout] make sure he's not dead
+	move.b	ds_plyr_actv+_b_bbee_clr_b,d0   	| [$1B11: ld   a,(ds_plyr_actv +_b_bbee_clr_b)]
+	subq.b	#4,d0                           	| [$1B14: sub  #4] convert color 4,5,or 6 to index from 0
+	lea	d_1B59,a0                      	        | [$1B16: ld   hl,#d_1B59]
+	jbsr	add_2_times_d0_to_a0_0008           | [$1B19: rst  0x08] HL += 2A
+	lea	ds3_99B0_X3attackcfg,a1        	        | [$1B1A: ld   de,#ds3_99B0_X3attackcfg] setup X3 attacker, write 3 bytes...
                                                   * [0]:=3
                                                   * [1] [2] word loaded from 1B59[ 2 * ( actv_plyr_state + 0x0F ) ]
-	move.b	#3,d0                           	| [ld   a,#3]
-	move.b	d0,(a1)+                         	| [ld   (de),a] (99B0):=3
-	                           	                | [inc  e]
-	jbsr	ldi                               	| [ldi]
-	jbsr	ldi                               	| [ldi]
+	move.b	#3,d0                           	| [$1B1D: ld   a,#3]
+	move.b	d0,(a1)+                         	| [$1B1F: ld   (de),a] (99B0):=3
+	                           	                | [$1B20: inc  e]
+	jbsr	ldi                               	| [$1B21: ldi]
+	jbsr	ldi                               	| [$1B23: ldi]
 * setup vector argument to c_diving_movement_1083
-	move.b	ds_plyr_actv+_b_bbee_clr_b,d0   	| [ld   a,(ds_plyr_actv +_b_bbee_clr_b)]
-	subq.b	#4,d0                           	| [sub  #4] convert color 4,5,or 6 to index from 0
-	and.b	#0x0F,d0                         	| [and  #0x0F] hmmmm.... we didn't do this before.. oh well
-	move.b	d0,d2                           	| [ld   c,a]
-	lea	d_1B5F,a0                      			| [ld   hl,#d_1B5F] setup to load pointers into DE
-	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
-	move.l	(a0),a1                        		| [ld   e,(hl)]
-								| [inc  hl]
-	                       	| [ld   d,(hl)]
+	move.b	ds_plyr_actv+_b_bbee_clr_b,d0   	| [$1B25: ld   a,(ds_plyr_actv +_b_bbee_clr_b)]
+	subq.b	#4,d0                           	| [$1B28: sub  #4] convert color 4,5,or 6 to index from 0
+	and.b	#0x0F,d0                         	| [$1B2A: and  #0x0F] hmmmm.... we didn't do this before.. oh well
+	move.b	d0,d2                           	| [$1B2C: ld   c,a]
+	lea	d_1B5F,a0                      			| [$1B2D: ld   hl,#d_1B5F] setup to load pointers into DE
+	jbsr	add_2_times_d0_to_a0_0008          	| [$1B30: rst  0x08] HL += 2A
+	move.b	(a0)+,d4                        	| [$1B31: ld   e,(hl)]
+												| [$1B32: inc  hl]
+	move.b	(a0),d3								| [$1B33: ld   d,(hl)]
+	LOAD_D3_16_FROM_D3D4
 * setup HL pointer to object in sprite code registers
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
+	lea	ds_sprite_code_8B00,a0              	| [$1B34: ld   h,#>ds_sprite_code_8B00]
 	moveq	#0,d6
 	move.b	ds_plyr_actv+_b_bbee_obj,d6     	| [$1B36: ld   a,(ds_plyr_actv +_b_bbee_obj)]
 	add.w	d6,a0								| [$1B39: ld   l,a]
@@ -4708,7 +4712,7 @@ l_1B75:
 l_1B7A:
 	move.b	(a0),d0                         	| [$1B7A: ld   a,(hl)] .b0: valid object index if slot active, otherwise $FF
 	addq.b	#1,d0                           	| [$1B7B: inc  a] 0 if boss_wing_slots[n*4].b0 == $ff
-	jne	l_launch_boss_wing_mission_1b8b                             	    | [$1B7C: jr   nz,l_launch_boss_wing_mission_1b8b] if slot active, go launch it
+	jne	l_launch_boss_wing_mission_1b8b         | [$1B7C: jr   nz,l_launch_boss_wing_mission_1b8b] if slot active, go launch it
 	addq.w	#3,a0                           	| [$1B7E: inc  l]*3
 	subq.b	#1,d1                           	| [...]
 	jne	l_1B7A                             	    | [$1B81: djnz l_1B7A]
@@ -4763,27 +4767,27 @@ l_launch_boss_wing_mission_1b8b:
 
 check_bomber_for_ready_status_1ba8:
 * check each bomber type for ready status i.e. yellow, red, boss
-	lea	b_92C0,a0                 				| [ld   hl,#b_92C0 + 0x00] 3 bytes, 1 byte for each slot, enumerates selection of red, yellow, or boss
-	move.b	#3,d1                           	| [ld   b,#3]
+	lea	b_92C0,a0                 				| [$1BA8: ld   hl,#b_92C0 + 0x00] 3 bytes, 1 byte for each slot, enumerates selection of red, yellow, or boss
+	move.b	#3,d1                           	| [$1BAB: ld   b,#3]
 l_1BAD:
-	subq.b	#1,(a0)                         	| [dec  (hl)] check if this one timed out
-	jeq	l_1BB4                             		| [jr   z,l_1BB4] b used below argument to "switch" to select type of alien launched?
-	addq.w	#1,a0                           	| [inc  l]
+	subq.b	#1,(a0)                         	| [$1BAD: dec  (hl)] check if this one timed out
+	jeq	l_1BB4                             		| [$1BAE: jr   z,l_1BB4] b used below argument to "switch" to select type of alien launched?
+	addq.w	#1,a0                           	| [$1BB0: inc  l]
 	subq.b	#1,d1                           	| [...]
-	jne	l_1BAD                             		| [djnz l_1BAD]
-	rts                                    		| [ret] none are ready
+	jne	l_1BAD                             		| [$1BB1: djnz l_1BAD]
+	rts                                    		| [$1BB3: ret] none are ready
 
 * called when first boss formation is attacking in the demo
 l_1BB4:
 * if (bugs_flying_nbr >= max_flying_bugs_this_rnd) then ...
-	move.b	ds_new_stage_parms_99c0+0x04,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x04)] max_bombers
-	move.b	d0,d2                           		| [ld   c,a]
-	move.b	b_bugs_flying_nbr_9287,d0            	| [ld   a,(b_bugs_flying_nbr_9287)]
-	cmp.b	d2,d0                            		| [cp   c]
-	jcs	l_1BC0                             			| [jr   c,l_1BC0]
+	move.b	ds_new_stage_parms_99c0+0x04,d0     | [$1BB4: ld   a,(ds_new_stage_parms_99c0 + 0x04)] max_bombers
+	move.b	d0,d2                           	| [$1BB7: ld   c,a]
+	move.b	b_bugs_flying_nbr_9287,d0           | [$1BB8: ld   a,(b_bugs_flying_nbr_9287)]
+	cmp.b	d2,d0                            	| [$1BBB: cp   c]
+	jcs	l_1BC0                             		| [$1BBC: jr   c,l_1BC0]
 * maximum nbr of bugs already flying set slot-counter back to 1 since it can't be processed right now
-	addq.b	#1,(a0)                         		| [inc  (hl)]
-	rts                                    			| [ret]
+	addq.b	#1,(a0)                         	| [$1BBE: inc  (hl)]
+	rts                                    		| [$1BBF: ret]
 
 * else ... launch another bombing excursion
 l_1BC0:
@@ -4865,8 +4869,8 @@ case_bmbr_boss_1C01:
 
 * capture-mode select: for each boss, first one that status==standby beomes capture-boss
 	move.b	#2,ixl		| ld   ixl,2
-	lea	db_0454,a3                     	| [ld   iy,#db_0454]
-	lea	b_8800+0x30,a1                 	| [ld   de,#b_8800 + 0x30] bosses start at $30 ... object/index of bomber to _1CAE
+	move.w	#db_0454,d5                     	| [ld   iy,#db_0454]
+	lea	b_8800+0x30,a1                 			| [ld   de,#b_8800 + 0x30] bosses start at $30 ... object/index of bomber to _1CAE
 	move.b	#0x04,d1                        	| [ld   b,#0x04] there are 4 of these evil creatures
 
 l_1C1B_while:
@@ -5018,10 +5022,9 @@ j_1CA0:
 	move.w	#db_flv_0411,d5                 	| [ld   iy,#db_flv_0411]
 	move.b	ds_9200_glbls+0x0B,d0           	| [ld   a,(ds_9200_glbls + 0x0B)] enemy enable, select data ptr boss launch: if (0), iy=$00F1, else iy=$0411
 	                               	| [and  a]
-	jne	l_1CAE                             	| [jr   nz,l_1CAE]
+	jne	j_1CAE                             	| [jr   nz,l_1CAE]
 	move.w	#db_flv_00f1,d5                 	| [ld   iy,#db_flv_00f1] training-mode
 
-l_1CAE:
 
 *-----------------------------------------------------------------------------
 * setup bomber-boss, _boss_pool[0], bonus scoring, etc.
@@ -5030,7 +5033,7 @@ l_1CAE:
 *    b, c: not used when escort selection skipped (ixl == 2)
 *    ixl:  2==solo/capture boss is valid and will skip escort selection ...
 *            ... in addition to 0 -> 2 escorts, 1 -> 1 escort
-*    d5 (was iy): pointer on flv data (subcpu address)
+*    d5.w (was iy): pointer on flv data (subcpu address)
 *-----------------------------------------------------------------------------
 j_1CAE:
 	
@@ -5072,15 +5075,16 @@ j_1CAE:
 	lea	bmbr_boss_pool_92ca+1*3+0,a1        	| [ld   de,#bmbr_boss_pool_92ca + 1 * 3 + 0] 4 groups of 3 bytes
 	
 * if (1 == ixl) ... setup 1 escort, else setup 2 escorts
-	subq.b	#1,d0                           	| [dec  a]
-	jeq	l_1CE0                             	| [jr   z,l_1CE0]
-	jbsr	c_1D03                            	| [call c_1D03] DE==&boss_pool[1] ... boss dives with wingman
+	
+	subq.b	#1,d0                           	| [$1CDA: dec  a]
+	jeq	l_1CE0                             		| [$1CDB: jr   z,l_1CE0]
+	jbsr	c_1D03                            	| [$1CDD: call c_1D03] DE==&boss_pool[1] ... boss dives with wingman
 l_1CE0:
-	jbsr	c_1D03                            	| [call c_1D03] DE==&boss_pool[2] ... boss dives with wingman
+	jbsr	c_1D03                            	| [$1CE0: call c_1D03] DE==&boss_pool[2] ... boss dives with wingman
 
 * if rogue fighter for this boss !STAND_BY then return
 l_1CE3:
-	move.b	bmbr_boss_pool_92ca,d0         	| [ld   a,(bmbr_boss_pool_92ca + 0 * 3 + 0)] obj/index (setup from function arguments above)
+	move.b	bmbr_boss_pool_92ca,d0         		| [ld   a,(bmbr_boss_pool_92ca + 0 * 3 + 0)] obj/index (setup from function arguments above)
 	and.b	#0x07,d0                         	| [and  #0x07] object/index of captured fighter i.e. 00 04 06 02
 	move.b	d0,d6                           	| [ld   l,a]
 * check for 0
@@ -5134,34 +5138,33 @@ d_1CFD:
 *  B
 *  C: flags for escorts available
 *  DE: &_boss_pool[n]
-*  IY: pointer to flight vector data
+*  IY (D5): pointer to flight vector data
 *  Cy': rotation flag, to be OR'd into pool_slot[n].idx<7>
 * OUT:
 *  B: index of next escort to be selected from const array
 *  C: flags for escorts available
 *-----------------------------------------------------------------------------
 c_1D03:
-	ror.b	#1,d2                            	| [rrc  c]
-	jcs	l_1D0D                             	| [jr   c,l_1D0D]
-	subq.b	#1,d1                           	| [dec  b] after boss docked home with ship
-	ror.b	#1,d2                            	| [rrc  c]
-	jcs	l_1D0D                             	| [jr   c,l_1D0D]
-	subq.b	#1,d1                           	| [dec  b]
+	ror.b	#1,d2                            	| [$1D03: rrc  c]
+	jcs	l_1D0D                             		| [$1D05: jr   c,l_1D0D]
+	subq.b	#1,d1                           	| [$1D07: dec  b] after boss docked home with ship
+	ror.b	#1,d2                            	| [$1D08: rrc  c]
+	jcs	l_1D0D                             		| [$1D0A: jr   c,l_1D0D]
+	subq.b	#1,d1                           	| [$1D0C: dec  b]
 l_1D0D:
-	move.b	d1,d0                           	| [ld   a,b]
-	subq.b	#1,d1                           	| [dec  b]
-	lea	d_1D2C_wingmen,a0              	| [ld   hl,#d_1D2C_wingmen]
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
+	move.b	d1,d0                           	| [$1D0D: ld   a,b]
+	subq.b	#1,d1                           	| [$1D0E: dec  b]
+	lea	d_1D2C_wingmen,a0              			| [$1D0F: ld   hl,#d_1D2C_wingmen]
+	jbsr	add_d0_to_a0_0010                   | [$1D12: rst  0x10] HL += A
 
 * setup parameters (IY, pointer to flight vector data, already loaded)
-	                              	| [ex   af,af'] unstash rotation flag
-	move.b	(a0),d0                         	| [ld   a,(hl)] d_escorts[a] ... object/index
-	exg	a1,a0                              	| [ex   de,hl] &boss_wing_slots[n] to HL
-
+												| [$1D13: ex   af,af'] unstash rotation flag
+	move.b	(a0),d0                         	| [$1D14: ld   a,(hl)] d_escorts[a] ... object/index
+	exg	a1,a0                              		| [$1D15: ex   de,hl] &boss_wing_slots[n] to HL
 	tst.b	d7                              	| [ex   af,af'] unstash rotation flag
 	beq.b	0f
 	SET_XC_FLAGS
-	jra	l_1D16                             	| [jr   l_1D16] ... jp past setup section of function
+	jra	l_1D16                             		| [jr   l_1D16] ... jp past setup section of function
 0:
 	CLEAR_XC_FLAGS
 
@@ -5180,20 +5183,22 @@ l_1D16:
 	roxl.b	#1,d0                           	| [rla] object/index
 	ror.b	#1,d0                            	| [rrca] rotate out of a<0> thru Cy into a<7>
 * re-stash Cy (rotation flag)
-	scs	d7                              	| [ex   af,af']
+	scs	d7                              		| [ex   af,af']
 	move.b	d0,(a0)+                         	| [ld   (hl),a] &boss_wing_slots[n + 0]
 
 	* store sub-cpu ROM address that is in D5.W
+	move.w	d5,-(a7)
 	LOAD_D5D6_FROM_D5_16
-	                           	| [inc  l]
-	                         	| [ld   a,iyl]
+												| [inc  l]
+												| [ld   a,iyl]
 	move.b	d6,(a0)+                         	| [ld   (hl),a]
-	                           	| [inc  l]
-	                         	| [ld   a,iyh]
+												| [inc  l]
+												| [ld   a,iyh]
 	move.b	d5,(a0)+                         	| [ld   (hl),a]
-	                           	| [inc  l]
-	exg	a1,a0                              	| [ex   de,hl] &boss_wing_slots[n] ... update pointer in DE for second subroutine call
-	rts                                    	| [ret]
+												| [inc  l]
+	move.w	(a7)+,d5							| we still need D5.W, c_1D03 can be called twice in a row
+	exg	a1,a0                              		| [ex   de,hl] &boss_wing_slots[n] ... update pointer in DE for second subroutine call
+	rts                                    		| [ret]
 
 *=============================================================================
 * Movement of captured rogue ship... out of section at l_1C83

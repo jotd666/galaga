@@ -1541,13 +1541,13 @@ f_08D3:
 * traverse the object-motion queue
 for__pool_idx_08E4:
 	btst.b	#0,(0x13,a2)                    	| [$08E4: bit  0,0x13(ix)] check for activated state
-	jeq	next__pool_idx_0dfb                     	| [jp   z,next__pool_idx_0dfb]
+	jeq	next__pool_idx_0dfb                     | [jp   z,next__pool_idx_0dfb]
 
-	lea	b_bugs_flying_cnt,a0           	| [ld   hl,#b_bugs_flying_cnt] +=1
+	lea	b_bugs_flying_cnt,a0           			| [ld   hl,#b_bugs_flying_cnt] +=1
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 	moveq	#0,d6
 	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] object identifier...8800[L]
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                      			| [ld   h,#>b_8800]
 	add.w	d6,a0
 
 * 9 is diving, 7 is spawning, 3 (and 6) bomb?
@@ -1579,11 +1579,22 @@ mctl_fltpn_dspchr:
 	illegal
 	illegal
 0:
+	cmp.w	#0x004b,d5
+	bcc.b	0f
+	* flight path pointer cannot be below that value
+	lea	ds_bug_motion_que_9100,a3
+	sub.l	a3,a2
+	jbsr	osd_break
+	nop
+	nop
+	nop
+	nop
+	nop
+0:
 	.endif
 	
 	lea		galaga_sub_rom,a0
 	add.w	d5,a0						| jotd: real pointer from sub-cpu ROM address
-	
 * this label allows reading the next token after doing state-selection
 j_090E_flite_path_init:
 	move.b	(a0),d0                         	| [$090E: ld   a,(hl)] data_set[n + 0]
@@ -1897,8 +1908,8 @@ l_0A73:
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 0
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x19       	| [ld   (ds_cpu0_task_actv_9000 + 0x19),a] 1: f_21CB ... boss diving to capture position
-	jbsr	read_ixl_into_d0                         	| [ld   a,ixl]
+	move.b	d0,ds_cpu0_task_actv_9000+0x19      | [ld   (ds_cpu0_task_actv_9000 + 0x19),a] 1: f_21CB ... boss diving to capture position
+	jbsr	read_ixl_into_d0                    | [ld   a,ixl]
 	move.b	d0,ds_plyr_actv+_b_cboss_slot   	| [ld   (ds_plyr_actv +_b_cboss_slot),a] ixl ... offset of slot used by capture boss, referenced by cpu0:f_21CB
 	move.l	(sp)+,a0                        	| [pop  hl] ptr to data table
 	addq.w	#1,a0                           	| [inc  hl]
@@ -2190,8 +2201,10 @@ l_0BF7:
 	CONVERT_SUBROM_A0_TO_D5D6
 	
 l_flite_pth_skip_load_0BFF:
-	move.b	d6,(0x08,a2)                    	| [$0BFF: ld   0x08(ix),l] pointer.b0
-	move.b	d5,(0x09,a2)                    	| [$0C02: ld   0x09(ix),h] pointer.b1
+	lea		ds_bug_motion_que_9100,a3
+	* update flight path pointers. They are initialized in maincpu at 0x10A1
+	move.b	d6,(0x08,a2)                    	| [$0BFF: ld   0x08(ix),l] update pointer.b0
+	move.b	d5,(0x09,a2)                    	| [$0C02: ld   0x09(ix),h] update pointer.b1
 
 
 * process this time-step of flite path, continue processing on this data-set
@@ -2329,6 +2342,7 @@ l_0CA4:
 	move.b	(0x0B,a2),d0                    	| [$0CA4: ld   a,0x0B(ix)]
 
 l_0CA7:
+	tst.b	d0
 												| [$0CA7: and  a] if zero, start of tractor beam and we can skip this crap
 	jeq	l_0D03_flite_pth_posn_set          		| [$0CA8: jp   z,l_0D03_flite_pth_posn_set] 2 "parameters": HL, and E (e saved from (ix)0x04)
 
@@ -2383,6 +2397,7 @@ l_0CD0:
 	move.b	(1,a0),d0                         	| [$0CD1: ld   a,(hl)] b01 or b03, depends on "jr   c,l_0CBF"
 	addx.b	d2,d0								| [$0CD2: adc  a,c]                                   ; add with carry-out from addition into lsb
 	move.b	d0,(1,a0)                         	| [$0CD3: ld   (hl),a]
+	move.w #0X0CD3,0x100
 
 * stash the pointer to .b0/.b2 in DE (previous DE into HL but no longer used)
 												| [$0CD4: dec  l]

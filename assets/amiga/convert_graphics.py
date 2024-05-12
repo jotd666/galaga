@@ -121,7 +121,7 @@ flip=False):
 def add_sprite(code,prefix,cluts,sprite_type=ST_BOB,mirror=False,flip=False):
     add_sprite_block(code,code+1,prefix,cluts,sprite_type,mirror,flip=flip)
 
-add_sprite_block(0x8,0x10,"boss_ship",[0,1])
+add_sprite_block(0x8,0x10,"boss_ship",[0,1,10])   # 10: yellow when about to explode
 # I'd like to hack player ship into a sprite only for clut 2
 # but use a BOB for clut 9 (captured)
 #add_sprite_block(0,0x8,"ship",[2,9])
