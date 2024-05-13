@@ -1120,77 +1120,75 @@ l_076A_while_object:
 * obj_collsn_notif[L].b0 ... $81 = hit notification already in progress
 
 * if (0x80 != ( obj_status[L].state & _obj_collsn_notif[L] ))
-	lea	b_9200_obj_collsn_notif,a0     	| [ld   h,#>b_9200_obj_collsn_notif] is hit notification already in progress
-	and.w	#0xFF,d6
+	lea	b_9200_obj_collsn_notif,a0     			| [$076A: ld   h,#>b_9200_obj_collsn_notif] is hit notification already in progress
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
-	and.w	#0xFF,d6
+	move.b	(a0),d0                         	| [$076C: ld   a,(hl)]
+	lea	b_8800,a0                      			| [$076D: ld   h,#>b_8800]
 	add.w	d6,a0
-	or.b	(a0),d0                           	| [or   (hl)]
-	rol.b	#1,d0                            	| [rlca]
-	jcs	l_07B4_next_object                 	| [jr   c,l_07B4_next_object]
+	or.b	(a0),d0                           	| [$076F: or   (hl)]
+	rol.b	#1,d0                            	| [$0770: rlca]
+	jcs	l_07B4_next_object                 		| [$0771: jr   c,l_07B4_next_object]
 
 * if EXPLODING or SCORE_BITM then next object
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	move.b	d0,d2                           	| [ld   c,a]
-	and.b	#0xFE,d0                         	| [and  #0xFE] tests for SCORE_BITM (5) also
-	cmp.b	#4,d0                            	| [cp   #4] disposition EXPLODING
-	jeq	l_07B4_next_object                 	| [jr   z,l_07B4_next_object]
+	move.b	(a0),d0                         	| [$0773: ld   a,(hl)]
+	move.b	d0,d2                           	| [$0774: ld   c,a]
+	and.b	#0xFE,d0                         	| [$0775: and  #0xFE] tests for SCORE_BITM (5) also
+	cmp.b	#4,d0                            	| [$0777: cp   #4] disposition EXPLODING
+	jeq	l_07B4_next_object                 		| [$0779: jr   z,l_07B4_next_object]
 
 * test dX and dY for within +/- 3 pixels, using the addition
 * offset with "Cy" so only 1 test needed for (d>-3 && d<+3 )
 
 * check Y coordinate ... sY<8:1> in A
-	addq.b	#1,d6                           	| [inc  l] [a0 coherence]
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sprite.sy<8>
+	addq.b	#1,d6                           	| [$077B: inc  l] [a0 coherence]
+	lea	ds_sprite_ctrl_9B00,a0              	| [$077C: ld   h,#>ds_sprite_ctrl_9B00] sprite.sy<8>
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d3                         	| [ld   d,(hl)]
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300] sprite.sy<7:0>
+	move.b	(a0),d3                         	| [$077E: ld   d,(hl)]
+	lea	ds_sprite_posn_9300,a0              	| [$077F: ld   h,#>ds_sprite_posn_9300] sprite.sy<7:0>
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	ror.b	#1,d3                            	| [rrc  d]
+	move.b	(a0),d0                         	| [$0781: ld   a,(hl)]
+	ror.b	#1,d3                            	| [$0782: rrc  d]
 	SET_X_FROM_C
-	roxr.b	#1,d0                           	| [rra]
-	subq.w	#1,a0                           	| [dec  l]
-
-	sub.b	ixh,d0                           	| [sub  ixh] sprite.sy<1:8> -= rocket.sy<1:8>
-	subq.b	#3,d0                           	| [sub  #3] tolerance for hit-check (divided by 2 to account for scaling)
-	addq.b	#6,d0                           	| [add  a,#6]
-	jcc	l_07B4_next_object                 		| [jr   nc,l_07B4_next_object]
+	roxr.b	#1,d0                           	| [$0784: rra]
+	subq.w	#1,a0                           	| [$0785: dec  l]
+	subq.w	#1,d6                           	| [$0785: dec  l] [a0 coherence]
+	sub.b	ixh,d0                           	| [$0786: sub  ixh] sprite.sy<1:8> -= rocket.sy<1:8>
+	subq.b	#3,d0                           	| [$0788: sub  #3] tolerance for hit-check (divided by 2 to account for scaling)
+	addq.b	#6,d0                           	| [$078A: add  a,#6]
+	jcc	l_07B4_next_object                 		| [$078C: jr   nc,l_07B4_next_object]
 
 * check X coordinate
-	move.b	d2,d0                           	| [ld   a,c] reload object status e.g. 8800[L]
-	subq.b	#1,d0                           	| [dec  a]
-	and.b	#0xFE,d0                         	| [and  #0xFE]
-	exg		d0,d7                              	| [ex   af,af'] object status to hitd_dspchr
-												| [and  a]
-	move.b	(a0),d0                         	| [ld   a,(hl)] sprite.sX
-	tst.b	ds_plyr_actv+_b_2ship        		| [ld   a,(ds_plyr_actv +_b_2ship)]
-	jne	l_07A4                             		| [jr   nz,l_07A4] and  a
-	sub.b	ixl,d0                           	| [sub  ixl] sprite.sX -= rocket.sX
-	subq.b	#6,d0                           	| [sub  #6]
-	add.b	#11,d0                           	| [add  a,#11]
-	jcs	hitd_dspchr_rckt                   		| [jr   c,hitd_dspchr_rckt]
-	jra	l_07B4_next_object                 		| [jr   l_07B4_next_object]
+	move.b	d2,d0                           	| [$078E: ld   a,c] reload object status e.g. 8800[L]
+	subq.b	#1,d0                           	| [$078F: dec  a]
+	and.b	#0xFE,d0                         	| [$0790: and  #0xFE]
+	exg		d0,d7                              	| [$0792: ex   af,af'] object status to hitd_dspchr
+												| [$0793: and  a]
+	move.b	(a0),d0                         	| [$0796: ld   a,(hl)] sprite.sX
+	tst.b	ds_plyr_actv+_b_2ship        		| [$0797: ld   a,(ds_plyr_actv +_b_2ship)]
+	jne	l_07A4                             		| [$0798: jr   nz,l_07A4] and  a
+	sub.b	ixl,d0                           	| [$079A: sub  ixl] sprite.sX -= rocket.sX
+	subq.b	#6,d0                           	| [$079C: sub  #6]
+	add.b	#11,d0                           	| [$079E: add  a,#11]
+	jcs	hitd_dspchr_rckt_07b9                   		| [$07A0: jr   c,hitd_dspchr_rckt_07b9]
+	jra	l_07B4_next_object                 		| [$07A2: jr   l_07B4_next_object]
 
 l_07A4:
-	sub.b	ixl,d0                           	| [sub  ixl] sprite.sX -= rocket.sX
-	sub.b	#20,d0                           	| [sub  #20]
-	add.b	#11,d0                           	| [add  a,#11]
-	jcs	hitd_dspchr_rckt                   		| [jr   c,hitd_dspchr_rckt]
-	addq.b	#4,d0                           	| [add  a,#4]
-	jcs	l_07B4_next_object                 		| [jr   c,l_07B4_next_object]
-	add.b	#11,d0                           	| [add  a,#11]
-	jcs	hitd_dspchr_rckt                   		| [jr   c,hitd_dspchr_rckt]
+	sub.b	ixl,d0                           	| [$07A4: sub  ixl] sprite.sX -= rocket.sX
+	sub.b	#20,d0                           	| [$07A6: sub  #20]
+	add.b	#11,d0                           	| [$07A8: add  a,#11]
+	jcs	hitd_dspchr_rckt_07b9                   		| [$07AA: jr   c,hitd_dspchr_rckt_07b9]
+	addq.b	#4,d0                           	| [$07AC: add  a,#4]
+	jcs	l_07B4_next_object                 		| [$07AE: jr   c,l_07B4_next_object]
+	add.b	#11,d0                           	| [$07B0: add  a,#11]
+	jcs	hitd_dspchr_rckt_07b9                   | [$07B2: jr   c,hitd_dspchr_rckt_07b9]
 
 l_07B4_next_object:
-	addq.b	#2,d6                           	| [inc  l] * 2
+	addq.b	#2,d6                           	| [$07B4: inc  l] * 2
 	subq.b	#1,d1                           	| [...]
-	jne	l_076A_while_object                		| [djnz l_076A_while_object]
-	rts                                    		| [ret]
+	jne	l_076A_while_object                		| [$07B6: djnz l_076A_while_object]
+	rts                                    		| [$07B8: ret]
 
 *=============================================================================
 * hitd_dspchr()
@@ -1207,13 +1205,12 @@ l_07B4_next_object:
 *   1 on jp   l_07B4_next_object
 *   0
 *-----------------------------------------------------------------------------
-hitd_dspchr_rckt:
-
-	move.b	d6,d0                           	| [ld   a,l] stash L, use HL for 16-bits math
-	move.l	ds_plyr_actv+_w_hit_ct,a0   	| [ld   hl,(ds_plyr_actv +_w_hit_ct)]
-	addq.w	#1,a0                           	| [inc  hl]
-	move.l	a0,ds_plyr_actv+_w_hit_ct       	| [ld   (ds_plyr_actv +_w_hit_ct),hl]
-	move.b	d0,d6                           	| [ld   l,a] restore L
+hitd_dspchr_rckt_07b9:
+	move.b	d6,d0                           	| [$07B9: ld   a,l] stash L, use HL for 16-bits math
+	move.l	ds_plyr_actv+_w_hit_ct,a0   		| [$07BA: ld   hl,(ds_plyr_actv +_w_hit_ct)]
+	addq.w	#1,a0                           	| [$07BD: inc  hl]
+	move.l	a0,ds_plyr_actv+_w_hit_ct       	| [$07BE: ld   (ds_plyr_actv +_w_hit_ct),hl]
+	move.b	d0,d6                           	| [$07C1: ld   l,a] restore L
 
 * hitd_dspchr
 
@@ -1259,16 +1256,16 @@ hitd_dspchr:
 	jeq	l_0815_bomb_hit                    	| [jr   z,l_0815_bomb_hit]
 
 * if rocket or ship collided with bug
-	tst.b	d7                              	| [ex   af,af'] un-stash parameter ... 1 if moving bug (hit by rocket or fighter)
-	jne	l_081E_hdl_flyng_bug               	| [jr   nz,l_081E_hdl_flyng_bug] will come back to $07DB or l_07DF
+	tst.b	d7                              | [ex   af,af'] un-stash parameter ... 1 if moving bug (hit by rocket or fighter)
+	jne	l_hdl_flyng_bug_081e               	| [jr   nz,l_hdl_flyng_bug_081e] will come back to $07DB or l_07DF
 
 * else if rocket hit stationary bug
-	                              	| [ex   af,af'] re-stash parameter
+											| [ex   af,af'] re-stash parameter
 
 l_07DB:
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
 * set it up for elimination
-	lea	b_9200_obj_collsn_notif,a0     	| [ld   h,#>b_9200_obj_collsn_notif] = $81
+	lea	b_9200_obj_collsn_notif,a0     			| [ld   h,#>b_9200_obj_collsn_notif] = $81
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#0x81,(a0)                      	| [ld   (hl),#0x81]
@@ -1277,7 +1274,7 @@ l_07DF:
 * if capture boss ...
 	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d0	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)]
 	sub.b	d6,d0                            	| [sub  l]
-	jne	l_07EC                             	| [jr   nz,l_07EC]
+	jne	l_07EC                             		| [jr   nz,l_07EC]
 * ... then ...
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0: shot the boss that was starting the capture beam
 	addq.b	#1,d0                           	| [inc  a]
@@ -1287,28 +1284,27 @@ l_07EC:
 * use the sprite color to get index to sound
 
 	move.l	a0,-(sp)                        	| [push hl] &obj_collsn_notif[L]
-
 * if sprite color == 7 ... (check for red captured ship)
 	move.b	d2,d0                           	| [ld   a,c] .... sprite.cclr.b1
 	cmp.b	#0x07,d0                         	| [cp   #0x07]
-	jne	l_07F5                             	| [jr   nz,l_07F5]
+	jne	l_07F5                             		| [jr   nz,l_07F5]
 	subq.b	#1,d0                           	| [dec  a]
-	jra	l_07F8_                            	| [jr   l_07F8_]
+	jra	l_07F8_                            		| [jr   l_07F8_]
 * ... else ...
 l_07F5:
 	subq.b	#1,d0                           	| [dec  a]
 	and.b	#0x03,d0                         	| [and  #0x03]
 
 l_07F8_:
-	lea	b_9AA0+0x01,a0                 	| [ld   hl,#b_9AA0 + 0x01] b_9AA0[1 + A] = 1 ... sound-fx count/enable registers
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
+	lea	b_9AA0+0x01,a0                 			| [ld   hl,#b_9AA0 + 0x01] b_9AA0[1 + A] = 1 ... sound-fx count/enable registers
+	jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A
 	move.b	#1,(a0)                         	| [ld   (hl),#1]
 
 * if sprite color == 7
 	move.b	d2,d0                           	| [ld   a,c] .... sprite.cclr.b1
 	cmp.b	#0x07,d0                         	| [cp   #0x07]
-	jne	l_0808                             	| [jr   nz,l_0808]
-	lea	ds_plyr_actv+_b_bmbr_boss_cflag,a0	| [ld   hl,#ds_plyr_actv +_b_bmbr_boss_cflag] 0 ... enable capture-mode selection
+	jne	l_0808                             		| [jr   nz,l_0808]
+	lea	ds_plyr_actv+_b_bmbr_boss_cflag,a0		| [ld   hl,#ds_plyr_actv +_b_bmbr_boss_cflag] 0 ... enable capture-mode selection
 	clr.b	(a0)                             	| [ld   (hl),#0]
 
 l_0808:
@@ -1316,13 +1312,12 @@ l_0808:
 	lea	ds_bug_collsn_hit_mult,a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x00] rocket/bug or ship/bug collision
 	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A ... _collsn_hit_mult[sprite.cclr.b1]
 	addq.b	#1,(a0)                         	| [inc  (hl)]
-
 	tst.b	d7                              	| [ex   af,af'] un-stash parameter/flag
-	jeq	l_0811                             	| [jr   z,l_0811]
+	jeq	l_0811                             		| [jr   z,l_0811]
 	addq.b	#1,(a0)                         	| [inc  (hl)] shot blue boss
 l_0811:
 	move.l	(sp)+,a0                        	| [pop  hl]
-	jra	l_07B4_next_object                 	| [jp   l_07B4_next_object]
+	jra	l_07B4_next_object                 		| [jp   l_07B4_next_object]
 
 * this invalidates the bomb object... but what about the ship?
 l_0815_bomb_hit:
@@ -1338,50 +1333,46 @@ l_0815_bomb_hit:
 	rts                                    	| [ret]
 
 * Handle flying bug collision (bullet or ship). Not stationary bugs.
-l_081E_hdl_flyng_bug:
+l_hdl_flyng_bug_081e:
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                      			| [$081E: ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 
-	movem.l	a0/d6,-(sp)                        	| [push hl]
-	exg		d0,d7                              	| [ex   af,af'] re-stash parameter
-	addq.w	#1,a0                           	| [inc  l]
-	addq.b	#1,d6                           	| [inc  l]  [a0 coherence]
-	move.b	(a0),d0                         	| [ld   a,(hl)] sprt_mctl_objs[L].mctl_idx
-
-	lea	ds_bug_motion_que_9100,a0           	| [ld   h,#>ds_bug_motion_que_9100] bug_motion_que[A].b13 = 0 (release this slot)
+	movem.l	a0/d6,-(sp)                        	| [$0820: push hl]
+	exg		d0,d7                              	| [$0821: ex   af,af'] re-stash parameter
+	addq.w	#1,a0                           	| [$0822: inc  l]
+	addq.b	#1,d6                           	| [$0822: inc  l]  [a0 coherence]
+	move.b	(a0),d0                         	| [$0823: ld   a,(hl)] sprt_mctl_objs[L].mctl_idx
+	lea	ds_bug_motion_que_9100,a0           	| [$0824: ld   h,#>ds_bug_motion_que_9100] bug_motion_que[A].b13 = 0 (release this slot)
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	add.b	#0x13,d0                         	| [add  a,#0x13]
-	move.b	d0,d6                           	| [ld   l,a]
-	clr.b	(a0)                             	| [ld   (hl),#0]
-
-	lea	b_bug_flyng_hits_p_round,a0    	| [ld   hl,#b_bug_flyng_hits_p_round] +=1
-	addq.b	#1,(a0)                         	| [inc  (hl)]
+	add.b	#0x13,d0                         	| [$0826: add  a,#0x13]
+	move.b	d0,d6                           	| [$0828: ld   l,a]
+	clr.b	(a0)                             	| [$0829: ld   (hl),#0]
+	lea	b_bug_flyng_hits_p_round,a0    			| [$082B: ld   hl,#b_bug_flyng_hits_p_round] +=1
+	addq.b	#1,(a0)                         	| [$082E: inc  (hl)]
 
 * bug_flying_hit_cnt is probably only meaningful in challenge rounds. In other
 * rounds it is simply intiialized to 0 at start of round.
-	lea	w_bug_flying_hit_cnt,a0        	| [ld   hl,#w_bug_flying_hit_cnt] hit_cnt -= 1 ... reset 8 each challenge_wave
-	subq.b	#1,(a0)                         	| [dec  (hl)]
-	movem.l	(sp)+,a0/d6                        	| [pop  hl] &sprt_mctl_objs[L].mctl_idx
+	lea	w_bug_flying_hit_cnt,a0        			| [$082F: ld   hl,#w_bug_flying_hit_cnt] hit_cnt -= 1 ... reset 8 each challenge_wave
+	subq.b	#1,(a0)                         	| [$0832: dec  (hl)]
+	movem.l	(sp)+,a0/d6                        	| [$0833: pop  hl] &sprt_mctl_objs[L].mctl_idx
 
-	jne	l_0849                             	| [jr   nz,l_0849]
+	jne	l_0849                             		| [$0849: jr   nz,l_0849]
 
 * award bonus points for destroying complete formation of 8 on challenge stage
-	lea	b_9200_obj_collsn_notif,a0     	| [ld   h,#>b_9200_obj_collsn_notif] = b_9280[4 + 1]
+	lea	b_9200_obj_collsn_notif,a0     			| [$0836: ld   h,#>b_9200_obj_collsn_notif] = b_9280[4 + 1]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	ds2_stg_chllg_rnd_attrib+1,d0   	| [ld   a,(ds2_stg_chllg_rnd_attrib + 1)] sprite code + flag
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-
-	move.b	ds2_stg_chllg_rnd_attrib+0,d0   	| [ld   a,(ds2_stg_chllg_rnd_attrib + 0)] add "score" to bug_collsn[$0F] (why add?)
-	move.b	d0,d5                           	| [ld   h,a]
-	move.b	ds_bug_collsn_hit_mult+0x0F,d0  	| [ld   a,(ds_bug_collsn_hit_mult + 0x0F)]
-	add.b	d5,d0                            	| [add  a,h]
-	move.b	d0,ds_bug_collsn_hit_mult+0x0F  	| [ld   (ds_bug_collsn_hit_mult + 0x0F),a] += b_9280[4 + 0] ... "score"
-
-	jra	l_07DF                             	| [jr   l_07DF]
+	move.b	ds2_stg_chllg_rnd_attrib+1,d0   	| [$0838: ld   a,(ds2_stg_chllg_rnd_attrib + 1)] sprite code + flag
+	move.b	d0,(a0)                         	| [$083B: ld   (hl),a]
+	move.b	ds2_stg_chllg_rnd_attrib+0,d0   	| [$083C: ld   a,(ds2_stg_chllg_rnd_attrib + 0)] add "score" to bug_collsn[$0F] (why add?)
+	move.b	d0,d5                           	| [$083F: ld   h,a]
+	move.b	ds_bug_collsn_hit_mult+0x0F,d0  	| [$0840: ld   a,(ds_bug_collsn_hit_mult + 0x0F)]
+	add.b	d5,d0                            	| [$0843: add  a,h]
+	move.b	d0,ds_bug_collsn_hit_mult+0x0F  	| [$0844: ld   (ds_bug_collsn_hit_mult + 0x0F),a] += b_9280[4 + 0] ... "score"
+	jra	l_07DF                             		| [$0847: jr   l_07DF]
 
 l_0849:
 * handle special cases of flying bugs, then jp   l_07DF
@@ -1389,44 +1380,42 @@ l_0849:
 * if (hit == captured ship)
 	move.b	d2,d0                           	| [ld   a,c] .... sprite.cclr.b1
 	cmp.b	#7,d0                            	| [cp   #7] color map 7 ... red captured ship
-	jne	l_0852                             	| [jr   nz,l_0852]
-
+	jne	l_0852                             		| [jr   nz,l_0852]
 	move.b	#0xB8,d3                        	| [ld   d,#0xB8]
-	jra	l_08B0_set_bonus_sprite_code       	| [jr   l_08B0_set_bonus_sprite_code]
+	jra	l_08B0_set_bonus_sprite_code       		| [jr   l_08B0_set_bonus_sprite_code]
 
 * else if ( hit bonus-bee or clone bonus-bee )
 l_0852:
 	move.b	ds_plyr_actv+_b_bbee_obj,d0     	| [ld   a,(ds_plyr_actv +_b_bbee_obj)] get object of parent bonus-bee
 	cmp.b	d6,d0                            	| [cp   l]
-	jeq	l_08B6                             	| [jp   z,l_08B6]
-
+	jeq	l_08B6                             		| [jp   z,l_08B6]
 	move.b	d6,d0                           	| [ld   a,l] check if this one is one of the clones ("transients" i.e.... $38 etc.)
 	and.b	#0x38,d0                         	| [and  #0x38]
 	cmp.b	#0x38,d0                         	| [cp   #0x38]
-	jeq	l_08B6                             	| [jp   z,l_08B6]
+	jeq	l_08B6                             		| [jp   z,l_08B6]
 
 * else if ! blue-boss ... l_07DB
 	move.b	d2,d0                           	| [ld   a,c] .... sprite.cclr.b1
 	cmp.b	#0x01,d0                         	| [cp   #0x01] color map 1 ... blue boss hit once
-	jne	l_07DB                             	| [jp   nz,l_07DB]
+	jne	l_07DB                             		| [jp   nz,l_07DB]
 
 * ... else ... handle blue boss
 * check for captured-fighter
-	movem.w	d3/d4,-(sp)                    	| [push de] &ds_sprite_ctrl_9B00[E]
+	movem.w	d3/d4,-(sp)                    		| [push de] &ds_sprite_ctrl_9B00[E]
 	move.l	a1,-(sp)                        	| [push de] &ds_sprite_ctrl_9B00[E]
 	move.b	d6,d0                           	| [ld   a,l]
 	and.b	#0x07,d0                         	| [and  #0x07] mask off to reference the captured ship
 	move.b	d0,d4                           	| [ld   e,a]
-	lea	b_8800,a1                      	| [ld   d,#>b_8800]
+	lea	b_8800,a1                      			| [ld   d,#>b_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	move.b	(a1),d0                         	| [ld   a,(de)]
 	cmp.b	#9,d0                            	| [cp   #9] is this a valid capture ship status ...i.e. diving? ...status may still...
-	jne	l_0899                             	| [jr   nz,l_0899] ...be $80 meaning I have killed the boss before he pulls the ship all in!
+	jne	l_0899                             		| [jr   nz,l_0899] ...be $80 meaning I have killed the boss before he pulls the ship all in!
 * captured ship is diving
 
 	movem.l	a0/d6,-(sp)                        	| [push hl] stash the boss object locator e.g. b_8830
-	exg	a1,a0                              	| 	[ex   de,hl] HL := &sprt_mctl_objs[ ].b0
+	exg	a1,a0                              		| 	[ex   de,hl] HL := &sprt_mctl_objs[ ].b0
 	addq.w	#1,a0                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprt_mctl_objs[ HL ].mctl_idx
 	add.b	#0x13,d0                         	| [add  a,#0x13] mctl_mpool[n].b13
@@ -1445,14 +1434,14 @@ l_0852:
 	subq.b	#1,d6                           	| [dec  l] [a0 coherence]
 	move.b	d6,d0                           	| [ld   a,l]
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] updated object locator token of rescued ship   (token was 1)
-	lea	b_8800,a0                      	| [ld   h,#>b_8800] the captured ship object becomes inactive (0)
+	lea	b_8800,a0                      			| [ld   h,#>b_8800] the captured ship object becomes inactive (0)
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 0
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x1D       	| [ld   (ds_cpu0_task_actv_9000 + 0x1D),a] 1 ... shot the boss that captured the ship
+	move.b	d0,ds_cpu0_task_actv_9000+0x1D      | [ld   (ds_cpu0_task_actv_9000 + 0x1D),a] 1 ... shot the boss that captured the ship
 	move.b	d0,ds5_928A_captr_status+0x03   	| [ld   (ds5_928A_captr_status + 0x03),a] 1
 	move.b	d0,b_9AA0+0x11                  	| [ld   (b_9AA0 + 0x11),a] 1 ... sound-fx count/enable registers, "rescued ship" music
 	movem.l	(sp)+,a0/d6                        	| [pop  hl] restore boss object locator e.g. b_883x
@@ -1460,15 +1449,15 @@ l_0852:
 l_0899:
 * lone blue boss killed, or boss killed before pulling the beam all in
 	move.l	(sp)+,a1                        	| [pop  de] ds_sprite_ctrl_9B00[n].b1
-	movem.w	(sp)+,d3/d4                    	| [pop  de] ds_sprite_ctrl_9B00[n].b1
+	movem.w	(sp)+,d3/d4                    		| [pop  de] ds_sprite_ctrl_9B00[n].b1
 
 	move.l	a0,-(sp)                        	| [push hl] sprt_mctl_objs[L] (boss) e.g. b_8830
 	move.b	#6,d0                           	| [ld   a,#6]
-	move.b	d0,ds4_game_tmrs_92ac+1              	| [ld   (ds4_game_tmrs_92ac + 1),a] 6 ... captured ship timer
+	move.b	d0,ds4_game_tmrs_92ac+1             | [ld   (ds4_game_tmrs_92ac + 1),a] 6 ... captured ship timer
 	move.b	d6,d0                           	| [ld   a,l]
 	and.b	#7,d0                            	| [and  #7] gets offset of object from $30
 	lea	ds_plyr_actv+_ds_bmbr_boss_scode,a0	| [ld   hl,#ds_plyr_actv +_ds_bmbr_boss_scode] bonus code/scoring attributes for 1 of 4 flying bosses
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A
 	move.b	(a0)+,d0                         	| [ld   a,(hl)] .b0 ... add to bug_collsn[$0F] (adjusted scoring increment)
 												| [inc  l]
 	move.b	(a0),d3                         	| [ld   d,(hl)] .b1 -> obj_collsn_notif[L] ... sprite code + 0x80
@@ -1478,29 +1467,26 @@ l_08AA:
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	move.l	(sp)+,a0                        	| [pop  hl]
 
-* jp here if shot the flying captured ship
+* jp here if shot the flying captured ship (else boss)
 l_08B0_set_bonus_sprite_code:
-	lea	b_9200_obj_collsn_notif,a0     	| [ld   h,#>b_9200_obj_collsn_notif]
+	lea	b_9200_obj_collsn_notif,a0     			| [ld   h,#>b_9200_obj_collsn_notif]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	ILLEGAL		| check D6 value when shooting captured ship
 	move.b	d3,(a0)                         	| [ld   (hl),d] shot boss ... (9230):=BA B5. B7?   B8 if hit captured ship
-	jra	l_07DF                             	| [jp   l_07DF]
+	jra	l_07DF                             		| [jp   l_07DF]
 
 l_08B6:
 
 	move.l	a0,-(sp)                        	| [push hl]
-	lea	b8_99B0_X3attackcfg_ct,a0      	| [ld   hl,#b8_99B0_X3attackcfg_ct] decrement (HL) (counter for triple attack?)
+	lea	b8_99B0_X3attackcfg_ct,a0      			| [ld   hl,#b8_99B0_X3attackcfg_ct] decrement (HL) (counter for triple attack?)
 	subq.b	#1,(a0)                         	| [dec  (hl)]
 	movem.l	(sp)+,a0                        	| [pop  hl]
-	jne	l_07DB                             	| [jp   nz,l_07DB]
+	jne	l_07DB                             		| [jp   nz,l_07DB]
 	move.b	b8_99B2_X3attackcfg_parm1,d0    	| [ld   a,(b8_99B2_X3attackcfg_parm1)] 99B0==0 ... destroyed all 3 of triple-attack
 	move.b	d0,d3                           	| [ld   d,a]
 	move.b	b8_99B1_X3attackcfg_parm0,d0    	| [ld   a,(b8_99B1_X3attackcfg_parm0)]
-
 	move.l	a0,-(sp)                        	| [push hl]
-
-	jra	l_08AA                             	| [jp   l_08AA]
+	jra	l_08AA                             		| [jp   l_08AA]
 
 l_08CA_hit_green_boss:
 	addq.b	#1,d0                           	| [inc  a]
@@ -1523,10 +1509,10 @@ l_08CA_hit_green_boss:
 *  ...
 *-----------------------------------------------------------------------------
 f_08D3:
-	lea	ds_bug_motion_que_9100,a2           | [$08D3: ld   ix,#ds_bug_motion_que_9100]
+	lea	ds_bug_motion_que_9100,a2           	| [$08D3: ld   ix,#ds_bug_motion_que_9100]
 	move.b	#0x0C,d0                        	| [$08D7: ld   a,#0x0C]
 	move.b	d0,b_bug_que_idx_9289               | [$08D9: ld   (b_bug_que_idx_9289),a] 12 ... nbr of queue structures
-	lea	b_bugs_flying_cnt,a0           	    | [$08DC: ld   hl,#b_bugs_flying_cnt] capture the (previous) count and zero the current count
+	lea	b_bugs_flying_cnt,a0           	    	| [$08DC: ld   hl,#b_bugs_flying_cnt] capture the (previous) count and zero the current count
 	move.b	(a0),d0                         	| [$08DF: ld   a,(hl)]
 	clr.b	(a0)+                             	| [$08E0: ld   (hl),#0]
 	                           	                | [$08E2: inc  hl] b_bugs_flying_nbr
@@ -1536,7 +1522,6 @@ f_08D3:
 for__pool_idx_08E4:
 	btst.b	#0,(0x13,a2)                    	| [$08E4: bit  0,0x13(ix)] check for activated state
 	jeq	next__pool_idx_0dfb                     | [jp   z,next__pool_idx_0dfb]
-
 	lea	b_bugs_flying_cnt,a0           			| [ld   hl,#b_bugs_flying_cnt] +=1
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 	moveq	#0,d6
@@ -1548,14 +1533,14 @@ for__pool_idx_08E4:
 * if (!(A == 3                          	|| A == 7|| A == 9)) ...
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	cmp.b	#3,d0                            	| [cp   #3] status 3 is what?
-	jeq	mctl_fltpn_dspchr                  	| [jr   z,mctl_fltpn_dspchr]
+	jeq	mctl_fltpn_dspchr                  		| [jr   z,mctl_fltpn_dspchr]
 	cmp.b	#9,d0                            	| [cp   #9] if 8800[L]==9 ... flying into formation or diving out.
-	jeq	mctl_fltpn_dspchr                  	| [jr   z,mctl_fltpn_dspchr]
+	jeq	mctl_fltpn_dspchr                  		| [jr   z,mctl_fltpn_dspchr]
 	cmp.b	#7,d0                            	| [cp   #7] if 8800[L]==7 ... spawning (new stage)
 * ... then ...
 * status==4 ... shot a non-flying capturing boss (ship will soon go rogue and launch out)
 * HL==8830, *HL==04, 8831==40
-	jne	case_0E49_make_object_inactive     	| [jp   nz,case_0E49_make_object_inactive] sets object state to $80
+	jne	case_0E49_make_object_inactive     		| [jp   nz,case_0E49_make_object_inactive] sets object state to $80
 
 
 mctl_fltpn_dspchr:
