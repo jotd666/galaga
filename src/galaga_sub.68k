@@ -960,7 +960,7 @@ rckt_man_0704:
 	bne.b	0f                               	| [...]
 	rts                                    		| [ret  z] [...]
 0:
-
+	
 * else ...
 	move.b	(a1),d0                         	| [ld   a,(de)] rocket "attribute"
 	move.b	d0,d1                           	| [ld   b,a]
@@ -994,7 +994,7 @@ l_0719:
 	cmp.b	#0xF0,d0                         	| [$071B: cp   #0xF0]
 	jcc	l_0763_disable_rocket              		| [$071D: jr   nc,l_0763_disable_rocket]
 
-* rocket.sX passed to hitd_det_rckt
+* rocket.sX passed to hitd_det_rckt_076a
 	move.b	d0,ixl								| [$071F: ld   ixl,a]
 
 
@@ -1022,17 +1022,16 @@ l_0729:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	rol.b	#1,d0                            	| [rlca]
-	jcc	l_0738                             	| [jr   nc,l_0738]
+	jcc	l_0738                             		| [jr   nc,l_0738]
 * compliment sy:8  (handles both overflow and underflow situation)
-	CLEAR_XC_FLAGS
 	move.b	(a0),d7
-	ror.b	#1,d7                          	| [rrc  (hl)]
+	ror.b	#1,d7                          		| [rrc  (hl)]
 	SET_X_FROM_C
-	INVERT_XC_FLAGS                      	| [ccf]
-	roxl.b	#1,d7                         	| [rl   (hl)]
+	INVERT_XC_FLAGS                      		| [ccf]
+	roxl.b	#1,d7                         		| [rl   (hl)]
     move.b	d7,(a0)
 
-* rocket.sy<8:1>, passed to hitd_det_rckt in IXH
+* rocket.sy<8:1>, passed to hitd_det_rckt_076a in IXH
 l_0738:
 	move.b	(a0),d2                         	| [ld   c,(hl)] rocket.sy<8>
 	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
@@ -1042,21 +1041,21 @@ l_0738:
 	ror.b	#1,d2                            	| [rrc  c] rotate bit-8 into Cy
 	SET_X_FROM_C
 	roxr.b	#1,d0                           	| [rra] rotate bit-8 from Cy into A
-	jbsr	read_ixh_into_d0		| ld   ixh,a                                 ; stash sy<8:1> for hit-detection parameter
+	move.b	d0,ixh								| [ld   ixh,a]                                 ; stash sy<8:1> for hit-detection parameter
 
-* if ( rocket.sY < 40                   	|| rocket.sY >= 312 ) then _disable_rocket
+* if ( rocket.sY < 40 || rocket.sY >= 312 ) then _disable_rocket
 	cmp.b	#20,d0                           	| [cp   #20] 0x14  0x28 >> 1
-	jcs	l_0760_disable_rocket_wposn        	| [jr   c,l_0760_disable_rocket_wposn] L is offset to sY, so first L--
+	jcs	l_0760_disable_rocket_wposn        		| [jr   c,l_0760_disable_rocket_wposn] L is offset to sY, so first L--
 	cmp.b	#156,d0                          	| [cp   #156] 0x9C   0x138 >> 1
-	jcc	l_0760_disable_rocket_wposn        	| [jr   nc,l_0760_disable_rocket_wposn] L is offset to sY, so first L--
+	jcc	l_0760_disable_rocket_wposn        		| [jr   nc,l_0760_disable_rocket_wposn] L is offset to sY, so first L--
 
 * index of rocket object/sprite passed through to hitd_dspchr (odd, i.e. b1)
 	move.b	d6,d4                           	| [ld   e,l]
 
 * if ( task_active ) then ... else _call_hit_detection_all
-	move.b	ds_cpu0_task_actv_9000+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x1D)] cpu0:f_2000 (capturing boss destroyed, rescued ship spinning)
-	                               	| [and  a]
-	jeq	l_0757_call_hit_detection_all      	| [jr   z,l_0757_call_hit_detection_all]
+	move.b	ds_cpu0_task_actv_9000+0x1D,d0      | [ld   a,(ds_cpu0_task_actv_9000 + 0x1D)] cpu0:f_2000 (capturing boss destroyed, rescued ship spinning)
+												| [and  a]
+	jeq	l_0757_call_hit_detection_all      		| [jr   z,l_0757_call_hit_detection_all]
 
 * else
 * ...the capturing boss is destroyed and the rescued ship is up there spinning,
@@ -1067,17 +1066,16 @@ l_0738:
 
 	lea	ds_sprite_posn_9300+0x08,a0         	| [ld   hl,#ds_sprite_posn_9300 + 0x08] skip first 4 objects...
 	move.b	#44,d1                          	| [ld   b,#44] 0x30 - 4
-
-	jra	l_075C_call_hit_detection          	| [jr   l_075C_call_hit_detection]
+												| [jr   l_075C_call_hit_detection]
 
 l_0757_call_hit_detection_all:
 * reset HL and count to check $30 objects
-	lea	ds_sprite_posn_9300,a0         	| [ld   hl,#ds_sprite_posn_9300 + 0x00]
-	move.b	#0x30,d1                        	| [ld   b,#0x30]
+	lea	ds_sprite_posn_9300,a0         			| [$0757: ld   hl,#ds_sprite_posn_9300 + 0x00]
+	move.b	#0x30,d1                        	| [$075A: ld   b,#0x30]
 
 l_075C_call_hit_detection:
-	jbsr	hitd_det_rckt                     	| [call hitd_det_rckt]
-	rts                                    	| [ret]
+	jbra	hitd_det_rckt_076a                  | [$075C: call hitd_det_rckt_076a]
+	                                    		| [$075F: ret]
 
 * terminate out of bounds rockets
 l_0760_disable_rocket_wposn:
@@ -1098,7 +1096,7 @@ l_0763_disable_rocket:
 	rts                                    	| [ret]
 
 *=============================================================================
-* hitd_det_rckt()
+* hitd_det_rckt_076a()
 *  Description:
 *   rocket hit detection
 * IN:
@@ -1112,15 +1110,16 @@ l_0763_disable_rocket:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-hitd_det_rckt:
+hitd_det_rckt_076a:
+	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 
+	* now d6 drives A0 lsb
 l_076A_while_object:
 
 * obj_status[L].state<7> ... $80 == inactive object
 * obj_collsn_notif[L].b0 ... $81 = hit notification already in progress
 
 * if (0x80 != ( obj_status[L].state & _obj_collsn_notif[L] ))
-	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 	lea	b_9200_obj_collsn_notif,a0     	| [ld   h,#>b_9200_obj_collsn_notif] is hit notification already in progress
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -1143,7 +1142,6 @@ l_076A_while_object:
 * offset with "Cy" so only 1 test needed for (d>-3 && d<+3 )
 
 * check Y coordinate ... sY<8:1> in A
-	addq.w	#1,a0                           	| [inc  l]
 	addq.b	#1,d6                           	| [inc  l] [a0 coherence]
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sprite.sy<8>
 	and.w	#0xFF,d6
@@ -1154,48 +1152,45 @@ l_076A_while_object:
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	ror.b	#1,d3                            	| [rrc  d]
+	SET_X_FROM_C
 	roxr.b	#1,d0                           	| [rra]
 	subq.w	#1,a0                           	| [dec  l]
 
 	sub.b	ixh,d0                           	| [sub  ixh] sprite.sy<1:8> -= rocket.sy<1:8>
 	subq.b	#3,d0                           	| [sub  #3] tolerance for hit-check (divided by 2 to account for scaling)
 	addq.b	#6,d0                           	| [add  a,#6]
-	jcc	l_07B4_next_object                 	| [jr   nc,l_07B4_next_object]
+	jcc	l_07B4_next_object                 		| [jr   nc,l_07B4_next_object]
 
 * check X coordinate
 	move.b	d2,d0                           	| [ld   a,c] reload object status e.g. 8800[L]
 	subq.b	#1,d0                           	| [dec  a]
 	and.b	#0xFE,d0                         	| [and  #0xFE]
 	exg		d0,d7                              	| [ex   af,af'] object status to hitd_dspchr
-	                               	| [and  a]
-
+												| [and  a]
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprite.sX
-	tst.b	ds_plyr_actv+_b_2ship        	| [ld   a,(ds_plyr_actv +_b_2ship)]
-
-	jne	l_07A4                             	| [jr   nz,l_07A4] and  a
-
+	tst.b	ds_plyr_actv+_b_2ship        		| [ld   a,(ds_plyr_actv +_b_2ship)]
+	jne	l_07A4                             		| [jr   nz,l_07A4] and  a
 	sub.b	ixl,d0                           	| [sub  ixl] sprite.sX -= rocket.sX
 	subq.b	#6,d0                           	| [sub  #6]
 	add.b	#11,d0                           	| [add  a,#11]
-	jcs	hitd_dspchr_rckt                   	| [jr   c,hitd_dspchr_rckt]
-	jra	l_07B4_next_object                 	| [jr   l_07B4_next_object]
+	jcs	hitd_dspchr_rckt                   		| [jr   c,hitd_dspchr_rckt]
+	jra	l_07B4_next_object                 		| [jr   l_07B4_next_object]
 
 l_07A4:
 	sub.b	ixl,d0                           	| [sub  ixl] sprite.sX -= rocket.sX
 	sub.b	#20,d0                           	| [sub  #20]
 	add.b	#11,d0                           	| [add  a,#11]
-	jcs	hitd_dspchr_rckt                   	| [jr   c,hitd_dspchr_rckt]
+	jcs	hitd_dspchr_rckt                   		| [jr   c,hitd_dspchr_rckt]
 	addq.b	#4,d0                           	| [add  a,#4]
-	jcs	l_07B4_next_object                 	| [jr   c,l_07B4_next_object]
+	jcs	l_07B4_next_object                 		| [jr   c,l_07B4_next_object]
 	add.b	#11,d0                           	| [add  a,#11]
-	jcs	hitd_dspchr_rckt                   	| [jr   c,hitd_dspchr_rckt]
+	jcs	hitd_dspchr_rckt                   		| [jr   c,hitd_dspchr_rckt]
 
 l_07B4_next_object:
-	addq.b	#2,d6                           	| [inc  l] * 2 [a0 coherence]
+	addq.b	#2,d6                           	| [inc  l] * 2
 	subq.b	#1,d1                           	| [...]
-	jne	l_076A_while_object                	| [djnz l_076A_while_object]
-
-	rts                                    	| [ret]
+	jne	l_076A_while_object                		| [djnz l_076A_while_object]
+	rts                                    		| [ret]
 
 *=============================================================================
 * hitd_dspchr()
@@ -1584,11 +1579,10 @@ mctl_fltpn_dspchr:
 	lea	ds_bug_motion_que_9100,a3
 	sub.l	a3,a2
 	jbsr	osd_break
+	illegal
 	nop
 	nop
-	nop
-	nop
-	nop
+
 0:
 	.endif
 	

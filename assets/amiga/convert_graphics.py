@@ -135,7 +135,7 @@ add_sprite_block(0x60,0x67,"mutant_green",6,sprite_type=ST_HW_SPRITE)
 add_sprite_block(0x68,0x6F,"challenge_butterfly",2) # or 7?
 add_sprite_block(0x70,0x77,"challenge_ship",7)
 add_sprite_block(0x78,0x7F,"challenge_rocket",7)
-add_sprite_block(0x30,0x34,"bomb",11)
+add_sprite_block(0x30,0x34,"bomb",[0x9,0xB])
 add_sprite(0x34,"score_150",0)  # wrong clut
 add_sprite(0x35,"score_400",0)  # wrong clut
 add_sprite(0x36,"score_500",0)  # wrong clut

@@ -270,7 +270,7 @@ l_game_state_ready:
 	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "PUSH START BUTTON"
 
 	lea	d_attrmode_sptiles_ships,a0    	| [ld   hl,#d_attrmode_sptiles_ships]
-	move.l	a0,p_attrmode_sptiles           	| [ld   (p_attrmode_sptiles),hl] &_attrmode_sptiles[0] ... parameter to _sprite_tiles_displ()
+	move.l	a0,p_attrmode_sptiles_9280           	| [ld   (p_attrmode_sptiles_9280),hl] &_attrmode_sptiles[0] ... parameter to _sprite_tiles_displ()
 
 * if ( 0xFF == mchn_cfg_bonus[0] ) goto l_While_Ready
 	move.b	w_mchn_cfg_bonus+0,d0           	| [ld   a,(w_mchn_cfg_bonus + 0)]
@@ -3027,39 +3027,38 @@ task_enable_tbl_def:
 *  ...
 *-----------------------------------------------------------------------------
 c_game_or_demo_init:
-	lea	ds_sprite_code_8B00+0x64,a0         	| [ld   hl,#ds_sprite_code_8B00 + 0x64] rocket object
-	move.b	#0x90,d3               	| [ld   de,#0x0900 + 0x0030] temp store two 8-bit values ... $30 is a rocket
-	move.b	#0x30,d4               	| [ld   de,#0x0900 + 0x0030] temp store two 8-bit values ... $30 is a rocket
-	clr.b	d2                               	| [ld   c,#0]
-	move.b	#10,d1                          	| [ld   b,#10]
+	lea	ds_sprite_code_8B00+0x64,a0         	| [$1268: ld   hl,#ds_sprite_code_8B00 + 0x64] rocket object
+	move.b	#0x09,d3               				| [$1269: ld   de,#0x0900 + 0x0030] temp store two 8-bit values ... $30 is a rocket
+	move.b	#0x30,d4               				| [$126C: ld   de,#0x0900 + 0x0030] temp store two 8-bit values ... $30 is a rocket
+	clr.b	d2                               	| [$126F: ld   c,#0]
+	move.b	#10,d1                          	| [$1271: ld   b,#10]
 
 l_1273_while:
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
-	move.b	d4,(a0)                         	| [ld   (hl),e] e.g. (8B64):=$30
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	move.b	d4,(a0)                         	| [$1273: ld   (hl),e] e.g. (8B64):=$30
+	lea	ds_sprite_posn_9300,a0              	| [$1274: ld   h,#>ds_sprite_posn_9300]
 	add.w	d6,a0
-	clr.b	(a0)                             	| [ld   (hl),#0]
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
+	clr.b	(a0)                             	| [$1276: ld   (hl),#0]
+	lea	ds_sprite_ctrl_9B00,a0              	| [$1278: ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
-	move.b	d2,(a0)                         	| [ld   (hl),c]
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
+	move.b	d2,(a0)                         	| [$127A: ld   (hl),c]
+	lea	ds_sprite_code_8B00,a0              	| [$127B: ld   h,#>ds_sprite_code_8B00]
 	add.w	d6,a0
-	addq.w	#1,a0                           	| [inc  l]
- 	move.b	d3,(a0)+                         	| [ld   (hl),d] e.g. (8B65):=$09
-
-                          	| [inc  l]
+	addq.w	#1,a0                           	| [$127D: inc  l]
+ 	move.b	d3,(a0)+                         	| [$127E: ld   (hl),d] e.g. (8B65):=$09
+												| [$127F: inc  l]
 * if ( B == 9 )
-	move.b	d1,d0                           	| [ld   a,b]
-	cmp.b	#9,d0                            	| [cp   #9]
-	jne	l_1289                             	| [jr   nz,l_1289]
-	move.b	#1,d2                           	| [ld   c,#1]
-	move.b	#0x0B,d3                        	| [ld   d,#0x0B] bomb color code
+	move.b	d1,d0                           	| [$1280: ld   a,b]
+	cmp.b	#9,d0                            	| [$1281: cp   #9]
+	jne	l_1289                             		| [$1283: jr   nz,l_1289]
+	move.b	#1,d2                           	| [$1285: ld   c,#1]
+	move.b	#0x0B,d3                        	| [$1287: ld   d,#0x0B] bomb color code
 
 l_1289:
 	subq.b	#1,d1                           	| [...]
-	jne	l_1273_while                       	| [djnz l_1273_while] B--
+	jne	l_1273_while                       		| [$1289: djnz l_1273_while] B--
 
-	rts                                    	| [ret]
+	rts                                    		| [$128B: ret]
 
 *=============================================================================
 * sprite_tiles_display()
@@ -3074,18 +3073,18 @@ l_1289:
 c_sprite_tiles_displ_128C:
 
 
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
+	lea	ds_sprite_code_8B00,a0              	| [$128C: ld   h,#>ds_sprite_code_8B00]
 
 * L = p_sptiles_displ[idx*4 + 0] ... index/offset of object to use
-	move.l	p_attrmode_sptiles,a1       	| [ld   de,(p_attrmode_sptiles)] load the persistent pointer (not always needed)
+	move.l	p_attrmode_sptiles_9280,a1       	| [$128E: ld   de,(p_attrmode_sptiles_9280)] load the persistent pointer (not always needed)
 	moveq	#0,d0
-	move.b	(a1),d0                         	| [ld   a,(de)] _attrmode_sptiles[ E + 0 ]
-	add.w	d0,a0                           	| [ld   l,a]
+	move.b	(a1),d0                         	| [$1292: ld   a,(de)] _attrmode_sptiles[ E + 0 ]
+	add.w	d0,a0                           	| [$1293: ld   l,a]
 
 * C = p_sptiles_displ[E+1] ... color/code
-	addq.w	#1,a1                           	| [inc  de] _attrmode_sptiles[DE].b01  ... color/code
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	move.b	d0,d2                           	| [ld   c,a]
+	addq.w	#1,a1                           	| [$1294: inc  de] _attrmode_sptiles[DE].b01  ... color/code
+	move.b	(a1),d0                         	| [$1295: ld   a,(de)]
+	move.b	d0,d2                           	| [$1296: ld   c,a]
 
 * sprite_code<3:6>	
 
@@ -3095,27 +3094,25 @@ c_sprite_tiles_displ_128C:
 	move.b	d0,(a0)                         	| [$129B: ld   (hl),a] sprite_code_base[ object + 0 ] ... sprite tile code
 
 * advance pointer, i.e. sprite_code_base[ index + 1 ] ... color code
-	                           	| [inc  l]
+												| [inc  l]
 
 * get color bits from original color/code value
 	move.b	d2,d0                           	| [ld   a,c]
 	and.b	#0x07,d0                         	| [and  #0x07]
 
 * Apparently bit-7 of the color/code provides color bit-3
-*     if (C & 0x80)  A                  	|= 0x08
+*     if (C & 0x80)  A |= 0x08
 	btst.b	#7,d2                           	| [bit  7,c]
-	jeq	l_12A6                             	| [jr   z,l_12A6]
+	jeq	l_12A6                             		| [jr   z,l_12A6]
 	or.b	#0x08,d0                          	| [or   #0x08]
 l_12A6:
 	move.b	d0,(1,a0)                         	| [ld   (hl),a] sprite_code_base
-
 	addq.w	#1,a1                           	| [inc  de] &table[ n + 2 ]  ... L/R offset
-
-	                           	| [dec  l] object_data[ n + 0 ] ... object state
+												| [dec  l] object_data[ n + 0 ] ... object state
 
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
 
- 	lea	b_8800,a0                      	| [ld   h,#>b_8800]
+ 	lea	b_8800,a0                      			| [ld   h,#>b_8800]
 	add.w	d6,a0
 	move.b	#1,(a0)                         	| [ld   (hl),#1] disposition = ACTIVE
 
@@ -3141,7 +3138,7 @@ l_12A6:
 
 * advance the pointer
 	addq.w	#1,a1                           	| [inc  de] e.g., DE:=$1960
-	move.l	a1,p_attrmode_sptiles           	| [ld   (p_attrmode_sptiles),de] += 1
+	move.l	a1,p_attrmode_sptiles_9280           	| [ld   (p_attrmode_sptiles_9280),de] += 1
 
 	rts                                    	| [ret]
 
@@ -3169,12 +3166,12 @@ c_12C3:
 l_12D1:
 	clr.b	(a0)+                             	| [ld   (hl),#0] fmtn_hpos.offs[]
 	                           	| [inc  l]
- 	move.b	(a1)+,d0                         	| [ld   a,(de)]
+ 	move.b	(a1)+,d0            | [ld   a,(de)]
 	                           	| [inc  de]
-	move.b	d0,(a0)+                         	| [ld   (hl),a] pair.b1 i.e. ds_hpos_loc_orig ... copy data for reference in CPU1
+	move.b	d0,(a0)+            | [ld   (hl),a] pair.b1 i.e. ds_hpos_loc_orig ... copy data for reference in CPU1
 	                           	| [inc  l]
-	subq.b	#1,d1                           	| [...]
-	jne	l_12D1                             	| [djnz l_12D1]
+	subq.b	#1,d1               | [...]
+	jne	l_12D1                  | [djnz l_12D1]
 
 * X coordinates at origin (10 bytes) to even offsets, adjusted for flip-screen.
 	lea	ds_hpos_spcoords_9800,a0            	| [ld   hl,#ds_hpos_spcoords_9800] init origin x-coords (10 columns)
@@ -4052,12 +4049,12 @@ case_init_demo_1852:
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] 1 ... sound_mgr_reset: non-zero causes re-initialization of sound mgr
 	move.b	d0,ds_plyr_actv+_b_stgctr       	| [ld   (ds_plyr_actv +_b_stgctr),a] 1
-	move.b	d0,ds_cpu0_task_actv_9000+0x03       	| [ld   (ds_cpu0_task_actv_9000 + 0x03),a] 1  (f_ship_demo_controls_1700 ... fighter control in training/demo mode)
-	move.b	d0,ds_cpu0_task_actv_9000+0x15       	| [ld   (ds_cpu0_task_actv_9000 + 0x15),a] 1  (f_read_fire_button_1f04 ... fire button input)
+	move.b	d0,ds_cpu0_task_actv_9000+0x03      | [ld   (ds_cpu0_task_actv_9000 + 0x03),a] 1  (f_ship_demo_controls_1700 ... fighter control in training/demo mode)
+	move.b	d0,ds_cpu0_task_actv_9000+0x15      | [ld   (ds_cpu0_task_actv_9000 + 0x15),a] 1  (f_read_fire_button_1f04 ... fire button input)
 	move.b	d0,ds_plyr_actv+_b_not_chllg_stg	| [ld   (ds_plyr_actv +_b_not_chllg_stg),a] 1  (0 if challenge stage ...see new_stg_game_only)
 
-	lea	d_1887,a0                      	| [ld   hl,#d_1887]
-	move.l	a0,pdb_demo_fghtrvctrs_9282          	| [ld   (pdb_demo_fghtrvctrs_9282),hl] &d_1887[0]
+	lea	d_1887,a0                      			| [ld   hl,#d_1887]
+	move.l	a0,pdb_demo_fghtrvctrs_9282         | [ld   (pdb_demo_fghtrvctrs_9282),hl] &d_1887[0]
 	jbsr	stg_init_env                      	| [call stg_init_env]
 	jbsr	c_fghtr_onscreen_133A                            	| [call c_fghtr_onscreen_133A] apparently erases some stuff from screen?
 
@@ -4066,9 +4063,9 @@ case_init_demo_1852:
 	move.b	d0,ds_plyr_actv+_b_atk_wv_enbl  	| [ld   (ds_plyr_actv +_b_atk_wv_enbl),a] 1 ... 0 when respawning player ship
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_wingm	| [ld   (ds_plyr_actv +_b_bmbr_boss_wingm),a] 1 ... for demo, force the bomber-boss into wingman-mode
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_new_stage_parms_99c0+0x04      	| [ld   (ds_new_stage_parms_99c0 + 0x04),a] 2 ... max_bombers (demo)
-	move.b	d0,ds_new_stage_parms_99c0+0x05      	| [ld   (ds_new_stage_parms_99c0 + 0x05),a] 2 ... increases max bombers in certain conditions (demo)
-	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
+	move.b	d0,ds_new_stage_parms_99c0+0x04     | [ld   (ds_new_stage_parms_99c0 + 0x04),a] 2 ... max_bombers (demo)
+	move.b	d0,ds_new_stage_parms_99c0+0x05     | [ld   (ds_new_stage_parms_99c0 + 0x05),a] 2 ... increases max bombers in certain conditions (demo)
+	jra	l_attmode_state_step               		| [jp   l_attmode_state_step]
 
 * demo fighter vectors demo level before capture
 d_1887:
@@ -4134,8 +4131,8 @@ l_18DB_while:
 * set inits and override defaults of bomber timers (note f_misc_gameplay_events_0857 disabled above)
 
 
-	move.b	#0xFF,d5                      	| [$18EA: ld   hl,#0xFF0D]
-	move.b	#0x0D,d6                      	| [$18EA: ld   hl,#0xFF0D]
+	move.b	#0xFF,d5                      		| [$18EA: ld   hl,#0xFF0D]
+	move.b	#0x0D,d6                      		| [$18EA: ld   hl,#0xFF0D]
        * tmrs_init[0x06] = 0xFF
 	*move.b	d6,b_92C0+0x05                  	| [$18ED: ld   (b_92C0 + 0x05),hl] demo ... timrs[0x06] = $FF
 	move.b	d5,b_92C0+0x06                  	| [$18ED: ld   (b_92C0 + 0x05),hl] demo ... timrs[0x06] = $FF
@@ -4150,7 +4147,7 @@ l_18DB_while:
 * now: 92C0  0D FF FF xx 0D FF FF
 
 	lea	d_1928,a0                      			| [$18F9: ld   hl,#d_1928] demo fighter vectors
-	move.l	a0,pdb_demo_fghtrvctrs_9282          	| [$18FC: ld   (pdb_demo_fghtrvctrs_9282),hl] &d_1928[0] ... demo fighter vectors
+	move.l	a0,pdb_demo_fghtrvctrs_9282         | [$18FC: ld   (pdb_demo_fghtrvctrs_9282),hl] &d_1928[0] ... demo fighter vectors
 
 * memset($92ca,$00,$10)
 	clr.b	d0                               	| [$18FF: xor  a]
@@ -4188,7 +4185,7 @@ case_clear_video_ram_1940:
 * 01: setup info-screen: sprite tbl index, text index, timer[2]
 case_setup_info_screen_1948:
 	lea	d_attrmode_sptiles,a0          	| [ld   hl,#d_attrmode_sptiles] setup index into sprite data table
-	move.l	a0,p_attrmode_sptiles           	| [ld   (p_attrmode_sptiles),hl] parameter to _sprite_tiles_displ
+	move.l	a0,p_attrmode_sptiles_9280           	| [ld   (p_attrmode_sptiles_9280),hl] parameter to _sprite_tiles_displ
 
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_9200_glbls+0x05           	| [ld   (ds_9200_glbls + 0x05),a] 0 ... demo_scrn_txt_indx
@@ -5817,7 +5814,6 @@ shot_slot_free_1f1e:
 
 
 l_1F2B:
-	jbsr	osd_break
 
 * sprite.ctrl[RCKT+n].b1 = sprite.ctrl[SHIP].b1 ... ship.sY, bit-8
 	jbsr	ldd                               	| [$1F2B: ldd] e.g. *(9B65--) = *(9B63--)

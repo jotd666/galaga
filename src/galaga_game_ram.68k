@@ -138,7 +138,7 @@
 	.global		b_9280
 	.global		ds8_9280_tmp_IO_parms
 	.global		ds3_9288_tmp_IO_data
-	.global		p_attrmode_sptiles
+	.global		p_attrmode_sptiles_9280
 	.global		pdb_demo_fghtrvctrs_9282
 	.global		b_bugs_flying_cnt
 	.global		b_bugs_flying_nbr_9287
@@ -444,7 +444,7 @@ ds3_9288_tmp_IO_data:
 
 
 *-----------------------------------------------------------------------------
-p_attrmode_sptiles:
+p_attrmode_sptiles_9280:
 	ds.l    1       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
 pdb_demo_fghtrvctrs_9282:
 	ds.l     1       | f_ship_demo_controls_1700, tracks state of demo mode by setting an offset to the data table

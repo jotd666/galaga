@@ -8,6 +8,9 @@
 - no shots in demo: check sub 0704 rckt_man
 - orientation of attacking sprites wrong: mirrored+flipped, we should support
   attributes!!
+- shot: missing clut 
+ D0 000000D4   D1 0000002F   D2 00000030   D3 00000010
+ 
 
 trace cpu with regs:
 
