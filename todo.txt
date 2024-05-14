@@ -1,15 +1,16 @@
 
-
+- boss not exploding when shot the second time, no score
+  all because no shots after first shot !!
 - ACTIVE_BITPLANE_MASK not implemented
 - generate sprite_cluts for hw sprite
 - debug rld,rrd (called after intro)
-- CREDIT displayed but wrong color, wrong row too, in windowed HIGHSCORE too low
+- 2 first rows not shown (attribute/color ??)
 - remove red timer flashes, maybe speedup using F10?
 
 - orientation of attacking sprites wrong: mirrored+flipped, we should support
   attributes!!
 - sprite priorities wrong: stars should be behind
- 
+- stars trashed near the PAL wait region 
 
 trace cpu with regs:
 

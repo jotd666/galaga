@@ -94,7 +94,7 @@ c_0034:
 d_003B_task_table:
 	.long f_05BE  | null-task (only slot with a "null" task enabled)
 	.long f_05BF  | [1]: update sprite RAM
-	.long f_08D3  | [2]: bug motion runner
+	.long f_bug_motion_runner_08d3  | [2]: bug motion runner
 	.long f_05BE  | null-task
 	.long f_06F5  | [4]: rocket hit-detection
 	.long f_05EE  | [5]: hit-detection
@@ -1498,7 +1498,7 @@ l_08CA_hit_green_boss:
 
 
 *=============================================================================
-* f_08D3()
+* f_bug_motion_runner_08d3()
 *  Description:
 *   bug motion runner
 *   The flying bugs are tracked by the queue (ds_bug_motion_que_9100) which is
@@ -1508,7 +1508,7 @@ l_08CA_hit_green_boss:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_08D3:
+f_bug_motion_runner_08d3:
 	lea	ds_bug_motion_que_9100,a2           	| [$08D3: ld   ix,#ds_bug_motion_que_9100]
 	move.b	#0x0C,d0                        	| [$08D7: ld   a,#0x0C]
 	move.b	d0,b_bug_que_idx_9289               | [$08D9: ld   (b_bug_que_idx_9289),a] 12 ... nbr of queue structures
@@ -1540,7 +1540,7 @@ for__pool_idx_08E4:
 * ... then ...
 * status==4 ... shot a non-flying capturing boss (ship will soon go rogue and launch out)
 * HL==8830, *HL==04, 8831==40
-	jne	case_0E49_make_object_inactive     		| [jp   nz,case_0E49_make_object_inactive] sets object state to $80
+	jne	case_make_object_inactive_0e49     		| [jp   nz,case_make_object_inactive_0e49] sets object state to $80
 
 
 mctl_fltpn_dspchr:
@@ -1587,21 +1587,20 @@ j_090E_flite_path_init:
 
 * the current data pointer could be copied from HL into 92FA,92FB or loaded directly from ix($08)ix($09) by handler
 *
-
-	move.l	a0,-(sp)                        	| [$0914: push hl] ptr to data table
+	exg		a0,d7                        		| [$0914: push hl] ptr to data table
 	not.b	d0                               	| [$0915: cpl]
 	CHECK_D0W_UPPER_BOUND	0x11
 	lea	d_0920_jp_tbl,a0               			| [$0916: ld   hl,#d_0920_jp_tbl]
 	jbsr	add_4_times_d0_to_a0_0008           | [$0919: rst  0x08] HL += 2A
-	move.l	(a0),(4,a7)         				| [$091A: ld   a,(hl)]
+	move.l	(a0),-(sp)         					| [$091A: ld   a,(hl)]
 												| [$091B: inc  hl]
 												| [$091C: ld   h,(hl)]
 												| [$091D: ld   l,a]
-	move.l	(sp)+,a0       						| [$091E: ex   (sp),hl] restore HL and goto stacked address in one-fell-swoop.. sneaky!
+	move.l	d7,a0       						| [$091E: ex   (sp),hl] restore HL and goto stacked address in one-fell-swoop.. sneaky!
 	rts                                    		| [$091F: ret]
 
 d_0920_jp_tbl:
-	.long case_0E49_make_object_inactive
+	.long case_make_object_inactive_0e49
 	.long case_0B16   | 1: attack elements that break formation to attack ship (level 3+)
 	.long case_0B46   | 2: returning to base: moths or bosses from top of screen, bees from bottom of loop-around.
 	.long case_0B4E   | 3: bee dive and starting loopback, or boss left position and starting dive down
@@ -1714,7 +1713,7 @@ l_098F_do_split_off_bonus_bee:
 
 * find available slot or getout
 	lea	ds_bug_motion_que_9100+0xF0-1,a0    	| [ld   hl,#ds_bug_motion_que_9100 + 0xF0 - 1] start at end/top of segment
-	move.w	#-14,d3                       	| [ld   de,#-0x14] sizeof array element
+	move.w	#-0x14,d3                       	| [ld   de,#-0x14] sizeof array element
 	move.b	#0x0C,d1                        	| [ld   b,#0x0C] nbr of object in the array
 l_09A3:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -1929,8 +1928,7 @@ case_0AA0:  | 0x04
 	move.b	(a0),d3                         	| [ld   d,(hl)] y coordinate (ds_hpos_loc_orig)
 
 	lsr.b	#1,d4                            	| [srl  e] x coordinate
-	movem.w	d3/d4,-(sp)                    	| [push de] y coord, x coord >> 1
-	move.l	a1,-(sp)                        	| [push de] y coord, x coord >> 1
+	movem.w	d3/d4,-(sp)                    		| [push de] y coord, x coord >> 1
 
 	move.b	d1,(0x11,a2)                    	| [ld   0x11(ix),b] step x coord (x offset)
 	move.b	d2,(0x12,a2)                    	| [ld   0x12(ix),c] step y coord (y offset)
@@ -1980,7 +1978,6 @@ l_0ACD:
 
 	move.b	d3,d2                           	| [ld   c,d] C is not used?
 
-	move.l	(sp)+,a1                        	| [pop  de] abs row pix coord & abs col pix coord >> 1
 	movem.w	(sp)+,d3/d4                    		| [pop  de] abs row pix coord & abs col pix coord >> 1
 
 	jbsr	c_0E5B                            	| [call c_0E5B] HL = mctl_rotn_hp(DE, H, L)
@@ -2084,13 +2081,12 @@ case_0B5F:  | 0x06
 l_0B76:
 	lsr.b	#1,d0                            	| [srl  a]
 	move.b	d0,(0x03,a2)                    	| [ld   0x03(ix),a] .cx.pair.b1
-
 	move.b	b_92A0+0x0A,d0                  	| [ld   a,(b_92A0 + 0x0A)] if continuous bombing flag is set, trigger dive attack sound b_9AA0[0x13]
-	                               	| [and  a]
-	jeq	l_0B8B                             	| [jp   z,l_0B8B] inc hl and finalize
+												| [and  a]
+	jeq	l_0B8B                             		| [jp   z,l_0B8B] inc hl and finalize
 
 	move.b	d0,b_9AA0+0x13                  	| [ld   (b_9AA0 + 0x13),a] ~0 ... sound-fx count/enable registers, bug dive attack sound
-	jra	l_0B8B                             	| [jr   l_0B8B] inc hl and finalize
+	jra	l_0B8B                             		| [jr   l_0B8B] inc hl and finalize
 
 * red alien flew through bottom of screen to top, heading for home
 * yellow alien flew under bottom of screen and now turns for home
@@ -2469,7 +2465,6 @@ l_0D03_flite_pth_posn_set:
 	jeq	l_0D23                             	    | [$0D1E: jr   z,l_0D23]
 	add.b	(0x11,a2),d0                     	| [$0D20: add  a,0x11(ix)] heading home (add x-offset ... already bits<7:0>)
 l_0D23:
-	move.b	d0,0x200
 	move.b	d0,(a0)+                         	| [$0D23: ld   (hl),a] &sprite[n].posn.x
 * extract y-coord and adjust for homing if needed
 	addq.b	#1,d6								| [$0D24: inc  l] sprite[n].posn.sy<0:7> [a0 coherence]
@@ -2506,7 +2501,6 @@ l_0D38:
 	jeq		l_0D50                             	| [$0D4D: jr   nc,l_0D50]
 	addq.b	#1,d4                           	| [$0D4F: inc  e]
 l_0D50:   
-	move.b	d0,0x201
 	move.b	d0,(a0)                         	| [$0D51: ld   (hl),a] sprite[n].posn.sy<7:0>
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sprite[n].posn.sy<8>
@@ -2599,20 +2593,20 @@ l_0D8D_got_a_bullet:
 	sub.b	d2,d0                            	| [sub  c] bomb.x
 	scs		d7
 	movem.w	d0,-(sp)                        	| [push af] stash fighter.x - bomber.x
-	jcc	l_0DB1                             	| [jr   nc,l_0DB1] if bomber.x > fighter.x ...
+	jcc	l_0DB1                             		| [jr   nc,l_0DB1] if bomber.x > fighter.x ...
 	neg.b	d0                               	| [neg] ... then dX = -dX
 l_0DB1:
 * dX passed to c_divide_d5d6_by_d0_0EAA()in hl16 ... lsb of &bomb.ctrl.b1 remaining in L is insignificant
 	move.b	d0,d5                           	| [ld   h,a]
 
-	                               	| [and  a]
+												| [and  a]
 	move.b	#298>>1,d0                      	| [ld   a,#298 >> 1] 0x95 ... 354-56
-	tst.b	b_9215_flip_screen           	| [ld   a,(b_9215_flip_screen)]
-	jeq	l_0DBC                             	| [jr   z,l_0DBC]
+	tst.b	b_9215_flip_screen           		| [ld   a,(b_9215_flip_screen)]
+	jeq	l_0DBC                             		| [jr   z,l_0DBC]
 	move.b	#56>>1,d0                       	| [ld   a,#56 >> 1] 0x1C ... inverted
 l_0DBC:
 	sub.b	d1,d0                            	| [sub  b] bomber.y<8:1>
-	jcc	l_0DC1                             	| [jr   nc,l_0DC1] if bomber.y > fighter.y ...
+	jcc	l_0DC1                             		| [jr   nc,l_0DC1] if bomber.y > fighter.y ...
 	neg.b	d0                               	| [neg]
 l_0DC1:
 	jbsr	c_divide_d5d6_by_d0_0EAA                            	| [call c_divide_d5d6_by_d0_0EAA] HL = HL / A
@@ -2630,13 +2624,12 @@ l_0DC1:
 	roxr.b	#1,d6                           	| [rr   l]
 	lsr.b	#1,d5                            	| [srl  h]
 	roxr.b	#1,d6                           	| [rr   l]
-
 	move.b	d5,d0                           	| [ld   a,h]
-	                               	| [and  a]
-	jne	l_0DE0                             	| [jr   nz,l_0DE0]
+												| [and  a]
+	jne	l_0DE0                             		| [jr   nz,l_0DE0]
 	move.b	d6,d0                           	| [ld   a,l]
 	cmp.b	#0x60,d0                         	| [cp   #0x60]
-	jcs	l_0DE2                             	| [jr   c,l_0DE2]
+	jcs	l_0DE2                             		| [jr   c,l_0DE2]
 l_0DE0:
 	move.b	#0x60,d0                        	| [ld   a,#0x60]
 l_0DE2:
@@ -2665,34 +2658,33 @@ l_0DF5_next_superloop_and_reload_0E:
 	move.b	d0,(0x0E,a2)                    	| [ld   0x0E(ix),a] b_92E2[0] ... bomb drop counter
 
 next__pool_idx_0dfb:
-	lea	b_bug_que_idx_9289,a0               	| [$0dfb: ld   hl,#b_bug_que_idx_9289] -= 1 ... counts backwards
-	subq.b	#1,(a0)                         	| [dec  (hl)]
+	lea	b_bug_que_idx_9289,a0               	| [$0DFB: ld   hl,#b_bug_que_idx_9289] -= 1 ... counts backwards
+	subq.b	#1,(a0)                         	| [$0DFE: dec  (hl)]
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] [...]
+	rts                                    		| [$0DFF: ret  z] [...]
 0:
 * mctl_pool_idx += 1
-	move.w	#0x0014,d3                      	| [ld   de,#0x0014] size of object-movement structure 20
-	add.w	d3,a2                            	| [add  ix,de]
-
-	jra	for__pool_idx_08E4                      	| [jp   for__pool_idx_08E4]
+	move.w	#0x0014,d3                      	| [$0E00: ld   de,#0x0014] size of object-movement structure 20
+	add.w	d3,a2                            	| [$0E03: add  ix,de]
+	jra	for__pool_idx_08E4                      | [$0E05: jp   for__pool_idx_08E4]
 
 * creature gets to home-spot
 l_0E08_imhome:
-	clr.b	d0                               	| [xor  a]
-	bclr.b	#0,(0x13,a2)                    	| [res  0,0x13(ix)] mark the flying structure as inactive
-	move.b	d0,(0x00,a2)                    	| [ld   0x00(ix),a] 0
-	move.b	d0,(0x02,a2)                    	| [ld   0x02(ix),a] 0
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
-	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] offset of object ...8800[L]
+	clr.b	d0                               	| [$0E08: xor  a]
+	bclr.b	#0,(0x13,a2)                    	| [$0E09: res  0,0x13(ix)] mark the flying structure as inactive
+	move.b	d0,(0x00,a2)                    	| [$0E0D: ld   0x00(ix),a] 0
+	move.b	d0,(0x02,a2)                    	| [$0E10: ld   0x02(ix),a] 0
+	lea	b_8800,a0                      			| [$0E13: ld   h,#>b_8800]
+	move.b	(0x10,a2),d6                    	| [$0E15: ld   l,0x10(ix)] offset of object ...8800[L]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#2,(a0)                         	| [ld   (hl),#2] disposition = 02: rotating back into position in the collective
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
+	move.b	#2,(a0)                         	| [$0E18: ld   (hl),#2] disposition = 02: rotating back into position in the collective
+	lea	ds_sprite_code_8B00,a0              	| [$0E1A: ld   h,#>ds_sprite_code_8B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	                           	| [inc  l]
+												| [inc  l]
 	move.b	(1,a0),d0                         	| [ld   a,(hl)] sprite color code
-	                           	| [dec  l]
+												| [dec  l]
 	addq.b	#1,d0                           	| [inc  a]
 	and.b	#0x07,d0                         	| [and  #0x07]
 	cmp.b	#5,d0                            	| [cp   #5]
@@ -2724,20 +2716,20 @@ l_0E3A:
 * training mode, make previous diving boss disabled
 * a bonus bee (e.g. 883A) flying off screen. Sprite-Code 5B (scorpion), color 05, object status==9
 * also, if status==4 (capturing boss shot while in home-position, freeing a rogue ship)
-case_0E49_make_object_inactive: | 0x0
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
-	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] object offset ...8800[L]
+case_make_object_inactive_0e49: | 0x0
+	move.b	#1,0x200
+	lea	b_8800,a0                      			| [$0E49: ld   h,#>b_8800]
+	move.b	(0x10,a2),d6                    	| [$0E4B: ld   l,0x10(ix)] object offset ...8800[L]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] make inactive
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	move.b	#0x80,(a0)                      	| [$0E4E: ld   (hl),#0x80] make inactive
+	lea	ds_sprite_posn_9300,a0              	| [$0E50: ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	clr.b	(a0)                             	| [ld   (hl),#0]
-	clr.b	(0x13,a2)                        	| [ld   0x13(ix),#0x00] make inactive
-
-	jra	next__pool_idx_0dfb                     	| [jp   next__pool_idx_0dfb]
-* end f_08D3
+	clr.b	(a0)                             	| [$0E52: ld   (hl),#0]
+	clr.b	(0x13,a2)                        	| [$0E54: ld   0x13(ix),#0x00] make inactive
+	jra	next__pool_idx_0dfb                     | [$0E58: jp   next__pool_idx_0dfb]
+* end f_bug_motion_runner_08d3
 
 *=============================================================================
 * c_0E5B()
@@ -2824,7 +2816,7 @@ l_0E93:
 *=============================================================================
 * mul_16_0E97()
 *  Description:
-*    for f_08D3
+*    for f_bug_motion_runner_08d3
 *    HL = HL * A
 * IN:
 *  A
