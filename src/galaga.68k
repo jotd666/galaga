@@ -3856,6 +3856,7 @@ l_1755:
 0:
 	jbsr	c_init_rocket_sprites_1F0F          | [$1763: call c_init_rocket_sprites_1F0F] init sprite objects for rockets ...training mode, ship about to shoot?
 
+* here shoot during demo
 case_demo_1766:  | 0x00, 0x01, 0x03
 	move.l	pdb_demo_fghtrvctrs_9282,a1    		| [$1766: ld   de,(pdb_demo_fghtrvctrs_9282)]
 	move.b	(a1),d0                         	| [$176A: ld   a,(de)]
@@ -3881,8 +3882,8 @@ l_1772:
 	jra	(a0)          					        | [$1785: jp   (hl)] 1784
 
 d_1786:
-	.long case_1794  | 0
-	.long case_1794  | 1 -> $2x
+	.long case_load_pos_of_target_1794  | 0
+	.long case_load_pos_of_target_1794  | 1 -> $2x
 	.long case_ship_shoots_demo_17A1  | 2 -> $4x
 	.long case_17A8  | 3
 	.long case_17AE  | 4 -> $8x
@@ -3891,7 +3892,7 @@ d_1786:
 
 	
 * load index/position of target alien
-case_1794:
+case_load_pos_of_target_1794:
 * ds_9200_glbls[0x09] = *_demo_fghtrvctrs << 1 & 0x7E
 	move.b	(a1),d0                         	| [$1794: ld   a,(de)]
 	rol.b	#1,d0                            	| [$1795: rlca] rotate bits<6:1> into place
@@ -3913,7 +3914,7 @@ l_17A4:
 	move.b	d0,ds_9200_glbls+0x07           	| [$17A4: ld   (ds_9200_glbls + 0x07),a] demo timer
 	rts                                    		| [$17A7: ret]
 
-* when?
+* when? seems not reached. maybe used at some point to print a message?
 case_17A8:
 	move.b	(a1),d0                         	| [$17A8: ld   a,(de)]
 	and.b	#0x1F,d0                         	| [$17A9: and  #0x1F]
@@ -3921,7 +3922,7 @@ case_17A8:
 	jbsr	string_out_pe_30                    | [$17AC: rst  0x30] string_out_pe
 	rts                                    		| [$17AD: ret]
 
-* $8x: prior to each fighter shot in training mode?
+* $8x: prior to each fighter shot in training mode
 case_17AE:
 	addq.w	#1,a1                           	| [$17AE: inc  de]
 	move.b	(a1),d0                         	| [$17AF: ld   a,(de)]
@@ -5886,7 +5887,7 @@ l_1F56_set_rocket_sprite_code:
 * rotated 90 * n) to a maximum amount of 3 as the ship approaches a rotation
 * of primary+45.
 *
-* See c_0704_update_rockets in cpu1.
+* See c_0704_update_rockets (rckt_man_0704) in cpu1.
 *
 *   code= 6     dS=0      $40     ... 7 - (6+1)
 *   code= 5     dS=1      $40     ... 7 - (5+1)
@@ -5932,7 +5933,7 @@ l_1F71:
 	move.b	#1,d0                           	| [$1F78: ld   a,#1]
 	move.b	d0,b_9AA0+0x0F                  	| [$1F7A: ld   (b_9AA0 + 0x0F),a] 1 ... sound-fx count/enable registers, shot-sound
 	MOVE_TO_REG	ds_plyr_actv+_w_shot_ct,d5  	| [$1F7D: ld   hl,(ds_plyr_actv +_w_shot_ct)]
-	addq.w	#1,d5                           	| [$1F80: inc  hl]
+	addq.w	#1,d5                           	| [$1F80: inc  hl]	just to count shots fired probably
 	MOVE_TO_VAR	d5,ds_plyr_actv+_w_shot_ct      | [$1F81: ld   (ds_plyr_actv +_w_shot_ct),hl] game shots fired count ++
 	rts                                    		| [$1F84: ret]
 * end 1F04
@@ -6998,7 +6999,7 @@ l_2416:
 	move.b	d0,d4                           	| [ld   e,a] index += 4
 
 	subq.b	#1,d1                           	| [...]
-	jne	l_23EF                             	| [djnz l_23EF]
+	jne	l_23EF                             	| [djnz l_23EF] a1 is loaded there
 
 	jbsr	read_ixl_into_d0                         	| [ld  a,ixl] b_bugs_actv_cnt
 	move.b	d0,b_bugs_actv_cnt              	| [ld  (b_bugs_actv_cnt),a]
@@ -7150,7 +7151,7 @@ l_249B:
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	move.b	d0,(a1)+                         	| [ld   (de),a] X pix coordinate
-	addq.w	#1,d4                           	| [inc  e] [a1 coherence]
+	addq.b	#1,d4                           	| [inc  e] [a1 coherence]
 	move.b	d2,d6                           	| [ld   l,c] row position index
 	COMPUTE_LSB_A0_D6	ds_hpos_spcoords_9800
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -7388,26 +7389,26 @@ l_2578_mk_obj_inactive:
 	jra	l_2416                             	| [jp   l_2416]
 
 l_2582_kill_bug_q_slot:
-	                           	| [inc  e]
-	move.b	(1,a1),d0                         	| [ld   a,(de)] b_8800[e].motion_q_idx
-	                           	| [dec  e]
-	add.b	#0x13,d0                         	| [add  a,#0x13]
-	move.b	d0,d6                           	| [ld   l,a]
-	lea	ds_bug_motion_que_9100,a0           	| [ld   h,#>ds_bug_motion_que_9100]
+							| [$2582: inc  e]
+	move.b	(1,a1),d0                         	| [$2583: ld   a,(de)] b_8800[e].motion_q_idx
+							| [$2584: dec  e]
+	add.b	#0x13,d0                         	| [$2585: add  a,#0x13]
+	move.b	d0,d6                           	| [$2587: ld   l,a]
+	lea	ds_bug_motion_que_9100,a0           	| [$2588: ld   h,#>ds_bug_motion_que_9100]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	clr.b	(a0)                             	| [ld   (hl),#0] e.g. "0x13(ix)"
+	clr.b	(a0)                             	| [$258A: ld   (hl),#0] e.g. "0x13(ix)"
 
-	lea	ds_bug_motion_que_9100,a0           	| [ld   h,#>ds_bug_motion_que_9100]
-	move.b	d4,d6                           	| [ld   l,e]
+	lea	ds_bug_motion_que_9100,a0
+	move.b	d4,d6                           	| [$258C: ld   l,e]
 	add.w	d6,a0
-	jra	l_2578_mk_obj_inactive             	| [jp   l_2578_mk_obj_inactive]
+	jra	l_2578_mk_obj_inactive             		| [$258D: jp   l_2578_mk_obj_inactive]
 
 * 07: once for each orc as he is spawning (new stage)
 case_spawning_orc_2590:
-	move.b	#3,d0                           	| [ld   a,#3]
-	move.b	d0,(a1)                         	| [ld   (de),a] disposition = 3 ... from 7 (spawning)
-	jra	l_2414_inc_active                  	| [jp   l_2414_inc_active]
+	move.b	#3,d0                           	| [$2590: ld   a,#3]
+	move.b	d0,(a1)                         	| [$2592: ld   (de),a] disposition = 3 ... from 7 (spawning)
+	jra	l_2414_inc_active                  	| [$2593: jp   l_2414_inc_active]
 
 l_2596_even_frame:
 * if ( framect & 0x02 ) ...

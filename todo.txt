@@ -1,6 +1,7 @@
 
 - boss not exploding when shot the second time, no score
-  all because no shots after first shot !!
+  all because no shots after first shot !! shots cancelled or enemies too fast??
+  now regression shoot not working at all
 - ACTIVE_BITPLANE_MASK not implemented
 - generate sprite_cluts for hw sprite
 - debug rld,rrd (called after intro)

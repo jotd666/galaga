@@ -936,7 +936,7 @@ l_06F0:
 f_06F5:
 	lea	b_92A0+0x04+0,a1               			| [$06F5: ld   de,#b_92A0 + 0x04 + 0] rocket "attribute"
 	lea	ds_sprite_posn_9300+0x64,a0         	| [$06F8: ld   hl,#ds_sprite_posn_9300 + 0x64] rocket
-	jbsr	rckt_man_0704                          	| [$06FB: call rckt_man_0704]
+	jbsr	rckt_man_0704                       | [$06FB: call rckt_man_0704]
 	lea	b_92A0+0x04+1,a1               			| [$06FE: ld   de,#b_92A0 + 0x04 + 1] rocket "attribute"
 	lea	ds_sprite_posn_9300+0x66,a0         	| [$0701: ld   hl,#ds_sprite_posn_9300 + 0x66] rocket
        * call rckt_man_0704
@@ -960,7 +960,7 @@ rckt_man_0704:
 	bne.b	0f                               	| [...]
 	rts                                    		| [ret  z] [...]
 0:
-	
+	move.b	#0,0x200
 * else ...
 	move.b	(a1),d0                         	| [ld   a,(de)] rocket "attribute"
 	move.b	d0,d1                           	| [ld   b,a]
@@ -1002,10 +1002,10 @@ l_0719:
 
 	addq.w	#1,a0                           	| [inc  l] offset[1] ... sprite_posn.sy
 * get the stashed dY
-	exg	d0,d7                              	| [ex   af,af']
+	exg	d0,d7                              		| [ex   af,af']
 * if ( ! flipX ) then  dY = -dY
 	btst.b	#5,d1                           	| [bit  5,b] inverted flipX
-	jeq	l_0729                             	| [jr   z,l_0729]
+	jeq	l_0729                             		| [jr   z,l_0729]
 	neg.b	d0                               	| [neg] negate dY if NOT flipX (2's comp)
 l_0729:
 	move.b	d0,d2                           	| [ld   c,a] stash the dY
@@ -2717,7 +2717,6 @@ l_0E3A:
 * a bonus bee (e.g. 883A) flying off screen. Sprite-Code 5B (scorpion), color 05, object status==9
 * also, if status==4 (capturing boss shot while in home-position, freeing a rogue ship)
 case_make_object_inactive_0e49: | 0x0
-	move.b	#1,0x200
 	lea	b_8800,a0                      			| [$0E49: ld   h,#>b_8800]
 	move.b	(0x10,a2),d6                    	| [$0E4B: ld   l,0x10(ix)] object offset ...8800[L]
 	and.w	#0xFF,d6
