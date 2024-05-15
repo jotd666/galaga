@@ -96,7 +96,7 @@ d_003B_task_table:
 	.long f_05BF  | [1]: update sprite RAM
 	.long f_bug_motion_runner_08d3  | [2]: bug motion runner
 	.long f_05BE  | null-task
-	.long f_06F5  | [4]: rocket hit-detection
+	.long f_rocket_hit_detection_06f5  | [4]: rocket hit-detection
 	.long f_05EE  | [5]: hit-detection
 	.long f_05BE  | null-task
 	.long f_0ECA  | [7] ... ?
@@ -731,8 +731,8 @@ l_0639_not_two_ship:
 hitd_fghtr_hit:
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 
-	exg	a1,a0                              	| [ex   de,hl]
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300] read directly from SFRs (not buffer RAM) ... already 0'd by hitd_dspchr
+	exg	a1,a0                              	    | [ex   de,hl]
+	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300] read directly from SFRs (not buffer RAM) ... already 0'd by hitd_dspchr_07c1
 	and.w	#0xFF,d6
 	bset.b	#7,d6                           	| [set  7,l]
 	add.w	d6,a0
@@ -742,7 +742,7 @@ l_064F:
 	sub.b	#8,d0                            	| [sub  #8]
 	sub.w	#0x80,A0                           	| [res  7,l]
 	move.b	d0,(a0)+                         	| [ld   (hl),a]
-	                           	| [inc  l]
+	                           	                | [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	sub.b	#8,d0                            	| [sub  #8]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
@@ -751,17 +751,16 @@ l_064F:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#0x0B,(a0)                      	| [ld   (hl),#0x0B] color
-	                           	| [dec  l]
+	                           	                | [dec  l]
 	move.b	#0x20,-(a0)                      	| [ld   (hl),#0x20] explosion tile
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
 	lea	b_8800,a0                      	| [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#8,(a0)+                         	| [ld   (hl),#8] .state, disposition from $80 to "exploding"
-	                           	| [inc  l]
-	move.b	#0x0F,(a0)                      	| [ld   (hl),#0x0F] mctrl_q index used for explosion counter
-	subq.w	#1,a0                           	| [dec  l]
-	COMPUTE_LSB_A0_D6	b_8800
+	move.b	#8,(a0)                         	| [ld   (hl),#8] .state, disposition from $80 to "exploding"
+	                           	                | [inc  l]
+	move.b	#0x0F,(1,a0)                      	| [ld   (hl),#0x0F] mctrl_q index used for explosion counter
+	                                         	| [dec  l]
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -812,7 +811,7 @@ hitd_fghtr_notif:
 
 	move.b	(a0)+,d0                         	| [ld   a,(hl)] sprite.pos.x
 	move.b	d0,ixl
-	                           	| [inc  l]
+	                           	                | [inc  l]
 	move.b	(a0),d1                         	| [ld   b,(hl)] get row bits 0:7
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] get row bit-8
@@ -894,8 +893,8 @@ while_06B7:
 	jcc	l_06F0                             	| [jr   nc,l_06F0]
 
 	addq.w	#1,a0                           	| [inc  l]
+	addq.w	#1,d6                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -916,7 +915,7 @@ while_06B7:
 
 	tst.b	d0                             	| [or   a] nz if fighter hit
 	sne	d7                              	| [ex   af,af']
-	jra	hitd_dspchr                        	| [jp   hitd_dspchr] return to 'call hitd_det_fghtr'
+	jra	hitd_dspchr_07c1                    | [jp   hitd_dspchr_07c1] return to 'call hitd_det_fghtr'
 l_06F0:
 	addq.b	#2,d6                           	| [inc  l] * 2  [a0 coherence]
 	subq.b	#1,d1                           	| [...]
@@ -925,7 +924,7 @@ l_06F0:
 	rts                                    	| [ret]
 
 *=============================================================================
-* f_06F5()
+* f_rocket_hit_detection_06f5()
 *  Description:
 *    rocket motion and hit-detection manager
 * IN:
@@ -933,7 +932,7 @@ l_06F0:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-f_06F5:
+f_rocket_hit_detection_06f5:
 	lea	b_92A0+0x04+0,a1               			| [$06F5: ld   de,#b_92A0 + 0x04 + 0] rocket "attribute"
 	lea	ds_sprite_posn_9300+0x64,a0         	| [$06F8: ld   hl,#ds_sprite_posn_9300 + 0x64] rocket
 	jbsr	rckt_man_0704                       | [$06FB: call rckt_man_0704]
@@ -956,34 +955,34 @@ f_06F5:
 rckt_man_0704:
 * if (0 == rocket.posn[hl].x<7:0>) return
 	move.b	(a0),d0                         	| [$0704: ld   a,(hl)]
-												| [and  a]
+												| [$0705: and  a]
 	bne.b	0f                               	| [...]
-	rts                                    		| [ret  z] [...]
+	rts                                    		| [$0706: ret  z] [...]
 0:
 	move.b	#0,0x200
 * else ...
-	move.b	(a1),d0                         	| [ld   a,(de)] rocket "attribute"
-	move.b	d0,d1                           	| [ld   b,a]
+	move.b	(a1),d0                         	| [$0707: ld   a,(de)] rocket "attribute"
+	move.b	d0,d1                           	| [$0708: ld   b,a]
 
 * if horizontal orientation, dY = A' ... dY is variable ...
-	and.b	#0x07,d0                         	| [and  #0x07] I thought it was only bits 1:2 ?
-	exg		d0,d7                              	| [ex   af,af']
+	and.b	#0x07,d0                         	| [$0709: and  #0x07] I thought it was only bits 1:2 ?
+	exg		d0,d7                              	| [$070B: ex   af,af']
 
 * ... and dX == A ... maximum displacement in X
-	move.b	#6,d0                           	| [ld   a,#6]
+	move.b	#6,d0                           	| [$070C: ld   a,#6]
 
 * if ( vertical orientation ) ...
-	btst.b	#7,d1                           	| [bit  7,b] from l_1F71, bit set if vertical orientation
-	jeq	l_0713                             	| [jr   z,l_0713]
+	btst.b	#7,d1                           	| [$070E: bit  7,b] from l_1F71, bit set if vertical orientation
+	jeq	l_0713                             	    | [$0710: jr   z,l_0713]
 
 * ... swap, i.e. dY = A' = 6 ... dY is maximum, and dX = A ... variable
-	exg		d0,d7                              	| [ex   af,af']
+	exg		d0,d7                              	| [$0712: ex   af,af']
 
 l_0713:
 * if ( ! flipY ) then  dX = ~A
-	btst.b	#6,d1                           	| [$0713: bit  6,b] flipY: inverted...
-	jeq	l_0719                             		| [$0715: jr   z,l_0719]
-	neg.b	d0                               	| [$0717: neg] .. NOT flipY...negate X offset (non-flipped sprite is leftfacing)
+	btst.b	#6,d1                           	| [$0713: $0713: bit  6,b] flipY: inverted...
+	jeq	l_0719                             		| [$0715: $0715: jr   z,l_0719]
+	neg.b	d0                               	| [$0717: $0717: neg] .. NOT flipY...negate X offset (non-flipped sprite is leftfacing)
 
 l_0719:
 * add new dX
@@ -1000,62 +999,62 @@ l_0719:
 
 * NOW onto sY...............
 
-	addq.w	#1,a0                           	| [inc  l] offset[1] ... sprite_posn.sy
+	addq.w	#1,a0                           	| [$0721: inc  l] offset[1] ... sprite_posn.sy
 * get the stashed dY
-	exg	d0,d7                              		| [ex   af,af']
+	exg	d0,d7                              		| [$0722: ex   af,af']
 * if ( ! flipX ) then  dY = -dY
-	btst.b	#5,d1                           	| [bit  5,b] inverted flipX
-	jeq	l_0729                             		| [jr   z,l_0729]
-	neg.b	d0                               	| [neg] negate dY if NOT flipX (2's comp)
+	btst.b	#5,d1                           	| [$0723: bit  5,b] inverted flipX
+	jeq	l_0729                             		| [$0725: jr   z,l_0729]
+	neg.b	d0                               	| [$0727: neg] negate dY if NOT flipX (2's comp)
 l_0729:
-	move.b	d0,d2                           	| [ld   c,a] stash the dY
+	move.b	d0,d2                           	| [$0729: ld   c,a] stash the dY
 
 * add new dY to .sY<7:0>
-	add.b	(a0),d0                          	| [add  a,(hl)]
-	move.b	d0,(a0)                         	| [ld   (hl),a] sprite.posn[hl].b1
+	add.b	(a0),d0                          	| [$072A: add  a,(hl)]
+	move.b	d0,(a0)                         	| [$072B: ld   (hl),a] sprite.posn[hl].b1
 
 * determines the sign, toggle position.sy:8 on overflow/carry. simple idea, complicated explanation.
-	roxr.b	#1,d0                           	| [rra] Cy from the addition rotated into b7
-	eor.b	d2,d0                            	| [xor  c] sign bit of addend/subtrahend
+	roxr.b	#1,d0                           	| [$072C: rra] Cy from the addition rotated into b7
+	eor.b	d2,d0                            	| [$072D: xor  c] sign bit of addend/subtrahend
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sy.bit-8 (SPR[n].CTRL.b1:0)
+	lea	ds_sprite_ctrl_9B00,a0              	| [$072E: ld   h,#>ds_sprite_ctrl_9B00] sy.bit-8 (SPR[n].CTRL.b1:0)
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	rol.b	#1,d0                            	| [rlca]
-	jcc	l_0738                             		| [jr   nc,l_0738]
+	rol.b	#1,d0                            	| [$0730: rlca]
+	jcc	l_0738                             		| [$0731: jr   nc,l_0738]
 * compliment sy:8  (handles both overflow and underflow situation)
 	move.b	(a0),d7
-	ror.b	#1,d7                          		| [rrc  (hl)]
-	SET_X_FROM_C
-	INVERT_XC_FLAGS                      		| [ccf]
-	roxl.b	#1,d7                         		| [rl   (hl)]
+	ror.b	#1,d7                          		| [$0733: rrc  (hl)]
+	SET_X_FROM_C								| ror doesn't set X only C
+	INVERT_XC_FLAGS                      		| [$0735: ccf]
+	roxl.b	#1,d7                         		| [$0736: rl   (hl)]
     move.b	d7,(a0)
 
 * rocket.sy<8:1>, passed to hitd_det_rckt_076a in IXH
 l_0738:
-	move.b	(a0),d2                         	| [ld   c,(hl)] rocket.sy<8>
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	move.b	(a0),d2                         	| [$0738: ld   c,(hl)] rocket.sy<8>
+	lea	ds_sprite_posn_9300,a0              	| [$0739: ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)] rocket.sy<7:0>
-	ror.b	#1,d2                            	| [rrc  c] rotate bit-8 into Cy
+	move.b	(a0),d0                         	| [$073B: ld   a,(hl)] rocket.sy<7:0>
+	ror.b	#1,d2                            	| [$073C: rrc  c] rotate bit-8 into Cy
 	SET_X_FROM_C
-	roxr.b	#1,d0                           	| [rra] rotate bit-8 from Cy into A
-	move.b	d0,ixh								| [ld   ixh,a]                                 ; stash sy<8:1> for hit-detection parameter
+	roxr.b	#1,d0                           	| [$073E: rra] rotate bit-8 from Cy into A
+	move.b	d0,ixh								| [$073F: ld   ixh,a]                                 ; stash sy<8:1> for hit-detection parameter
 
 * if ( rocket.sY < 40 || rocket.sY >= 312 ) then _disable_rocket
-	cmp.b	#20,d0                           	| [cp   #20] 0x14  0x28 >> 1
-	jcs	l_0760_disable_rocket_wposn        		| [jr   c,l_0760_disable_rocket_wposn] L is offset to sY, so first L--
-	cmp.b	#156,d0                          	| [cp   #156] 0x9C   0x138 >> 1
-	jcc	l_0760_disable_rocket_wposn        		| [jr   nc,l_0760_disable_rocket_wposn] L is offset to sY, so first L--
+	cmp.b	#20,d0                           	| [$0741: cp   #20] 0x14  0x28 >> 1
+	jcs	l_0760_disable_rocket_wposn        		| [$0743: jr   c,l_0760_disable_rocket_wposn] L is offset to sY, so first L--
+	cmp.b	#156,d0                          	| [$0745: cp   #156] 0x9C   0x138 >> 1
+	jcc	l_0760_disable_rocket_wposn        		| [$0747: jr   nc,l_0760_disable_rocket_wposn] L is offset to sY, so first L--
 
-* index of rocket object/sprite passed through to hitd_dspchr (odd, i.e. b1)
-	move.b	d6,d4                           	| [ld   e,l]
+* index of rocket object/sprite passed through to hitd_dspchr_07c1 (odd, i.e. b1)
+	move.b	d6,d4                           	| [$0749: ld   e,l]
 
 * if ( task_active ) then ... else _call_hit_detection_all
-	move.b	ds_cpu0_task_actv_9000+0x1D,d0      | [ld   a,(ds_cpu0_task_actv_9000 + 0x1D)] cpu0:f_2000 (capturing boss destroyed, rescued ship spinning)
-												| [and  a]
-	jeq	l_0757_call_hit_detection_all      		| [jr   z,l_0757_call_hit_detection_all]
+	move.b	ds_cpu0_task_actv_9000+0x1D,d0      | [$074A: ld   a,(ds_cpu0_task_actv_9000 + 0x1D)] cpu0:f_2000 (capturing boss destroyed, rescued ship spinning)
+												| [$074D: and  a]
+	jeq	l_0757_call_hit_detection_all      		| [$074E: jr   z,l_0757_call_hit_detection_all]
 
 * else
 * ...the capturing boss is destroyed and the rescued ship is up there spinning,
@@ -1064,9 +1063,9 @@ l_0738:
 * ( $00, thru $06 ) ... in a moment, rockets will be disabled while the
 * the rescued ship is landing.
 
-	lea	ds_sprite_posn_9300+0x08,a0         	| [ld   hl,#ds_sprite_posn_9300 + 0x08] skip first 4 objects...
-	move.b	#44,d1                          	| [ld   b,#44] 0x30 - 4
-												| [jr   l_075C_call_hit_detection]
+	lea	ds_sprite_posn_9300+0x08,a0         	| [$0750: ld   hl,#ds_sprite_posn_9300 + 0x08] skip first 4 objects...
+	move.b	#44,d1                          	| [$0753: ld   b,#44] 0x30 - 4
+												| [$0755: jr   l_075C_call_hit_detection]
 
 l_0757_call_hit_detection_all:
 * reset HL and count to check $30 objects
@@ -1079,21 +1078,20 @@ l_075C_call_hit_detection:
 
 * terminate out of bounds rockets
 l_0760_disable_rocket_wposn:
-	subq.w	#1,a0                           	| [dec  l] .b0 (sX)
+	subq.w	#1,a0                           	| [$0760: dec  l] .b0 (sX)
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300] x
+	lea	ds_sprite_posn_9300,a0              	| [$0761: ld   h,#>ds_sprite_posn_9300] x
 	add.w	d6,a0
 
 * when testing X limits, &sprite_posn[0] already in H so skip loading it
 l_0763_disable_rocket:
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
-	clr.b	(a0)                             	| [ld   (hl),#0] x
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
+	clr.b	(a0)                             	| [$0763: ld   (hl),#0] x
+	lea	ds_sprite_ctrl_9B00,a0              	| [$0765: ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	clr.b	(a0)                             	| [ld   (hl),#0] attribute bits
-
-	rts                                    	| [ret]
+	clr.b	(a0)                             	| [$0767: ld   (hl),#0] attribute bits
+	rts                                    	    | [$0769: ret]
 
 *=============================================================================
 * hitd_det_rckt_076a()
@@ -1101,7 +1099,7 @@ l_0763_disable_rocket:
 *   rocket hit detection
 * IN:
 *  E == LSB of pointer to object/sprite passed through to
-*       hitd_dspchr (odd, i.e. offset to b1)
+*       hitd_dspchr_07c1 (odd, i.e. offset to b1)
 *  HL == pointer to sprite.posn[], starting object object to test ... 0, or
 *        +8 skips 4 objects... see explanation at l_0757.
 *  B == count ... $30, or ($30 - 4) as per explanation above.
@@ -1152,7 +1150,6 @@ l_076A_while_object:
 	ror.b	#1,d3                            	| [$0782: rrc  d]
 	SET_X_FROM_C
 	roxr.b	#1,d0                           	| [$0784: rra]
-	subq.w	#1,a0                           	| [$0785: dec  l]
 	subq.w	#1,d6                           	| [$0785: dec  l] [a0 coherence]
 	sub.b	ixh,d0                           	| [$0786: sub  ixh] sprite.sy<1:8> -= rocket.sy<1:8>
 	subq.b	#3,d0                           	| [$0788: sub  #3] tolerance for hit-check (divided by 2 to account for scaling)
@@ -1163,7 +1160,7 @@ l_076A_while_object:
 	move.b	d2,d0                           	| [$078E: ld   a,c] reload object status e.g. 8800[L]
 	subq.b	#1,d0                           	| [$078F: dec  a]
 	and.b	#0xFE,d0                         	| [$0790: and  #0xFE]
-	exg		d0,d7                              	| [$0792: ex   af,af'] object status to hitd_dspchr
+	exg		d0,d7                              	| [$0792: ex   af,af'] object status to hitd_dspchr_07c1
 												| [$0793: and  a]
 	move.b	(a0),d0                         	| [$0796: ld   a,(hl)] sprite.sX
 	tst.b	ds_plyr_actv+_b_2ship        		| [$0797: ld   a,(ds_plyr_actv +_b_2ship)]
@@ -1171,18 +1168,18 @@ l_076A_while_object:
 	sub.b	ixl,d0                           	| [$079A: sub  ixl] sprite.sX -= rocket.sX
 	subq.b	#6,d0                           	| [$079C: sub  #6]
 	add.b	#11,d0                           	| [$079E: add  a,#11]
-	jcs	hitd_dspchr_rckt_07b9                   		| [$07A0: jr   c,hitd_dspchr_rckt_07b9]
+	jcs	hitd_dspchr_07c1_rckt_07b9                   | [$07A0: jr   c,hitd_dspchr_07c1_rckt_07b9]
 	jra	l_07B4_next_object                 		| [$07A2: jr   l_07B4_next_object]
 
 l_07A4:
 	sub.b	ixl,d0                           	| [$07A4: sub  ixl] sprite.sX -= rocket.sX
 	sub.b	#20,d0                           	| [$07A6: sub  #20]
 	add.b	#11,d0                           	| [$07A8: add  a,#11]
-	jcs	hitd_dspchr_rckt_07b9                   		| [$07AA: jr   c,hitd_dspchr_rckt_07b9]
+	jcs	hitd_dspchr_07c1_rckt_07b9                   | [$07AA: jr   c,hitd_dspchr_07c1_rckt_07b9]
 	addq.b	#4,d0                           	| [$07AC: add  a,#4]
 	jcs	l_07B4_next_object                 		| [$07AE: jr   c,l_07B4_next_object]
 	add.b	#11,d0                           	| [$07B0: add  a,#11]
-	jcs	hitd_dspchr_rckt_07b9                   | [$07B2: jr   c,hitd_dspchr_rckt_07b9]
+	jcs	hitd_dspchr_07c1_rckt_07b9                   | [$07B2: jr   c,hitd_dspchr_07c1_rckt_07b9]
 
 l_07B4_next_object:
 	addq.b	#2,d6                           	| [$07B4: inc  l] * 2
@@ -1191,7 +1188,7 @@ l_07B4_next_object:
 	rts                                    		| [$07B8: ret]
 
 *=============================================================================
-* hitd_dspchr()
+* hitd_dspchr_07c1()
 *  Description:
 *   Detect collisions from the reference of the rocket ... update hit count
 *   and call common subroutine.
@@ -1205,17 +1202,17 @@ l_07B4_next_object:
 *   1 on jp   l_07B4_next_object
 *   0
 *-----------------------------------------------------------------------------
-hitd_dspchr_rckt_07b9:
-	move.b	d6,d0                           	| [$07B9: ld   a,l] stash L, use HL for 16-bits math
-	move.l	ds_plyr_actv+_w_hit_ct,a0   		| [$07BA: ld   hl,(ds_plyr_actv +_w_hit_ct)]
-	addq.w	#1,a0                           	| [$07BD: inc  hl]
-	move.l	a0,ds_plyr_actv+_w_hit_ct       	| [$07BE: ld   (ds_plyr_actv +_w_hit_ct),hl]
-	move.b	d0,d6                           	| [$07C1: ld   l,a] restore L
+hitd_dspchr_07c1_rckt_07b9:
+												| [$07B9: ld   a,l] stash L, use HL for 16-bits math
+	MOVE_TO_REG	ds_plyr_actv+_w_hit_ct,d5   	| [$07BA: ld   hl,(ds_plyr_actv +_w_hit_ct)]
+	addq.w	#1,d5                           	| [$07BD: inc  hl]
+	MOVE_TO_VAR	d5,ds_plyr_actv+_w_hit_ct       | [$07BE: ld   (ds_plyr_actv +_w_hit_ct),hl]
+												| [$07C1: ld   l,a] restore L
 
-* hitd_dspchr
+* hitd_dspchr_07c1
 
 *=============================================================================
-* hitd_dspchr()
+* hitd_dspchr_07c1()
 *  Description:
 *   collisions are detected from the reference of the rocket or fighter - this
 *   function is common to both rocket and fighter hit detection, and
@@ -1231,18 +1228,16 @@ hitd_dspchr_rckt_07b9:
 * RETURN:
 *  ...
 *-----------------------------------------------------------------------------
-hitd_dspchr:
-	lea	ds_sprite_posn_9300,a1              	| [ld   d,#>ds_sprite_posn_9300] _sprite_posn[E].b0 = 0 ... sX
+hitd_dspchr_07c1:
+	lea	ds_sprite_posn_9300,a1              	| [$07C1: ld   d,#>ds_sprite_posn_9300] _sprite_posn[E].b0 = 0 ... sX
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,(a1)                         	| [ld   (de),a]
-	lea	ds_sprite_ctrl_9B00,a1              	| [ld   d,#>ds_sprite_ctrl_9B00] _sprite_ctrl[E].b0 = 0 ... attributes
-	and.w	#0xFF,d4
+	clr.b	d0                               	| [$07C4: xor  a]
+	move.b	d0,(a1)                         	| [$07C5: ld   (de),a]
+	lea	ds_sprite_ctrl_9B00,a1              	| [$07C6: ld   d,#>ds_sprite_ctrl_9B00] _sprite_ctrl[E].b0 = 0 ... attributes
 	add.w	d4,a1
 	move.b	d0,(a1)                         	| [ld   (de),a]
 
-	addq.w	#1,a0                           	| [inc  l]
 	addq.b	#1,d6                           	| [inc  l] [a0 coherence]
 	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00] sprite.cclr.b1 ...
 	and.w	#0xFF,d6
@@ -1250,10 +1245,10 @@ hitd_dspchr:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	move.b	d0,d2                           	| [ld   c,a] ... for later ....
 	tst.b	d0                               	| [and  a]
-	jeq	l_08CA_hit_green_boss              	| [jp   z,l_08CA_hit_green_boss] color map 0 is the "green" boss
+	jeq	l_08CA_hit_green_boss              		| [jp   z,l_08CA_hit_green_boss] color map 0 is the "green" boss
 	subq.w	#1,a0                           	| [dec  l]
 	cmp.b	#0x0B,d0                         	| [cp   #0x0B] color map $B is for "bombs"
-	jeq	l_0815_bomb_hit                    	| [jr   z,l_0815_bomb_hit]
+	jeq	l_0815_bomb_hit                    	    | [jr   z,l_0815_bomb_hit]
 
 * if rocket or ship collided with bug
 	tst.b	d7                              | [ex   af,af'] un-stash parameter ... 1 if moving bug (hit by rocket or fighter)
@@ -1310,7 +1305,7 @@ l_07F8_:
 l_0808:
 * _bug_collsn[ color ] += 1
 	lea	ds_bug_collsn_hit_mult,a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x00] rocket/bug or ship/bug collision
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A ... _collsn_hit_mult[sprite.cclr.b1]
+	jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A ... _collsn_hit_mult[sprite.cclr.b1]
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 	tst.b	d7                              	| [ex   af,af'] un-stash parameter/flag
 	jeq	l_0811                             		| [jr   z,l_0811]
@@ -1494,7 +1489,7 @@ l_08CA_hit_green_boss:
 	move.b	d0,b_9AA0+0x04                  	| [ld   (b_9AA0 + 0x04),a] sound-fx count/enable registers, hit_green_boss
 	subq.w	#1,a0                           	| [dec  l]
 
-	jra	l_07B4_next_object                 	| [jp   l_07B4_next_object]
+	jra	l_07B4_next_object                 		| [jp   l_07B4_next_object]
 
 
 *=============================================================================
