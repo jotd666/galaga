@@ -1,4 +1,6 @@
 
+- attack trajectories OK but fail after going slightly left: first boss X doesn't go
+  over $D3, in the original boss goes over $D7
 - boss not exploding when shot the second time, no score
   all because no shots after first shot !! shots cancelled or enemies too fast??
   now regression shoot not working at all
@@ -11,7 +13,7 @@
 - orientation of attacking sprites wrong: mirrored+flipped, we should support
   attributes!!
 - sprite priorities wrong: stars should be behind
-- stars trashed near the PAL wait region 
+- stars & colors trashed near the PAL wait region 
 
 trace cpu with regs:
 

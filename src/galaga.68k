@@ -3812,17 +3812,17 @@ case_boss_wingmen_near_171F:  | 0x02
 * appearance of first enemy formation in Demo
 case_172D:  | 0x05
 	jbsr	c_init_rocket_sprites_1F0F      	| [$172D: call c_init_rocket_sprites_1F0F] init sprite objects for rockets
-	move.l	pdb_demo_fghtrvctrs_9282,a1    | [$1730: ld   de,(pdb_demo_fghtrvctrs_9282)] trampled DE so reload it
+	move.l	pdb_demo_fghtrvctrs_9282,a1         | [$1730: ld   de,(pdb_demo_fghtrvctrs_9282)] trampled DE so reload it
 
 * drives the simulated inputs to the fighter in training mode
 case_drives_sim_inputs_1734:  | 0x04
-	move.b	(a1),d0                         | [$1734: ld   a,(de)] *pdb_demo_fghtrvctrs_9282
-	lea	ds_plyr_actv+_b_2ship,a0       		| [$1735: ld   hl,#ds_plyr_actv +_b_2ship]
-	move.b	(a0),d4                         | [$1738: ld   e,(hl)] setup E for c_skip_real_io_input_1F92
-	btst.b	#0,d0                           | [$1739: bit  0,a]
-	jne	l_1741                             	| [$173B: jr   nz,l_1741]
-	and.b	#0x0A,d0                        | [$173D: and  #0x0A]
-	jra	l_1755                             	| [$173F: jr   l_1755]
+	move.b	(a1),d0                             | [$1734: ld   a,(de)] *pdb_demo_fghtrvctrs_9282
+	lea	ds_plyr_actv+_b_2ship,a0       		    | [$1735: ld   hl,#ds_plyr_actv +_b_2ship]
+	move.b	(a0),d4                             | [$1738: ld   e,(hl)] setup E for c_skip_real_io_input_1F92
+	btst.b	#0,d0                               | [$1739: bit  0,a]
+	jne	l_1741                             	    | [$173B: jr   nz,l_1741]
+	and.b	#0x0A,d0                            | [$173D: and  #0x0A]
+	jra	l_1755                             	    | [$173F: jr   l_1755]
 
 l_1741:
 	move.b	ds_9200_glbls+0x09,d0           	| [$1741: ld   a,(ds_9200_glbls + 0x09)] object/index of targeted alien
@@ -3830,6 +3830,13 @@ l_1741:
 	lea	ds_sprite_posn_9300,a0              	| [$1745: ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
+
+	move.b	(a0),d0
+	cmp.b	#0xC4,d0
+	beq		111f
+	move.b	#0,0x200
+111:
+
 	move.b	ds_sprite_posn_9300+0x62,d0         | [$1747: ld   a,(ds_sprite_posn_9300 + 0x62)] ship (1) position
 	sub.b	(a0),d0                          	| [$174A: sub  (hl)]
 	* jotd: had to handle Z and C flags separately as there are some "ld" instructions in between
@@ -5957,7 +5964,7 @@ f_controller_io_and_ship_movement_1f85:
 	*move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
 	*add.b	<ds3_99B5_io_input+0x01,d0       	| [add  a,#<ds3_99B5_io_input + 0x01] LSB
 	*move.b	d0,d6                           	| [ld   l,a]
-	lea	ds3_99B5_io_input,a0      	| [ld   h,#>ds3_99B5_io_input + 0x00] MSB
+	lea	ds3_99B5_io_input,a0      				| [ld   h,#>ds3_99B5_io_input + 0x00] MSB
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 
 *      call c_skip_real_io_input_1F92
@@ -5986,92 +5993,92 @@ f_controller_io_and_ship_movement_1f85:
 *-----------------------------------------------------------------------------
 c_skip_real_io_input_1F92:
 * if ( ( A & 0x0A ) == $0A ... inputs are active low, neither left or right active
-	and.b	#0x0A,d0                         	| [and  #0x0A]
-	cmp.b	#0x0A,d0                         	| [cp   #0x0A]
-	jeq	l_1FCF_no_input                    	| [jr   z,l_1FCF_no_input]
+	and.b	#0x0A,d0                         	| [$1F92: and  #0x0A]
+	cmp.b	#0x0A,d0                         	| [$1F94: cp   #0x0A]
+	jeq	l_1FCF_no_input                    	    | [$1F96: jr   z,l_1FCF_no_input]
 
 * invert the input bits if screen flipped (swap L/R direction)
-	lea	b_9215_flip_screen,a0          	| [ld   hl,#b_9215_flip_screen]
-	btst.b	#0,(a0)                         	| [bit  0,(hl)]
-	jeq	l_1FA1_set_ship_dx                 	| [jr   z,l_1FA1_set_ship_dx]
-	eor.b	#0x0A,d0                         	| [xor  #0x0A] screen is flipped
+	*lea	b_9215_flip_screen,a0          	        | [$1F98: ld   hl,#b_9215_flip_screen]
+	*btst.b	#0,(a0)                         	| [$1F9B: bit  0,(hl)]
+	*jeq	l_1FA1_set_ship_dx                 	    | [$1F9D: jr   z,l_1FA1_set_ship_dx]
+	*eor.b	#0x0A,d0                         	| [$1F9F: xor  #0x0A] screen is flipped
 
 * set ship.dX (1 or 2)
 l_1FA1_set_ship_dx:
-	lea	b_92A0+0x03,a0                 	| [ld   hl,#b_92A0 + 0x03] ship_dX_flag
-	move.b	d0,d1                           	| [ld   b,a] stash the control input bits
-	move.b	#1,d2                           	| [ld   c,#1] ship_dX = 1
+	lea	b_92A0+0x03,a0                 	        | [$1FA1: ld   hl,#b_92A0 + 0x03] ship_dX_flag
+	move.b	d0,d1                           	| [$1FA4: ld   b,a] stash the control input bits
+	move.b	#1,d2                           	| [$1FA5: ld   c,#1] ship_dX = 1
 * toggle ship_dX_flag
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	eor.b	#0x01,d0                         	| [xor  #0x01]
-	move.b	d0,(a0)                         	| [ld   (hl),a] dX.flag ^= 1
+	move.b	(a0),d0                         	| [$1FA7: ld   a,(hl)]
+	eor.b	#0x01,d0                         	| [$1FA8: xor  #0x01]
+	move.b	d0,(a0)                         	| [$1FAA: ld   (hl),a] dX.flag ^= 1
 * if (0 == ship_dX_flag) ship_dX++
-	jne	l_1FAE_handle_input_bits           	| [jr   nz,l_1FAE_handle_input_bits]
-	addq.b	#1,d2                           	| [inc  c]
+	jne	l_1FAE_handle_input_bits           	    | [$1FAB: jr   nz,l_1FAE_handle_input_bits]
+	addq.b	#1,d2                           	| [$1FAD: inc  c]
 
 l_1FAE_handle_input_bits:
 * if ( ship.posn.x == 0 ) return
-	lea	ds_sprite_posn_9300+0x62,a0         	| [ld   hl,#ds_sprite_posn_9300 + 0x62] "main" ship (single) position
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	| [and  a]
+	lea	ds_sprite_posn_9300+0x62,a0         	| [$1FAE: ld   hl,#ds_sprite_posn_9300 + 0x62] "main" ship (single) position
+	move.b	(a0),d0                         	| [$1FB1: ld   a,(hl)]
+	                               	            | [$1FB2: and  a]
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] [...]
+	rts                                    	    | [$1FB3: ret  z] [...]
 0:
 
 * if ( input.Right ) ...
-	btst.b	#1,d1                           	| [bit  1,b] if ( ! input bits.right ) ... inverted
-	jne	l_1FC7_test_llmt                   	| [jr   nz,l_1FC7_test_llmt]
+	btst.b	#1,d1                           	| [$1FB4: bit  1,b] if ( ! input bits.right ) ... inverted
+	jne	l_1FC7_test_llmt                   	    | [$1FB6: jr   nz,l_1FC7_test_llmt]
 
 * if ( ship.posn.x > 0xD1) ... moving right: check right limit for double-ship
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	cmp.b	#0xD1,d0                         	| [cp   #0xD1] right limit, double-ship
-	jcs	l_1FC0_test_rlmt_single            	| [jr   c,l_1FC0_test_rlmt_single]
+	move.b	(a0),d0                         	| [$1FB8: ld   a,(hl)]
+	cmp.b	#0xD1,d0                         	| [$1FB9: cp   #0xD1] right limit, double-ship
+	jcs	l_1FC0_test_rlmt_single            	    | [$1FBB: jr   c,l_1FC0_test_rlmt_single]
 * else if ( double_ship ) return
-	btst.b	#0,d4                           	| [bit  0,e] if ( is_double_ship & 0x01 )
+	btst.b	#0,d4                           	| [$1FBD: bit  0,e] if ( is_double_ship & 0x01 )
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] at right limit of double-ship [...]
+	rts                                    	    | [$1FBF: ret  nz] at right limit of double-ship [...]
 0:
 
 l_1FC0_test_rlmt_single:
 * if ( ship.posn.x >= 0xE1 ) return
-	cmp.b	#0xE1,d0                         	| [cp   #0xE1] right limit, single-ship
+	cmp.b	#0xE1,d0                         	| [$1FC0: cp   #0xE1] right limit, single-ship
 	bcs.b	0f                               	| [...]
-	rts                                    	| [ret  nc] [...]
+	rts                                    	    | [$1FC2: ret  nc] [...]
 0:
 * add dX for right direction
-	add.b	d2,d0                            	| [add  a,c] fighter dX
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	jra	l_1FD4_update_two_ship             	| [jr   l_1FD4_update_two_ship]
+	add.b	d2,d0                            	| [$1FC3: add  a,c] fighter dX
+	move.b	d0,(a0)                         	| [$1FC4: ld   (hl),a]
+	jra	l_1FD4_update_two_ship             	    | [$1FC5: jr   l_1FD4_update_two_ship]
 
 * ... else ... test left limit
 l_1FC7_test_llmt:
 * if ( ship.posn.x < 0x12 ) return
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	cmp.b	#0x12,d0                         	| [cp   #0x12] left limit
+	move.b	(a0),d0                         	| [$1FC7: ld   a,(hl)]
+	cmp.b	#0x12,d0                         	| [$1FC8: cp   #0x12] left limit
 	bcc.b	0f                               	| [...]
-	rts                                    	| [ret  c] [...]
+	rts                                    	    | [$1FCA: ret  c] [...]
 0:
 * else
-	sub.b	d2,d0                            	| [sub  c] subtract dX
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	jra	l_1FD4_update_two_ship             	| [jr   l_1FD4_update_two_ship]
+	sub.b	d2,d0                            	| [$1FCB: sub  c] subtract dX
+	move.b	d0,(a0)                         	| [$1FCC: ld   (hl),a]
+	jra	l_1FD4_update_two_ship             	    | [$1FCD: jr   l_1FD4_update_two_ship]
 
 l_1FCF_no_input:
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,b_92A0+0x03                  	| [ld   (b_92A0 + 0x03),a] ship_dX_flag = 0
-	rts                                    	| [ret]
+	clr.b	d0                               	| [$1FCF: xor  a]
+	move.b	d0,b_92A0+0x03                  	| [$1FD0: ld   (b_92A0 + 0x03),a] ship_dX_flag = 0
+	rts                                    	    | [$1FD3: ret]
 
 
 l_1FD4_update_two_ship:
 * if ( ! two_ship_plyr )  return
-	btst.b	#0,d4                           	| [bit  0,e]
+	btst.b	#0,d4                           	| [$1FD4: bit  0,e]
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] [...]
+	rts                                    	    | [$1FD6: ret  z] [...]
 0:
 * else ... ship2.posn.x = ship1.posn.x + $0F
-	add.b	#0x0F,d0                         	| [add  a,#0x0F] +single ship position
-	move.b	d0,ds_sprite_posn_9300+0x60          	| [ld   (ds_sprite_posn_9300 + 0x60), a] double ship position
-	rts                                    	| [ret]
+	add.b	#0x0F,d0                         	| [$1FD7: add  a,#0x0F] +single ship position
+	move.b	d0,ds_sprite_posn_9300+0x60         | [$1FD9: ld   (ds_sprite_posn_9300 + 0x60), a] double ship position
+	rts                                    	    | [$1FDC: ret]
 
 * end 1F85
 
