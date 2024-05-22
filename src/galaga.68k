@@ -3831,11 +3831,7 @@ l_1741:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 
-	move.b	(a0),d0
-	cmp.b	#0xC4,d0
-	beq		111f
-	move.b	#0,0x200
-111:
+
 
 	move.b	ds_sprite_posn_9300+0x62,d0         | [$1747: ld   a,(ds_sprite_posn_9300 + 0x62)] ship (1) position
 	sub.b	(a0),d0                          	| [$174A: sub  (hl)]
@@ -11216,6 +11212,7 @@ galaga_mock:
 
 galaga_reset:
 	.ifndef		RELEASE
+	clr.b		0X1FF
 	tst.b	break_at_startup_flag
 	beq.b	0f
 	

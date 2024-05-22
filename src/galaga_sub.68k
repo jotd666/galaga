@@ -959,7 +959,6 @@ rckt_man_0704:
 	bne.b	0f                               	| [...]
 	rts                                    		| [$0706: ret  z] [...]
 0:
-	move.b	#0,0x200
 * else ...
 	move.b	(a1),d0                         	| [$0707: ld   a,(de)] rocket "attribute"
 	move.b	d0,d1                           	| [$0708: ld   b,a]
@@ -2302,6 +2301,7 @@ l_0C81:
 	move.b	d0,(a0)                         	| [$0C97: ld   (hl),a] mrw_sprite[L].ctrl.b0 = A & 0x03
 
 * choose x or y displacement vector to apply on this update
+	
 	move.b	ds3_frame_cts_92A0+0,d0         	| [$0C98: ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x01,d0                         	| [$0C9B: and  #0x01]
 	jeq	l_0CA4                             		| [$0C9D: jr   z,l_0CA4]
@@ -2367,13 +2367,20 @@ l_0CD0:
 	addx.b	d2,d0								| [$0CD2: adc  a,c]                                   ; add with carry-out from addition into lsb
 	move.b	d0,(1,a0)                         	| [$0CD3: ld   (hl),a]
 
+	cmp.b	#6,0X1FF
+	bne		0f
+	jbsr	osd_break
+0:
+	addq.b	#1,0x1FF
+
+
 * stash the pointer to .b0/.b2 in DE (previous DE into HL but no longer used)
 												| [$0CD4: dec  l]
 	COMPUTE_LSB_A0_D6	ds_bug_motion_que_9100 	| extract lsb from a0
 	exg	a1,a0                              		| [$0CD5: ex   de,hl] save a0 in a1
 	exg		d5,d3								| [$0CD5: ex   de,hl] useful?
 	exg		d6,d4								| [$0CD5: ex   de,hl]
-	move.b	d6,d0                           	| [$0CD6: ld   a,e]
+	move.b	d4,d0                           	| [$0CD6: ld   a,e]
 	eor.b	#0x02,d0                         	| [$0CD7: xor  #0x02] toggle x/y pointer, .b00 or .b02
 	move.b	d0,d4                           	| [$0CD9: ld   e,a]
 
@@ -2381,9 +2388,9 @@ l_0CD0:
 	movem.w	(sp)+,d5/d6                        	| [$0CDA: pop  hl] ..... adjusted rotation angle from push DE above
 	lsr.b	#1,d6                            	| [$0CDB: srl  l] revert to unshifted, but did not retain bit-7
 	jcc	l_0CE3                             	    | [$0CDD: jr   nc,l_0CE3] bit<0> into Cy (which was actually bit<7>
-	move.b	d6,d0                           	| [$0CDF: ld   a,l]
-	eor.b	#0x7F,d0                         	| [$0CE0: xor  #0x7F] compliment bits<6:0>
-	move.b	d0,d6                           	| [$0CE2: ld   l,a]
+												| [$0CDF: ld   a,l]
+	eor.b	#0x7F,d6                         	| [$0CE0: xor  #0x7F] compliment bits<6:0>
+												| [$0CE2: ld   l,a]
 l_0CE3:
 	move.b	d1,d0                           	| [$0CE3: ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix)
 	move.b	d5,d1                           	| [$0CE4: ld   b,h] msb of adjusted angle
@@ -2460,6 +2467,7 @@ l_0D03_flite_pth_posn_set:
 	jeq	l_0D23                             	    | [$0D1E: jr   z,l_0D23]
 	add.b	(0x11,a2),d0                     	| [$0D20: add  a,0x11(ix)] heading home (add x-offset ... already bits<7:0>)
 l_0D23:
+	move.b	d0,0x200
 	move.b	d0,(a0)+                         	| [$0D23: ld   (hl),a] &sprite[n].posn.x
 * extract y-coord and adjust for homing if needed
 	addq.b	#1,d6								| [$0D24: inc  l] sprite[n].posn.sy<0:7> [a0 coherence]
@@ -2496,6 +2504,7 @@ l_0D38:
 	jeq		l_0D50                             	| [$0D4D: jr   nc,l_0D50]
 	addq.b	#1,d4                           	| [$0D4F: inc  e]
 l_0D50:   
+	move.b	d0,0x201
 	move.b	d0,(a0)                         	| [$0D51: ld   (hl),a] sprite[n].posn.sy<7:0>
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sprite[n].posn.sy<8>
