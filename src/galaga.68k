@@ -1421,8 +1421,9 @@ f_update_sprites_0828:
 	jbsr	ldir                              	| [ldir]
 
 
-	* sprite data has been made contiguous to simplify API
 	lea	sfr_sprite_code_8B80,a0
+	lea	sfr_sprite_posn_9380,a1
+	lea	sfr_sprite_ctrl_9B80,a2
 	jbsr	osd_update_sprites
 	
 *	lea	mrw_sprite_code_8B00+0x40,a0        	| [ld   hl,#mrw_sprite_code_8B00 + 0x40]
@@ -9689,8 +9690,8 @@ l_389B:
 	lea	ds8_9280_tmp_IO_parms+1,a0     	| [ld   hl,#ds8_9280_tmp_IO_parms + 1] 4 bytes (arguments to "set coinage" command)
 	move.b	#4,d1                           	| [ld   b,#4]
 l_38A0:
-	clr.b	(a0)                             	| [ld   (hl),#0]
-	addq.w	#1,a0                           	| [inc  hl]
+	clr.b	(a0)+                             	| [ld   (hl),#0]
+												| [inc  hl]
 	subq.b	#1,d1                           	| [...]
 	jne	l_38A0                             	| [djnz l_38A0]
 
@@ -10113,8 +10114,8 @@ c_svc_clr_snd_regs:
 	lea	ds_9AA0,a0                     	| [ld   hl,#ds_9AA0] sound mgr SFRs, clear $40 bytes
 	move.b	#0x40,d1                        	| [ld   b,#0x40] length to fill
 l_3A41:
-	clr.b	(a0)                             	| [ld   (hl),#0] fill with 0
-	addq.w	#1,a0                           	| [inc  hl]
+	clr.b	(a0)+                             	| [ld   (hl),#0] fill with 0
+												| [inc  hl]
 	subq.b	#1,d1                           	| [...]
 	jne	l_3A41                             	| [djnz l_3A41]
 	rts                                    	| [ret]

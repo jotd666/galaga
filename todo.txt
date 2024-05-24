@@ -1,12 +1,15 @@
-
-- boss not exploding when shot the second time, no score
-  all because no shots after first shot !! shots cancelled or enemies too fast??
-  now regression shoot not working at all
+- demo: ship misses first boss on first shot (debug/log ship coords again?)
+- demo: second boss not exploding when shot the second time, no score
+- demo: shot goes up the screen: seems to stop too late (blitter out of range error): we should add 16 pixels on the top too
+  for the buffer and allow off-screen negative ranges
+- demo: boss explosions: some frames shifted
 - ACTIVE_BITPLANE_MASK not implemented
 - generate sprite_cluts for hw sprite
 - debug rld,rrd (called after intro)
+- illegal after intro
 - 2 first rows not shown (attribute/color ??)
 - remove red timer flashes, maybe speedup using F10?
+- get rid of extra copy in osd_update_sprites
 
 - orientation of attacking sprites wrong: mirrored+flipped, we should support
   attributes!!

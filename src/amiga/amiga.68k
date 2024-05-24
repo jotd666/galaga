@@ -874,16 +874,26 @@ osd_break:
 
 
 	
-* < A0: pointer on sprite shadow zone
+* < A0: pointer on sprite shadow zone 1 (8B80)
+* < A1: pointer on sprite shadow zone 2
+* < A2: pointer on sprite shadow zone 3
 * we made sure that all 3 zones are contiguous
 * (tilecode+color, x+y, attributes+x msb)
 
 
 osd_update_sprites:
-	lea		sprite_buffer(pc),a1
-	move.w	#(NB_TARGET_SPRITES*3)-1,d7
+	lea		sprite_buffer(pc),a4
+	move.w	#(NB_TARGET_SPRITES)-1,d7
 0:
-	move.w	(a0)+,(a1)+
+	move.w	(a0)+,(a4)+
+	dbf		d7,0b
+	move.w	#(NB_TARGET_SPRITES)-1,d7
+0:
+	move.w	(a1)+,(a4)+
+	dbf		d7,0b
+	move.w	#(NB_TARGET_SPRITES)-1,d7
+0:
+	move.w	(a2)+,(a4)+
 	dbf		d7,0b
 	rts
 

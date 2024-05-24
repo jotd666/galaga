@@ -537,23 +537,19 @@ ds_sprite_code_8B00:
 mrw_sprite_code_8B00:
        ds.b     0x0040     | sprite code/color l (buffer)
        ds.b     0x0040     | sprite code/color h (buffer)
+sfr_sprite_code_8B80:
+     ds.b     0x0040     | sprite code/color l ("video" registers) 0x8B80
+     ds.b     0x0040     | sprite code/color h ("video" registers) 0x8BC0
 
 * sprite position buffer and SFRs
 ds_sprite_posn_9300:
 mrw_sprite_posn_9300:
      ds.b     0x40       | sprite position l (buffer)
      ds.b     0x40       | sprite position h (buffer)
-
-	 * this should be continuous
-sfr_sprite_code_8B80:
-     ds.b     0x0040     | sprite code/color l ("video" registers) 0x8B80
-     ds.b     0x0040     | sprite code/color h ("video" registers) 0x8BC0
 sfr_sprite_posn_9380:
      ds.b     0x40       | sprite position l ("video" registers)
      ds.b     0x40       | sprite position h ("video" registers)
-sfr_sprite_ctrl_9B80:
-     ds.b     0x40       | sprite control l ("video" registers)
-     ds.b     0x40       | sprite control h ("video" registers)
+
 
 
 *=============================================================================
@@ -759,9 +755,15 @@ b_9AC0:
 
 
 * sprite control buffer and SFRs (9B00)
+* mrw & sfr HAVE to be contiguous even in the 68k version
+* as game sometimes reads into sfr (to get previous value?) by adding
+* 0x80 to the offset
 ds_sprite_ctrl_9B00:
 
 mrw_sprite_ctrl_9B00:
        ds.b     0x40       | sprite control l (buffer)
        ds.b     0x40       | sprite control h (buffer)
+sfr_sprite_ctrl_9B80:
+     ds.b     0x40       | sprite control l ("video" registers)
+     ds.b     0x40       | sprite control h ("video" registers)
 
