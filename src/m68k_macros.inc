@@ -139,6 +139,8 @@
 	lsr.w	#8,d3
 	.endm
 
+
+	
 	.ifndef	RELEASE
 check_d0w_upper_bound_error:
 	.asciz	"jump table index too high D1 >= D2!"

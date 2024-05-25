@@ -3,9 +3,10 @@
 - demo: shot goes up the screen: seems to stop too late (blitter out of range error): we should add 16 pixels on the top too
   for the buffer and allow off-screen negative ranges
 - demo: boss explosions: some frames shifted
+- fake game: wrong sprite cluts & codes (blue bees don't show, red bees show)
 - ACTIVE_BITPLANE_MASK not implemented
 - generate sprite_cluts for hw sprite
-- debug rld,rrd (called after intro)
+- debug rrd (called after intro)
 - illegal after intro
 - 2 first rows not shown (attribute/color ??)
 - remove red timer flashes, maybe speedup using F10?

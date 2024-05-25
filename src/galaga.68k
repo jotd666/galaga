@@ -7737,7 +7737,7 @@ d_challg_stg_data_idx:
 * byte 1 & 2
 *   bit 7     byte-2 only ... if clear, 2nd bug of pair is delayed for trailing formation
 *   bit 6     if set selects second set of 3-bytes in db_2A6C[]
-*   bits 0:5  index of word in LUT at db_2A3C ( 0x18 entries)
+*   bits 0:5  index of word in LUT at db_word_address_table_2a3c ( 0x18 entries)
 *   bit 0     also, if set,0e(ix) = 0x44 ... finalize_object
 
 * combat stage data
@@ -8021,7 +8021,7 @@ l_2953_next_pair:
 
 * ready to stick another bug in the flying queue
 l_295E:
-* make byte offset into lut at db_2A3C  (_finalize_object) ... also we're done with bit-7
+* make byte offset into lut at db_word_address_table_2a3c  (_finalize_object) ... also we're done with bit-7
 	asl.b	#1,d2                            	| [sla  c]
 
 * find a slot in the queue
@@ -8097,7 +8097,7 @@ l_2980:
 	move.b	d0,(a0)                         	| [ld   (hl),a] sprite[n].cclr.b1
 
 * if ( ! code_bit_7 )
-	jeq	l_29AE                             	| [jr   z,l_29AE]
+	jeq	l_29AE                             	    | [jr   z,l_29AE]
 * else
 	move.b	b_92E2+0x01,d0                  	| [ld   a,(b_92E2 + 0x01)] to 0x0F(ix) ... _stg_dat[1] ... bomb drop enable flags
 	bra.b	0f
@@ -8105,20 +8105,21 @@ l_29AE:
 	clr.b	d0                               	| [ld   a,#0]
 0:
 	move.b	d0,(0x0F,a2)                    	| [ld   0x0F(ix),a] 0, or b_92E2[1] ... bomb drop enable flags
-	jra	l_29D1_finalize_object_setup       	| [jr   l_29D1_finalize_object_setup]
+	jra	l_29D1_finalize_object_setup       	    | [jr   l_29D1_finalize_object_setup]
 
 * handle the additional "transient" buggers that fly-in but don't join ... Stage 4 or higher.
 l_29B3_setup_transients:
 	move.b	#0x02,d3
-	move.b	#0x0010,d4             	| [ld   de,#0x02 * 256 + 0x0010] redmoth, color 02, 270-deg rotation
+	move.b	#0x10,d4             	            | [ld   de,#0x02 * 256 + 0x0010] redmoth, color 02, 270-deg rotation
 	btst.b	#6,d1                           	| [bit  6,b]
-	jne	l_29C7                             	| [jr   nz,l_29C7]
+	jne	l_29C7                             	    | [jr   nz,l_29C7]
 	move.b	#0x03,d3
-	move.b	#0x0018,d4             	| [ld   de,#0x03 * 256 + 0x0018] yellowbee, color 03, 270-deg rotation
+	move.b	#0x18,d4             	            | [ld   de,#0x03 * 256 + 0x0018] yellowbee, color 03, 270-deg rotation
 	move.b	ds_plyr_actv+_b_attkwv_ctr,d0   	| [ld   a,(ds_plyr_actv +_b_attkwv_ctr)]
-	cmp.b	#0x02,d0                         	| [cp   #0x02]
-	jne	l_29C7                             	| [jr   nz,l_29C7]
-	move.w	#8,d3               	| [ld   de,#0x0000 + 0x0008] boss, color 00, 270-deg rotation (>=stage 9)
+	cmp.b	#0x02,d0                            | [cp   #0x02]
+	jne	l_29C7                                  | [jr   nz,l_29C7]
+	move.b	#0,d3
+	move.b	#8,d4               	            | [ld   de,#0x0000 + 0x0008] boss, color 00, 270-deg rotation (>=stage 9)
 l_29C7:
 	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
 	and.w	#0xFF,d6
@@ -8141,30 +8142,30 @@ l_29D1_finalize_object_setup:
 l_29DC:
 	move.b	d1,(0x0E,a2)                    	| [$29DC: ld   0x0E(ix),b] $08 or $44 ... bomb drop counter
 
-* ds_bug_move_queue[IX].b08 = db_2A3C[C] ... LSB of data pointer
-	and.w	#0xFF,d1                            | [$29DF: ld   b,#0]
-	lea	db_2A3C,a0                     	        | [$29E1: ld   hl,#db_2A3C]
-	add.w	d1,a0                            	| [$29E4: add  hl,bc] only C is significant
-	move.b	(a0)+,d0                         	| [$29E5: ld   a,(hl)]
+* ds_bug_move_queue[IX].b08 = db_word_address_table_2a3c[C] ... LSB of data pointer
+	and.w	#0xFF,d2                            | [$29DF: ld   b,#0]
+	lea	db_word_address_table_2a3c,a0                     	        | [$29E1: ld   hl,#db_word_address_table_2a3c]
+	add.w	d2,a0                            	| [$29E4: add  hl,bc] only C is significant
+	move.b	(1,a0),d0                         	| [$29E5: ld   a,(hl)] lsb!
 	                           	                | [$29E6: inc  hl]
 	move.b	d0,(0x08,a2)                    	| [$29E7: ld   0x08(ix),a] lo-byte of pointer e.g. cpu-sub1:001D
 
-* get upper nibble of word at db_2A3C[w] (bits 5:7 will be masked by 0x0E below)
+* get upper nibble of word at db_word_address_table_2a3c[w] (bits 5:7 will be masked by 0x0E below)
 * rld (hl): Performs a 4-bit leftward rotation of the 12-bit number whose
 * 4 most significant bits are the 4 least significant bits of A
 	clr.b	d0                               	| [$29EA: xor  a]
 	jbsr	rld                               	| [$29EB: rld]
 	move.b	d0,d1                           	| [$29ED: ld   b,a]
 
-* ds_bug_move_queue[IX].b09  = db_2A3C[C + 1] & 0x1F ... MSB of data pointer
+* ds_bug_move_queue[IX].b09  = db_word_address_table_2a3c[C + 1] & 0x1F ... MSB of data pointer
 	move.b	(a0),d0                         	| [$29EE: ld   a,(hl)]
 	and.b	#0x1F,d0                         	| [$29EF: and  #0x1F]
 	move.b	d0,(0x09,a2)                    	| [$29F1: ld   0x09(ix),a] hi-byte of pointer e.g. cpu-sub1:001D
 
-* ... get upper 4-bits of word at db_2A3C[w] which were rld'd into A: these
+* ... get upper 4-bits of word at db_word_address_table_2a3c[w] which were rld'd into A: these
 * are $2 thru $A even, and this is multiplied by 3 by the expression A*2+A
 	move.b	d1,d0                           	| [$29F4: ld   a,b]
-	and.b	#0x0E,d0                         	| [$29F5: and  #0x0E] bits 5:7 of db_2A3C[].b1
+	and.b	#0x0E,d0                         	| [$29F5: and  #0x0E] bits 5:7 of db_word_address_table_2a3c[].b1
 	move.b	d0,d1                           	| [$29F7: ld   b,a]
 	rol.b	#1,d0                            	| [$29F8: rlca]
 	add.b	d1,d0                            	| [$29F9: add  a,b]
@@ -8202,20 +8203,19 @@ l_2A05:
 * all 8 of the last wave of bees are on screen now... waiting for them to get in position.
 * if (nbr_flying bugs > 0 ) return
 l_2A29_attack_waves_complete:
-	move.b	b_bugs_flying_nbr_9287,d0            	| [ld   a,(b_bugs_flying_nbr_9287)]
-	                               	| [and  a]
-	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	move.b	b_bugs_flying_nbr_9287,d0            | [ld   a,(b_bugs_flying_nbr_9287)]
+	                               	             | [and  a]
+	beq.b	0f                               	 | [...]
+	rts                                    	     | [ret  nz] [...]
 0:
 
 * the last one has found its position in the collective.
-	move.b	d0,ds_cpu0_task_actv_9000+0x08       	| [ld   (ds_cpu0_task_actv_9000 + 0x08),a] 0  (f_insert_attackers_2916 ... end of attack waves)
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x04       	| [ld   (ds_cpu0_task_actv_9000 + 0x04),a] 1  (f_clone_attack_manager_1A80 ... bonus-bee manager)
-	move.b	d0,ds_cpu0_task_actv_9000+0x10       	| [ld   (ds_cpu0_task_actv_9000 + 0x10),a] 1  (f_manage_bomber_attacks_1b65 ... manage bomber attack )
-	move.b	d0,ds_plyr_actv+_b_nestlr_inh   	| [ld   (ds_plyr_actv +_b_nestlr_inh),a] 1  ... inhibit nest left/right movement
-
-	rts                                    	| [ret]
+	move.b	d0,ds_cpu0_task_actv_9000+0x08       | [ld   (ds_cpu0_task_actv_9000 + 0x08),a] 0  (f_insert_attackers_2916 ... end of attack waves)
+	addq.b	#1,d0                           	 | [inc  a]
+	move.b	d0,ds_cpu0_task_actv_9000+0x04       | [ld   (ds_cpu0_task_actv_9000 + 0x04),a] 1  (f_clone_attack_manager_1A80 ... bonus-bee manager)
+	move.b	d0,ds_cpu0_task_actv_9000+0x10       | [ld   (ds_cpu0_task_actv_9000 + 0x10),a] 1  (f_manage_bomber_attacks_1b65 ... manage bomber attack )
+	move.b	d0,ds_plyr_actv+_b_nestlr_inh   	 | [ld   (ds_plyr_actv +_b_nestlr_inh),a] 1  ... inhibit nest left/right movement
+	rts                                    	     | [ret]
 
 
 
@@ -8223,7 +8223,7 @@ l_2A29_attack_waves_complete:
 
 * bits 0:12  - pointer to data tables for flying pattern control.
 * bits 13:15 - selection index into lut 2A6C.
-db_2A3C:
+db_word_address_table_2a3c:
 	.word db_flv_001d + 0x0000, db_flv_0067 + 0x2000, db_flv_009f + 0x4000, db_flv_00d4 + 0x2000
 	.word db_flv_017b + 0x0000, db_flv_01b0 + 0x6000, db_flv_01e8 + 0x0000, db_flv_01f5 + 0x2000
 	.word db_flv_020b + 0x0000, db_flv_021b + 0x2000, db_flv_022b + 0x8000, db_flv_0241 + 0x2000
@@ -11196,12 +11196,12 @@ galaga_mock:
 
 galaga_reset:
 	.ifndef		RELEASE
-	clr.b		0X1FF
 	tst.b	break_at_startup_flag
 	beq.b	0f
 	
 	jbsr	osd_break
 0:
+
 	* those are the locations where the game updates
 	* the sprite logic (mrw), before copying into the hardware
 	* sprite buffers (sfr)

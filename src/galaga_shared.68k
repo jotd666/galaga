@@ -42,18 +42,17 @@
 * < A0 (HL)
 * < D0 (A)
 rld:
-	*illegal
     movem.w    d1/d2,-(a7)
     move.b    d0,d1        | backup A
     clr.w    d2            | make sure high bits of D2 are clear
-    move.b    (a0),d2       | read (HL)
-    and.b #0xF,d1        | keep 4 lower bits of A
-    lsl.w    #4,d2       | make room for 4 lower bits
-    or.b    d1,d2        | insert bits
-    move.b    d2,(a0)        | update (HL)
-    lsr.w    #4,d2        | get 4 shifted bits of (HL)
-    and.b    #0xF0,d0    | keep only the 4 highest bits of A
-    or.b    d2,d0        | insert high bits from (HL) into first bits of A
+    move.b    (a0),d2      | read (HL)
+    and.b #0xF,d1          | keep 4 lower bits of A
+    lsl.w    #4,d2         | make room for 4 lower bits
+    or.b    d1,d2          | insert bits
+    move.b    d2,(a0)      | update (HL)
+    lsr.w    #8,d2         | get 4 shifted bits of (HL) back
+    and.b    #0xF0,d0      | keep only the 4 highest bits of A
+    or.b    d2,d0          | insert high bits from (HL) into first bits of A
     movem.w    (a7)+,d1/d2
     rts
 
@@ -69,7 +68,7 @@ rld:
 * A = $WZ
 * (HL) = $XY
 rrd:
-	*illegal   | needs to be properly debugged
+	illegal   | needs to be properly debugged
 	movem.w	d1/d2,-(a7)
 	move.b	d0,d1		| backup A
 	clr.w	d2			| make sure high bits of D2 are clear
@@ -78,7 +77,7 @@ rrd:
 	lsr.w	#4,d2		| make room for 4 lower bits
 	or.b	d1,d2		| insert bits
 	move.b	d2,(a0)		| update (HL)
-	lsl.w	#4,d2		| get 4 shifted bits of (HL)
+	lsl.w	#8,d2		| get 4 shifted bits of (HL)
 	and.b	#0xF,d0		| keep only the 4 lowest bits of A
 	or.b	d2,d0		| insert lowest bits from (HL) into first bits of A
 	movem.w	(a7)+,d1/d2
