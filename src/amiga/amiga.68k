@@ -109,22 +109,30 @@ SPRITE_SIZEOF = 4
 	.endm
 	.else
 	* debug mode: check if blitter start address (in A1) at least
-	* is within the 4 first planes
+	* is within the 4 first planes, with an error margin of 16 rows
 	.macro	CHECK_BLITTER_BOUNDS
 	movem.l	d0/a0-a2,-(a7)
 	move.l	bg_drawed_screen_ptr(pc),d0
 	sub.l	d0,a1
 	jpl		110f
 111:
+	* dest blit address too low: below drawed screen address
 	move.l	a1,a0
 	move.l	#BG_SCREEN_PLANE_SIZE*NB_BOBS_PLANES,d1
 	move.l	bg_drawed_screen_ptr(pc),a2
 	lea		blitter_address_too_low_error(pc),a1
 	jbsr	osd_break
 	jra		112f
+113:
+	move.l	a1,a0
+	move.l	#BG_SCREEN_PLANE_SIZE*NB_BOBS_PLANES,d1
+	move.l	bg_drawed_screen_ptr(pc),a2
+	lea		blitter_address_too_high_error(pc),a1
+	jbsr	osd_break
+	jra		112f
 110:
 	cmp.l	#BG_SCREEN_PLANE_SIZE*NB_BOBS_PLANES,a1
-	bcc.b	111b
+	bcc.b	113b
 112:
 	movem.l	(a7)+,d0/a0-a2
 	.endm	
@@ -2926,7 +2934,9 @@ amiga_sprite_slots:
 
 	.ifndef	RELEASE
 blitter_address_too_low_error:
-	.asciz	"blitter address out of range, a0=offset, a2=screen addr"
+	.asciz	"blitter address too low, a0=offset, a2=screen addr, D1=screen size"
+blitter_address_too_high_error:
+	.asciz	"blitter address too high, a0=offset, a2=screen addr, D1=screen size"
 coordinates_out_of_range_error:
 	.asciz	"coordinates out of range, offset in d0, base in a0"
 sprite_allocation_error:
@@ -3344,14 +3354,14 @@ color_row_29_plus:
 		.section .bsschip
 bg_background_data:
 	ds.b	BG_SCREEN_SIZE
-	ds.b	NB_BYTES_PER_ROW*12*3
+	ds.b	NB_BYTES_PER_ROW*16*NB_BOBS_PLANES
 bg_screen_data_1:
 	ds.b	BG_SCREEN_SIZE
-	ds.b	NB_BYTES_PER_ROW*12*3
+	ds.b	NB_BYTES_PER_ROW*16*NB_BOBS_PLANES
 	.ifne  OPT_ENABLE_DOUBLE_BUFFERING
 bg_screen_data_2:
 	ds.b	BG_SCREEN_SIZE
-	ds.b	NB_BYTES_PER_ROW*12*3
+	ds.b	NB_BYTES_PER_ROW*16*NB_BOBS_PLANES
 	.endif
 	.align	8
 

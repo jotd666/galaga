@@ -884,7 +884,7 @@ l_06AC_:
 *-----------------------------------------------------------------------------
 hitd_det_fghtr:
 while_06B7:
-	lea	b_9200_obj_collsn_notif,a0     	| [ld   h,#>b_9200_obj_collsn_notif] sprt_hit_notif
+	lea	b_obj_collsn_notif_9200,a0     	| [ld   h,#>b_obj_collsn_notif_9200] sprt_hit_notif
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -1135,7 +1135,7 @@ l_076A_while_object:
 * obj_collsn_notif[L].b0 ... $81 = hit notification already in progress
 
 * if (0x80 != ( obj_status[L].state & _obj_collsn_notif[L] ))
-	lea	b_9200_obj_collsn_notif,a0     			| [$076A: ld   h,#>b_9200_obj_collsn_notif] is hit notification already in progress
+	lea	b_obj_collsn_notif_9200,a0     			| [$076A: ld   h,#>b_obj_collsn_notif_9200] is hit notification already in progress
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$076C: ld   a,(hl)]
 	lea	b_8800,a0                      			| [$076D: ld   h,#>b_8800]
@@ -1278,7 +1278,7 @@ hitd_dspchr_07c1:
 l_07DB:
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
 * set it up for elimination
-	lea	b_9200_obj_collsn_notif,a0     			| [ld   h,#>b_9200_obj_collsn_notif] = $81
+	lea	b_obj_collsn_notif_9200,a0     			| [ld   h,#>b_obj_collsn_notif_9200] = $81
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#0x81,(a0)                      	| [ld   (hl),#0x81]
@@ -1375,7 +1375,7 @@ l_hdl_flyng_bug_081e:
 	jne	l_0849                             		| [$0849: jr   nz,l_0849]
 
 * award bonus points for destroying complete formation of 8 on challenge stage
-	lea	b_9200_obj_collsn_notif,a0     			| [$0836: ld   h,#>b_9200_obj_collsn_notif] = b_9280[4 + 1]
+	lea	b_obj_collsn_notif_9200,a0     			| [$0836: ld   h,#>b_obj_collsn_notif_9200] = b_9280[4 + 1]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	ds2_stg_chllg_rnd_attrib+1,d0   	| [$0838: ld   a,(ds2_stg_chllg_rnd_attrib + 1)] sprite code + flag
@@ -1482,7 +1482,7 @@ l_08AA:
 
 * jp here if shot the flying captured ship (else boss)
 l_08B0_set_bonus_sprite_code:
-	lea	b_9200_obj_collsn_notif,a0     			| [ld   h,#>b_9200_obj_collsn_notif]
+	lea	b_obj_collsn_notif_9200,a0     			| [ld   h,#>b_obj_collsn_notif_9200]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	d3,(a0)                         	| [ld   (hl),d] shot boss ... (9230):=BA B5. B7?   B8 if hit captured ship
@@ -1568,10 +1568,12 @@ mctl_fltpn_dspchr:
 	.ifndef		RELEASE
 	cmp.w	#0x1000,d5
 	bcs.b	0f
+	jbsr	osd_break
+	* flight path pointer cannot be above that value
 	illegal
 	illegal
 0:
-	cmp.w	#0x004b,d5
+	cmp.w	#0x001d,d5
 	bcc.b	0f
 	* flight path pointer cannot be below that value
 	lea	ds_bug_motion_que_9100,a3

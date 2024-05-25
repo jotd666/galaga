@@ -125,13 +125,13 @@
 	.global		ds_9100
 	.global		ds_9100_tmp
 	.global		b_svc_test_inp_buf
-	.global		ds_atk_wav_tmp_buf
+	.global		ds_atk_wav_tmp_buf_9100
 	.global		ds_bug_motion_que_9100
 	.global		ds_9200
 	.global		ds_9200_glbls
 	.global		b8_9201_game_state
 	.global		b_9215_flip_screen
-	.global		b_9200_obj_collsn_notif
+	.global		b_obj_collsn_notif_9200
 	.global		b_svc_test_snd_slctn
 	.global		b_svc_eastregg_keyprs_cnt
 	.global		w_svc_15sec_tmr
@@ -329,7 +329,7 @@ ds_9100:
 ds_9100_tmp:
 
 
-ds_atk_wav_tmp_buf:
+ds_atk_wav_tmp_buf_9100:
        ds.b     0x10       | temp array for c_25A2 ($0100 boundary)
 
 * temp array for Test_menu_proc
@@ -414,7 +414,7 @@ b_9215_flip_screen:
 *-----------------------------------------------------------------------------
 * Object-collision notification to f_update_enemy_status_1db3 from cpu1:c_076A (even-bytes)
 *-----------------------------------------------------------------------------
-b_9200_obj_collsn_notif:
+b_obj_collsn_notif_9200:
        ds.b     0x60       | even bytes ($30 elements)
 
        ds.b     0x10       | unused
