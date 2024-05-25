@@ -121,20 +121,20 @@ flip=False):
 def add_sprite(code,prefix,cluts,sprite_type=ST_BOB,mirror=False,flip=False):
     add_sprite_block(code,code+1,prefix,cluts,sprite_type,mirror,flip=flip)
 
-add_sprite_block(0x8,0x10,"boss_ship",[0,1,10])   # 10: yellow when about to explode
+add_sprite_block(0x8,0x10,"boss_ship",[0,1,10],mirror=True)   # 10: yellow when about to explode
 # I'd like to hack player ship into a sprite only for clut 2
 # but use a BOB for clut 9 (captured)
 #add_sprite_block(0,0x8,"ship",[2,9])
 add_sprite_block(0,0x8,"ship",9) #,sprite_type=ST_HW_SPRITE)
 add_sprite_block(0,0x8,"ship",2)
-add_sprite_block(0x10,0x18,"red_bee",2)
-add_sprite_block(0x18,0x20,"blue_bee",3)
-add_sprite_block(0x50,0x57,"mutant_galaxian_boss",4,sprite_type=ST_HW_SPRITE)
-add_sprite_block(0x58,0x5F,"mutant_scorpion",5,sprite_type=ST_HW_SPRITE)
-add_sprite_block(0x60,0x67,"mutant_green",6,sprite_type=ST_HW_SPRITE)
-add_sprite_block(0x68,0x6F,"challenge_butterfly",2) # or 7?
-add_sprite_block(0x70,0x77,"challenge_ship",7)
-add_sprite_block(0x78,0x7F,"challenge_rocket",7)
+add_sprite_block(0x10,0x18,"red_bee",2,mirror=True)
+add_sprite_block(0x18,0x20,"blue_bee",3,mirror=True)
+add_sprite_block(0x50,0x57,"mutant_galaxian_boss",4,sprite_type=ST_HW_SPRITE,mirror=True)
+add_sprite_block(0x58,0x5F,"mutant_scorpion",5,sprite_type=ST_HW_SPRITE,mirror=True)
+add_sprite_block(0x60,0x67,"mutant_green",6,sprite_type=ST_HW_SPRITE,mirror=True)
+add_sprite_block(0x68,0x6F,"challenge_butterfly",2,mirror=True) # or 7?
+add_sprite_block(0x70,0x77,"challenge_ship",7,mirror=True)
+add_sprite_block(0x78,0x7F,"challenge_rocket",7,mirror=True)
 add_sprite_block(0x30,0x34,"bomb",[0x9,0xB])
 add_sprite_block(0x41,0x49,"enemy_explosion",0xA)
 add_sprite(0x34,"score_150",0xA)
@@ -286,10 +286,7 @@ palette = palette + [(0x10,0x20,0x30)]*(16-len(palette))
 with open(os.path.join(src_dir,"palette_cluts.68k"),"w") as f:
     for clut_index in range(16):
         clut = get_sprite_clut(clut_index)   # simple slice of palette
-##        if clut_index==3:
-##            # kludge for moving ladders (clut looks wrong and ladders are green)
-##            clut[3] = (255,255,255)
-##            clut[1] = (0xe0,0x30,0x90) #,0x0800,0x01ff
+
         rgb4 = [bitplanelib.to_rgb4_color(x) for x in clut]
         bitplanelib.dump_asm_bytes(rgb4,f,mit_format=True,size=2)
 
@@ -398,7 +395,7 @@ if True:
                                  palette_precision_mask=0xFF,sprite_fmode=0,with_control_words=True)]
 
                         if cs["mirror"]:
-                            # we need do re-iterate with opposite Y-flip image (donkey kong)
+                            # we need do re-iterate with opposite Y-flip image
                             cs["sprmap"].append(bitplanelib.palette_image2sprite(ImageOps.mirror(img),None,spritepal,
                              palette_precision_mask=0xFF,sprite_fmode=0,with_control_words=True))
                         else:
@@ -457,14 +454,9 @@ if True:
                             break
 
                     # plane list size varies depending on mirror or not
-                    # we allow to mask as only in some special cases there are clut indexes > 16
-                    # (but seen as masked in sprite dumps. Never mind, we can make them look correct
-                    # just by masking after having used the proper CLUT when creating the bitmap)
-                    # all sprites have a clut under 0x10
-                    # except for those 2 (which conveniently are sprites!)
-                    # - moving ladder: seems to be 0x13
-                    # - elevator: seems to be 0x23
+                    # we add padding with -1 to detect forgotten mirror attribute
 
+                    plane_list += [-1]*(((NB_BOB_PLANES+1)*2)-len(plane_list))
                     csb[cidx] = plane_list
 
 
@@ -597,6 +589,8 @@ with open(os.path.join(src_dir,"graphics.68k"),"w") as f:
                         f.write("\t.long\t")
                         if plane_id is None:
                             f.write("0")
+                        elif plane_id == -1:
+                            f.write("-1")
                         else:
                             f.write(f"plane_{plane_id}")
                         f.write("\n")

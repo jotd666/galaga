@@ -1251,12 +1251,14 @@ update_bobs:
 	bclr	#7,d2		| discard last bit
 	move.b	d2,(PREVIOUS_SPRITE_CODE,a6)
 	
-	moveq	#0,d6		| temp noflip
-*	bclr	#7,d2		| clear & test X mirror mode
-*	sne		d6			| d6 nonzero means we'll use mirrored bob data
+	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d4
 
+	btst	#1,d4		| clear & test X mirror mode (flipx, but screen is rotated)
+	sne		d6			| d6 nonzero means we'll use mirrored bob data
+
+	btst	#0,d4
+	sne		d5			| d5 nonzero means we'll reverse blit
 	
-	moveq	#0,d5		| temp noflip
 	moveq	#0,d3
 	move.b	(TARGET_SPRITE_COLOR,a0),d3
 	and.b	#0x3F,d3	| discard high bits
@@ -1297,12 +1299,19 @@ update_bobs:
 	* D0 and D1 are already set
 	move.l	d4,a0	| plane list (+ mask)
 	tst.b	d6
-	*beq.b	13f
+	beq.b	13f
 	* Y-flip: fetch mirrored planes
 	* note that there is no safety: if it's mirrored
 	* and mirror isn't declared when creating sprite, the engine
 	* will fetch the next bob (pretty visible when testing!!)
-	*add.w	#(NB_BOBS_PLANES+1)*4,a0
+	add.w	#(NB_BOBS_PLANES+1)*4,a0
+	.ifndef RELEASE
+	tst.l	(a0)
+	bpl.b	13f
+	* missing mirror
+	move.w	#0x00F,_custom+color
+	sub.w	#(NB_BOBS_PLANES+1)*4,a0
+	.endif
 13:
 	move.l	(NB_BOBS_PLANES*4,a0),d2	| mask plane is after bob data
 	beq.b	22f		| mask is zero: blank tile => skip

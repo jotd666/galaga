@@ -11,8 +11,6 @@
 - remove red timer flashes, maybe speedup using F10?
 - get rid of extra copy in osd_update_sprites
 
-- orientation of attacking sprites wrong: mirrored+flipped, we should support
-  attributes!!
 - sprite priorities wrong: stars should be behind
 - stars & colors trashed near the PAL wait region 
 
