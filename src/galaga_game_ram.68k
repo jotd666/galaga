@@ -532,6 +532,11 @@ b_92E2:
        ds.b     0x1C       | unused
 
 * origin base of sprite data block
+* mrw and sfr blocks NEED to be contiguous because sometimes the game adds 0x80
+* to peek in sfr registers (which have write but also read capability)
+* now this is also VERY important for the amiga version that all blocks are contiguous
+* because in the amiga version we only use one pointer and 3 offsets for the 3 blocks
+* the base pointer being sfr_sprite_code_8B80
 ds_sprite_code_8B00:
 
 mrw_sprite_code_8B00:
@@ -549,6 +554,19 @@ mrw_sprite_posn_9300:
 sfr_sprite_posn_9380:
      ds.b     0x40       | sprite position l ("video" registers)
      ds.b     0x40       | sprite position h ("video" registers)
+
+* sprite control buffer and SFRs (9B00)
+* mrw & sfr HAVE to be contiguous even in the 68k version
+* as game sometimes reads into sfr (to get previous value?) by adding
+* 0x80 to the offset
+ds_sprite_ctrl_9B00:
+
+mrw_sprite_ctrl_9B00:
+       ds.b     0x40       | sprite control l (buffer)
+       ds.b     0x40       | sprite control h (buffer)
+sfr_sprite_ctrl_9B80:
+     ds.b     0x40       | sprite control l ("video" registers)
+     ds.b     0x40       | sprite control h ("video" registers)
 
 
 
@@ -753,17 +771,4 @@ b_9AC0:
 
 
 
-
-* sprite control buffer and SFRs (9B00)
-* mrw & sfr HAVE to be contiguous even in the 68k version
-* as game sometimes reads into sfr (to get previous value?) by adding
-* 0x80 to the offset
-ds_sprite_ctrl_9B00:
-
-mrw_sprite_ctrl_9B00:
-       ds.b     0x40       | sprite control l (buffer)
-       ds.b     0x40       | sprite control h (buffer)
-sfr_sprite_ctrl_9B80:
-     ds.b     0x40       | sprite control l ("video" registers)
-     ds.b     0x40       | sprite control h ("video" registers)
 

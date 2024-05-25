@@ -6,11 +6,8 @@
 - fake game: wrong sprite cluts & codes (blue bees don't show, red bees show)
 - ACTIVE_BITPLANE_MASK not implemented
 - generate sprite_cluts for hw sprite
-- debug rrd (called after intro)
-- illegal after intro
-- 2 first rows not shown (attribute/color ??)
+- 2 first rows not shown (attribute/color is black!!!)
 - remove red timer flashes, maybe speedup using F10?
-- get rid of extra copy in osd_update_sprites
 
 - sprite priorities wrong: stars should be behind
 - stars & colors trashed near the PAL wait region 

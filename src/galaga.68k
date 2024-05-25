@@ -8110,25 +8110,25 @@ l_29AE:
 * handle the additional "transient" buggers that fly-in but don't join ... Stage 4 or higher.
 l_29B3_setup_transients:
 	move.b	#0x02,d3
-	move.b	#0x10,d4             	            | [ld   de,#0x02 * 256 + 0x0010] redmoth, color 02, 270-deg rotation
-	btst.b	#6,d1                           	| [bit  6,b]
-	jne	l_29C7                             	    | [jr   nz,l_29C7]
+	move.b	#0x10,d4             	            | [$29B3: ld   de,#0x02 * 256 + 0x0010] redmoth, color 02, 270-deg rotation
+	btst.b	#6,d1                           	| [$29B6: bit  6,b]
+	jne	l_29C7                             	    | [$29B8: jr   nz,l_29C7]
 	move.b	#0x03,d3
-	move.b	#0x18,d4             	            | [ld   de,#0x03 * 256 + 0x0018] yellowbee, color 03, 270-deg rotation
-	move.b	ds_plyr_actv+_b_attkwv_ctr,d0   	| [ld   a,(ds_plyr_actv +_b_attkwv_ctr)]
-	cmp.b	#0x02,d0                            | [cp   #0x02]
-	jne	l_29C7                                  | [jr   nz,l_29C7]
+	move.b	#0x18,d4             	            | [$29BA: ld   de,#0x03 * 256 + 0x0018] yellowbee, color 03, 270-deg rotation
+	move.b	ds_plyr_actv+_b_attkwv_ctr,d0   	| [$29BD: ld   a,(ds_plyr_actv +_b_attkwv_ctr)]
+	cmp.b	#0x02,d0                            | [$29C0: cp   #0x02]
+	jne	l_29C7                                  | [$29C2: jr   nz,l_29C7]
 	move.b	#0,d3
-	move.b	#8,d4               	            | [ld   de,#0x0000 + 0x0008] boss, color 00, 270-deg rotation (>=stage 9)
+	move.b	#8,d4               	            | [$29C4: ld   de,#0x0000 + 0x0008] boss, color 00, 270-deg rotation (>=stage 9)
 l_29C7:
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
+	lea	ds_sprite_code_8B00,a0              	| [$29C7: ld   h,#>ds_sprite_code_8B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	d3,(a0)+                         	| [ld   (hl),d] color, e.g. 8B3B=$03
-	                           	| [dec  l]
-	move.b	d4,(a0)+                         	| [ld   (hl),e] color, e.g. 8B3A=$18
-	                           	| [inc  l]
-	clr.b	(0x0F,a2)                        	| [ld   0x0F(ix),#0] setup transients ... bomb drop enable flags
+	move.b	d3,(a0)                         	| [$29C9: ld   (hl),d] color, e.g. 8B3B=$03
+												| [$29CA: dec  l]
+	move.b	d4,(-1,a0)                         	| [$29CB: ld   (hl),e] color, e.g. 8B3A=$18
+												| [$29CC: inc  l]
+	clr.b	(0x0F,a2)                        	| [$29CD: ld   0x0F(ix),#0] setup transients ... bomb drop enable flags
 
 l_29D1_finalize_object_setup:
 	move.b	d2,d3                           	| [$29D1: ld   d,c] first byte of token-pair, left-shifted 1 (byte-1 of _stg_dat triplet)
@@ -8146,8 +8146,8 @@ l_29DC:
 	and.w	#0xFF,d2                            | [$29DF: ld   b,#0]
 	lea	db_word_address_table_2a3c,a0                     	        | [$29E1: ld   hl,#db_word_address_table_2a3c]
 	add.w	d2,a0                            	| [$29E4: add  hl,bc] only C is significant
-	move.b	(1,a0),d0                         	| [$29E5: ld   a,(hl)] lsb!
-	                           	                | [$29E6: inc  hl]
+	move.b	(1,a0),d0                         	| [$29E5: ld   a,(hl)] lsb! table is in the code, thus big endian
+	                           	                | [$29E6: inc  hl] don't increase, we run big-endian!
 	move.b	d0,(0x08,a2)                    	| [$29E7: ld   0x08(ix),a] lo-byte of pointer e.g. cpu-sub1:001D
 
 * get upper nibble of word at db_word_address_table_2a3c[w] (bits 5:7 will be masked by 0x0E below)
@@ -8158,7 +8158,7 @@ l_29DC:
 	move.b	d0,d1                           	| [$29ED: ld   b,a]
 
 * ds_bug_move_queue[IX].b09  = db_word_address_table_2a3c[C + 1] & 0x1F ... MSB of data pointer
-	move.b	(a0),d0                         	| [$29EE: ld   a,(hl)]
+	move.b	(a0),d0                         	| [$29EE: ld   a,(hl)] msb
 	and.b	#0x1F,d0                         	| [$29EF: and  #0x1F]
 	move.b	d0,(0x09,a2)                    	| [$29F1: ld   0x09(ix),a] hi-byte of pointer e.g. cpu-sub1:001D
 

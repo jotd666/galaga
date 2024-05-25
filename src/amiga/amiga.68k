@@ -41,7 +41,7 @@ SCORE_FILE_SIZE = 0xAA
 * RAMs have 4 bytes per sprite, only the order
 * and some bits differ
 
-SPRITE_BLOCK_OFFSET = 128			| len of each sprite info table
+SPRITE_BLOCK_OFFSET = 256			| len of each sprite info table times 2
 
 PREVIOUS_SPRITE_X = 0
 PREVIOUS_SPRITE_Y = 2
@@ -890,21 +890,8 @@ osd_break:
 
 
 osd_update_sprites:
-	lea		sprite_buffer(pc),a4
-	move.w	#(NB_TARGET_SPRITES)-1,d7
-0:
-	move.w	(a0)+,(a4)+
-	dbf		d7,0b
-	move.w	#(NB_TARGET_SPRITES)-1,d7
-0:
-	move.w	(a1)+,(a4)+
-	dbf		d7,0b
-	move.w	#(NB_TARGET_SPRITES)-1,d7
-0:
-	move.w	(a2)+,(a4)+
-	dbf		d7,0b
 	rts
-
+	
 update_delta_mockup:
 	* mockup!
 	eor.b	#1,delta_flip_flop
@@ -939,7 +926,7 @@ sprite_toggle:
 	dc.w	0
 	
 update_hardware_sprites:
-	lea		sprite_buffer(pc),a0
+	lea		sfr_sprite_code_8B80,a0
 	*lea		sprconf_codes,a0		| mockup!!
 
 	* clear host sprites
@@ -1164,7 +1151,7 @@ compute_sprite_xy:
 	bcs.b	0f
 	cmp.w	#0x200,d1
 	bcs.b	0f
-	move.l	#sprite_buffer,d0
+	move.l	#sfr_sprite_code_8B80,d0
 	sub.l	a0,d0
 	lea		coordinates_out_of_range_error(pc),a1
 	jbsr	osd_break
@@ -1188,7 +1175,7 @@ update_bobs:
 	lea			hardware_sprite_flag_table,a2
 	
 	move.l		bob_previous_drawed_sprites(pc),a4
-	lea			sprite_buffer(pc),a3
+	lea		sfr_sprite_code_8B80,a3
 	*lea		sprconf_codes,a3		| mockup!!
 	move.l	a3,a0
 	* clear previous positions
@@ -1740,7 +1727,7 @@ alloc_sprite:
 	* if we reach that point there's a big problem, break if dev mode
 	* hopefully if we save buffer in A1 we can reproduce the issue at will!
 	.ifndef	RELEASE
-	lea			sprite_buffer(pc),a1
+	lea		sfr_sprite_code_8B80,a1
 	lea			sprite_allocation_error,a0
 	jbsr	osd_break
 	.endif
@@ -2943,8 +2930,6 @@ sprite_allocation_error:
 	.asciz	"sprite allocation error"
 sprite_doesnt_exist_error:
 	.asciz	"sprite doesn't exist"
-sprite_buffer_doesnt_exist_error:
-	.asciz	"sprite buffer doesn't exist"
 read_videoram_out_of_range_error:
 	.asciz	"read videoram out of range"
 write_videoram_out_of_range_error:
@@ -3140,9 +3125,6 @@ bg_color_table:
 	.endr
 
 
-
-sprite_buffer:
-	.skip	3*NB_TARGET_SPRITES*2		| enough for 3 arrays of 128 bytes
 	
 bob_previous_positions_1:
 	ds.b	NB_TARGET_SPRITES*PREVIOUS_SPRITE_SIZE
