@@ -2616,6 +2616,10 @@ osd_update_inputs:
 	moveq	#1,d4
 	abcd	d4,d3		| add one credit
 	move.b	d3,(a0)
+	move.l	d0,-(a7)
+	move.w	#CREDIT_SND,d0
+	jbsr	osd_sound_start
+	move.l	(a7)+,d0
 0:
 	tst.b	(0x4F,a1)		| "<-" key
 	beq.b	0f

@@ -787,7 +787,7 @@ l_064F:
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_plyr_actv+_b_2ship        	| [ld   (ds_plyr_actv +_b_2ship),a] 0
 
-	move.b	b8_9201_game_state,d0           	| [ld   a,(b8_9201_game_state)]
+	move.b	b8_game_state_9201,d0           	| [ld   a,(b8_game_state_9201)]
 	subq.b	#1,d0                           	| [dec  a]
 	move.b	d0,b_9AA0+0x19                  	| [ld   (b_9AA0 + 0x19),a] sound-fx count/enable registers, "bang" sound (not in Attract Mode)
 

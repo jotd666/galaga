@@ -129,7 +129,7 @@
 	.global		ds_bug_motion_que_9100
 	.global		ds_9200
 	.global		ds_9200_glbls
-	.global		b8_9201_game_state
+	.global		b8_game_state_9201
 	.global		b_9215_flip_screen
 	.global		b_obj_collsn_notif_9200
 	.global		b_svc_test_snd_slctn
@@ -367,7 +367,7 @@ ds_9200:
 *-----------------------------------------------------------------------------
 ds_9200_glbls:
        ds.b     0x01
-b8_9201_game_state:
+b8_game_state_9201:
        ds.b     0x01       | game states (1, 2, 3, 4 from the manual)
                             * 0==Game Ended   (not described in manual)
                             * 1==ATTRACT_MODE, 2==READY_TO_PLAY_MODE, 3==PLAY_MODE
