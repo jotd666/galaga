@@ -13,4 +13,6 @@
 - sprite priorities wrong: stars should be behind
 - stars & colors trashed near the PAL wait region 
 
+push start button screen: l_game_state_ready_039d then loop
+
 traj issues: Traj computed in subcpu D23 / D50 probe there!

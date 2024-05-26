@@ -136,7 +136,7 @@ l_032A:
 	
 * initialize game state
 	move.b	#0x01,d0                        	| [$0333: ld   a,#0x01]
-	move.b	d0,b8_9201_game_state           	| [ld   (b8_9201_game_state),a] 1 == ATTRACT_MODE
+	move.b	d0,b8_game_state_9201           	| [ld   (b8_game_state_9201),a] 1 == ATTRACT_MODE
 
 	*lea	l_A005,a0                      	| [ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
 	*clr.b	(a0)                             	| [ld   (hl),#0]
@@ -229,11 +229,11 @@ g_main_035a:
 * else  game_state = READY_TO_PLAY_MODE
 	move.b	#2,d0                           	| [ld   a,#2] 2 == READY_TO_PLAY_MODE
 l_0380:
-	move.b	d0,b8_9201_game_state           	| [ld   (b8_9201_game_state),a] = (credit_cnt==0 ? ATTRACT : READY) ... (m/c start, game_state init)
+	move.b	d0,b8_game_state_9201           	| [ld   (b8_game_state_9201),a] = (credit_cnt==0 ? ATTRACT : READY) ... (m/c start, game_state init)
 
 * if ( credit_cnt == 0 ) ...
 	tst.b	b8_99B8_credit_cnt
-	jne	l_game_state_ready                 	| [jr   nz,l_game_state_ready]
+	jne	l_game_state_ready_039d                 	| [jr   nz,l_game_state_ready_039d]
 
 * ... do attract mode stuff
 	clr.b	d0                               	| [xor  a]
@@ -247,7 +247,7 @@ l_0380:
 	
 * while (game_state == ATTRACT_MODE) { | }
 l_038D_while:
-	move.b	b8_9201_game_state,d0           	| [$038D: ld   a,(b8_9201_game_state)] while (ATTRACT_MODE)
+	move.b	b8_game_state_9201,d0           	| [$038D: ld   a,(b8_game_state_9201)] while (ATTRACT_MODE)
 	subq.b	#1,d0                           	| [dec  a]
 	jeq	l_038D_while                       	| [jr   z,l_038D_while]
 
@@ -261,7 +261,7 @@ l_038D_while:
 
 * game_state == READY
 
-l_game_state_ready:
+l_game_state_ready_039d:
 	clr.b	d0                               	| [$039D: xor  a]
 	move.b	d0,ds_9200_glbls+0x0B           	| [$039E: ld   (ds_9200_glbls + 0x0B),a] 0 ... glbl_enemy_enbl: cleared in case demo was running
 	move.b	#0x13,d2                        	| [$03A1: ld   c,#0x13] C = string_out_pe_index
@@ -300,7 +300,7 @@ l_game_state_ready:
 * while (game_state == READY_TO_PLAY_MODE)
 j_0003D8_wrdy:
 l_0003D8:
-	move.b	b8_9201_game_state,d0           	| [ld   a,(b8_9201_game_state)] while (READY)
+	move.b	b8_game_state_9201,d0           	| [ld   a,(b8_game_state_9201)] while (READY)
 	cmp.b	#2,d0                            	| [cp   #2] READY_TO_PLAY_MODE
 	jeq	l_0003D8                           	| [jr   z,l_0003D8]
 
@@ -388,14 +388,15 @@ l_0414_while_tmr_3:
 *  'XXX BONUS FOR XXXXXX PTS'
 *  'AND FOR EVERY XXXXXX PTS'
 * IN:
-*  C = string_out_pe_index
-*  E = first digit of score i.e. X of Xxxxx.
+*  D2 = string_out_pe_index
+*  D4 = first digit of score i.e. X of Xxxxx.
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
 c_game_bonus_info_show_line_043d:
 	jbsr	string_out_pe_30                | [$043D: rst  0x30] string_out_pe ('XXX BONUS FOR   ', 'AND FOR EVERY   ' )
 * set next position to append 'X0000 PTS'
+	exg	d4,d6
 	exg	a1,a0                               | [$043E: ex   de,hl] get position of final character from string_out (digit now in L)
 	                        	            | [$043F: ld   a,e]
 	add.w	#0x40,a1                        | [$0440: add  a,#0x40] Offset position by 2 characters to the left.
@@ -1633,7 +1634,7 @@ c_093C:
 	move.b	d0,d2                           	| [ld   c,a] stash counter in C
 
 * if ( game_state != IN_GAME_MODE )  return
-	move.b	b8_9201_game_state,d0           	| [ld   a,(b8_9201_game_state)] if ( ! IN_GAME )
+	move.b	b8_game_state_9201,d0           	| [ld   a,(b8_game_state_9201)] if ( ! IN_GAME )
 	cmp.b	#3,d0                            	| [cp   #3]
 	beq.b	0f                               	| [...]
 	rts                                    	| [ret  nz] [...]
@@ -1748,7 +1749,7 @@ f_credit_game_state_management_0977:
 	jeq	jp_RAM_test                        	    | [$097C: jp   z,jp_RAM_test]
 
 * if ( game_state != IN_GAME_MODE )  // goto update freeplay_or_credit
-	move.b	b8_9201_game_state,d0           	| [$097F: ld   a,(b8_9201_game_state)] if ( IN_GAME )
+	move.b	b8_game_state_9201,d0           	| [$097F: ld   a,(b8_game_state_9201)] if ( IN_GAME )
 	cmp.b	#3,d0                            	| [$0982: cp   #3] game_state==IN_GAME
 	jne	l_099F_update_freeplay_or_credit   	    | [$0984: jr   nz,l_099F_update_freeplay_or_credit]
 
@@ -1837,7 +1838,7 @@ l_09D9_puts_freeplay:
 l_09E1_update_game_state:
 
 * if ( game_state == GAME_ENDED ) return
-	move.b	b8_9201_game_state,d0           | [$09E1: ld   a,(b8_9201_game_state)] if Game Ended
+	move.b	b8_game_state_9201,d0           | [$09E1: ld   a,(b8_game_state_9201)] if Game Ended
 	                               	        | [$09E4: and  a]
 	bne.b	0f                              | [...]
 	rts                                    	| [$09E5: ret  z] 0==GAME_ENDED [...]
@@ -1853,7 +1854,7 @@ l_09E1_update_game_state:
 * then {
 *   game_state = READY_TO_PLAY_MODE
 	move.b	#2,d0                           | [$09EF: ld   a,#2]
-	move.b	d0,b8_9201_game_state           | [$09F1: ld   (b8_9201_game_state),a] READY_TO_PLAY ...push start to begin!
+	move.b	d0,b8_game_state_9201           | [$09F1: ld   (b8_game_state_9201),a] READY_TO_PLAY ...push start to begin!
 
        * memset($9AA0,0,8)
 	clr.b	d0                               | [$09F4: xor  a]
@@ -1896,7 +1897,7 @@ l_09FF_check_credits_used:
 
 *   game_state = IN_GAME_MODE
 	move.b	#3,d0                           	| [$0A14: ld   a,#3]
-	move.b	d0,b8_9201_game_state           	| [$0A16: ld   (b8_9201_game_state),a] 3 (IN_GAME)
+	move.b	d0,b8_game_state_9201           	| [$0A16: ld   (b8_game_state_9201),a] 3 (IN_GAME)
 	rts                                    	    | [$0A19: ret]
 * }
 
@@ -3443,7 +3444,6 @@ c_string_out_1398:
 											| [and  a] clear CY flag.
 	clr.b		d7                          | [ex   af,af'] save CY flag.
 j_string_out_pe_139a:
-	move.b	#0,0x200
 	movem.w	d3/d4,-(sp)                    	| [push de] preserves DE
 	move.l	a1,-(sp)                        | [push de] preserves DE
 	exg	a1,a0                              	| [ex   de,hl] DE := position in tile RAM
@@ -3716,7 +3716,7 @@ s_15C1:
 	_dea 21 4                                 | 0335
 s_15D5:
 	.byte 0x05
-.ascii "AND FOR EVERY   /"
+	.ascii "AND FOR EVERY   /"
 
 * $1E
 s_15E7:
@@ -3930,7 +3930,7 @@ case_17AE:
 *-----------------------------------------------------------------------------
 f_manage_attract_mode_17B2:
 * if ( game_state != ATTRACT_MODE ) return
-	move.b	b8_9201_game_state,d0           	| [ld   a,(b8_9201_game_state)]
+	move.b	b8_game_state_9201,d0           	| [ld   a,(b8_game_state_9201)]
 	subq.b	#1,d0                           	| [dec  a]
 	beq.b	0f                               	| [...]
 	rts                                    	| [ret  nz] [...]
@@ -6828,7 +6828,7 @@ l_2352:
 	rts                                    	| [ret  nc] [...]
 0:
 * if ( game_state == ATTRACT_MODE ) goto 236d
-	move.b	b8_9201_game_state,d0           	| [ld   a,(b8_9201_game_state)]  == ATTRACT_MODE
+	move.b	b8_game_state_9201,d0           	| [ld   a,(b8_game_state_9201)]  == ATTRACT_MODE
 	subq.b	#1,d0                           	| [dec  a]
 	jeq	l_236D                             	| [jr   z,l_236D]
 * else if (  !  ( task_enabled  &&  !restart_stage )  return
@@ -9694,15 +9694,17 @@ l_38A0:
 * AND EVERY XX0000 PTS
 
 l_38AB:
+	illegal
 	* TODO point on something valid
 	**lea	_sfr_dsw4,a0                   	| [ld   hl,#_sfr_dsw4] bonus levels
 
 	move.b	#3,d1                           	| [ld   b,#3] 3 positions to read
 	clr.b	d0                               	| [xor  a]
+	CLEAR_XC_FLAGS
 l_38B1:
 	move.b	(a0),d2                         	| [ld   c,(hl)]
 	roxr.b	#1,d2                           	| [rr   c] "right-shift" lo-bit into Cy flag.
-	addx.b	d0,d0				| adc  a,a                                   | "left-shift" the hi-bit and add the lo-bit from Cy flag.
+	addx.b	d0,d0				                | [adc  a,a]  "left-shift" the hi-bit and add the lo-bit from Cy flag.
 	addq.w	#1,a0                           	| [inc  hl]
 	subq.b	#1,d1                           	| [...]
 	jne	l_38B1                             	| [djnz l_38B1]
@@ -9739,32 +9741,31 @@ l_38B1:
 c_38DA:
 	move.b	(a0),d0                         	| [ld   a,(hl)] ld one byte from the two-byte table entry
 	addq.b	#1,d0                           	| [inc  a] setup test for $FF in the bonus-none parameters
-	jeq	l_393B                             	| [jp   z,l_393B] if 'bonus none', skip the 'second and every' display (when?)
+	jeq	l_393B                             	    | [jp   z,l_393B] if 'bonus none', skip the 'second and every' display (when?)
 	move.b	d2,d0                           	| [ld   a,c] first-pass (second-and-every) indicated by 1, second-pass indicated by 0..
 	add.b	d0,d0                            	| [add  a,a] ...so A==2 or A==0  (offset from 3B1A to string address loaded into HL)
-
 	move.l	a0,-(sp)                        	| [push hl] save address of table-entry
-	lea	str_3B1A,a0                    	| [ld   hl,#str_3B1A] i.e., 1E 3B "1ST BONUS ", 36 3B "2ND BONUS"
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A                                  | HL += A
-	move.b	(a0),d0                         	| [ld   a,(hl)] get LSB of src address
-	addq.w	#1,a0                           	| [inc  hl]
+	lea	str_3B1A,a0                    	        | [ld   hl,#str_3B1A] i.e., 1E 3B "1ST BONUS ", 36 3B "2ND BONUS"
+	jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A                                  | HL += A
+	move.b	(a0)+,d0                         	| [ld   a,(hl)] get LSB of src address
+	                                        	| [inc  hl]
 	move.b	(a0),d5                         	| [ld   h,(hl)] get MSB of src address
 	move.b	d0,d6                           	| [ld   l,a] ld LSB to L
-	movem.w	d1/d2,-(sp)                    	| [push bc] C holds the so-called 'first-bonus/second-bonus' flag, save it!
+	movem.w	d1/d2,-(sp)                    	    | [push bc] C holds the so-called 'first-bonus/second-bonus' flag, save it!
 	jbsr	c_text_out                        	| [call c_text_out] display "2ND BONUS" or "1ST BONUS"
 	jbsr	c_text_out                        	| [call c_text_out] display "0000 PTS" of "??? BONUS XX0000 PTS"...
                                                   * HL==$3B2B or HL==$3B42, as there are two copies of "0000 PTS"
                                                   * DE==$80B2, that value will be used later......?
 
-	movem.w	(sp)+,d1/d2                    	| [pop  bc] get back the first-pass-second-pass flag
+	movem.w	(sp)+,d1/d2                    	    | [pop  bc] get back the first-pass-second-pass flag
 	move.l	(sp)+,a0                        	| [pop  hl] get back the address of the table-entry
 	move.b	(a0),d0                         	| [ld   a,(hl)] ld the table-entry...
 	and.b	#0x7F,d0                         	| [and  #0x7F] ... and mask out bit-7 which indicates there is no 'and-every' setting
-	exg	a1,a0                              	| [ex   de,hl] save address of table-entry in HL... DE==$80B2 (address of ' ' in "PTS ")
-	lea	0x8000+0x01E0+0x10,a0      	| [ld   hl,#0x8000 + 0x01E0 + 0x10]
+	exg	a1,a0                              	    | [ex   de,hl] save address of table-entry in HL... DE==$80B2 (address of ' ' in "PTS ")
+	lea	0x8000+0x01E0+0x10,a0      	            | [ld   hl,#0x8000 + 0x01E0 + 0x10]
 	move.b	d2,d1                           	| [ld   b,c] the first time through here, C==1...
 	subq.b	#1,d1                           	| [...]
-	jne	l_38FF                             	| [djnz l_38FF] ... so the second time, when the Flag is 0 we skip next two lines
+	jne	l_38FF                             	    | [djnz l_38FF] ... so the second time, when the Flag is 0 we skip next two lines
 	addq.w	#2,a0                           	| [inc  hl] * 2
 l_38FF:
 	jbsr	c_391E                            	| [call c_391E] display "X" of "??? BONUS XX0000 PTS"
