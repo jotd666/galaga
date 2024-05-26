@@ -185,7 +185,7 @@
 	.global		b8_99B2_X3attackcfg_parm1
 	.global		b8_99B3_two_plyr_game
 	.global		b8_99B4_bugnest_onoff_scrn_tmr
-	.global		ds3_99B5_io_input
+	.global		ds3_io_input_99b5
 	.global		b8_99B8_credit_cnt
 	.global		ds_99B9_star_ctrl
 	.global		b8_ship_collsn_detectd_status
@@ -655,7 +655,7 @@ b8_99B3_two_plyr_game:
       ds.b    1          | 0 for 1P, 1 for 2P
 b8_99B4_bugnest_onoff_scrn_tmr:
       ds.b    1
-ds3_99B5_io_input:
+ds3_io_input_99b5:
       ds.b    3          | see info in j_Test_menu_proc
 
 b8_99B8_credit_cnt:

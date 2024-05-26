@@ -104,7 +104,7 @@ j_Game_init_02d3:
 	jbsr	rst_18_color                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
 
-	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr] clear remainder of grid pattern from the playfield tiles (14x16)
+	jbsr	c_sctrl_playfld_clr_0160               	| [call c_sctrl_playfld_clr_0160] clear remainder of grid pattern from the playfield tiles (14x16)
 * all tile ram is now wiped
 
 * Sets up "Heroes" screen
@@ -142,7 +142,7 @@ l_032A:
 	*clr.b	(a0)                             	| [ld   (hl),#0]
 	*move.b	d0,(a0)                         	| [ld   (hl),a]
 
-	jbsr	c_sctrl_sprite_ram_clr            	| [call c_sctrl_sprite_ram_clr]
+	jbsr	c_sctrl_sprite_ram_clr_003c            	| [call c_sctrl_sprite_ram_clr_003c]
 
 * display 1UP HIGH SCORE 20000 (1 time only after boot)
 	jbsr	c_textout_1uphighscore_onetime    	| [call c_textout_1uphighscore_onetime]
@@ -165,7 +165,7 @@ l_032A:
 	move.b	d0,ds_cpu0_task_actv_9000+0x1E       	| [ld   (ds_cpu0_task_actv_9000 + 0x1E),a] $20
 
 * credit_cnt = io_input[0]
-	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] credit_count
+	move.b	ds3_io_input_99b5,d0       			| [ld   a,(ds3_io_input_99b5 + 0x00)] credit_count
 	move.b	d0,b8_99B8_credit_cnt           	| [ld   (b8_99B8_credit_cnt),a] credit_cnt = io_input[credit_count]
 
 * cpu0_task_activ[0x1E] = 0
@@ -218,7 +218,7 @@ g_main_035a:
 
 * array of object movement structures etc.
 	jbsr	rst_28                            	| [rst  0x28] memset(mctl_mpool,0,$$14 * 12)
-	jbsr	c_sctrl_sprite_ram_clr            	| [$0370: call c_sctrl_sprite_ram_clr] clear sprite mem etc.
+	jbsr	c_sctrl_sprite_ram_clr_003c            	| [$0370: call c_sctrl_sprite_ram_clr_003c] clear sprite mem etc.
 	jbsr	c_init_taskman_structs_1230       	| [$0373: call c_init_taskman_structs_1230]
 * allow attract-mode festivities to be skipped if credit available
 * if ( credit_cnt == 0 )  game_state = ATTRACT_MODE
@@ -255,50 +255,47 @@ l_038D_while:
 
 * GameState == Ready ... reinitialize everthing
 	jbsr	c_init_taskman_structs_1230       	| [$0393: call c_init_taskman_structs_1230]
-	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr]
-	jbsr	rst_28                            	| [rst  0x28] memset(mctl_mpool,0,$$14 * 12)
-	jbsr	c_sctrl_sprite_ram_clr            	| [call c_sctrl_sprite_ram_clr]
+	jbsr	c_sctrl_playfld_clr_0160           	| [$0396: call c_sctrl_playfld_clr_0160]
+	jbsr	rst_28                            	| [$0399: rst  0x28] memset(mctl_mpool,0,$$14 * 12)
+	jbsr	c_sctrl_sprite_ram_clr_003c        	| [$039A: call c_sctrl_sprite_ram_clr_003c]
 
 * game_state == READY
 
 l_game_state_ready:
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 0 ... glbl_enemy_enbl: cleared in case demo was running
-	move.b	#0x13,d2                        	| [ld   c,#0x13] C = string_out_pe_index
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "(c) 1981 NAMCO LTD"
-	move.b	#1,d2                           	| [ld   c,#1] C = string_out_pe_index
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "PUSH START BUTTON"
-
-	lea	d_attrmode_sptiles_ships,a0    	| [ld   hl,#d_attrmode_sptiles_ships]
-	move.l	a0,p_attrmode_sptiles_9280           	| [ld   (p_attrmode_sptiles_9280),hl] &_attrmode_sptiles[0] ... parameter to _sprite_tiles_displ()
+	clr.b	d0                               	| [$039D: xor  a]
+	move.b	d0,ds_9200_glbls+0x0B           	| [$039E: ld   (ds_9200_glbls + 0x0B),a] 0 ... glbl_enemy_enbl: cleared in case demo was running
+	move.b	#0x13,d2                        	| [$03A1: ld   c,#0x13] C = string_out_pe_index
+	jbsr	string_out_pe_30                    | [$03A3: rst  0x30] string_out_pe "(c) 1981 NAMCO LTD"
+	move.b	#1,d2                           	| [$03A4: ld   c,#1] C = string_out_pe_index
+	jbsr	string_out_pe_30                    | [$03A6: rst  0x30] string_out_pe "PUSH START BUTTON"
+	lea	d_attrmode_sptiles_ships,a0    	        | [$03A7: ld   hl,#d_attrmode_sptiles_ships]
+	move.l	a0,p_attrmode_sptiles_9280          | [$03AA: ld   (p_attrmode_sptiles_9280),hl] &_attrmode_sptiles[0] ... parameter to _sprite_tiles_displ()
 
 * if ( 0xFF == mchn_cfg_bonus[0] ) goto l_While_Ready
-	move.b	w_mchn_cfg_bonus+0,d0           	| [ld   a,(w_mchn_cfg_bonus + 0)]
-	cmp.b	#0xFF,d0                         	| [cp   #0xFF]
-	jeq	j_0003D8_wrdy                      	| [jr   z,j_0003D8_wrdy]
-
-	move.b	d0,d4                           	| [ld   e,a] E=bonus score digit
-	move.b	#0x1B,d2                        	| [ld   c,#0x1B] C=string_out_pe_index
-	jbsr	c_game_bonus_info_show_line       	| [call c_game_bonus_info_show_line]
+	move.b	w_mchn_cfg_bonus+0,d0           	| [$03AD: ld   a,(w_mchn_cfg_bonus + 0)]
+	cmp.b	#0xFF,d0                         	| [$03B0: cp   #0xFF]
+	jeq	j_0003D8_wrdy                      	    | [$03B2: jr   z,j_0003D8_wrdy]
+	move.b	d0,d4                           	| [$03B4: ld   e,a] E=bonus score digit
+	move.b	#0x1B,d2                        	| [$03B5: ld   c,#0x1B] C=string_out_pe_index
+	jbsr	c_game_bonus_info_show_line_043d 	| [$03B7: call c_game_bonus_info_show_line_043d]
 
 * if ( 0xFF == mchn_cfg_bonus[1] ) goto l_While_Ready
-	move.b	w_mchn_cfg_bonus+1,d0           	| [ld   a,(w_mchn_cfg_bonus + 1)]
-	cmp.b	#0xFF,d0                         	| [cp   #0xFF]
-	jeq	j_0003D8_wrdy                      	| [jr   z,j_0003D8_wrdy]
-
-	and.b	#0x7F,d0                         	| [and  #0x7F]
-	move.b	d0,d4                           	| [ld   e,a] E=bonus score digit
-	move.b	#0x1C,d2                        	| [ld   c,#0x1C] C=string_out_pe_index
-	jbsr	c_game_bonus_info_show_line       	| [call c_game_bonus_info_show_line] bugs from demo mode have disappeared!
+	move.b	w_mchn_cfg_bonus+1,d0           	| [$03BA: ld   a,(w_mchn_cfg_bonus + 1)]
+	cmp.b	#0xFF,d0                         	| [$03BD: cp   #0xFF]
+	jeq	j_0003D8_wrdy                      	    | [$03BF: jr   z,j_0003D8_wrdy]
+	and.b	#0x7F,d0                         	| [$03C1: and  #0x7F]
+	move.b	d0,d4                           	| [$03C3: ld   e,a] E=bonus score digit
+	move.b	#0x1C,d2                        	| [$03C4: ld   c,#0x1C] C=string_out_pe_index
+	jbsr	c_game_bonus_info_show_line_043d  	| [$03C6: call c_game_bonus_info_show_line_043d] bugs from demo mode have disappeared!
 
 * if bit 7 is set, the third bonus award does not apply
-	move.b	w_mchn_cfg_bonus+1,d0           	| [ld   a,(w_mchn_cfg_bonus + 1)]
-	btst.b	#7,d0                           	| [bit  7,a]
-	jne	j_0003D8_wrdy                      	| [jr   nz,j_0003D8_wrdy]
-	and.b	#0x7F,d0                         	| [and  #0x7F]
-	move.b	d0,d4                           	| [ld   e,a] E=bonus score digit
-	move.b	#0x1D,d2                        	| [ld   c,#0x1D] C=string_out_pe_index
-	jbsr	c_game_bonus_info_show_line       	| [call c_game_bonus_info_show_line]
+	move.b	w_mchn_cfg_bonus+1,d0           	| [$03C9: ld   a,(w_mchn_cfg_bonus + 1)]
+	btst.b	#7,d0                           	| [$03CC: bit  7,a]
+	jne	j_0003D8_wrdy                      	    | [$03CE: jr   nz,j_0003D8_wrdy]
+	and.b	#0x7F,d0                         	| [$03D0: and  #0x7F]
+	move.b	d0,d4                           	| [$03D2: ld   e,a] E=bonus score digit
+	move.b	#0x1D,d2                        	| [$03D3: ld   c,#0x1D] C=string_out_pe_index
+	jbsr	c_game_bonus_info_show_line_043d    | [$03D5: call c_game_bonus_info_show_line_043d]
 
 * while (game_state == READY_TO_PLAY_MODE)
 j_0003D8_wrdy:
@@ -312,8 +309,8 @@ l_0003D8:
 	**move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] sound_mgr_reset: non-zero causes re-initialization of sound mgr process
 
 * clear sprite mem etc.
-	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr]
-	jbsr	c_sctrl_sprite_ram_clr            	| [call c_sctrl_sprite_ram_clr]
+	jbsr	c_sctrl_playfld_clr_0160               	| [call c_sctrl_playfld_clr_0160]
+	jbsr	c_sctrl_sprite_ram_clr_003c            	| [call c_sctrl_sprite_ram_clr_003c]
 
 * stars paused
 	*lea	l_A005,a0                      	| [ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
@@ -384,7 +381,7 @@ l_0414_while_tmr_3:
 * end
 
 *=============================================================================
-* c_game_bonus_info_show_line()
+* c_game_bonus_info_show_line_043d()
 *  Description:
 *   coinup... displays each line of "1st BONUS, 2ND BONUS, AND FOR EVERY".
 *   Successive calls to this are made depending upon machine config, e.g.
@@ -396,26 +393,20 @@ l_0414_while_tmr_3:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_game_bonus_info_show_line:
-
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ('XXX BONUS FOR   ', 'AND FOR EVERY   ' )
-
+c_game_bonus_info_show_line_043d:
+	jbsr	string_out_pe_30                | [$043D: rst  0x30] string_out_pe ('XXX BONUS FOR   ', 'AND FOR EVERY   ' )
 * set next position to append 'X0000 PTS'
-	exg	a1,a0                              	| [ex   de,hl] get position of final character from string_out (digit now in L)
-	                        	| [ld   a,e]
-	add.w	#0x40,a1                         	| [add  a,#0x40] Offset position by 2 characters to the left.
-	                        	| [ld   e,a]
-
-	clr.b	d5                               	| [ld   h,#0]
-	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] HL contains number to display, returns updated destination in DE
-
-	exg	a1,a0                              	| [ex   de,hl]
-	move.b	#0x1E,d2                        	| [ld   c,#0x1E]
-	jbsr	c_string_out_1398                      	| [call c_string_out_1398] DE=dest, C=string_out_pe_index
-
-	jbsr	c_sprite_tiles_displ_128C              	| [call c_sprite_tiles_displ_128C]
-
-	rts                                    	| [ret]
+	exg	a1,a0                               | [$043E: ex   de,hl] get position of final character from string_out (digit now in L)
+	                        	            | [$043F: ld   a,e]
+	add.w	#0x40,a1                        | [$0440: add  a,#0x40] Offset position by 2 characters to the left.
+	                        	            | [$0442: ld   e,a]								            
+	clr.b	d5                              | [$0443: ld   h,#0]
+	jbsr	c_text_out_i_to_d_0A53          | [$0445: call c_text_out_i_to_d_0A53] HL contains number to display, returns updated destination in DE								            
+	exg	a1,a0                               | [$0448: ex   de,hl]
+	move.b	#0x1E,d2                        | [$0449: ld   c,#0x1E]
+	jbsr	c_string_out_1398               | [$044B: call c_string_out_1398] DE=dest, C=string_out_pe_index
+	jbsr	c_sprite_tiles_displ_128C     	| [$044E: call c_sprite_tiles_displ_128C]
+	rts                                    	| [$0451: ret]
 
 
 *=============================================================================
@@ -645,8 +636,8 @@ l_0509_while:
 
 	jbsr	rst_28                            	| [rst  0x28] memset(mctl_mpool,0,$$14 * 12)
 
-	jbsr	c_sctrl_sprite_ram_clr            	| [call c_sctrl_sprite_ram_clr]
-	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr]
+	jbsr	c_sctrl_sprite_ram_clr_003c            	| [call c_sctrl_sprite_ram_clr_003c]
+	jbsr	c_sctrl_playfld_clr_0160               	| [call c_sctrl_playfld_clr_0160]
 
 	move.b	#0x15,d2                        	| [ld   c,#0x15] string index
 	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("-RESULTS-")
@@ -681,7 +672,7 @@ l_0540_while:
 	                               	| [and  a]
 	jne	l_0540_while                       	| [jr   nz,l_0540_while]
 
-	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr]
+	jbsr	c_sctrl_playfld_clr_0160               	| [call c_sctrl_playfld_clr_0160]
 	jbsr	c_top5_dlg_proc                   	| [call c_top5_dlg_proc] returns immediately if not in top-5
 
 	clr.b	d0                               	| [xor  a]
@@ -707,7 +698,7 @@ l_055F:
 	jra	l_0554_while                       	| [jr   l_0554_while]
 
 l_0562:
-	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr] clear screen at end of game
+	jbsr	c_sctrl_playfld_clr_0160               	| [call c_sctrl_playfld_clr_0160] clear screen at end of game
 
 * done game over stuff for active player, so if 1P game or
 * plyr_susp.resv_fghtrs exhausted then halt
@@ -1419,11 +1410,8 @@ f_update_sprites_0828:
 	move.w	#0x80,d1                        	| [ld   c,#0x40]
 	jbsr	ldir                              	| [ldir]
 
-
-	lea	sfr_sprite_code_8B80,a0
-	lea	sfr_sprite_posn_9380,a1
-	lea	sfr_sprite_ctrl_9B80,a2
-	jbsr	osd_update_sprites
+	* host side uses the sfr_sprite_code_8B80 address directly, no need to
+	* call any OSD shit
 	
 *	lea	mrw_sprite_code_8B00+0x40,a0        	| [ld   hl,#mrw_sprite_code_8B00 + 0x40]
 *	lea	sfr_sprite_code_8B80+0x40,a1        	| [ld   de,#sfr_sprite_code_8B80 + 0x40]
@@ -1755,7 +1743,7 @@ str_0974:
 *-----------------------------------------------------------------------------
 f_credit_game_state_management_0977:
 * if ( io_input[0] == $bb )
-	move.b	ds3_99B5_io_input+0x00,d0       	| [$0977: ld   a,(ds3_99B5_io_input + 0x00)] check for bb ... Service Switch On indication in credit mode
+	move.b	ds3_io_input_99b5+0x00,d0       	| [$0977: ld   a,(ds3_io_input_99b5 + 0x00)] check for bb ... Service Switch On indication in credit mode
 	cmp.b	#0xBB,d0                         	| [$097A: cp   #0xBB]
 	jeq	jp_RAM_test                        	    | [$097C: jp   z,jp_RAM_test]
 
@@ -1801,7 +1789,7 @@ l_099F_update_freeplay_or_credit:
 * if (credit_cnt == 0xA0 )  // goto puts_freeplay ...  i.e. > 99 (BCD)
 	jeq	l_09D9_puts_freeplay               	    | [$09A7: jr   z,l_09D9_puts_freeplay] skip credits status
 * else if (credit_cnt < 0xA0 )  // do credit update display
-	move.b	ds3_99B5_io_input,d0       	| [$09A9: ld   a,(ds3_99B5_io_input + 0x00)] io_input[credit_count]
+	move.b	ds3_io_input_99b5,d0       	        | [$09A9: ld   a,(ds3_io_input_99b5 + 0x00)] io_input[credit_count]
        * puts "CREDIT"
 	lea	str_09CA+6-1,a0                	        | [$09AC: ld   hl,#str_09CA + 6 - 1] source of 'C' in reversed string
 	move.w	#0x06,d1                        	| [$09AF: ld   bc,#0x0006] strlen(strCredit) 6
@@ -1842,95 +1830,93 @@ str_09D0:
 	.align	2
 
 l_09D9_puts_freeplay:
-	lea	str_09D0+9-1,a0                	| [ld   hl,#str_09D0 + 9 - 1] load src (last byte) of string "FREE PLAY"
-	move.w	#0x09,d1                        	| [ld   bc,#0x0009] 9
-	jbsr	lddr_video
+	lea	str_09D0+9-1,a0                	    | [$09D9: ld   hl,#str_09D0 + 9 - 1] load src (last byte) of string "FREE PLAY"
+	move.w	#0x09,d1                        | [$09DC: ld   bc,#0x0009] 9
+	jbsr	lddr_video                      | [$09DF: lddr]
 
 l_09E1_update_game_state:
 
 * if ( game_state == GAME_ENDED ) return
-	move.b	b8_9201_game_state,d0           	| [ld   a,(b8_9201_game_state)] if Game Ended
-	                               	| [and  a]
-	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] 0==GAME_ENDED [...]
+	move.b	b8_9201_game_state,d0           | [$09E1: ld   a,(b8_9201_game_state)] if Game Ended
+	                               	        | [$09E4: and  a]
+	bne.b	0f                              | [...]
+	rts                                    	| [$09E5: ret  z] 0==GAME_ENDED [...]
 0:
 
 * else if ( game_state == ATTRACT_MODE && io_input[credit_count] > 0 )
-	subq.b	#1,d0                           	| [dec  a] ATTRACT_MODE - 1 ==0
-	jne	l_09FF_check_credits_used          	| [jr   nz,l_09FF_check_credits_used] if (!ATTRACT_MODE)
-
-	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] io_input[credit_count]
-	                               	| [and  a]
-	jeq	l_09FF_check_credits_used          	| [jr   z,l_09FF_check_credits_used] if io_credit_count == 0
+	subq.b	#1,d0                           | [$09E6: dec  a] ATTRACT_MODE - 1 ==0
+	jne	l_09FF_check_credits_used          	| [$09E7: jr   nz,l_09FF_check_credits_used] if (!ATTRACT_MODE)
+	move.b	ds3_io_input_99b5+0x00,d0       | [$09E9: ld   a,(ds3_io_input_99b5 + 0x00)] io_input[credit_count]
+	                               	        | [$09EC: and  a]
+	jeq	l_09FF_check_credits_used          	| [$09ED: jr   z,l_09FF_check_credits_used] if io_credit_count == 0
 
 * then {
 *   game_state = READY_TO_PLAY_MODE
-	move.b	#2,d0                           	| [ld   a,#2]
-	move.b	d0,b8_9201_game_state           	| [ld   (b8_9201_game_state),a] READY_TO_PLAY ...push start to begin!
+	move.b	#2,d0                           | [$09EF: ld   a,#2]
+	move.b	d0,b8_9201_game_state           | [$09F1: ld   (b8_9201_game_state),a] READY_TO_PLAY ...push start to begin!
 
        * memset($9AA0,0,8)
-	clr.b	d0                               	| [xor  a]
-	lea	ds_9AA0+0x00,a0                	| [ld   hl,#ds_9AA0 + 0x00] clear sound-fx count/enable registers (9AA0...9AA7)
-	move.b	#8,d1                           	| [ld   b,#8]
-	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
-       * memset($9AA0+8+1,0,15)
-	addq.w	#1,a0                           	| [inc  l] hl = $9AA0+9, sound-fx cnt/enable regs, 15 bytes, skipped 9AA0[8] (coin-in)
-	move.b	#0x0F,d1                        	| [ld   b,#0x0F]
-	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	clr.b	d0                               | [$09F4: xor  a]
+	lea	ds_9AA0+0x00,a0                	     | [$09F5: ld   hl,#ds_9AA0 + 0x00] clear sound-fx count/enable registers (9AA0...9AA7)
+	move.b	#8,d1                            | [$09F8: ld   b,#8]
+	jbsr	rst_18                           | [$09FA: rst  0x18] memset((HL), A=fill, B=ct)
+       * memset($9AA0+8+1,0,15)              
+	addq.w	#1,a0                            | [$09FB: inc  l] hl = $9AA0+9, sound-fx cnt/enable regs, 15 bytes, skipped 9AA0[8] (coin-in)
+	move.b	#0x0F,d1                         | [$09FC: ld   b,#0x0F]
+	jbsr	rst_18                           | [$09FE: rst  0x18] memset((HL), A=fill, B=ct)
 * }
 
 l_09FF_check_credits_used:
 
 * A = credits_counted - io_input[credit_count]  ... credits_used
 * if ( A == 0 )  return
-	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] io_input[credit_count] ... in BCD!
-	move.b	d0,d2                           	| [ld   c,a]
-	move.b	b8_99B8_credit_cnt,d0           	| [ld   a,(b8_99B8_credit_cnt)] BCD
-	move.b	d0,d1                           	| [ld   b,a] stash the previous credit count
+	move.b	ds3_io_input_99b5,d0            	| [$09FF: ld   a,(ds3_io_input_99b5 + 0x00)] io_input[credit_count] ... in BCD!
+	move.b	d0,d2                           	| [$0A02: ld   c,a]
+	move.b	b8_99B8_credit_cnt,d0           	| [$0A03: ld   a,(b8_99B8_credit_cnt)] BCD
+	move.b	d0,d1                           	| [$0A06: ld   b,a] stash the previous credit count
 	CLEAR_XC_FLAGS
-	sbcd	d2,d0                            	| [sub  c]
+	sbcd	d2,d0                            	| [$0A07: sub  c] (see daa below)
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] return if no change of game state [...]
+	rts                                    		| [$0A08: ret  z] return if no change of game state [...]
 0:
 
 * else  if (io_input[credit_count] > credit_cnt)  goto _update_credit_ct ...
-	jcs	l_0A1A_update_credit_ct            	| [jr   c,l_0A1A_update_credit_ct] Cy is set (credit_hw > credit_ct)
+	jcs	l_0A1A_update_credit_ct            	    | [$0A09: jr   c,l_0A1A_update_credit_ct] Cy is set (credit_hw > credit_ct)
 
 * else  ... if (io_input[credit_count] < credit_cnt) {
 
-*   two_plyr_game = credits_used - 1                                        | A == credits_used ... corrected for arithmentic with BCD operands
-	subq.b	#1,d0                           	| [dec  a]
-	move.b	d0,b8_99B3_two_plyr_game        	| [ld   (b8_99B3_two_plyr_game),a] 0 for 1P, 1 for 2P
+*   two_plyr_game = credits_used - 1            | A == credits_used ... corrected for arithmentic with BCD operands
+	                                            | [$0A0B: daa]
+	subq.b	#1,d0                           	| [$0A0C: dec  a]
+	move.b	d0,b8_99B3_two_plyr_game        	| [$0A0D: ld   (b8_99B3_two_plyr_game),a] 0 for 1P, 1 for 2P
 
 *   credit_cnt = io_input[credit_count]
-	move.b	d2,d0                           	| [ld   a,c]
-	move.b	d0,b8_99B8_credit_cnt           	| [ld   (b8_99B8_credit_cnt),a] io_input[credit_count]
+	move.b	d2,d0                           	| [$0A10: ld   a,c]
+	move.b	d0,b8_99B8_credit_cnt           	| [$0A11: ld   (b8_99B8_credit_cnt),a] io_input[credit_count]
 
 *   game_state = IN_GAME_MODE
-	move.b	#3,d0                           	| [ld   a,#3]
-	move.b	d0,b8_9201_game_state           	| [ld   (b8_9201_game_state),a] 3 (IN_GAME)
-
-	rts                                    	| [ret]
+	move.b	#3,d0                           	| [$0A14: ld   a,#3]
+	move.b	d0,b8_9201_game_state           	| [$0A16: ld   (b8_9201_game_state),a] 3 (IN_GAME)
+	rts                                    	    | [$0A19: ret]
 * }
 
 * ...  credits_countd_hw > credit_count_sw
 l_0A1A_update_credit_ct:
 * credit_cnt = io_input[credit_count]
-	move.b	d2,d0                           	| [ld   a,c] C==credits_countd_hw (from above)
-	move.b	d0,b8_99B8_credit_cnt           	| [ld   (b8_99B8_credit_cnt),a] credits_countd_hw
+	move.b	d2,d0                           	| [$0A1A: ld   a,c] C==credits_countd_hw (from above)
+	move.b	d0,b8_99B8_credit_cnt           	| [$0A1B: ld   (b8_99B8_credit_cnt),a] credits_countd_hw
 
 * no coin_in sound for free-play
 * if ( credit_cnt == $A0 )  return
-	cmp.b	#0xA0,d0                         	| [cp   #0xA0]
+	cmp.b	#0xA0,d0                         	| [$0A1E: cp   #0xA0]
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] [...]
+	rts                                    	    | [$0A20: ret  z] [...]
 0:
 * else ... set global credit count for sound-manager
 	CLEAR_XC_FLAGS
-	sbcd	d1,d0                            	| [sub  b]+daa B==credit_ct_previous (from above)
-
-	move.b	d0,b_9A70+0x09                  	| [ld   (b_9A70 + 0x09),a] sndmgr, count of credits-in since last update (triggering coin-in sound)
-	rts                                    	| [ret]
+	sbcd	d1,d0                            	| [$0A21: sub  b]+daa B==credit_ct_previous (from above)
+	move.b	d0,b_9A70+0x09                  	| [$0A23: ld   (b_9A70 + 0x09),a] sndmgr, count of credits-in since last update (triggering coin-in sound)
+	rts                                    	    | [$0A26: ret]
 
 
 *=============================================================================
@@ -1993,13 +1979,14 @@ l_0A4A:
 *   A1.W: points to (destination - count * 0x40)
 *-----------------------------------------------------------------------------
 c_text_out_i_to_d_0A53:
+	exg		d7,a1
 	move.b	#1,d1                           	| [ld   b,#1] there is at least 1 digit ... (but maybe more)
 l_0A55:
 	LOAD_D5D6_FROM_D5_16
 * check HL > 10 ... but we can only cp 8 bits in A, so we have to break HL into 2 bytes.
 * while ( ( H > 0 )  ...
-	subq.b	#1,d5                           	| [dec  h]
-	addq.b	#1,d5                           	| [inc  h]
+											| [dec  h]
+	tst.b	d5                           	| [inc  h]
 	jne	l_0A5E                             	| [jr   nz,l_0A5E]
 * ...                                   	|| ( L > $0A ) )
 	move.b	d6,d0                           	| [ld   a,l]
@@ -2013,7 +2000,7 @@ l_0A5E:
 	jbsr	c_divmod                          	| [call c_divmod] A=HL%10 (gets a "printable" decimal digit)
 	move.w	d0,-(sp)                        	| [push af] converted digit returned in A and stacked.
 	addq.b	#1,d1                           	| [inc  b] count of digits in converted decimal number.
-	jra	l_0A55                             	| [jr   l_0A55]
+	jra	l_0A55                             	    | [jr   l_0A55]
 
 * while ( b > 0 ) ... show digits from left to right
 l_0A67:
@@ -2025,6 +2012,7 @@ l_0A68:
 	subq.b	#1,d1                           	| [...]
 	jne	l_0A67                             	| [djnz l_0A67]
 
+	exg		d7,a1
 	rts                                    	| [ret]
 
 c_0A6E:
@@ -3454,8 +3442,8 @@ l_1390:
 c_string_out_1398:
 											| [and  a] clear CY flag.
 	clr.b		d7                          | [ex   af,af'] save CY flag.
-
 j_string_out_pe_139a:
+	move.b	#0,0x200
 	movem.w	d3/d4,-(sp)                    	| [push de] preserves DE
 	move.l	a1,-(sp)                        | [push de] preserves DE
 	exg	a1,a0                              	| [ex   de,hl] DE := position in tile RAM
@@ -3491,51 +3479,48 @@ j_string_out_pe_139a:
 	
 * now DE == position, so the rest is the same...
 l_13AE:
-	move.b	(a0)+,d2                         	| [ld   c,(hl)] C := color byte ($00 == "cyan")
-	                           	| [inc  hl] ptr++ (first byte of "text")
-	exg	a1,a0                              	| [ex   de,hl] position address in HL, src address in DE
+	move.b	(a0)+,d2                         	| [$13AE: ld   c,(hl)] C := color byte ($00 == "cyan")
+	                           	                | [$13AF: inc  hl] ptr++ (first byte of "text")
+	exg	a1,a0                              	    | [$13B0: ex   de,hl] position address in HL, src address in DE
 l_13B1:
 * if ( TERMINATION ) then exit
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	cmp.b	#0x2F,d0                         	| [cp   #0x2F] string terminator
-	jeq	l_13D4_out                         	| [jr   z,l_13D4_out]
+	move.b	(a1),d0                         	| [$13B1: ld   a,(de)]
+	cmp.b	#0x2F,d0                         	| [$13B2: cp   #0x2F] string terminator
+	jeq	l_13D4_out                         	    | [$13B4: jr   z,l_13D4_out]
        *
 * only a <space> character ($20) should be < $30
-	sub.b	#0x30,d0                         	| [sub  #0x30] e.g. ASCII "0" ... ($30 - $30 ) = 0, "1" ... ($31 - $30 ) = 1 ... etc.
-	jcc	l_13BE                             	| [jr   nc,l_13BE]
-	move.b	#0x24,d0                        	| [ld   a,#0x24] generate a <space> character.
-	jra	l_13C4_putc                        	| [jr   l_13C4_putc]
+	sub.b	#0x30,d0                         	| [$13B6: sub  #0x30] e.g. ASCII "0" ... ($30 - $30 ) = 0, "1" ... ($31 - $30 ) = 1 ... etc.
+	jcc	l_13BE                             	    | [$13B8: jr   nc,l_13BE]
+	move.b	#0x24,d0                        	| [$13BA: ld   a,#0x24] generate a <space> character.
+	jra	l_13C4_putc                        	    | [$13BC: jr   l_13C4_putc]
 l_13BE:
 * if ( A >= $11 )
-	cmp.b	#0x11,d0                         	| [cp   #0x11] e.g. ASCII "A" ... ($41 - $30) = $11
-	jcs	l_13C4_putc                        	| [jr   c,l_13C4_putc]
+	cmp.b	#0x11,d0                         	| [$13BE: cp   #0x11] e.g. ASCII "A" ... ($41 - $30) = $11
+	jcs	l_13C4_putc                        	    | [$13C0: jr   c,l_13C4_putc]
 * then A-=7
-	subq.b	#7,d0                           	| [sub  #7] e.g. ASCII "A" ... ($41 - $30 - $07) = $0A
+	subq.b	#7,d0                           	| [$13C2: sub  #7] e.g. ASCII "A" ... ($41 - $30 - $07) = $0A
 
 l_13C4_putc:
-	jbsr	osd_w_videoram                         	| [ld   (hl),a] display the character
-
-	bset.b	#10,d7                           	| [set  2,h] H|= $04  (HL:+=$0400)  offset HL into color RAM $8400-$87FF
+	jbsr	osd_w_videoram                      | [$13C4: ld   (hl),a] display the character
+	bset.b	#10,d7                           	| [$13C5: set  2,h] H|= $04  (HL:+=$0400)  offset HL into color RAM $8400-$87FF
 	exg		d2,d0
-	jbsr	osd_w_colorram                         	| [ld   (hl),c] color code in C
+	jbsr	osd_w_colorram                      | [$13C7: ld   (hl),c] color code in C
 	exg		d2,d0
-	bclr.b	#10,d7                           	| [res  2,h] HL:-=$0400
-
-	addq.w	#1,a1                           	| [inc  de] psrc++
+	bclr.b	#10,d7                           	| [$13C8: res  2,h] HL:-=$0400
+	addq.w	#1,a1                           	| [$13CA: inc  de] psrc++
 
 * HL-=$20 (advance destination position one tile to the "right")
-	                           	| [ld   a,l]
-	sub.w	#0x20,d7                         	| [sub  #0x20]
-	                           	| [ld   l,a]
-	                             	| [jr   nc,l_13B1]
-	                           	| [dec  h]
-       
-	jra	l_13B1                             	| [jr   l_13B1]
+	                           	                | [$13CB: ld   a,l]
+	sub.w	#0x20,d7                         	| [$13CC: sub  #0x20]
+	                           	                | [$13CE: ld   l,a]
+	                             	            | [$13CF: jr   nc,l_13B1]
+	                           	                | [$13D1: dec  h]
+	jra	l_13B1                             	    | [$13D2: jr   l_13B1]
 l_13D4_out:
 	move.l	d7,a0				| re-transfer to a0
-	move.l	(sp)+,a1                        	| [pop  de]
-	movem.w	(sp)+,d3/d4                    	| [pop  de]
-	rts                                    	| [ret]
+	move.l	(sp)+,a1                            | [pop  de]
+	movem.w	(sp)+,d3/d4                    	    | [$13D4: pop  de]
+	rts                                    	    | [$13D5: ret]
 
 *=============================================================================
 * strings for c_string_out_1398
@@ -4182,8 +4167,8 @@ d_1928:
 
 * 00, 06, 13: clear tile and sprite ram
 case_clear_video_ram_1940:
-	jbsr	c_sctrl_playfld_clr               	| [call c_sctrl_playfld_clr]
-	jbsr	c_sctrl_sprite_ram_clr            	| [call c_sctrl_sprite_ram_clr]
+	jbsr	c_sctrl_playfld_clr_0160               	| [call c_sctrl_playfld_clr_0160]
+	jbsr	c_sctrl_sprite_ram_clr_003c            	| [call c_sctrl_sprite_ram_clr_003c]
 	jra	l_attmode_state_step               	| [jr   l_attmode_state_step]
 
 * 01: setup info-screen: sprite tbl index, text index, timer[2]
@@ -5758,9 +5743,9 @@ l_1EFF:
 f_read_fire_button_1f04:
 * select the input port depending upon whether screen is flipped.
 	*move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
-	*add.b	<ds3_99B5_io_input+0x01,d0       	| [add  a,#<ds3_99B5_io_input + 0x01] add lsb
+	*add.b	<ds3_io_input_99b5+0x01,d0       	| [add  a,#<ds3_io_input_99b5 + 0x01] add lsb
 	*move.b	d0,d6                           	| [ld   l,a]
-	lea	ds3_99B5_io_input,a0      	| [ld   h,#>ds3_99B5_io_input + 0x00] msb
+	lea	ds3_io_input_99b5,a0      	| [ld   h,#>ds3_io_input_99b5 + 0x00] msb
 	*and.w	#0xFF,d6
 	*add.w	d6,a0
 
@@ -5958,9 +5943,9 @@ f_controller_io_and_ship_movement_1f85:
 
 * read from io_input[1] or io_input[2] depending whether screen is flipped.
 	*move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
-	*add.b	<ds3_99B5_io_input+0x01,d0       	| [add  a,#<ds3_99B5_io_input + 0x01] LSB
+	*add.b	<ds3_io_input_99b5+0x01,d0       	| [add  a,#<ds3_io_input_99b5 + 0x01] LSB
 	*move.b	d0,d6                           	| [ld   l,a]
-	lea	ds3_99B5_io_input,a0      				| [ld   h,#>ds3_99B5_io_input + 0x00] MSB
+	lea	ds3_io_input_99b5,a0      				| [ld   h,#>ds3_io_input_99b5 + 0x00] MSB
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 
 *      call c_skip_real_io_input_1F92
@@ -8539,7 +8524,7 @@ l_30BF_frame_sync:
 0:
 
 * read IO port: setup for second player control panel if needed for tabletop
-	lea	ds3_99B5_io_input+0x01,a0      	| [ld   hl,#ds3_99B5_io_input + 0x01] plyr 1 input register
+	lea	ds3_io_input_99b5+0x01,a0      	| [ld   hl,#ds3_io_input_99b5 + 0x01] plyr 1 input register
 	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
 	                               	| [and  a]
 	jeq	l_30D8_chk_button                  	| [jr   z,l_30D8_chk_button]
@@ -9147,7 +9132,7 @@ best_score_table_32C5:
 *-----------------------------------------------------------------------------
 c_32ED_top5_dlg_endproc:
 * if (free-play)
-	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)] io_input[credit_count]
+	move.b	ds3_io_input_99b5+0x00,d0       	| [ld   a,(ds3_io_input_99b5 + 0x00)] io_input[credit_count]
 	cmp.b	#0xA0,d0                         	| [cp   #0xA0]
 	jeq	l_32FB_check_for_timeout           	| [jr   z,l_32FB_check_for_timeout]
 * else if ( hw credit cnt > current credit count ) goto finish
@@ -9548,7 +9533,7 @@ c_svc_updt_dsply:
 * picture will turn updside down and stay that way until you release the buttons.
 * If the buttons are not pushed, the picture stays inverted momentarily until
 * a 0 is read from the IO chip (due to residual non-zero value left from memory test).
-	move.b	ds3_99B5_io_input+0x00,d0       	| [ld   a,(ds3_99B5_io_input + 0x00)]
+	move.b	ds3_io_input_99b5+0x00,d0       	| [ld   a,(ds3_io_input_99b5 + 0x00)]
 	clr.b	d2                               	| [ld   c,#0]
 	and.b	#0x0C,d0                         	| [and  #0x0C] 08->2plyr_start, 04->1plyr_start
 	jne	l_380F                             	    | [jr   nz,l_380F]
@@ -10351,6 +10336,11 @@ galaga_irq:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
+	* we shunted all NMI shit to copy number of credits and controls
+	* we handle that directly from an osd routine
+	lea		ds3_io_input_99b5,a0
+	jbsr	osd_update_inputs
+	
 	jbsr	galaga1_irq
 	jra	jp_Task_man_0237                        	| [jp   jp_Task_man_0237]
 
@@ -10370,7 +10360,7 @@ c_task_switcher:
 
 
 *=============================================================================
-* c_sctrl_sprite_ram_clr()
+* c_sctrl_sprite_ram_clr_003c()
 *  Description:
 *   Initialize screen control registers.
 * IN:
@@ -10378,7 +10368,7 @@ c_task_switcher:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_sctrl_sprite_ram_clr:
+c_sctrl_sprite_ram_clr_003c:
 * memset($9300, 0, $80)
 	lea	ds_sprite_posn_9300,a0              	| [ld   hl,#ds_sprite_posn_9300]
 	move.b	#0x80,d1                        	| [ld   b,#0x80]
@@ -10408,46 +10398,52 @@ c_sctrl_sprite_ram_clr:
 * IN:
 * OUT:
 *  ...
+* called 3 times with various registers set in input
 * without that routine (retn at start) game runs but inputs
 * (insert coin, joystick...) don't work. It also seems to handle
 * ship hit sound or whatnot...
-* I think we can live without that in the port...
+* I think we can live without that in the port... we'll do the readings some other
+* way
 *-----------------------------------------------------------------------------
-*	jbsr	exx                               	| [exx] Load function params from aux regs
-*	jbsr	ldi                               	| [ldi] each nmi will move one byte, so BC--, DE++, HL++
+*	jbsr	exx                               	| [$0066: exx] Load function params from aux regs
+*   actually copy 7000-7002 in 99B5-99B7
+*   99B5: number of credits
+*   99B6: player 1 controls
+*   99B7: player 2 controls (cocktail, we ignore that here!)
+*	jbsr	ldi                               	| [$0067: ldi] each nmi will move one byte, so BC--, DE++, HL++
 *
 **  if ( BC > 0 )  { goto l_008F } ... exit if still copying data
-*	jvc	l_008F                             	| [jp   pe,l_008F] !P/V when BC==0
+*	jvc	l_008F                             	    | [$0069: jp   pe,l_008F] !P/V when BC==0
 *
-*	move.w	d0,-(sp)                        	| [push af] save AF, it's not part of the exx exchange
+*	move.w	d0,-(sp)                        	| [$006C: push af] save AF, it's not part of the exx exchange
 *
 ** Signal the chip that the parameter transfer is finished.
-*	lea	l_7100,a0                      	| [ld   hl,#0x7100] $10 - command params complete.
-*	move.b	#0x10,(a0)                      	| [ld   (hl),#0x10] IO_CMD_DONE
+*	lea	l_7100,a0                      	        | [$006D: ld   hl,#0x7100] $10 - command params complete.
+*	move.b	#0x10,(a0)                      	| [$0070: ld   (hl),#0x10] IO_CMD_DONE
 *
 **  if ( !player_hit )
-*	move.b	b_9AA0+0x19,d0                  	| [ld   a,(b_9AA0 + 0x19)] sound-fx count/enable registers, ship hit
-*	                               	| [and  a] A!=0 or maybe 02 when you get hit
-*	jeq	l_plyr_ok                          	| [jr   z,l_plyr_ok]
+*	move.b	b_9AA0+0x19,d0                  	| [$0072: ld   a,(b_9AA0 + 0x19)] sound-fx count/enable registers, ship hit
+*	                               	            | [$0075: and  a] A!=0 or maybe 02 when you get hit
+*	jeq	l_plyr_ok                          	    | [$0076: jr   z,l_plyr_ok]
 ** else
-*	clr.b	d0                               	| [xor  a]
-*	move.b	d0,b_9AA0+0x19                  	| [ld   (b_9AA0 + 0x19),a] 0 ... sound-fx count/enable registers, ship hit
+*	clr.b	d0                               	| [$0078: xor  a]
+*	move.b	d0,b_9AA0+0x19                  	| [$0079: ld   (b_9AA0 + 0x19),a] 0 ... sound-fx count/enable registers, ship hit
 *
-*	lea	d_IO_ChipParms,a0              	| [ld   hl,#d_IO_ChipParms]
-*	lea	l_7000,a1                      	| [ld   de,#0x7000] IO data xfer (write)
-*	move.b	#0x00,d1                        	| [ld   bc,#0x0004] 4
-*	move.b	#0x04,d2                        	| [ld   bc,#0x0004] 4
-*	jbsr	exx                               	| [exx]
+*	lea	d_IO_ChipParms,a0              	        | [$007C: ld   hl,#d_IO_ChipParms]
+*	lea	l_7000,a1                      	        | [$007F: ld   de,#0x7000] IO data xfer (write)
+*	move.b	#0x00,d1                        	| [$0082: ld   bc,#0x0004] 4
+*	move.b	#0x04,d2                        	| [$0082: ld   bc,#0x0004] 4
+*	jbsr	exx                               	| [$0085: exx]
 *
-*	move.b	#0xA8,d0                        	| [ld   a,#0xA8]
-*	*move.b	d0,0x7100                       	| [ld   (0x7100),a] IO cmd ($A8 -> trigger bang sound)
-*	move.w	(sp)+,d0                        	| [pop  af]
-*retn
+*	move.b	#0xA8,d0                        	| [$0086: ld   a,#0xA8]
+*	*move.b	d0,0x7100                       	| [$0088: ld   (0x7100),a] IO cmd ($A8 -> trigger bang sound)
+*	move.w	(sp)+,d0                        	| [$008B: pop  af]
+*	                                            | [$008C: retn]
 *l_plyr_ok:
-*	move.w	(sp)+,d0                        	| [pop  af]
+*	move.w	(sp)+,d0                        	| [$008E: pop  af]
 *l_008F:
-*	jbsr	exx                               	| [exx] restore regs for the main "thread"
-*	rts   | [retn]                                       | end 'NMI'
+*	jbsr	exx                               	| [$008F: exx] restore regs for the main "thread"
+*	rts                                         | [$0090: retn] end 'NMI'
 
 *
 *
@@ -10810,7 +10806,7 @@ db_obj_home_posn_rc:
 	.align	2
 
 *=============================================================================
-* c_sctrl_playfld_clr()
+* c_sctrl_playfld_clr_0160()
 *  Description:
 *    clears playfield tileram (not the score and credit texts at top & bottom).
 * IN:
@@ -10818,7 +10814,7 @@ db_obj_home_posn_rc:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_sctrl_playfld_clr:
+c_sctrl_playfld_clr_0160:
 	move.w	#0x8000+0x0040,d7           	| [ld   hl,#0x8000 + 0x0040]
 											| [ld   de,#0x8000 + 0x0041]
 	move.w	#0x037F,d1                      | [ld   bc,#0x037F] 895
@@ -11128,7 +11124,7 @@ l_0280_nonzero_tbl_entry:
 
 * setup regs for input from IO chip
 	*lea	l_7000,a0                      	| [ld   hl,#0x7000] IO data xfer (read)
-	lea	ds3_99B5_io_input,a1      	| [ld   de,#ds3_99B5_io_input + 0x00] read 3 bytes
+	lea	ds3_io_input_99b5,a1      	| [ld   de,#ds3_io_input_99b5 + 0x00] read 3 bytes
 	move.b	#0x00,d1                        	| [ld   bc,#0x0003] 3
 	move.b	#0x03,d2                        	| [ld   bc,#0x0003] 3
 	jbsr	exx                               	| [exx]
