@@ -299,10 +299,9 @@ l_game_state_ready_039d:
 
 * while (game_state == READY_TO_PLAY_MODE)
 j_0003D8_wrdy:
-l_0003D8:
 	move.b	b8_game_state_9201,d0           	| [ld   a,(b8_game_state_9201)] while (READY)
 	cmp.b	#2,d0                            	| [cp   #2] READY_TO_PLAY_MODE
-	jeq	l_0003D8                           	| [jr   z,l_0003D8]
+	jeq	j_0003D8_wrdy                     	    | [jr   z,l_0003D8]
 
 * /****  start button was hit ******************/
 
@@ -1744,7 +1743,7 @@ str_0974:
 *-----------------------------------------------------------------------------
 f_credit_game_state_management_0977:
 * if ( io_input[0] == $bb )
-	move.b	ds3_io_input_99b5+0x00,d0       	| [$0977: ld   a,(ds3_io_input_99b5 + 0x00)] check for bb ... Service Switch On indication in credit mode
+	move.b	ds3_io_input_99b5,d0       	        | [$0977: ld   a,(ds3_io_input_99b5 + 0x00)] check for bb ... Service Switch On indication in credit mode
 	cmp.b	#0xBB,d0                         	| [$097A: cp   #0xBB]
 	jeq	jp_RAM_test                        	    | [$097C: jp   z,jp_RAM_test]
 
@@ -1847,7 +1846,7 @@ l_09E1_update_game_state:
 * else if ( game_state == ATTRACT_MODE && io_input[credit_count] > 0 )
 	subq.b	#1,d0                           | [$09E6: dec  a] ATTRACT_MODE - 1 ==0
 	jne	l_09FF_check_credits_used          	| [$09E7: jr   nz,l_09FF_check_credits_used] if (!ATTRACT_MODE)
-	move.b	ds3_io_input_99b5+0x00,d0       | [$09E9: ld   a,(ds3_io_input_99b5 + 0x00)] io_input[credit_count]
+	move.b	ds3_io_input_99b5,d0       | [$09E9: ld   a,(ds3_io_input_99b5 + 0x00)] io_input[credit_count]
 	                               	        | [$09EC: and  a]
 	jeq	l_09FF_check_credits_used          	| [$09ED: jr   z,l_09FF_check_credits_used] if io_credit_count == 0
 
@@ -3462,30 +3461,31 @@ j_string_out_pe_139a:
 											| [ld   h,(hl)] msb
 											| [ld   l,a] lsb
 					
-	
 * Restore flags and check CY
-	tst.b	d7                              	| [ex   af,af']
+	tst.b	d7                              | [ex   af,af']
 * if ( CY ) ...
 	jeq	l_13AE                             	| [jr   nc,l_13AE]
 * ... do PE stuff: get position into DE ... HL-=2, DE:=*(HL)
-	subq.w	#2,a0                           	| [dec  hl] * 2
+	                                     	| [dec  hl] * 2
 	* jotd: the macro generates big endian words, code needs adaptation
-	move.b	(a0)+,d3                         	| [ld   e,(hl)] MSB
-	                           	| [inc  hl]
-	move.b	(a0)+,d4                         	| [ld   d,(hl)] LSB
-	                           	| [inc  hl] HL now pointing to "color".
+	moveq	#0,d3
+	move.b	(-2,a0),d3                      | [ld   e,(hl)] MSB
+	                           	            | [inc  hl]
+	move.b	(-1,a0),d4                      | [ld   d,(hl)] LSB
+	                           	            | [inc  hl] HL now pointing to "color".
 	LOAD_D3_16_FROM_D3D4
-	move.w	d3,d7				| screen address
+	move.l	d3,a1				            | screen address
 	
 * now DE == position, so the rest is the same...
 l_13AE:
 	move.b	(a0)+,d2                         	| [$13AE: ld   c,(hl)] C := color byte ($00 == "cyan")
 	                           	                | [$13AF: inc  hl] ptr++ (first byte of "text")
-	exg	a1,a0                              	    | [$13B0: ex   de,hl] position address in HL, src address in DE
+	exg	a0,a1                           	    | [$13B0: ex   de,hl] position address in HL, src address in DE
+	move.l	a0,d7
 l_13B1:
 * if ( TERMINATION ) then exit
 	move.b	(a1),d0                         	| [$13B1: ld   a,(de)]
-	cmp.b	#0x2F,d0                         	| [$13B2: cp   #0x2F] string terminator
+	cmp.b	#0x2F,d0                         	| [$13B2: cp   #0x2F] string terminator (/)
 	jeq	l_13D4_out                         	    | [$13B4: jr   z,l_13D4_out]
        *
 * only a <space> character ($20) should be < $30

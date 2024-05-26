@@ -93,7 +93,7 @@ BG_SCREEN_SIZE =  BG_SCREEN_PLANE_SIZE*NB_PLAYFIELD_PLANES
 
 NB_HOST_SPRITES = 6
 
-* hardware can take 64 sprites max like Xevious. What a beast!
+* hardware can take 64 sprites max like Xevious. What a beast for 1981!
 
 NB_TARGET_SPRITES = 64
 
@@ -2587,11 +2587,11 @@ osd_update_inputs:
 	beq.b	0f
 	bset	#JPB_BTN_REVERSE,d1
 0:
-	tst.b	(1,a0)		| "1" key like in MAME
+	tst.b	(1,a1)		| "1" key like in MAME
 	beq.b	0f
-	bset	#2,d0
+	bset	#JPB_BTN_FORWARD,d1
 0:
-	tst.b	(2,a0)		| "2" key like in MAME
+	tst.b	(2,a1)		| "2" key like in MAME
 	beq.b	0f
 	bset	#3,d0
 0:	
@@ -2606,6 +2606,18 @@ osd_update_inputs:
 	
 *	bset	#JPB_BTN_REVERSE,d1		| add one credit
 1:
+	btst	#JPB_BTN_FORWARD,d1
+	beq.b	0f
+	btst	#JPB_BTN_FORWARD,d2
+	bne.b	0f
+	clr		d3
+	add.b	d3,d3	| clear X
+	move.b	(a0),d3
+	beq.b	0f
+	moveq	#1,d4
+	sbcd	d4,d3		| sub one credit: this starts the game
+	move.b	d3,(a0)     | as game monitors previous credit count
+0:
 	btst	#JPB_BTN_REVERSE,d1
 	beq.b	0f
 	btst	#JPB_BTN_REVERSE,d2

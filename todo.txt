@@ -4,15 +4,16 @@
   for the buffer and allow off-screen negative ranges
 - demo: third boss (alone) does not attack, explodes but no score
 - demo: boss explosions: some frames shifted
-- fake game: wrong sprite cluts & codes (blue bees don't show, red bees show)
+- fake game: wrong sprite cluts & codes (blue bees don't show: probably wrong sprite codes for them, red bees show)
 - ACTIVE_BITPLANE_MASK not implemented
 - generate sprite_cluts for hw sprite
 - 2 first rows not shown (attribute/color is black!!!)
-- remove red timer flashes, maybe speedup using F10?
+- start game: shows "stage 0"
+- start game: ship shoots & goes left
 
 - sprite priorities wrong: stars should be behind
 - stars & colors trashed near the PAL wait region 
+- remove red timer flashes, maybe speedup using F10?
 
-push start button screen: l_game_state_ready_039d then loop
 
 traj issues: Traj computed in subcpu D23 / D50 probe there!
