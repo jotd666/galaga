@@ -42,6 +42,26 @@
 	.endif
 	.endm
 
+	.macro	COMPUTE_LSB_A3_D0	base
+	move.l	a3,d0
+	sub.l	#\base,d0
+	.ifndef		RELEASE
+	jpl		0f
+	lea		\base,a2
+	lea		compute_lsb_a3_d0_base_mismatch_msg,a0
+	jbsr	osd_break
+	illegal
+0:
+	cmp.w	#0x100,d0
+	jcs		0f
+	lea		\base,a2
+	lea		compute_lsb_a3_d0_base_mismatch_msg,a0
+	jbsr	osd_break
+	illegal
+0:
+	.endif
+	.endm
+
 	* read register to var, little endian
 	.macro	MOVE_TO_VAR	reg,var
 	move.b	\reg,\var
@@ -148,6 +168,7 @@ compute_lsb_a0_d6_base_mismatch_msg:
 	.asciz	"compute_lsb_a0_d6_base_mismatch"
 compute_lsb_a1_d4_base_mismatch_msg:
 	.asciz	"compute_lsb_a1_d4_base_mismatch"
-
+compute_lsb_a3_d0_base_mismatch_msg:
+	.asciz	"compute_lsb_a3_d0_base_mismatch"
 	.endif
 	

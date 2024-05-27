@@ -1274,9 +1274,11 @@ hitd_dspchr_07c1:
 
 * else if rocket hit stationary bug
 											| [ex   af,af'] re-stash parameter
-
-l_07DB:
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
+	bra.b	l_07DB_1
+l_07DB:
+	COMPUTE_LSB_A0_D6	b_8800
+l_07DB_1:
 * set it up for elimination
 	lea	b_obj_collsn_notif_9200,a0     			| [ld   h,#>b_obj_collsn_notif_9200] = $81
 	and.w	#0xFF,d6
@@ -1368,7 +1370,7 @@ l_hdl_flyng_bug_081e:
 
 * bug_flying_hit_cnt is probably only meaningful in challenge rounds. In other
 * rounds it is simply intiialized to 0 at start of round.
-	lea	w_bug_flying_hit_cnt,a0        			| [$082F: ld   hl,#w_bug_flying_hit_cnt] hit_cnt -= 1 ... reset 8 each challenge_wave
+	lea	w_bug_flying_hit_cnt_92a8,a0     		| [$082F: ld   hl,#w_bug_flying_hit_cnt_92a8] hit_cnt -= 1 ... reset 8 each challenge_wave
 	subq.b	#1,(a0)                         	| [$0832: dec  (hl)]
 	movem.l	(sp)+,a0/d6                        	| [$0833: pop  hl] &sprt_mctl_objs[L].mctl_idx
 
@@ -1741,26 +1743,26 @@ l_09A3:
 	jra	l_09FA_bonusbee_creat_fail         	| [jp   l_09FA_bonusbee_creat_fail]
 
 l_09AE_doit:
-	add.w	d3,a0                            	| [add  hl,de]
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	(a2),d0                    	| [ld   a,0x00(ix)] coordinate of parent alien
+	add.w	d3,a0                           | [add  hl,de]
+	addq.w	#1,a0                           | [inc  hl]
+	move.b	(a2),d0                    	    | [ld   a,0x00(ix)] coordinate of parent alien
 	move.l	a2,a1
 											| [ld   e,ixl]
 											| [ld   d,ixh]
 	exg	a1,a0                              	| [ex   de,hl]
 	move.l	a1,a3							| ld   iyl,e
 											| ld   iyh,d
-	move.w	#0x06,d1                        	| [ld   bc,#0x0006] 6
-	jbsr	ldir                              	| [ldir]
-	move.w	#6,d1                           	| [ld   c,#6]
-	add.w	d1,a0                            	| [add  hl,bc]
+	move.w	#0x06,d1                        | [ld   bc,#0x0006] 6
+	jbsr	ldir                            | [ldir]
+	move.w	#6,d1                           | [ld   c,#6]
+	add.w	d1,a0                           | [add  hl,bc]
 	exg	a1,a0                              	| [ex   de,hl]
-	add.w	d3,a0                            	| [add  hl,de]
+	add.w	d3,a0                           | [add  hl,de]
 	exg	a1,a0                              	| [ex   de,hl]
-	move.w	#4,d1                           	| [ld   c,#4]
-	jbsr	ldir                              	| [ldir]
-	move.b	(0x13,a2),d0                    	| [$0E54: ld   a,0x13(ix)] 0x13(iy)
-	move.b	d0,(0x13,a3)                    	| [ld   0x13(iy),a]
+	move.w	#4,d1                           | [ld   c,#4]
+	jbsr	ldir                            | [ldir]
+	move.b	(0x13,a2),d0                    | [$0E54: ld   a,0x13(ix)] 0x13(iy)
+	move.b	d0,(0x13,a3)                    | [ld   0x13(iy),a]
 
 * load new data pointer from data and store in flite q object
 	move.l	(sp)+,a0                        	| [pop  hl] special attack, pushes hl right away
@@ -1777,19 +1779,16 @@ l_09AE_doit:
 	exg		d0,d7                              	| [ex   af,af'] index of spawning yellow alien
 	move.b	d0,(0x10,a3)                    	| [ld   0x10(iy),a]
 	move.b	d0,d4                           	| [ld   e,a]
-	lea	b_8800,a1                      	| [ld   d,#>b_8800]
+	lea	b_8800,a1                      	        | [ld   d,#>b_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	move.b	#9,d0                           	| [ld   a,#9] 09: diving -> 8800[i]
 	move.b	d0,(a1)+                         	| [ld   (de),a]
-	                           	| [inc  e]
-	* TODO debug here a3 value????
-	illegal
-	dc.w	1800
-	*move.b	iyl,d0                         	| [$09F3: ld   a,iyl]
+												| [inc  e]
+	COMPUTE_LSB_A3_D0	ds_bug_motion_que_9100  | [$09F3: ld   a,iyl]
 	move.b	d0,(a1)                         	| [ld   (de),a]
 	addq.w	#1,a0                           	| [inc  hl] new ptr loaded to b08/b09, but HL is advanced, still in same data series
-	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
+	jra	j_090E_flite_path_init             	    | [jp   j_090E_flite_path_init]
 
 l_09FA_bonusbee_creat_fail:
 * skip two bytes of 16-bit address and inc hl to next data
@@ -1949,78 +1948,73 @@ case_0AA0:  | 0x04
 	move.b	d2,(0x12,a2)                    	| [ld   0x12(ix),c] step y coord (y offset)
 
 	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
-	                               	| [and  a]
-	jeq	l_0ACD                             	| [jr   z,l_0ACD]
+	                               	            | [and  a]
+	jeq	l_0ACD                             	    | [jr   z,l_0ACD]
 * flipped ... negate the steps
-	move.b	d1,d0                           	| [ld   a,b]
-	neg.b	d0                               	| [neg]
-	move.b	d0,d1                           	| [ld   b,a]
-	move.b	d2,d0                           	| [ld   a,c]
-	neg.b	d0                               	| [neg]
-	move.b	d0,d2                           	| [ld   c,a]
+	move.b	d1,d0                           	| [$0AC5: ld   a,b]
+	neg.b	d0                               	| [$0AC6: neg]
+	move.b	d0,d1                           	| [$0AC8: ld   b,a]
+	move.b	d2,d0                           	| [$0AC9: ld   a,c]
+	neg.b	d0                               	| [$0ACA: neg]
+	move.b	d0,d2                           	| [$0ACC: ld   c,a]
 l_0ACD:
 * add y-offset to .b00/.b01 (sra/rr -> 9.7 fixed-point scaling)
-	move.b	(0x00,a2),d6                    	| [ld   l,0x00(ix)] .b00
-	move.b	(0x01,a2),d5                    	| [ld   h,0x01(ix)] .b01 ... sY<8:1>
-	illegal
-	nop
-	move.b	d2,d3                           	| [ld   d,c] step y coord, y offset
-	clr.b	d4                               	| [ld   e,#0]
-	asr.b	#1,d3                            	| [sra  d]
-	roxr.b	#1,d4                           	| [rr   e]
+	move.b	(0x00,a2),d6                    	| [$0ACD: ld   l,0x00(ix)] .b00
+	move.b	(0x01,a2),d5                    	| [$0AD0: ld   h,0x01(ix)] .b01 ... sY<8:1>
+	LOAD_D5_16_FROM_D5D6
+	move.b	d2,d3                           	| [$0AD3: ld   d,c] step y coord, y offset
+	clr.b	d4                               	| [$0AD4: ld   e,#0]
+	asr.b	#1,d3                            	| [$0AD6: sra  d]
+	roxr.b	#1,d4                           	| [$0AD8: rr   e]
 	LOAD_D3_16_FROM_D3D4
-	add.w	d3,a0                            	| [add  hl,de]
-	* store 16 bit pointer in struct
-	illegal
-	move.b	d6,(0x00,a2)                    	| [ld   0x00(ix),l] .b00
-	move.b	d5,(0x01,a2)                    	| [ld   0x01(ix),h] .b01
-	move.b	d5,d4                           	| [ld   e,h] y, .b01 (bits<1:8> of integer portion)
+	add.w	d3,d5                            	| [$0ADA: add  hl,de]
+	* store 16 bit in struct
+	LOAD_D5D6_FROM_D5_16
+	move.b	d6,(0x00,a2)                    	| [$0ADB: ld   0x00(ix),l] .b00
+	move.b	d5,(0x01,a2)                    	| [$0ADE: ld   0x01(ix),h] .b01
+	move.b	d5,d4                           	| [$0AE1: ld   e,h] y, .b01 (bits<1:8> of integer portion)
 
 * add x-offset to .b02/.b03 (sra/rr -> 9.7 fixed-point scaling)
-	move.b	(0x02,a2),d6                    	| [ld   l,0x02(ix)] .b00
-	move.b	(0x03,a2),d5                    	| [ld   h,0x03(ix)] .b01
+	move.b	(0x02,a2),d6                    	| [$0AE2: ld   l,0x02(ix)] .b00
+	move.b	(0x03,a2),d5                    	| [$0AE5: ld   h,0x03(ix)] .b01
 	LOAD_D5_16_FROM_D5D6
-	clr.b	d2                               	| [ld   c,#0]
-	asr.b	#1,d1                            	| [sra  b] step x coord, x offset
-	roxr.b	#1,d2                           	| [rr   c]
+	clr.b	d2                               	| [$0AE8: ld   c,#0]
+	asr.b	#1,d1                            	| [$0AEA: sra  b] step x coord, x offset
+	roxr.b	#1,d2                           	| [$0AEC: rr   c] 0 or 0x80
 	LOAD_D1_16_FROM_D1D2
-	sub.w	d1,d5                            	| [sbc  hl,bc]
+	subx.w	d1,d5                            	| [$0AEE: sbc  hl,bc] sub could work too
 	LOAD_D5D6_FROM_D5_16
-	move.b	d6,(0x02,a2)                    	| [ld   0x02(ix),l] .b00
-	move.b	d5,(0x03,a2)                    	| [ld   0x03(ix),h] .b01
-	move.b	d5,d6                           	| [ld   l,h] x, .b01 (bits<8:1> of integer portion)
-	move.b	d4,d5                           	| [ld   h,e] y, .b01 (bits<8:1> of integer portion)
-
-	move.b	d3,d2                           	| [ld   c,d] C is not used?
-
-	movem.w	(sp)+,d3/d4                    		| [pop  de] abs row pix coord & abs col pix coord >> 1
-
-	jbsr	c_0E5B                            	| [call c_0E5B] HL = mctl_rotn_hp(DE, H, L)
-	lsr.b	#1,d5                            	| [srl  h]
-	roxr.b	#1,d6                           	| [rr   l]
-	move.b	d6,(0x04,a2)                    	| [ld   0x04(ix),l]
-	move.b	d5,(0x05,a2)                    	| [ld   0x05(ix),h]
-	move.b	d3,(0x06,a2)                    	| [ld   0x06(ix),d] origin home position y (bits 15:8) ... from hpos_loc_orig.x
-	move.b	d4,(0x07,a2)                    	| [ld   0x07(ix),e] origin home position x (bits 15:8) ... from hpos_loc_orig.y
-	bset.b	#6,(0x13,a2)                    	| [set  6,0x13(ix)] if set, flite path handler checks for home
-
-	move.l	(sp)+,a0                        	| [pop  hl] ptr to data table
-	addq.w	#1,a0                           	| [inc  hl]
-	jra	j_090E_flite_path_init             		| [jp   j_090E_flite_path_init]
+	move.b	d6,(0x02,a2)                    	| [$0AF0: ld   0x02(ix),l] .b00
+	move.b	d5,(0x03,a2)                    	| [$0AF3: ld   0x03(ix),h] .b01
+	move.b	d5,d6                           	| [$0AF6: ld   l,h] x, .b01 (bits<8:1> of integer portion)
+	move.b	d4,d5                           	| [$0AF7: ld   h,e] y, .b01 (bits<8:1> of integer portion)
+	move.b	d3,d2                           	| [$0AF8: ld   c,d] C is not used?
+	movem.w	(sp)+,d3/d4                    		| [$0AF9: pop  de] abs row pix coord & abs col pix coord >> 1
+	jbsr	c_0E5B                            	| [$0AFA: call c_0E5B] HL = mctl_rotn_hp(DE, H, L)
+	lsr.b	#1,d5                            	| [$0AFD: srl  h]
+	roxr.b	#1,d6                           	| [$0AFF: rr   l]
+	move.b	d6,(0x04,a2)                    	| [$0B01: ld   0x04(ix),l]
+	move.b	d5,(0x05,a2)                    	| [$0B04: ld   0x05(ix),h]
+	move.b	d3,(0x06,a2)                    	| [$0B07: ld   0x06(ix),d] origin home position y (bits 15:8) ... from hpos_loc_orig.x
+	move.b	d4,(0x07,a2)                    	| [$0B0A: ld   0x07(ix),e] origin home position x (bits 15:8) ... from hpos_loc_orig.y
+	bset.b	#6,(0x13,a2)                    	| [$0B0D: set  6,0x13(ix)] if set, flite path handler checks for home
+	move.l	(sp)+,a0                        	| [$0B11: pop  hl] ptr to data table
+	addq.w	#1,a0                           	| [$0B12: inc  hl]
+	jra	j_090E_flite_path_init             		| [$0B13: jp   j_090E_flite_path_init]
 
 * attack elements that break formation to attack ship (level 3+)
 case_0B16:  | 0x01
 
-	move.l	a0,-(sp)                        	| [push hl] ptr to data table
-	exg	a1,a0                              		| [ex   de,hl]
-	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
-	ror.b	#1,d0                            	| [rrca]
-	move.b	(0x13,a2),d1                    	| [ld   b,0x13(ix)] xor
-	eor.b	d1,d0                            	| [xor  b]
-	rol.b	#1,d0                            	| [rlca]
-	move.b	sfr_sprite_posn_9380+0x62,d0         	| [ld   a,(sfr_sprite_posn_9380 + 0x62)] ship1
-	addq.b	#1,d0                           	| [inc  a]
-	subq.b	#1,d0                           	| [dec  a]
+	move.l	a0,-(sp)                        	| [$0B16: push hl] ptr to data table
+	exg	a1,a0                              		| [$0B17: ex   de,hl]
+	move.b	b_9215_flip_screen,d0           	| [$0B18: ld   a,(b_9215_flip_screen)]
+	ror.b	#1,d0                            	| [$0B1B: rrca]
+	move.b	(0x13,a2),d1                    	| [$0B1C: ld   b,0x13(ix)] xor
+	eor.b	d1,d0                            	| [$0B1F: xor  b]
+	rol.b	#1,d0                            	| [$0B20: rlca]
+	move.b	sfr_sprite_posn_9380+0x62,d0        | [$0B21: ld   a,(sfr_sprite_posn_9380 + 0x62)] ship1
+	addq.b	#1,d0                           	| [$0B24: inc  a]
+	subq.b	#1,d0                           	| [$0B25: dec  a]
 	scs	d7
 	jne	l_0B2A                             		| [jr   nz,l_0B2A]
 	move.b	#0x80,d0                        	| [ld   a,#0x80]
@@ -2052,12 +2046,12 @@ l_0B46:
 * ld new data ptr into de and ex into hl ... resultant de not used
 	addq.w	#1,a0                           	| [inc  hl] ptr to data table
 	move.b	(a0)+,d4                         	| [ld   e,(hl)]
-	                           	| [inc  hl]
+	                           	                | [inc  hl]
 	move.b	(a0),d3                         	| [ld   d,(hl)]
 	illegal
 	dc.w	2073
-	exg	a1,a0                              	| [ex   de,hl] new pointer to HL
-	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
+	exg	a1,a0                              	    | [ex   de,hl] new pointer to HL
+	jra	j_090E_flite_path_init             	    | [jp   j_090E_flite_path_init]
 
 * bee dive and starting loopback, or boss left position and starting dive down
 case_0B4E:  | 0x03

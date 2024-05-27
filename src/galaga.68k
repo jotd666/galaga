@@ -4174,7 +4174,7 @@ case_setup_info_screen_1948:
 
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_9200_glbls+0x05           	| [ld   (ds_9200_glbls + 0x05),a] 0 ... demo_scrn_txt_indx
-	move.b	d0,w_bug_flying_hit_cnt         	| [ld   (w_bug_flying_hit_cnt),a] 0
+	move.b	d0,w_bug_flying_hit_cnt_92a8         	| [ld   (w_bug_flying_hit_cnt_92a8),a] 0
 
 	move.b	#2,d0                           	| [ld   a,#2]
 	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] 2 (1 sec)
@@ -7945,7 +7945,7 @@ f_insert_attackers_2916:
 	jne	l_2942_chk_tmr0                    	| [jr   nz,l_2942_chk_tmr0]
 *  ..
 	move.b	#8,d0                           	| [ld   a,#8]
-	move.b	d0,w_bug_flying_hit_cnt         	| [ld   (w_bug_flying_hit_cnt),a] 8 ... count down each flying bug hit
+	move.b	d0,w_bug_flying_hit_cnt_92a8         	| [ld   (w_bug_flying_hit_cnt_92a8),a] 8 ... count down each flying bug hit
 	rts                                    	| [ret]
 *  ..
 * if ( 0 != game_tmrs[0] ) return
@@ -10877,7 +10877,7 @@ l_01A2_set_challeng_stg:
 * }
 
 l_01AC:
-	move.b	d0,w_bug_flying_hit_cnt         	| [ld   (w_bug_flying_hit_cnt),a] 8 for challenge stage (else 0 i.e. don't care)
+	move.b	d0,w_bug_flying_hit_cnt_92a8         	| [ld   (w_bug_flying_hit_cnt_92a8),a] 8 for challenge stage (else 0 i.e. don't care)
 
 * set the timer to synchronize finish of c_new_level_tokens
 	move.b	#3,d0                           	| [ld   a,#3]

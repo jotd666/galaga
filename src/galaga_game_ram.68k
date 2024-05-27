@@ -150,7 +150,7 @@
 	.global		ds3_frame_cts_92A0
 	.global		b_bugs_actv_cnt
 	.global		b_bugs_actv_nbr
-	.global		w_bug_flying_hit_cnt
+	.global		w_bug_flying_hit_cnt_92a8
 	.global		ds4_game_tmrs_92ac
 	.global		b_92B0
 	.global		b_92C0
@@ -486,7 +486,7 @@ b_bugs_actv_cnt:
        ds.b     0x01       | counts number of active bugs at each frame update (c_23E0)
 b_bugs_actv_nbr:
        ds.b     0x01       | total number of active bugs (global)
-w_bug_flying_hit_cnt:
+w_bug_flying_hit_cnt_92a8:
        ds.b     0x02       | count down each flying bug hit (only relevant on challenge stg) only the lsb is used.
 * b16_92AA
        ds.b     0x01       | flag determines continuous bombing
