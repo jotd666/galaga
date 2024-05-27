@@ -1391,24 +1391,24 @@ f_rts_0827:
 *  ...
 *-----------------------------------------------------------------------------
 f_update_sprites_0828:
-	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,b_CPU1_in_progress           	| [ld   (b_CPU1_in_progress),a] 1
+	move.b	#1,d0                           	| [$0828: ld   a,#1]
+	move.b	d0,b_CPU1_in_progress           	| [$082A: ld   (b_CPU1_in_progress),a] 1
 	
 	* update all sprite registers at the same time
 	* (it was done in cooperation with the other cpu)
 		
-	lea	mrw_sprite_code_8B00,a0             	| [ld   hl,#mrw_sprite_code_8B00]
-	lea	sfr_sprite_code_8B80,a1             	| [ld   de,#sfr_sprite_code_8B80]
-	move.w	#0x80,d1                        	| [ld   bc,#0x0040] 64
-	jbsr	ldir                              	| [ldir]
-	lea	mrw_sprite_posn_9300,a0             	| [ld   hl,#mrw_sprite_posn_9300]
-	lea	sfr_sprite_posn_9380,a1             	| [ld   de,#sfr_sprite_posn_9380]
-	move.w	#0x80,d1                        	| [ld   c,#0x40]
-	jbsr	ldir                              	| [ldir]
-	lea	mrw_sprite_ctrl_9B00,a0             	| [ld   hl,#mrw_sprite_ctrl_9B00]
-	lea	sfr_sprite_ctrl_9B80,a1             	| [ld   de,#sfr_sprite_ctrl_9B80]
-	move.w	#0x80,d1                        	| [ld   c,#0x40]
-	jbsr	ldir                              	| [ldir]
+	lea	mrw_sprite_code_8B00,a0             	| [$082D: ld   hl,#mrw_sprite_code_8B00]
+	lea	sfr_sprite_code_8B80,a1             	| [$0830: ld   de,#sfr_sprite_code_8B80]
+	move.w	#0x80,d1                        	| [$0833: ld   bc,#0x0040] 64
+	jbsr	ldir                              	| [$0836: ldir]
+	lea	mrw_sprite_posn_9300,a0             	| [$0838: ld   hl,#mrw_sprite_posn_9300]
+	lea	sfr_sprite_posn_9380,a1             	| [$083B: ld   de,#sfr_sprite_posn_9380]
+	move.w	#0x80,d1                        	| [$083E: ld   c,#0x40]
+	jbsr	ldir                              	| [$0840: ldir]
+	lea	mrw_sprite_ctrl_9B00,a0             	| [$0842: ld   hl,#mrw_sprite_ctrl_9B00]
+	lea	sfr_sprite_ctrl_9B80,a1             	| [$0845: ld   de,#sfr_sprite_ctrl_9B80]
+	move.w	#0x80,d1                        	| [$0848: ld   c,#0x40]
+	jbsr	ldir                              	| [$084A: ldir]
 
 	* host side uses the sfr_sprite_code_8B80 address directly, no need to
 	* call any OSD shit
@@ -3958,7 +3958,7 @@ d_17C3_jptbl:
 	.long case_delay_before_game_over_17F5            | 0x07   delay ~1 sec before puts("GAME OVER")
 	.long case_init_demo_1852                         | 0x08   init demo   task[F_demo_fghter_ctrl]==1
 	.long case_wait_for_fighter_task_18D1             | 0x09 ~ wait for task[F_demo_fghter_ctrl]==0 demo-mode runs before advance state
-	.long case_1808                                   | 0x0A   task[F_demo_fghter_ctrl]==1
+	.long case_enable_fighter_control_demo_1808       | 0x0A   task[F_demo_fghter_ctrl]==1
 	.long case_wait_for_fighter_task_18D1             | 0x0B ~ wait for task[F_demo_fghter_ctrl]==0 boss-capture before advance state
 	.long case_init_taskman_disable_bugs_1840         | 0x0C   end of Demo - init taskman, disable flying_bug_ctrl(), global enemy ct 0,
 	.long case_clear_video_ram_1940                   | 0x0D . clear tile and sprite ram
@@ -3998,17 +3998,16 @@ case_delay_before_game_over_17F5:
 	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
 
 * 10: enable fighter control demo
-case_1808:
-	jbsr	c_fghtr_onscreen_133A                            	| [call c_fghtr_onscreen_133A]
+case_enable_fighter_control_demo_1808:
+	jbsr	c_fghtr_onscreen_133A             | [call c_fghtr_onscreen_133A]
+	lea	d_181F,a0                      	      | [ld   hl,#d_181F]
+	move.l	a0,pdb_demo_fghtrvctrs_9282       | [ld   (pdb_demo_fghtrvctrs_9282),hl] &d_181F[0]
 
-	lea	d_181F,a0                      	| [ld   hl,#d_181F]
-	move.l	a0,pdb_demo_fghtrvctrs_9282          	| [ld   (pdb_demo_fghtrvctrs_9282),hl] &d_181F[0]
-
-	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,ds_cpu0_task_actv_9000+0x03       	| [ld   (ds_cpu0_task_actv_9000 + 0x03),a] 1  (f_ship_demo_controls_1700 ... fighter control in training/demo mode)
-	move.b	d0,ds_cpu0_task_actv_9000+0x15       	| [ld   (ds_cpu0_task_actv_9000 + 0x15),a] 1  (f_read_fire_button_1f04 ... fire button input))
-	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 1  (cpu1:f_05EE ... fighter collision detection)
-	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
+	move.b	#1,d0                             | [ld   a,#1]
+	move.b	d0,ds_cpu0_task_actv_9000+0x03    | [ld   (ds_cpu0_task_actv_9000 + 0x03),a] 1  (f_ship_demo_controls_1700 ... fighter control in training/demo mode)
+	move.b	d0,ds_cpu0_task_actv_9000+0x15    | [ld   (ds_cpu0_task_actv_9000 + 0x15),a] 1  (f_read_fire_button_1f04 ... fire button input))
+	move.b	d0,ds_cpu1_task_actv+0x05         | [ld   (ds_cpu1_task_actv + 0x05),a] 1  (cpu1:f_05EE ... fighter collision detection)
+	jra	l_attmode_state_step               	  | [jp   l_attmode_state_step]
 
 * demo fighter vectors demo level after capture
 d_181F:
@@ -4022,39 +4021,36 @@ case_init_taskman_disable_bugs_1840:
 	jbsr	c_init_taskman_structs_1230       	| [call c_init_taskman_structs_1230]
 
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x10       	| [ld   (ds_cpu0_task_actv_9000 + 0x10),a] 0 (f_manage_bomber_attacks_1b65 ... manage bomber attack )
+	move.b	d0,ds_cpu0_task_actv_9000+0x10      | [ld   (ds_cpu0_task_actv_9000 + 0x10),a] 0 (f_manage_bomber_attacks_1b65 ... manage bomber attack )
 	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 0 ... glbl_enemy_enbl, end of demo
 
 * have to re-set enable bit for this flag after init_structs
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x02       	| [ld   (ds_cpu0_task_actv_9000 + 0x02),a] 1 ... f_manage_attract_mode_17B2 (attract-mode control)
-
-	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
+	move.b	d0,ds_cpu0_task_actv_9000+0x02      | [ld   (ds_cpu0_task_actv_9000 + 0x02),a] 1 ... f_manage_attract_mode_17B2 (attract-mode control)
+	jra	l_attmode_state_step               	    | [jp   l_attmode_state_step]
 
 * 08: init demo (following training mode) ... "GAME OVER" showing
 case_init_demo_1852:
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] 1 ... sound_mgr_reset: non-zero causes re-initialization of sound mgr
-	move.b	d0,ds_plyr_actv+_b_stgctr       	| [ld   (ds_plyr_actv +_b_stgctr),a] 1
-	move.b	d0,ds_cpu0_task_actv_9000+0x03      | [ld   (ds_cpu0_task_actv_9000 + 0x03),a] 1  (f_ship_demo_controls_1700 ... fighter control in training/demo mode)
-	move.b	d0,ds_cpu0_task_actv_9000+0x15      | [ld   (ds_cpu0_task_actv_9000 + 0x15),a] 1  (f_read_fire_button_1f04 ... fire button input)
-	move.b	d0,ds_plyr_actv+_b_not_chllg_stg	| [ld   (ds_plyr_actv +_b_not_chllg_stg),a] 1  (0 if challenge stage ...see new_stg_game_only)
-
-	lea	d_1887,a0                      			| [ld   hl,#d_1887]
-	move.l	a0,pdb_demo_fghtrvctrs_9282         | [ld   (pdb_demo_fghtrvctrs_9282),hl] &d_1887[0]
-	jbsr	stg_init_env_01c5                      	| [call stg_init_env_01c5]
-	jbsr	c_fghtr_onscreen_133A                            	| [call c_fghtr_onscreen_133A] apparently erases some stuff from screen?
-
-	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 1 ... glbl_enemy_enbl, one time init for demo
-	move.b	d0,ds_plyr_actv+_b_atk_wv_enbl  	| [ld   (ds_plyr_actv +_b_atk_wv_enbl),a] 1 ... 0 when respawning player ship
-	move.b	d0,ds_plyr_actv+_b_bmbr_boss_wingm	| [ld   (ds_plyr_actv +_b_bmbr_boss_wingm),a] 1 ... for demo, force the bomber-boss into wingman-mode
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_new_stage_parms_99c0+0x04     | [ld   (ds_new_stage_parms_99c0 + 0x04),a] 2 ... max_bombers (demo)
-	move.b	d0,ds_new_stage_parms_99c0+0x05     | [ld   (ds_new_stage_parms_99c0 + 0x05),a] 2 ... increases max bombers in certain conditions (demo)
-	jra	l_attmode_state_step               		| [jp   l_attmode_state_step]
+	clr.b	d0                               	| [$1852: xor  a]
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [$1853: ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
+	addq.b	#1,d0                           	| [$1856: inc  a]
+	move.b	d0,b_9AA0+0x17                  	| [$1857: ld   (b_9AA0 + 0x17),a] 1 ... sound_mgr_reset: non-zero causes re-initialization of sound mgr
+	move.b	d0,ds_plyr_actv+_b_stgctr       	| [$185A: ld   (ds_plyr_actv +_b_stgctr),a] 1
+	move.b	d0,ds_cpu0_task_actv_9000+0x03      | [$185D: ld   (ds_cpu0_task_actv_9000 + 0x03),a] 1  (f_ship_demo_controls_1700 ... fighter control in training/demo mode)
+	move.b	d0,ds_cpu0_task_actv_9000+0x15      | [$1860: ld   (ds_cpu0_task_actv_9000 + 0x15),a] 1  (f_read_fire_button_1f04 ... fire button input)
+	move.b	d0,ds_plyr_actv+_b_not_chllg_stg	| [$1863: ld   (ds_plyr_actv +_b_not_chllg_stg),a] 1  (0 if challenge stage ...see new_stg_game_only)
+	lea	d_1887(pc),a0                      			| [$1866: ld   hl,#d_1887]
+	move.l	a0,pdb_demo_fghtrvctrs_9282         | [$1869: ld   (pdb_demo_fghtrvctrs_9282),hl] &d_1887[0]
+	jbsr	stg_init_env_01c5                   | [$186C: call stg_init_env_01c5]
+	jbsr	c_fghtr_onscreen_133A               | [$186F: call c_fghtr_onscreen_133A] apparently erases some stuff from screen?
+	move.b	#1,d0                           	| [$1872: ld   a,#1]
+	move.b	d0,ds_9200_glbls+0x0B           	| [$1874: ld   (ds_9200_glbls + 0x0B),a] 1 ... glbl_enemy_enbl, one time init for demo
+	move.b	d0,ds_plyr_actv+_b_atk_wv_enbl  	| [$1877: ld   (ds_plyr_actv +_b_atk_wv_enbl),a] 1 ... 0 when respawning player ship
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_wingm	| [$187A: ld   (ds_plyr_actv +_b_bmbr_boss_wingm),a] 1 ... for demo, force the bomber-boss into wingman-mode
+	addq.b	#1,d0                           	| [$187D: inc  a]
+	move.b	d0,ds_new_stage_parms_99c0+0x04     | [$187E: ld   (ds_new_stage_parms_99c0 + 0x04),a] 2 ... max_bombers (demo)
+	move.b	d0,ds_new_stage_parms_99c0+0x05     | [$1881: ld   (ds_new_stage_parms_99c0 + 0x05),a] 2 ... increases max bombers in certain conditions (demo)
+	jra	l_attmode_state_step               		| [$1884: jp   l_attmode_state_step]
 
 * demo fighter vectors demo level before capture
 d_1887:
@@ -4084,10 +4080,10 @@ l_18BB:
 	move.b	#0x34,d0                        	| [ld   a,#0x34]
 	move.b	d0,b_obj_collsn_notif_9200+0x34 	| [ld   (b_obj_collsn_notif_9200 + 0x34),a] $34
 	move.b	#9,d0                           	| [ld   a,#9]
-	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] 9
-	rts                                    	| [ret]
+	move.b	d0,ds4_game_tmrs_92ac+2             | [ld   (ds4_game_tmrs_92ac + 2),a] 9
+	rts                                    	    | [ret]
 l_18C6:
-* tmr == 5, explosion complete ... '150' score on display
+* tmr == 5, explosion complete ... '150' score on display, display namco copyright
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_sprite_posn_9300+0x62         | [ld   (ds_sprite_posn_9300 + 0x62),a] 0 ... fighter (1) is removed from screen
 	move.b	#0x13,d2                        	| [ld   c,#0x13]
@@ -5030,19 +5026,19 @@ j_1CAE:
 * plyr_actv.bmbr_boss_scode[]
 	move.b	d4,d0                           	| [ld   a,e] object/index of bomber
 	and.b	#0x07,d0                         	| [and  #0x07]
-	lea	ds_plyr_actv+_ds_bmbr_boss_scode,a0	| [ld   hl,#ds_plyr_actv +_ds_bmbr_boss_scode]
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
+	lea	ds_plyr_actv+_ds_bmbr_boss_scode,a0	    | [ld   hl,#ds_plyr_actv +_ds_bmbr_boss_scode]
+	jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A
 * d_1CFD[ixl]
-	jbsr	read_ixl_into_d0                         	| [ld   a,ixl]
-	exg	a1,a0                              	| [ex   de,hl] stash hl (&plyr_actv.code)
-	lea	d_1CFD,a0                      	| [ld   hl,#d_1CFD]
-	jbsr	add_2_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
-	move.b	(a0)+,(a1)+                         	| [ld   a,(hl)]
-	                         	| [ld   (de),a] plyr_actv._bonus_codescore[E] = d_1CFD[2*A]
-	                           	| [inc  hl]
-	add.q	#1,d4              	| [inc  e]  [a1 coherence] (not sure if required)
+	jbsr	read_ixl_into_d0                    | [ld   a,ixl]
+	exg	a1,a0                              	    | [ex   de,hl] stash hl (&plyr_actv.code)
+	lea	d_1CFD,a0                      	        | [ld   hl,#d_1CFD]
+	jbsr	add_2_times_d0_to_a0_0008           | [rst  0x08] HL += 2A
+	move.b	(a0)+,(a1)+                         | [ld   a,(hl)]
+	                         	                | [ld   (de),a] plyr_actv._bonus_codescore[E] = d_1CFD[2*A]
+	                           	                | [inc  hl]
+	add.q	#1,d4              	                | [inc  e]  [a1 coherence] (not sure if required)
 	move.b	(a0),(a1)                         	| [ld   a,(hl)]
-	                         	| [ld   (de),a]
+	                         	                | [ld   (de),a]
 
 * if (2 == ixl) then skip launching wingmen ... capture-boss situation
 	jbsr	read_ixl_into_d0                         	| [ld   a,ixl]
@@ -5484,10 +5480,8 @@ l_1E09:
 	move.b	d2,d0                           	| [ld   a,c] A = updated_counter
 	and.b	#0x18,d0                         	| [and  #0x18] make it even multiple of 8
 	jbsr	add_2_times_d0_to_a0_0008              	| [rst  0x08] HL += 2A   .... table entries are $10 bytes long
-
 	move.b	d4,d0                           	| [ld   a,e] reload previous_nest_direction counter
-
-	lea	ds10_9920,a1                   	| [ld   de,#ds10_9920] $10 bytes copied from 1E64+2*A
+	lea	ds10_9920,a1                   	        | [ld   de,#ds10_9920] $10 bytes copied from 1E64+2*A
 	move.w	#0x10,d1                        	| [ld   bc,#0x0010] 16
 	jbsr	ldir                              	| [ldir]
 
@@ -7578,42 +7572,39 @@ l_2631:
 *   0x58,0x5A,0x5C,0x5E,0xFF,0xFF,0xFF,0xFF,0x28,0x2A,0x2C,0x2E,0xFF,0xFF,0xFF,0xFF,
 
 l_2636:
-	lea	ds_atk_wav_tmp_buf_9100,a0          	| [ld   hl,#ds_atk_wav_tmp_buf_9100]
-	move.l	pb_attk_wav_IDs,a1          	| [ld   de,(pb_attk_wav_IDs)]
-	move.b	#8,d1                           	| [ld   b,#8]
+	lea	ds_atk_wav_tmp_buf_9100,a0          	| [$2636: ld   hl,#ds_atk_wav_tmp_buf_9100]
+	move.l	pb_attk_wav_IDs,a1          	    | [$2639: ld   de,(pb_attk_wav_IDs)]
+	move.b	#8,d1                           	| [$263D: ld   b,#8]
 
 l_263F_while_b:
 j_263F_skip_until_ff:
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	cmp.b	#0xFF,d0                         	| [cp   #0xFF] check for unused position in tmp buffer
-	jeq	l_2647_is_ff                       	| [jr   z,l_2647_is_ff]
-	addq.w	#1,a0                           	| [inc  hl] skip if not $ff
-	jra	j_263F_skip_until_ff               	| [jr   j_263F_skip_until_ff]
+	move.b	(a0),d0                         	| [$263F: ld   a,(hl)]
+	cmp.b	#0xFF,d0                         	| [$2640: cp   #0xFF] check for unused position in tmp buffer
+	jeq	l_2647_is_ff                       	    | [$2642: jr   z,l_2647_is_ff]
+	addq.w	#1,a0                           	| [$2644: inc  hl] skip if not $ff
+	jra	j_263F_skip_until_ff               	    | [$2645: jr   j_263F_skip_until_ff]
 
 l_2647_is_ff:
-	move.b	(a1)+,(a0)+                         	| [ld   a,(de)] attk_wav_IDs[e]
-												| [ld   (hl),a] atk_wav_tmp_buf[l] = attk_wav_IDs[e]
-												| [inc  de]
-												| [inc  hl]
-	move.b	d1,d0                           	| [ld   a,b] loop count
-	cmp.b	#5,d0                            	| [cp   #5]
-	jne	l_2652                             	| [jr   nz,l_2652] if ct > 4 ... skip to atk_wav_tmp_buf[ l + 8 ]
-	move.b	#8,d6                           	| [ld   l,#8] alignment to $0100 boundary!
+	move.b	(a1)+,(a0)+                         | [$2647: ld   a,(de)] attk_wav_IDs[e]
+												| [$2648: ld   (hl),a] atk_wav_tmp_buf[l] = attk_wav_IDs[e]
+												| [$2649: inc  de]
+												| [$264A: inc  hl]
+	move.b	d1,d0                           	| [$264B: ld   a,b] loop count
+	cmp.b	#5,d0                            	| [$264C: cp   #5]
+	jne	l_2652                             	    | [$264E: jr   nz,l_2652] if ct > 4 ... skip to atk_wav_tmp_buf[ l + 8 ]
+	lea		ds_atk_wav_tmp_buf_9100+8,a0        | [$2650: ld   l,#8] alignment to $0100 boundary!
 l_2652:
 	subq.b	#1,d1                           	| [...]
-	jne	l_263F_while_b                     	| [djnz l_263F_while_b]
-
-	move.l	a1,pb_attk_wav_IDs              	| [ld   (pb_attk_wav_IDs),de] &db_attk_wav_IDs[ 8 * n ]
-
-	move.l	(sp)+,a0                        	| [pop  hl] HL == &_stg_dat[ 2 + 3 * n + 1 ]
-	move.l	(sp)+,a1                        	| [pop  de] DE == &ds_8920[ $11 * n ]
-	movem.w	(sp)+,d3/d4                    	| [pop  de] DE == &ds_8920[ $11 * n ]
-	move.b	(a0)+,d1                         	| [ld   b,(hl)]
-	                           	| [inc  hl]
-	move.b	(a0)+,d2                         	| [ld   c,(hl)] HL == &_stg_dat[ 2 + 3 * n + 2 ]
-	                           	| [inc  hl]
-
-	move.l	a0,-(sp)                        	| [push hl] HL == &_stg_dat[ 2 + 3 * n + 0 ] ... next n
+	jne	l_263F_while_b                     	    | [$2652: djnz l_263F_while_b]
+	move.l	a1,pb_attk_wav_IDs              	| [$2654: ld   (pb_attk_wav_IDs),de] &db_attk_wav_IDs[ 8 * n ]
+	move.l	(sp)+,a0                        	| [$2658: pop  hl] HL == &_stg_dat[ 2 + 3 * n + 1 ]
+	move.l	(sp)+,a1                        	| [$2659: pop  de] DE == &ds_8920[ $11 * n ]
+	movem.w	(sp)+,d3/d4                    	    | [pop  de] DE == &ds_8920[ $11 * n ]
+	move.b	(a0)+,d1                         	| [$265A: ld   b,(hl)]
+	                           	                | [$265B: inc  hl]
+	move.b	(a0)+,d2                         	| [$265C: ld   c,(hl)] HL == &_stg_dat[ 2 + 3 * n + 2 ]
+	                           	                | [$265D: inc  hl]
+	move.l	a0,-(sp)                        	| [$265E: push hl] HL == &_stg_dat[ 2 + 3 * n + 0 ] ... next n
 
 * tmp buffer looks like this with transients inserted at 'x' ...  UUUUxxxxVVVVxxxx
 * where U and V are IDs loaded from db_attk_wav_IDs (UUUUVVVV)
@@ -7626,21 +7617,20 @@ l_2662_form_pair:
 * read_until_ff
 	move.b	(a0),d0                         	| [ld   a,(hl)] UU
 	cmp.b	#0xFF,d0                         	| [cp   #0xFF]
-	jeq	l_2679_next_wave                   	| [jr   z,l_2679_next_wave]
-
+	jeq	l_2679_next_wave                   	    | [jr   z,l_2679_next_wave]
 	addq.w	#1,a1                           	| [inc  e]
 	move.b	d0,(a1)+                         	| [ld   (de),a]
-	                           	| [inc  e]
+	                           	                | [inc  e]
 	move.b	d2,d0                           	| [ld   a,c] cc
 	move.b	d0,(a1)+                         	| [ld   (de),a]
-										| [inc  e]
-	                           	| [set  3,l] HL += $08
+										        | [inc  e]
+	                           	                | [set  3,l] HL += $08
 	move.b	(8,a0),d0                         	| [ld   a,(hl)] VV
 	move.b	d0,(a1)+                         	| [ld   (de),a]
-	                           	| [inc  e]
-	                           	| [res  3,l] HL -= $08
+	                           	                | [inc  e]
+	                           	                | [res  3,l] HL -= $08
 	addq.w	#1,a0                           	| [inc  hl]
-	jra	l_2662_form_pair                   	| [jr   l_2662_form_pair]
+	jra	l_2662_form_pair                   	    | [jr   l_2662_form_pair]
 
 l_2679_next_wave:
 	move.b	#0x7E,d0                        	| [ld   a,#0x7E] start token of each group (will overwrite with 7f if finished)
@@ -7789,46 +7779,44 @@ db_attk_wav_IDs:
 *  ...
 *-----------------------------------------------------------------------------
 c_2896:
-
 * once per stage, set the player's private pointer to attack wave object setup tables
-	lea	ds_8920,a0                     	| [ld   hl,#ds_8920] -> plyr_actv.p_atkwav_tbl
-
-	move.l	a0,ds_plyr_actv+_p_atkwav_tbl   	| [ld   (ds_plyr_actv +_p_atkwav_tbl),hl] = &ds_8920[0] ... initialize it
+	lea	ds_8920,a0                     	        | [$2896: ld   hl,#ds_8920] -> plyr_actv.p_atkwav_tbl
+	move.l	a0,ds_plyr_actv+_p_atkwav_tbl   	| [$2899: ld   (ds_plyr_actv +_p_atkwav_tbl),hl] = &ds_8920[0] ... initialize it
 
 * pointer to table of packed bits set in b<7>  ... see code leading up to _29AE
-	lea	d_2908,a3                      	| [ld   iy,#d_2908]
+	lea	d_2908,a3                      	        | [$289C: $289C: ld   iy,#d_2908]
 
 * if ( 0 == not_chllng_stg ) ...
-	move.b	ds_plyr_actv+_b_not_chllg_stg,d0	| [ld   a,(ds_plyr_actv +_b_not_chllg_stg)] ==(stg_ctr+1)%4 ...i.e. 0 if challenge stage
-	                               	| [and  a]
-	jne	l_28CD_not_challenge_stage         	| [jr   nz,l_28CD_not_challenge_stage]
+	move.b	ds_plyr_actv+_b_not_chllg_stg,d0	| [$28A0: ld   a,(ds_plyr_actv +_b_not_chllg_stg)] ==(stg_ctr+1)%4 ...i.e. 0 if challenge stage
+	                               	            | [$28A3: and  a]
+	jne	l_28CD_not_challenge_stage         	    | [$28A4: jr   nz,l_28CD_not_challenge_stage]
 * ...
-	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] stage init sprite codes
-	ror.b	#2,d0                            	| [rrca] * 2
-	move.b	d0,d2                           	| [ld   c,a] table index (below)
-	ror.b	#1,d0                            	| [rrca]
-	move.b	d0,d1                           	| [ld   b,a]
-	and.b	#0xE0>>3,d0                       	| [and  #0xE0 >> 3] 0x1C ... test if stage >= 32
-	jeq	l_28B5                             	| [jr   z,l_28B5]
-	move.b	#3,d0                           	| [ld   a,#3] select index 3 if stage >= 32
+	move.b	ds_plyr_actv+_b_stgctr,d0       	| [$28A6: ld   a,(ds_plyr_actv +_b_stgctr)] stage init sprite codes
+	ror.b	#2,d0                            	| [$28A9: rrca] * 2
+	move.b	d0,d2                           	| [$28AB: ld   c,a] table index (below)
+	ror.b	#1,d0                            	| [$28AC: rrca]
+	move.b	d0,d1                           	| [$28AD: ld   b,a]
+	and.b	#0xE0>>3,d0                       	| [$28AE: and  #0xE0 >> 3] 0x1C ... test if stage >= 32
+	jeq	l_28B5                             	    | [$28B1: jr   z,l_28B5]
+	move.b	#3,d0                           	| [$28B3: ld   a,#3] select index 3 if stage >= 32
 	bra.b	0f
 l_28B5:
-	move.b	d1,d0                           	| [ld   a,b] .stage_ctr >> 3
+	move.b	d1,d0                           	| [$28B0: ld   a,b] .stage_ctr >> 3
 0:
-	and.b	#0x03,d0                         	| [and  #0x03] 4 entries in data (every 8 challenge stages the selection index is stepped)
-	lea	d_stage_chllg_rnd_attrib,a0    	| [ld   hl,#d_stage_chllg_rnd_attrib]
-	jbsr	add_2_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
-	lea	ds2_stg_chllg_rnd_attrib,a1    	| [ld   de,#ds2_stg_chllg_rnd_attrib] challenge bonus attributes (2 bytes from 2900[])
-	move.b	d2,d0                           	| [ld   a,c]
-	jbsr	ldi                               	| [ldi] "LD (DE),(HL)", DE++, HL++, BC--
-	jbsr	ldi                               	| [ldi]
+	and.b	#0x03,d0                         	| [$28B5: and  #0x03] 4 entries in data (every 8 challenge stages the selection index is stepped)
+	lea	d_stage_chllg_rnd_attrib,a0    	        | [$28B7: ld   hl,#d_stage_chllg_rnd_attrib]
+	jbsr	add_2_times_d0_to_a0_0008           | [$28BA: rst  0x08] HL += 2A
+	lea	ds2_stg_chllg_rnd_attrib,a1    	        | [$28BB: ld   de,#ds2_stg_chllg_rnd_attrib] challenge bonus attributes (2 bytes from 2900[])
+	move.b	d2,d0                           	| [$28BE: ld   a,c]
+	jbsr	ldi                               	| [$28BF: ldi] "LD (DE),(HL)", DE++, HL++, BC--
+	jbsr	ldi                               	| [$28C1: ldi]
 
-	lea	d_290E,a0                      	| [ld   hl,#d_290E] 8 entries
-	and.b	#0x07,d0                         	| [and  #0x07]
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
-	move.b	(a0),d3                         	| [ld   d,(hl)]
-	move.b	d3,d4                           	| [ld   e,d]
-	jra	l_28D0                             	| [jr   l_28D0]
+	lea	d_290E,a0                      	        | [$28C3: ld   hl,#d_290E] 8 entries
+	and.b	#0x07,d0                         	| [$28C6: and  #0x07]
+	jbsr	add_d0_to_a0_0010                   | [$28C8: rst  0x10] HL += A
+	move.b	(a0),d3                         	| [$28C9: ld   d,(hl)]
+	move.b	d3,d4                           	| [$28CA: ld   e,d]
+	jra	l_28D0                             	    | [$28CB: jr   l_28D0]
 
 l_28CD_not_challenge_stage:
  * Initialization values are base-code + 2 bits of color table.
@@ -7838,27 +7826,23 @@ l_28CD_not_challenge_stage:
  * left shift codes by 1 bit because the flag (bit-7) will be rra'd from Cy
  * Results in 3-bits of color (multiple of 2)
 	move.b	#(0x18+3)*2,d3	| [ld   de,#(0x18 + 3) * 2 * 0x0100  +  (0x10 + 2) * 2]
-	move.b	#(0x10+2)*2,d3	| [ld   de,#(0x18 + 3) * 2 * 0x0100  +  (0x10 + 2) * 2]
+	move.b	#(0x10+2)*2,d4	| [ld   de,#(0x18 + 3) * 2 * 0x0100  +  (0x10 + 2) * 2]
 
 l_28D0:
-	lea	ds_sprite_code_8B00+0x08,a0         	| [ld   hl,#ds_sprite_code_8B00 + 0x08] offsetof first bee in the group
-
-	move.b	#1,ixl							| [ld  ixl,#1]                                 | start count for bit shifting
-
-	move.b	#20,d1                          	| [ld   b,#20] 20 bees ... $08-$2E
-	move.b	d3,ixh					| [ld   ixh,d]                                 | D == moth == $18	| $03
-	jbsr	c_28E9                            	| [call c_28E9]
-
-	move.b	#8,d1                           	| [ld   b,#8] 8 bosses and bonus-bees ... $30-$3E
-	move.b	#(0x08)*2,ixh			| ld   ixh,#(0x08 + 0x0) * 2                 | code      == $08	| $00
-	jbsr	c_28E9                            	| [call c_28E9]
-
-	move.b	#16,d1                          	| [ld   b,#16] 16 moths ... $40-$5E
-	move.b	d4,ixh				| ld   ixh,e                                 | E == bee  == $10	| $02
-       * call c_28E9
+	lea	ds_sprite_code_8B00+0x08,a0     | [$28D0: ld   hl,#ds_sprite_code_8B00 + 0x08] offsetof first bee in the group
+	move.b	#1,ixl						| [$28D3: ld  ixl,#1]                                 | start count for bit shifting
+	move.b	#20,d1                      | [$28D6: ld   b,#20] 20 bees ... $08-$2E
+	move.b	d3,ixh					    | [$28D8: ld   ixh,d]                                 | D == moth == $18	| $03
+	jbsr	init_creatures_class_28e9   | [$28DA: call init_creatures_class_28e9]
+	move.b	#8,d1                       | [$28DD: ld   b,#8] 8 bosses and bonus-bees ... $30-$3E
+	move.b	#(0x08)*2,ixh			    | [$28DF: ld   ixh,#(0x08 + 0x0) * 2]                 | code      == $08	| $00
+	jbsr	init_creatures_class_28e9   | [$28E2: call init_creatures_class_28e9]
+	move.b	#16,d1                      | [$28E5: ld   b,#16] 16 moths ... $40-$5E
+	move.b	d4,ixh				        | [$28E7: ld   ixh,e]                                 | E == bee  == $10	| $02
+       * call init_creatures_class_28e9
 
 *=============================================================================
-* c_28E9()
+* init_creatures_class_28e9()
 *  Description:
 *    Initialize a class of creatures.
 * IN:
@@ -7873,27 +7857,24 @@ l_28D0:
 * After that, reload C every 8 times.
 * Each time, C is RL'd into Cy, and Cy RR'd into A.
 *-----------------------------------------------------------------------------
-c_28E9:
-l_28E9:
+init_creatures_class_28e9:
 * if ( --IXL == 0 )
-	subq.b	#1,ixl                          	| [dec  ixl]
-	jne	l_28F5                             	| [jr   nz,l_28F5]
+	subq.b	#1,ixl                          | [$28E9: dec  ixl]
+	jne	l_28F5                             	| [$28EB: jr   nz,l_28F5]
 * then ...  C = IY[ n++ ], IXL = 8
-	move.b	(a3),d2                    	| [ld   c,0x00(iy)]
-	addq.w	#1,a3                           	| [inc  iy]
-	move.b	#8,ixl		| ld   ixl,#8
-
+	move.b	(a3)+,d2                    	| [$28ED: ld   c,0x00(iy)]
+	                           	            | [$28F0: inc  iy]
+	move.b	#8,ixl		                    | [$28F2: ld   ixl,#8]
 l_28F5:
-	rol.b	#1,d2                            	| [rlc  c]
+	rol.b	#1,d2                           | [$28F5: rlc  c]
 	SET_X_FROM_C
-	move.b	ixh,d0                         	| [ld   a,ixh] base sprite-code parameter
-	roxr.b	#1,d0                           	| [rra]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	addq.w	#2,a0                           	| [inc  l] * 2
-	subq.b	#1,d1                           	| [...]
-	jne	l_28E9                             	| [djnz l_28E9]
-
-	rts                                    	| [ret]
+	move.b	ixh,d0                         	| [$28F7: ld   a,ixh] base sprite-code parameter
+	roxr.b	#1,d0                           | [$28F9: rra]
+	move.b	d0,(a0)                         | [$28FA: ld   (hl),a]
+	addq.w	#2,a0                           | [$28FB: inc  l] * 2
+	subq.b	#1,d1                           | [...]
+	jne	init_creatures_class_28e9          	| [$28FD: djnz l_28E9]
+	rts                                    	| [$28FF: ret]
 
 
 *=============================================================================
@@ -7911,7 +7892,7 @@ d_2908:
 	.byte 0xA5,0x5A,0xA9,0x0F,0x0A,0x50 | 44-bits used
 d_290E:
 	.byte 0x36,0x24,0xD4,0xBA,0xE4,0xCC,0xA8,0xF4
-
+	.align	2
 *=============================================================================
 * f_insert_attackers_2916()
 *  Description:
