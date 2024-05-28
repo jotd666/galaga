@@ -2325,8 +2325,7 @@ l_0CA4:
 	move.b	(0x0B,a2),d0                    	| [$0CA4: ld   a,0x0B(ix)]
 
 l_0CA7:
-	tst.b	d0
-												| [$0CA7: and  a] if zero, start of tractor beam and we can skip this crap
+	tst.b	d0                                	| [$0CA7: and  a] if zero, start of tractor beam and we can skip this crap
 	jeq	l_0D03_flite_pth_posn_set          		| [$0CA8: jp   z,l_0D03_flite_pth_posn_set] 2 "parameters": HL, and E (e saved from (ix)0x04)
 
 * compute increment and update selected coordinate
@@ -2515,7 +2514,6 @@ l_0D38:
 	jeq		l_0D50                             	| [$0D4D: jr   nc,l_0D50]
 	addq.b	#1,d4                           	| [$0D4F: inc  e]
 l_0D50:   
-
 	move.b	d0,(a0)                         	| [$0D50: ld   (hl),a] sprite[n].posn.sy<7:0>
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 	lea	ds_sprite_ctrl_9B00,a0              	| [$0D51: ld   h,#>ds_sprite_ctrl_9B00] sprite[n].posn.sy<8>
@@ -2560,14 +2558,13 @@ l_0D82:
 	addq.w	#2,a0                           	| [inc  l] * 2
 	subq.b	#1,d1                           	| [...]
 	jne	l_0D82                             		| [djnz l_0D82]
-
-	jra	l_0DF5_next_superloop_and_reload_0E	| [jr   l_0DF5_next_superloop_and_reload_0E]
+	jra	l_0DF5_next_superloop_and_reload_0E	    | [jr   l_0DF5_next_superloop_and_reload_0E]
 
 l_0D8D_got_a_bullet:
 	move.b	#6,(a0)                         	| [ld   (hl),#6] _objs[BOMB0].state = BOMB
 
 	COMPUTE_LSB_A0_D6	b_8800
-	move.l	a0,-(sp)                        	| [push hl] &_objs[BOMB0 + n]
+	move.w	d6,-(sp)                        	| [push hl] &_objs[BOMB0 + n]
 	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -2624,7 +2621,7 @@ l_0DBC:
 	jcc	l_0DC1                             		| [jr   nc,l_0DC1] if bomber.y > fighter.y ...
 	neg.b	d0                               	| [neg]
 l_0DC1:
-	jbsr	c_divide_d5d6_by_d0_0EAA                            	| [call c_divide_d5d6_by_d0_0EAA] HL = HL / A
+	jbsr	c_divide_d5d6_by_d0_0EAA            | [call c_divide_d5d6_by_d0_0EAA] HL = HL / A
 	move.b	d5,d1                           	| [ld   b,h]
 	move.b	d6,d2                           	| [ld   c,l]
 	lsr.b	#1,d5                            	| [srl  h]
@@ -2650,27 +2647,27 @@ l_0DE0:
 l_0DE2:
 	move.b	d0,d1                           	| [ld   b,a]
 
-	move.w	(sp)+,d0                        	| [pop  af] Cy from (fighter.x - bomber.x)
+	move.w	(sp)+,d0                        	| [$0DE3: pop  af] Cy from (fighter.x - bomber.x)
 	CLEAR_XC_FLAGS
 	tst.b	d7
 	beq.b	0f
 	SET_XC_FLAGS
 0:
-	roxr.b	#1,d1                           	| [rr   b]
- 	move.l	(sp)+,a0                        	| [pop  hl] sprt_mctl_objs[bomb]
-	move.b	d6,d0                           	| [ld   a,l]
-	add.b	#8,d0                            	| [add  a,#8] IDX_BOMB will be index 0 thanks to and $0F
-	and.w	#0x0F,d0                         	| [and  #0x0F]
-	lea	b_92B0,a0                 	| [ld   hl,#b_92B0 + 0x00] bomb x-coordinate structure ( 8 * 2 )
-	add.w	d0,a0                            	| [add  a,l]
-	                           	| [ld   l,a]
-	move.b	d1,(a0)+                         	| [ld   (hl),b]
-	                           	| [inc  hl]
-	clr.b	(a0)                             	| [ld   (hl),#0]
+	roxr.b	#1,d1                           	| [$0DE4: rr   b]
+ 	move.w	(sp)+,d6                        	| [$0DE6: pop  hl] sprt_mctl_objs[bomb]
+	move.b	d6,d0                           	| [$0DE7: ld   a,l]
+	add.b	#8,d0                            	| [$0DE8: add  a,#8] IDX_BOMB will be index 0 thanks to and $0F
+	and.w	#0x0F,d0                         	| [$0DEA: and  #0x0F]
+	lea	b_92B0,a0                 	            | [$0DEC: ld   hl,#b_92B0 + 0x00] bomb x-coordinate structure ( 8 * 2 )
+	add.w	d0,a0                            	| [$0DEF: add  a,l]
+	                           	                | [$0DF0: ld   l,a]
+	move.b	d1,(a0)+                         	| [$0DF1: ld   (hl),b]
+	                           	                | [$0DF2: inc  hl]
+	clr.b	(a0)                             	| [$0DF3: ld   (hl),#0]
 
 l_0DF5_next_superloop_and_reload_0E:
-	move.b	b_92E2,d0                  	| [ld   a,(b_92E2 + 0x00)] to $0E(ix) e.g. A==14 (set for each round ... bomb drop counter)
-	move.b	d0,(0x0E,a2)                    	| [ld   0x0E(ix),a] b_92E2[0] ... bomb drop counter
+	move.b	b_92E2,d0                  	        | [$0DF5: ld   a,(b_92E2 + 0x00)] to $0E(ix) e.g. A==14 (set for each round ... bomb drop counter)
+	move.b	d0,(0x0E,a2)                    	| [$0DF8: ld   0x0E(ix),a] b_92E2[0] ... bomb drop counter
 
 next__pool_idx_0dfb:
 	lea	b_bug_que_idx_9289,a0               	| [$0DFB: ld   hl,#b_bug_que_idx_9289] -= 1 ... counts backwards
@@ -2697,36 +2694,39 @@ l_0E08_imhome:
 	lea	ds_sprite_code_8B00,a0              	| [$0E1A: ld   h,#>ds_sprite_code_8B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-												| [inc  l]
-	move.b	(1,a0),d0                         	| [ld   a,(hl)] sprite color code
-												| [dec  l]
-	addq.b	#1,d0                           	| [inc  a]
-	and.b	#0x07,d0                         	| [and  #0x07]
-	cmp.b	#5,d0                            	| [cp   #5]
-	jcs	l_0E3A                             	| [jr   c,l_0E3A]
+												| [$0E1C: inc  l]
+	move.b	(1,a0),d0                         	| [$0E1D: ld   a,(hl)] sprite color code
+												| [$0E1E: dec  l]
+	addq.b	#1,d0                           	| [$0E1F: inc  a]
+	and.b	#0x07,d0                         	| [$0E20: and  #0x07]
+	cmp.b	#5,d0                            	| [$0E22: cp   #5]
+	jcs	l_0E3A                             	    | [$0E24: jr   c,l_0E3A]
 
 * A > 5 ... remaining bonus-bee returns to collective
-	move.b	ds_plyr_actv+_b_bbee_clr_a,d0   	| [ld   a,(ds_plyr_actv +_b_bbee_clr_a)]
-	move.b	d0,d2                           	| [ld   c,a]
-	and.b	#0xF8,d0                         	| [and  #0xF8]
-	addq.b	#6,d0                           	| [add  a,#6]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-												| [inc  l]
-	move.b	d2,d0                           	| [ld   a,c]
-	and.b	#0x07,d0                         	| [and  #0x07]
-	move.b	d0,(1,a0)                         	| [ld   (hl),a]
-												| [dec  l]
-	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,ds_plyr_actv+_b_bbee_obj     	| [ld   (ds_plyr_actv +_b_bbee_obj),a] 1 ... offset of object that spawns the bonus bee.
+	move.b	ds_plyr_actv+_b_bbee_clr_a,d0   	| [$0E26: ld   a,(ds_plyr_actv +_b_bbee_clr_a)]
+	move.b	d0,d2                           	| [$0E29: ld   c,a]
+	and.b	#0xF8,d0                         	| [$0E2A: and  #0xF8]
+	addq.b	#6,d0                           	| [$0E2C: add  a,#6]
+	move.b	d0,(a0)                         	| [$0E2E: ld   (hl),a]
+												| [$0E2F: inc  l]
+	move.b	d2,d0                           	| [$0E30: ld   a,c]
+	and.b	#0x07,d0                         	| [$0E31: and  #0x07]
+	move.b	d0,(1,a0)                         	| [$0E33: ld   (hl),a]
+												| [$0E34: dec  l]
+	move.b	#1,d0                           	| [$0E35: ld   a,#1]
+	move.b	d0,ds_plyr_actv+_b_bbee_obj     	| [$0E37: ld   (ds_plyr_actv +_b_bbee_obj),a] 1 ... offset of object that spawns the bonus bee.
 
 l_0E3A:
 * these could be off by one if not already equal
-	move.b	(0x06,a2),d0                    	| [ld   a,0x06(ix)] ->(ix)0x01 ... origin home position y (bits 15:8)
-	move.b	d0,(0x01,a2)                    	| [ld   0x01(ix),a] (ix)0x06
-	move.b	(0x07,a2),d0                    	| [ld   a,0x07(ix)] ->(ix)0x03
-	move.b	d0,(0x03,a2)                    	| [ld   0x03(ix),a] (ix)0x07
+	move.b	(0x06,a2),d0                    	| [$0E3A: ld   a,0x06(ix)] ->(ix)0x01 ... origin home position y (bits 15:8)
+	move.b	d0,(0x01,a2)                    	| [$0E3D: ld   0x01(ix),a] (ix)0x06
+	move.b	(0x07,a2),d0                    	| [$0E40: ld   a,0x07(ix)] ->(ix)0x03
+	move.b	d0,(0x03,a2)                    	| [$0E43: ld   0x03(ix),a] (ix)0x07
 
-	jra	l_0D03_flite_pth_posn_set          	| [jp   l_0D03_flite_pth_posn_set]
+	COMPUTE_LSB_A0_D6 ds_sprite_code_8B00
+	lea		ds_sprite_ctrl_9B00,a0
+	add.w	d6,a0
+	jra	l_0D03_flite_pth_posn_set          	    | [$0E46: jp   l_0D03_flite_pth_posn_set]
 
 * training mode, make previous diving boss disabled
 * a bonus bee (e.g. 883A) flying off screen. Sprite-Code 5B (scorpion), color 05, object status==9

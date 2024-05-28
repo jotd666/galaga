@@ -4,6 +4,7 @@
   for the buffer and allow off-screen negative ranges
 - demo: third boss (alone) does not attack, explodes but no score
 - demo: boss explosions: some frames shifted
+- demo: trajectories are wrong, return to swarm is wrong
 - fake game: wrong sprite cluts & codes (blue bees don't show: probably wrong sprite codes for them, red bees show)
 - ACTIVE_BITPLANE_MASK not implemented
 - generate sprite_cluts for hw sprite

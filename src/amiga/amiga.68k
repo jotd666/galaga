@@ -118,17 +118,30 @@ SPRITE_SIZEOF = 4
 111:
 	* dest blit address too low: below drawed screen address
 	move.l	a1,a0
+	movem.l	d1-d4/a3,-(a7)
+	move.l	a1,a3
 	move.l	#BG_SCREEN_PLANE_SIZE*NB_BOBS_PLANES,d1
 	move.l	bg_drawed_screen_ptr(pc),a2
 	lea		blitter_address_too_low_error(pc),a1
+	move.w	last_x_blit,d2
+	move.w	last_y_blit,d3
+	move.w	last_blit_height,d4
 	jbsr	osd_break
+	movem.l	(a7)+,d1-d4/a3
 	jra		112f
 113:
 	move.l	a1,a0
+	movem.l	d1-d4/a3,-(a7)
+	move.l	a1,a3
+	add.l	bg_drawed_screen_ptr(pc),a3
 	move.l	#BG_SCREEN_PLANE_SIZE*NB_BOBS_PLANES,d1
 	move.l	bg_drawed_screen_ptr(pc),a2
 	lea		blitter_address_too_high_error(pc),a1
+	move.w	last_x_blit,d2
+	move.w	last_y_blit,d3
+	move.w	last_blit_height,d4
 	jbsr	osd_break
+	movem.l	(a7)+,d1-d4/a3
 	jra		112f
 110:
 	cmp.l	#BG_SCREEN_PLANE_SIZE*NB_BOBS_PLANES,a1
@@ -1364,7 +1377,8 @@ restore_16x_background:
 	.ifndef	RELEASE
 	movem.l	d0/d1,-(a7)
 	.endif
-	
+	tst.w	d1
+	bmi.b	0f
 	movem.l	d2-d7/a0-a5,-(a7)
 	moveq	#4,d2			| 32 bits blit
 	move.w	#NB_BOBS_PLANES,d3
@@ -1373,7 +1387,7 @@ restore_16x_background:
 	lea		_custom,a5
 	bsr.b	clear_planes_any_blitter_internal
 	movem.l	(a7)+,d2-d7/a0-a5
-
+0:
 	.ifndef	RELEASE
 	movem.l	(a7)+,d0/d1
 	.endif
@@ -1452,7 +1466,7 @@ clear_planes_any_blitter_internal:
     move.w  d0,bltdmod(a5)	|D modulo
 	
 	subq	#1,d3
-	beq.b	4f
+	jeq		4f
 	subq	#1,d3
 3:
 	CHECK_BLITTER_BOUNDS
@@ -1490,6 +1504,15 @@ blit_planes_cookie_cut_16x_flipped:
 * < D3: height of data
 * trashes: D0-D1
 blit_planes_cookie_cut_16x:
+	.ifndef	RELEASE
+	move.w	d0,last_x_blit
+	move.w	d1,last_y_blit
+	move.w	d3,last_blit_height
+	.endif
+	tst.w	d1
+	bpl.b	0f
+	rts
+0:
     lea _custom,A5
 	move.w	d2,d5
 	move.w	d3,d4
@@ -2900,7 +2923,7 @@ beamdelay:
 	rts
 
 	* add 16 to account for reverted Y blit
-	MUL_TABLE	NB_BYTES_PER_ROW,256+16
+	MUL_TABLE	NB_BYTES_PER_ROW,288+16
 
 
 	.align	4		| leave this long word alignment
@@ -2946,6 +2969,12 @@ write_colorram_out_of_range_error:
 	.asciz	"write colorram out of range"
 	.align	2
 
+last_x_blit:
+	.word	0
+last_y_blit:
+	.word	0
+last_blit_height:
+	.word	0
 	.endif
 
 
