@@ -3156,7 +3156,7 @@ l_12D1:
 	                           	| [inc  l]
  	move.b	(a1)+,d0            | [ld   a,(de)]
 	                           	| [inc  de]
-	move.b	d0,(a0)+            | [ld   (hl),a] pair.b1 i.e. ds_hpos_loc_orig ... copy data for reference in CPU1
+	move.b	d0,(a0)+            | [ld   (hl),a] pair.b1 i.e. ds_hpos_loc_orig_9900 ... copy data for reference in CPU1
 	                           	| [inc  l]
 	subq.b	#1,d1               | [...]
 	jne	l_12D1                  | [djnz l_12D1]

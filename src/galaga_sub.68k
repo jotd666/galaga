@@ -1675,14 +1675,13 @@ l_0963:
 
 * diving attacks stop and bugs go home
 case_0968:  | 0x0E
-	move.b	(0x10,a2),d4                    	| [ld   e,0x10(ix)] home_posn_rc[ obj_id ]
-	lea	sprt_fmtn_hpos,a1              	| [ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
+	move.b	(0x10,a2),d4                    	| [$0968: ld   e,0x10(ix)] home_posn_rc[ obj_id ]
+	lea	sprt_fmtn_hpos,a1              	        | [$096B: ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	move.b	(a1),d0                         	| [ld   a,(de)] row position index
-	move.b	d0,d4                           	| [ld   e,a]
-	lea	ds_hpos_loc_orig,a1            	| [ld   d,#>ds_hpos_loc_orig] b1: copy of origin data
-	and.w	#0xFF,d4
+	move.b	(a1),d0                         	| [$096D: ld   a,(de)] row position index
+	move.b	d0,d4                           	| [$096E: ld   e,a]
+	lea	ds_hpos_loc_orig_9900,a1            	        | [$096F: ld   d,#>ds_hpos_loc_orig_9900] b1: copy of origin data
 	add.w	d4,a1
 	addq.w	#1,a1                           	| [inc  e]
 	move.b	(a1),d0                         	| [ld   a,(de)] copy of origin data
@@ -1750,8 +1749,8 @@ l_09AE_doit:
 											| [ld   e,ixl]
 											| [ld   d,ixh]
 	exg	a1,a0                              	| [ex   de,hl]
-	move.l	a1,a3							| ld   iyl,e
-											| ld   iyh,d
+	move.l	a1,a3							| [ld   iyl,e]
+											| [ld   iyh,d]
 	move.w	#0x06,d1                        | [ld   bc,#0x0006] 6
 	jbsr	ldir                            | [ldir]
 	move.w	#6,d1                           | [ld   c,#6]
@@ -1769,7 +1768,7 @@ l_09AE_doit:
 	addq.w	#1,a0                           	| [inc  hl]
 	move.b	(a0)+,d0                         	| [ld   a,(hl)]
 	move.b	d0,(0x08,a3)                    	| [ld   0x08(iy),a]
-	                           	| [inc  hl]
+	                           	                | [inc  hl]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	move.b	d0,(0x09,a3)                    	| [ld   0x09(iy),a]
 
@@ -1908,39 +1907,29 @@ l_0A73:
 
 * attack wave element hits turning point and heads to home
 case_0AA0:  | 0x04
-
-	move.l	a0,-(sp)                        	| [push hl] ptr to data table
-
-	move.b	(0x10,a2),d6                    	| [ld   l,0x10(ix)] update object disposition ... i.e. 8800[L]
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
+	move.l	a0,-(sp)                        	| [$0AA0: push hl] ptr to data table
+	move.b	(0x10,a2),d6                    	| [$0AA1: ld   l,0x10(ix)] update object disposition ... i.e. 8800[L]
+	lea	b_8800,a0                      	        | [$0AA4: ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#9,(a0)                         	| [ld   (hl),#9] disposition = 9: diving/homing (currently 3)
-
-	lea	sprt_fmtn_hpos,a0              	| [ld   h,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
-	and.w	#0xFF,d6
+	move.b	#9,(a0)                         	| [$0AA6: ld   (hl),#9] disposition = 9: diving/homing (currently 3)
+	lea	sprt_fmtn_hpos,a0              	        | [ld   h,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
 	add.w	d6,a0
 	move.b	(a0)+,d2                         	| [ld   c,(hl)] row index
-	                           	| [inc  l]
+	                           	                | [inc  l]
 	move.b	(a0),d6                         	| [ld   l,(hl)] column index
-	lea	ds_hpos_loc_t,a0               	| [ld   h,#>ds_hpos_loc_t]
-	and.w	#0xFF,d6
+	lea	ds_hpos_loc_t,a0               	        | [ld   h,#>ds_hpos_loc_t]
 	add.w	d6,a0
-
 	move.b	(a0)+,d1                         	| [ld   b,(hl)] x offset
-	                           	| [inc  l]
-	move.b	(a0),d4                         	| [ld   e,(hl)] x coordinate (ds_hpos_loc_orig)
-
+	                           	                | [inc  l]
+	move.b	(a0),d4                         	| [ld   e,(hl)] x coordinate (ds_hpos_loc_orig_9900)
 	move.b	d2,d6                           	| [ld   l,c] row position index
 
 	lea	ds_hpos_loc_t,a0               	| [ld   h,#>ds_hpos_loc_t]
-	and.w	#0xFF,d6
 	add.w	d6,a0
-
 	move.b	(a0)+,d2                         	| [ld   c,(hl)] y offset
-	                           	| [inc  l]
-	move.b	(a0),d3                         	| [ld   d,(hl)] y coordinate (ds_hpos_loc_orig)
-
+	                           	                | [inc  l]
+	move.b	(a0),d3                         	| [ld   d,(hl)] y coordinate (ds_hpos_loc_orig_9900)
 	lsr.b	#1,d4                            	| [srl  e] x coordinate
 	movem.w	d3/d4,-(sp)                    		| [push de] y coord, x coord >> 1
 
@@ -1966,8 +1955,11 @@ l_0ACD:
 	clr.b	d4                               	| [$0AD4: ld   e,#0]
 	asr.b	#1,d3                            	| [$0AD6: sra  d]
 	roxr.b	#1,d4                           	| [$0AD8: rr   e]
+	move.w	d3,-(a7)
 	LOAD_D3_16_FROM_D3D4
 	add.w	d3,d5                            	| [$0ADA: add  hl,de]
+	move.w	(a7)+,d3
+	
 	* store 16 bit in struct
 	LOAD_D5D6_FROM_D5_16
 	move.b	d6,(0x00,a2)                    	| [$0ADB: ld   0x00(ix),l] .b00
@@ -2684,7 +2676,7 @@ next__pool_idx_0dfb:
 l_0E08_imhome:
 	clr.b	d0                               	| [$0E08: xor  a]
 	bclr.b	#0,(0x13,a2)                    	| [$0E09: res  0,0x13(ix)] mark the flying structure as inactive
-	move.b	d0,(0x00,a2)                    	| [$0E0D: ld   0x00(ix),a] 0
+	move.b	d0,(a2)                    	| [$0E0D: ld   0x00(ix),a] 0
 	move.b	d0,(0x02,a2)                    	| [$0E10: ld   0x02(ix),a] 0
 	lea	b_8800,a0                      			| [$0E13: ld   h,#>b_8800]
 	move.b	(0x10,a2),d6                    	| [$0E15: ld   l,0x10(ix)] offset of object ...8800[L]
@@ -2763,7 +2755,6 @@ case_make_object_inactive_0e49: | 0x0
 c_0E5B:
 	movem.w	d1/d2,-(sp)                    	| [push bc]
 	movem.w	d3/d4,-(sp)                    	| [push de]
-	move.l	a1,-(sp)                        	| [push de]
 
 * dx
 	move.b	d4,d0                           	| [ld   a,e]
@@ -2820,9 +2811,7 @@ l_0E84:
 l_0E93:
 	move.b	d1,d5                           	| [ld   h,b]
 
-	move.l	(sp)+,a1                        	| [pop  de]
 	movem.w	(sp)+,d3/d4                    	| [pop  de]
-
 	movem.w	(sp)+,d1/d2                    	| [pop  bc]
 
 	rts                                    	| [ret]
