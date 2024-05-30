@@ -395,12 +395,12 @@ l_0414_while_tmr_3:
 c_game_bonus_info_show_line_043d:
 	jbsr	string_out_pe_30                | [$043D: rst  0x30] string_out_pe ('XXX BONUS FOR   ', 'AND FOR EVERY   ' )
 * set next position to append 'X0000 PTS'
-	exg	d4,d6
+	exg	d4,d5
 	exg	a1,a0                               | [$043E: ex   de,hl] get position of final character from string_out (digit now in L)
 	                        	            | [$043F: ld   a,e]
 	add.w	#0x40,a1                        | [$0440: add  a,#0x40] Offset position by 2 characters to the left.
 	                        	            | [$0442: ld   e,a]								            
-	clr.b	d5                              | [$0443: ld   h,#0]
+	and.w	#0xFF,d5                        | [$0443: ld   h,#0]
 	jbsr	c_text_out_i_to_d_0A53          | [$0445: call c_text_out_i_to_d_0A53] HL contains number to display, returns updated destination in DE								            
 	exg	a1,a0                               | [$0448: ex   de,hl]
 	move.b	#0x1E,d2                        | [$0449: ld   c,#0x1E]
@@ -588,7 +588,7 @@ l_04C1_while:
 l_04DC_break:
 
 * end of stage ... "normal"
-	jbsr	stg_init_splash                   	| [call stg_init_splash]
+	jbsr	stg_init_splash_0185                   	| [call stg_init_splash_0185]
 	jra	plyr_respawn_rdy                   	| [jp   plyr_respawn_rdy]
 
 
@@ -645,7 +645,7 @@ l_0509_while:
 	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("SHOTS FIRED")
 
 	lea	0x8000+0x0120+0x12,a1      	| [ld   de,#0x8000 + 0x0120 + 0x12]
-	move.w	ds_plyr_actv+_w_shot_ct,d5  	| [ld   hl,(ds_plyr_actv +_w_shot_ct)] puts game shots fired count
+	MOVE_TO_REG	ds_plyr_actv+_w_shot_ct,d5  	| [ld   hl,(ds_plyr_actv +_w_shot_ct)] puts game shots fired count
 	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] puts game shots fired count
 
 	move.b	#0x18,d2                        	| [ld   c,#0x18] string index
@@ -802,7 +802,7 @@ l_05D1:
 * set Cy to disable sound clicks for level tokens on player change (value of A is irrelevant)
 	SET_XC_FLAGS                           	| [scf]
 	scs	d7                              	| [ex   af,af']
-	jbsr	c_new_level_tokens                	| [call c_new_level_tokens] Cy' == 1, A == don't care
+	jbsr	c_new_level_tokens_117f                	| [call c_new_level_tokens_117f] Cy' == 1, A == don't care
 
 * if ( _enmy_ct_actv == 0 )  ... then _stg_init ... player was previously destroyed by collision with last enemy in the round
 	move.b	ds_plyr_actv+_b_enmy_ct_actv,d0 	| [ld   a,(ds_plyr_actv +_b_enmy_ct_actv)]
@@ -825,11 +825,10 @@ l_05D1:
 
 * while ( cpu0_task_actv[$0E] ) ... wait for the task to timeout
 l_05FD:
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	| [and  a]
-	jne	l_05FD                             	| [jr   nz,l_05FD]
-
-	jra	plyr_respawn_plyrup                	| [jp   plyr_respawn_plyrup] reloaded suspended plyr, bug nest reloaded... ready!
+	move.b	(a0),d0                         | [$05FD: ld   a,(hl)]
+	                               	        | [$05FE: and  a]
+	jne	l_05FD                             	| [$05FF: jr   nz,l_05FD]
+	jra	plyr_respawn_plyrup                	| [$0601: jp   plyr_respawn_plyrup] reloaded suspended plyr, bug nest reloaded... ready!
 
 
 *=============================================================================
@@ -838,13 +837,12 @@ l_05FD:
 * Only reference is from _terminate() so it should be "inlined" there.
 plyr_respawn_1up:
 * if (0 == plyr_state_actv.b_nbugs) ...
-	move.b	ds_plyr_actv+_b_enmy_ct_actv,d0 	| [ld   a,(ds_plyr_actv +_b_enmy_ct_actv)]
-	                               	| [and  a]
-	jne	gctl_plyr_respawn_wait             	| [jr   nz,gctl_plyr_respawn_wait]
+	move.b	ds_plyr_actv+_b_enmy_ct_actv,d0 	| [$0604: ld   a,(ds_plyr_actv +_b_enmy_ct_actv)]
+	                               	            | [$0607: and  a]
+	jne	gctl_plyr_respawn_wait             	    | [$0608: jr   nz,gctl_plyr_respawn_wait]
 * ... then ...
-	jbsr	stg_init_splash                   	| [call stg_init_splash] new stage setup, shows "STAGE X"
-
-	jra	gctl_plyr_respawn_wait             	| [jr   gctl_plyr_respawn_wait]
+	jbsr	stg_init_splash_0185                | [$060A: call stg_init_splash_0185] new stage setup, shows "STAGE X"
+	jra	gctl_plyr_respawn_wait             	    | [$060D: jr   gctl_plyr_respawn_wait]
 
 
 *=============================================================================
@@ -852,7 +850,7 @@ plyr_respawn_1up:
 * change, or at start of new game loop.
 * If on a new game, PLAYER 1 text has been erased.
 plyr_respawn_splsh:
-	jbsr	stg_init_splash                   	| [call stg_init_splash] shows "STAGE X" and does setup
+	jbsr	stg_init_splash_0185                   	| [call stg_init_splash_0185] shows "STAGE X" and does setup
 
        * plyr_respawn_plyrup()
 
@@ -935,8 +933,8 @@ l_065E:
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 
 * DE = adjusted offset into tile ram on return
-	move.b	d4,d6                           	| [ld   l,e] E==nbr of flying bugs hit this round
-	clr.b	d5                               	| [ld   h,#0]
+	clr.w	d5                               	| [ld   h,#0]
+	move.b	d4,d5                           	| [ld   l,e] E==nbr of flying bugs hit this round
 	lea	0x8000+0x0100+0x10,a1      	| [ld   de,#0x8000 + 0x0100 + 0x10]
 	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] HL contains number to display (number of hits)
 
@@ -959,8 +957,8 @@ l_065E:
 	                               	| [and  a]
 	jeq	l_0693_put_ones                    	| [jr   z,l_0693_put_ones]
 * then ...
-	move.b	d0,d6                           	| [ld   l,a]
-	clr.b	d5                               	| [ld   h,#0]
+	clr.w	d5                               	| [ld   h,#0]
+	move.b	d0,d5                           	| [ld   l,a]
 	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] HL contains number to display (1000's,100's place of bonus pts awarded)
 	clr.b	d0                               	| [xor  a]
 	jbsr	write_videoram_to_a1					| [ld   (de),a] putc(0) ... 10's place of bonus pts awarded
@@ -2674,7 +2672,7 @@ l_1171:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_new_level_tokens:
+c_new_level_tokens_117f:
 *  memset($8002,$24,$12)
 	lea	0x8000+2,a0                	| [ld   hl,#0x8000 + 2] second row from bottom at right
 	move.b	#0x12,d1                        	| [ld   b,#0x12]
@@ -2685,7 +2683,7 @@ c_new_level_tokens:
 	move.b	#0x12,d1                        	| [ld   b,#0x12]
 	jbsr	rst_18_video                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
-	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] c_new_level_tokens
+	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] c_new_level_tokens_117f
 	clr.b	d1                               	| [ld   b,#0] tmp_quotient 50
 	lea	0x8000+1,a0                	| [ld   hl,#0x8000 + 1] offset into tile ram
 
@@ -10842,60 +10840,58 @@ c_sctrl_playfld_clr_0160:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-stg_init_splash:
-
+stg_init_splash_0185:
 * plyr_state_active.stage_ctr++
-	lea	ds_plyr_actv+_b_stgctr,a0      	| [ld   hl,#ds_plyr_actv +_b_stgctr] ++
-	addq.b	#1,(a0)                         	| [inc  (hl)]
+	lea	ds_plyr_actv+_b_stgctr,a0      	        | [$0185: ld   hl,#ds_plyr_actv +_b_stgctr] ++ ($9821)
+	addq.b	#1,(a0)                         	| [$0188: inc  (hl)]
 
 * plyr_state_active.not_chllng_stg = *HL & 0x03  ... gives 0 for challenge stage
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	addq.b	#1,d0                           	| [inc  a]
-	and.b	#0x03,d0                         	| [and  #0x03]
-	move.b	d0,ds_plyr_actv+_b_not_chllg_stg	| [ld   (ds_plyr_actv +_b_not_chllg_stg),a] ==(stg_ctr+1)%4 ...i.e. 0 if challenge stage
+	move.b	(a0),d0                         	| [$0189: ld   a,(hl)]
+	addq.b	#1,d0                           	| [$018A: inc  a]
+	and.b	#0x03,d0                         	| [$018B: and  #0x03]
+	move.b	d0,ds_plyr_actv+_b_not_chllg_stg	| [$018D: ld   (ds_plyr_actv +_b_not_chllg_stg),a] ==(stg_ctr+1)%4 ...i.e. 0 if challenge stage
 
 *  if ( 0 != plyr_state_active.not_chllng_stg ) ...
-	jeq	l_01A2_set_challeng_stg            	| [jr   z,l_01A2_set_challeng_stg]
+	jeq	l_01A2_set_challeng_stg            	    | [$0190: jr   z,l_01A2_set_challeng_stg]
 * then {
-	move.b	#0x06,d2                        	| [ld   c,#0x06] C=string_out_pe_index
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "STAGE "
+	move.b	#0x06,d2                        	| [$0192: ld   c,#0x06] C=string_out_pe_index
+	jbsr	string_out_pe_30                    | [$0194: rst  0x30] string_out_pe "STAGE "
 * HL == $81B0 ... "X" of STAGE X.
-	exg	a1,a0                              	| [ex   de,hl] DE now 81B0 (points to X in "STAGE X")
-	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] show score
-	move.b	d0,d6                           	| [ld   l,a]
-	clr.b	d5                               	| [ld   h,#0]
-	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] Print "X" of STAGE X.
-	clr.b	d0                               	| [xor  a] 0 ... start value for wave_bonus_ctr (irrelevant if !challenge)
-	jra	l_01AC                             	| [jr   l_01AC]
+	exg	a1,a0                              	    | [$0195: ex   de,hl] DE now 81B0 (points to X in "STAGE X")
+	move.b	ds_plyr_actv+_b_stgctr,d0       	| [$0196: ld   a,(ds_plyr_actv +_b_stgctr)] show score
+	clr.w	d5                               	| [$019A: ld   h,#0]
+	move.b	d0,d5                           	| [$0199: ld   l,a]
+	jbsr	c_text_out_i_to_d_0A53              | [$019C: call c_text_out_i_to_d_0A53] Print "X" of STAGE X.
+	clr.b	d0                               	| [$019F: xor  a] 0 ... start value for wave_bonus_ctr (irrelevant if !challenge)
+	jra	l_01AC                             	    | [$01A0: jr   l_01AC]
 * } else {
 l_01A2_set_challeng_stg:
-	move.b	#0x07,d2                        	| [ld   c,#0x07] C=string_out_pe_index
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "CHALLENGING STAGE"
-	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,b_9AA0+0x0D                  	| [ld   (b_9AA0 + 0x0D),a] 1 ... sound-fx count/enable registers, start challenge stage
-	move.b	#8,d0                           	| [ld   a,#8] start value for wave_bonus_ctr (decremented by cpu-b when bug destroyed)
+	move.b	#0x07,d2                        	| [$01A2: ld   c,#0x07] C=string_out_pe_index
+	jbsr	string_out_pe_30                    | [$01A4: rst  0x30] string_out_pe "CHALLENGING STAGE"
+	move.b	#1,d0                           	| [$01A5: ld   a,#1]
+	move.b	d0,b_9AA0+0x0D                  	| [$01A7: ld   (b_9AA0 + 0x0D),a] 1 ... sound-fx count/enable registers, start challenge stage
+	move.b	#8,d0                           	| [$01AA: ld   a,#8] start value for wave_bonus_ctr (decremented by cpu-b when bug destroyed)
 * }
 
 l_01AC:
-	move.b	d0,w_bug_flying_hit_cnt_92a8         	| [ld   (w_bug_flying_hit_cnt_92a8),a] 8 for challenge stage (else 0 i.e. don't care)
+	move.b	d0,w_bug_flying_hit_cnt_92a8        | [$01AC: ld   (w_bug_flying_hit_cnt_92a8),a] 8 for challenge stage (else 0 i.e. don't care)
 
-* set the timer to synchronize finish of c_new_level_tokens
-	move.b	#3,d0                           	| [ld   a,#3]
-	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] 3
-
-	move.b	d0,ds_9200_glbls+0x0B           	| [ld   (ds_9200_glbls + 0x0B),a] 3: enemy_enable, begin round, needs to be !0 (use 3 for optimization)
+* set the timer to synchronize finish of c_new_level_tokens_117f
+	move.b	#3,d0                           	| [$01AF: ld   a,#3]
+	move.b	d0,ds4_game_tmrs_92ac+2             | [$01B1: ld   (ds4_game_tmrs_92ac + 2),a] 3
+	move.b	d0,ds_9200_glbls+0x0B           	| [$01B4: ld   (ds_9200_glbls + 0x0B),a] 3: enemy_enable, begin round, needs to be !0 (use 3 for optimization)
 
 * if ( 0 != plyr_actv.b_not_chllg_stg ) Cy' = 0 ... set Cy to inhibit sound clicks for level tokens at challenge stage (1211)
-	move.b	ds_plyr_actv+_b_not_chllg_stg,d0	| [ld   a,(ds_plyr_actv +_b_not_chllg_stg)] parameter to sound manager passed through to c_build_token_1
-	                               	| [and  a] clear Cy if A != 0
-	seq	d7                              	| [ex   af,af']
-	jbsr	c_new_level_tokens                	| [call c_new_level_tokens] A' == 0 if challenge stg, else non-zero (stage_ct + 1)
+	move.b	ds_plyr_actv+_b_not_chllg_stg,d0	| [$01B7: ld   a,(ds_plyr_actv +_b_not_chllg_stg)] parameter to sound manager passed through to c_build_token_1
+	                               	            | [$01BA: and  a] clear Cy if A != 0
+	seq	d7                              	    | [$01BB: ex   af,af']
+	jbsr	c_new_level_tokens_117f             | [$01BC: call c_new_level_tokens_117f] A' == 0 if challenge stg, else non-zero (stage_ct + 1)
 
 * while ( game_tmrs[2] ){}
 l_01BF:
-	move.b	ds4_game_tmrs_92ac+2,d0              	| [ld   a,(ds4_game_tmrs_92ac + 2)]
-	                               	| [and  a]
-	jne	l_01BF                             	| [jr   nz,l_01BF]
+	move.b	ds4_game_tmrs_92ac+2,d0             | [$01BF: ld   a,(ds4_game_tmrs_92ac + 2)]
+	                               	            | [$01C2: and  a]
+	jne	l_01BF                             	    | [$01C3: jr   nz,l_01BF]
 
 * _init_env()|
 
@@ -10970,7 +10966,7 @@ l_0220:
 	move.b	#0x0B,d2                        	| [ld   c,#0x0B]
 	lea	0x8000+0x03A0+0x10,a0      	            | [ld   hl,#0x8000 + 0x03A0 + 0x10]
 	jbsr	c_string_out_1398                   | [call c_string_out_1398] erase "stage X" text"
-	jra	stg_init_splash                    	    | [jp   stg_init_splash] start over again
+	jra	stg_init_splash_0185                    	    | [jp   stg_init_splash_0185] start over again
 
 
 *=============================================================================
