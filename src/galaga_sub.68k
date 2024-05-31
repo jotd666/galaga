@@ -1628,7 +1628,7 @@ d_0920_jp_tbl:
 	.long case_0B98   | 8: attack wave
 	.long case_0BA8   | 9: one red moth left in "free flight mode"
 	.long case_0942   | A: ?
-	.long case_0A53   | B: capture boss diving
+	.long case_capturing_boss_starts_dive_0A53   | B: capture boss diving
 	.long case_0A01   | C: diving elements have left formation and fired
 	.long case_097B   | D: bonus bee
 	.long case_0968   | E: diving attacks stop and bugs go home
@@ -1860,7 +1860,7 @@ l_0A38:
 	jra	l_flite_pth_skip_load_0BFF         	    | [$0A50: jp   l_flite_pth_skip_load_0BFF] save pointer and goto _flite_pth_cont
 
 * capturing boss starts dive
-case_0A53:  | 0x0B
+case_capturing_boss_starts_dive_0A53:  | 0x0B
 	move.l	a0,-(sp)                        	| [$0A53: push hl]
 	move.b	b_9215_flip_screen,d0           	| [$0A54: ld   a,(b_9215_flip_screen)]
 	move.b	d0,d2                           	| [$0A57: ld   c,a]
@@ -1887,7 +1887,7 @@ l_0A73:
 	move.b	#0x48,d3                        	| [ld   d,#0x48]
 	move.b	(0x01,a2),d5                    	| [ld   h,0x01(ix)]
 	move.b	(0x03,a2),d6                    	| [ld   l,0x03(ix)]
-	jbsr	compute_rotation_angle_0e5b                            	| [call compute_rotation_angle_0e5b] HL = compute_rotation_angle_0e5b(DE, H, L) ... determine rotation angle
+	jbsr	compute_rotation_angle_0e5b         | [call compute_rotation_angle_0e5b] HL = compute_rotation_angle_0e5b(DE, H, L) ... determine rotation angle
 	lsr.b	#1,d5                            	| [srl  h]
 	roxr.b	#1,d6                           	| [rr   l]
 	move.b	d6,(0x04,a2)                    	| [ld   0x04(ix),l]
@@ -1945,13 +1945,13 @@ l_0ACD:
 * add y-offset to .b00/.b01 (sra/rr -> 9.7 fixed-point scaling)
 	move.b	(0x00,a2),d6                    	| [$0ACD: ld   l,0x00(ix)] .b00
 	move.b	(0x01,a2),d5                    	| [$0AD0: ld   h,0x01(ix)] .b01 ... sY<8:1>
-	LOAD_D5_16_FROM_D5D6
 	move.b	d2,d3                           	| [$0AD3: ld   d,c] step y coord, y offset
 	clr.b	d4                               	| [$0AD4: ld   e,#0]
 	asr.b	#1,d3                            	| [$0AD6: sra  d]
 	roxr.b	#1,d4                           	| [$0AD8: rr   e]
 	move.w	d3,-(a7)
 	LOAD_D3_16_FROM_D3D4
+	LOAD_D5_16_FROM_D5D6
 	add.w	d3,d5                            	| [$0ADA: add  hl,de]
 	move.w	(a7)+,d3
 	
@@ -1964,11 +1964,11 @@ l_0ACD:
 * add x-offset to .b02/.b03 (sra/rr -> 9.7 fixed-point scaling)
 	move.b	(0x02,a2),d6                    	| [$0AE2: ld   l,0x02(ix)] .b00
 	move.b	(0x03,a2),d5                    	| [$0AE5: ld   h,0x03(ix)] .b01
-	LOAD_D5_16_FROM_D5D6
 	clr.b	d2                               	| [$0AE8: ld   c,#0]
 	asr.b	#1,d1                            	| [$0AEA: sra  b] step x coord, x offset
 	roxr.b	#1,d2                           	| [$0AEC: rr   c] 0 or 0x80
 	LOAD_D1_16_FROM_D1D2
+	LOAD_D5_16_FROM_D5D6
 	subx.w	d1,d5                            	| [$0AEE: sbc  hl,bc] sub could work too
 	LOAD_D5D6_FROM_D5_16
 	move.b	d6,(0x02,a2)                    	| [$0AF0: ld   0x02(ix),l] .b00
@@ -1977,13 +1977,11 @@ l_0ACD:
 	move.b	d4,d5                           	| [$0AF7: ld   h,e] y, .b01 (bits<8:1> of integer portion)
 	move.b	d3,d2                           	| [$0AF8: ld   c,d] C is not used?
 	movem.w	(sp)+,d3/d4                    		| [$0AF9: pop  de] abs row pix coord & abs col pix coord >> 1
-	jbsr	osd_break
 	jbsr	compute_rotation_angle_0e5b         | [$0AFA: call compute_rotation_angle_0e5b] HL = mctl_rotn_hp(DE, H, L)
 	lsr.b	#1,d5                            	| [$0AFD: srl  h]
 	roxr.b	#1,d6                           	| [$0AFF: rr   l]
-	move.b	d6,(0x04,a2)                    	| [$0B01: ld   0x04(ix),l]
+	move.b	d6,(0x04,a2)                    	| [$0B01: ld   0x04(ix),l] TODO sometimes values differ slightly from original for D6
 	move.b	d5,(0x05,a2)                    	| [$0B04: ld   0x05(ix),h]
-	LOG_REGS	B07
 	move.b	d3,(0x06,a2)                    	| [$0B07: ld   0x06(ix),d] origin home position y (bits 15:8) ... from hpos_loc_orig.x
 	move.b	d4,(0x07,a2)                    	| [$0B0A: ld   0x07(ix),e] origin home position x (bits 15:8) ... from hpos_loc_orig.y
 	bset.b	#6,(0x13,a2)                    	| [$0B0D: set  6,0x13(ix)] if set, flite path handler checks for home
@@ -2239,7 +2237,6 @@ l_0C46:
 	btst.b	#7,d1                           	| [$0C56: bit  7,b] (ix)0x0C
 	jeq	l_0C5C                             	    | [$0C58: jr   z,l_0C5C]
 	st.b	d6                          	    | [$0C5A: ld   l,#-1]
-
 l_0C5C:
 * check for overflow out of LSB from addition (subtraction) result, sneaky ... xor sets S flag if bit-7 is toggled hi
 	roxr.b	#1,d0                           	| [$0C5C: rra]
@@ -2669,17 +2666,16 @@ next__pool_idx_0dfb:
 
 * creature gets to home-spot
 l_0E08_imhome:
-	clr.b	d0                               	| [$0E08: xor  a]
+	                                         	| [$0E08: xor  a]
 	bclr.b	#0,(0x13,a2)                    	| [$0E09: res  0,0x13(ix)] mark the flying structure as inactive
-	move.b	d0,(a2)                    	| [$0E0D: ld   0x00(ix),a] 0
-	move.b	d0,(0x02,a2)                    	| [$0E10: ld   0x02(ix),a] 0
+	clr.b	(a2)                    	        | [$0E0D: ld   0x00(ix),a] 0
+	clr.b	(0x02,a2)                    	    | [$0E10: ld   0x02(ix),a] 0
 	lea	b_8800,a0                      			| [$0E13: ld   h,#>b_8800]
 	move.b	(0x10,a2),d6                    	| [$0E15: ld   l,0x10(ix)] offset of object ...8800[L]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#2,(a0)                         	| [$0E18: ld   (hl),#2] disposition = 02: rotating back into position in the collective
 	lea	ds_sprite_code_8B00,a0              	| [$0E1A: ld   h,#>ds_sprite_code_8B00]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 												| [$0E1C: inc  l]
 	move.b	(1,a0),d0                         	| [$0E1D: ld   a,(hl)] sprite color code
@@ -2738,19 +2734,18 @@ case_make_object_inactive_0e49: | 0x0
 *    Determine rotation angle ... (ix)0x04, (ix)0x05
 *    Parameters are all bits<1:8> of the integer portion (upper-byte)
 * IN:
-*  D - abs row pix coord
-*  E - abs col pix coord
-*  H - y, (ix)0x01
-*  L - x, (ix)0x03
+*  D3 - abs row pix coord
+*  D4 - abs col pix coord
+*  D5 - y, (ix)0x01
+*  D6 - x, (ix)0x03
 * OUT:
-*  HL
+*  D5.W
 * PRESERVES:
-*  BC, DE
+*  D1-D4
 *-----------------------------------------------------------------------------
 compute_rotation_angle_0e5b:
-	movem.w	d1/d2,-(sp)                    	    | [$0E5B: push bc]
-	movem.w	d3/d4,-(sp)                    	    | [$0E5C: push de]
-
+	movem.w	d1-d4,-(sp)                    	    | [$0E5B: push bc]
+	                                      	    | [$0E5C: push de]
 * dx
 	move.b	d4,d0                           	| [$0E5D: ld   a,e]
 	clr.b	d1                               	| [$0E5E: ld   b,#0]
@@ -2776,7 +2771,7 @@ l_0E67:
 l_0E76:
 	cmp.b	d2,d0                            	| [$0E76: cp   c]
 	SET_X_FROM_C
-	scs		d7
+	scs		d7				| save C
 	move.w	d0,-(sp)                        	| [$0E77: push af]
 	roxl.b	#1,d0                           	| [$0E78: rla]
 	eor.b	d1,d0                            	| [$0E79: xor  b]
@@ -2784,7 +2779,7 @@ l_0E76:
 	INVERT_XC_FLAGS                            	| [$0E7B: ccf] complement Cy
 	roxl.b	#1,d1                           	| [$0E7C: rl   b]
 	movem.w	(sp)+,d0                        	| [$0E7E: pop  af]
-	tst.b	d7
+	tst.b	d7				| test preserved C
 	jeq	l_0E84                             	    | [$0E7F: jr   nc,l_0E84]
 	move.b	d2,d3                           	| [$0E81: ld   d,c]
 	move.b	d0,d2                           	| [$0E82: ld   c,a]
@@ -2805,8 +2800,8 @@ l_0E84:
 
 l_0E93:
 	move.b	d1,d5                           	| [$0E93: ld   h,b]
-	movem.w	(sp)+,d3/d4                      	| [$0E94: pop  de]
-	movem.w	(sp)+,d1/d2                      	| [$0E95: pop  bc]
+												| [$0E94: pop  de]
+	movem.w	(sp)+,d1-d4                      	| [$0E95: pop  bc]
 	rts                                      	| [$0E96: ret]
 
 *=============================================================================
@@ -2835,40 +2830,46 @@ mul_16_0E97:
 *  Description:
 *   HL = HL / A
 * IN:
-*  A, HL
+*  D0, D5/D6
 * OUT:
-*  HL
+*  D5/D6
 * PRESERVES:
-*  BC
+*  D1/D2
 *-----------------------------------------------------------------------------
 c_divide_d5d6_by_d0_0EAA:
 	LOAD_D5_16_FROM_D5D6
-	movem.w	d1/d2,-(sp)                    	| [$0EAA: push bc]
-	move.b	d0,d2                           | [$0EAB: ld   c,a]
-	clr.b	d0                              | [$0EAC: xor  a] clears Cy
-	CLEAR_XC_FLAGS
-	move.w	#0x11-1,d1                      | [$0EAD: ld   b,#0x11]
-l_0EAF:
-	addx.b	d0,d0					        | [$0EAF: adc  a,a]
-	jcs	l_0EBD                             	| [$0EB0: jr   c,l_0EBD]
-	cmp.b	d2,d0                           | [$0EB2: cp   c]
-	jcs	l_0EB6                             	| [$0EB3: jr   c,l_0EB6]
-	sub.b	d2,d0                           | [$0EB5: sub  c]
-l_0EB6:
-* flip the Cy: i.e. set it if the "sub c" was done, otherwise clear it.
-	INVERT_XC_FLAGS                         | [$0EB6: ccf]
-l_0EB7:
-	addx.w	d5,d5			                | [$0EB7: adc  hl,hl]
-	dbf		d1,l_0EAF                       | [$0EB9: djnz l_0EAF]
-
-	movem.w	(sp)+,d1/d2                    	| [$0EBB: pop  bc]
+	and.w	#0xFF,d0
+	divu	d0,d5							| completely replaced by divu!
 	LOAD_D5D6_FROM_D5_16
 	rts                                    	| [$0EBC: ret]
-
-l_0EBD:
-	sub.b	d2,d0                           | [$0EBD: sub  c]
-	SET_XC_FLAGS                           	| [$0EBE: scf]
-	jra	l_0EB7                             	| [$0EBF: jp   l_0EB7]
+	
+*	LOAD_D5_16_FROM_D5D6
+*	movem.w	d1/d2,-(sp)                    	| [$0EAA: push bc]
+*	move.b	d0,d2                           | [$0EAB: ld   c,a]
+*	clr.b	d0                              | [$0EAC: xor  a] clears Cy
+*	CLEAR_XC_FLAGS
+*	move.w	#0x11-1,d1                      | [$0EAD: ld   b,#0x11]
+*l_0EAF:
+*	addx.b	d0,d0					        | [$0EAF: adc  a,a]
+*	jcs	l_0EBD                             	| [$0EB0: jr   c,l_0EBD]
+*	cmp.b	d2,d0                           | [$0EB2: cp   c]
+*	jcs	l_0EB6                             	| [$0EB3: jr   c,l_0EB6]
+*	sub.b	d2,d0                           | [$0EB5: sub  c]
+*l_0EB6:
+** flip the Cy: i.e. set it if the "sub c" was done, otherwise clear it.
+*	INVERT_XC_FLAGS                         | [$0EB6: ccf]
+*l_0EB7:
+*	addx.w	d5,d5			                | [$0EB7: adc  hl,hl]
+*	dbf		d1,l_0EAF                       | [$0EB9: djnz l_0EAF] using dbf and not sub preserves X
+*
+*	movem.w	(sp)+,d1/d2                    	| [$0EBB: pop  bc]
+*	LOAD_D5D6_FROM_D5_16
+*	rts                                    	| [$0EBC: ret]
+*
+*l_0EBD:
+*	sub.b	d2,d0                           | [$0EBD: sub  c]
+*	SET_XC_FLAGS                           	| [$0EBE: scf]
+*	jra	l_0EB7                             	| [$0EBF: jp   l_0EB7]
 
 
 *=============================================================================

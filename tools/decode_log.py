@@ -41,7 +41,7 @@ with open("amiga.tr","w") as f:
         out = f"{pc:04X}: A={a:02X}, B={b:02X}, C={c:02X}, D={d:02X}, E={e:02X}, H={h:02X}, L={l:02X}\n"
         f.write(out)
 
-# generated using log: trace galaga.tr,,,{tracelog "A=%02X, B=%02X, C=%02X, D=%02X, E=%02X, H=%02X, L=%02X, IX=%04X ",a,b,c,d,e,h,l,ix}
+# generated using log: trace galaga.tr,sub,,{tracelog "A=%02X, B=%02X, C=%02X, D=%02X, E=%02X, H=%02X, L=%02X, IX=%04X ",a,b,c,d,e,h,l,ix}
 
 with open(r"K:\Emulation\MAME\galaga.tr") as f, open("mame.tr","w") as fw:
     l = len("A=01, B=00, C=3F, D=93, E=81, H=93, L=01, ")

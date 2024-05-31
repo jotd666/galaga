@@ -17,3 +17,7 @@
 
 
 traj issues: Traj computed in subcpu D23 / D50 probe there!
+
+homing traj OK but final positions wrong
+
+break in E08 see when happens???
