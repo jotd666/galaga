@@ -1,4 +1,4 @@
-# Pengo (68K)
+# Galaga (68K)
 
 This is a transcode from the original arcade game Z80 to 68K assembly.
 
@@ -16,24 +16,16 @@ This is a transcode from the original arcade game Z80 to 68K assembly.
 
 #### NEO GEO
 
-- tested & playable w/sound on MVS,NGCDZ (MAME only)
-- TBD: display masking top/bottom
-- WIP: sound (partial, glitches)
-- TBD: non-tate mode?
-
 ### FEATURES:
 
 #### CREDITS:
 
-- Jean-Francois Fabre (aka jotd): Z80 reverse engineering, Z80 to 68k transcode, Amiga code and assets
+- Jean-Francois Fabre (aka jotd): Z80 to 68k transcode, Amiga code and assets
 - Mark McDougall (aka tcdev): Neo Geo code and assets (conversion)
 - no9: remade amiga tunes
 - phx: ptplayer sound/music replay Amiga code
-- DamienD: floppy menu
-- K1200RS21: Amiga icon
-- mrv2k: Amiga boxart
 - blastar: NGFX SoundBuilder (Neo Geo sound tool)
-- SEGA: original game :)
+- Namco: original game :)
 
 #### SPECIAL THANKS:
 
@@ -89,10 +81,10 @@ This is a transcode from the original arcade game Z80 to 68K assembly.
 
 - make -f makefile.ng OUTPUT={cart|cd} MAMEDIR={mamedir} install
   - (mamedir defaults to '.')
-- paste pengo.xml into MAME's hash/neogeo.xml file
+- paste galaga.xml into MAME's hash/galaga.xml file
 
 #### To run in MAME:
 
-- cart : 'mame neogeo pengo'
+- cart : 'mame neogeo galaga'
 - cd : 'mame neocdz -cdrom roms/neocdz/pengo.iso'
   

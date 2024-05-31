@@ -1545,17 +1545,17 @@ for__pool_idx_08E4:
 	add.w	d6,a0
 
 * 9 is diving, 7 is spawning, 3 (and 6) bomb?
-* if (!(A == 3                          	|| A == 7|| A == 9)) ...
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	cmp.b	#3,d0                            	| [cp   #3] status 3 is what?
-	jeq	mctl_fltpn_dspchr                  		| [jr   z,mctl_fltpn_dspchr]
-	cmp.b	#9,d0                            	| [cp   #9] if 8800[L]==9 ... flying into formation or diving out.
-	jeq	mctl_fltpn_dspchr                  		| [jr   z,mctl_fltpn_dspchr]
-	cmp.b	#7,d0                            	| [cp   #7] if 8800[L]==7 ... spawning (new stage)
+* if (!(A == 3 || A == 7|| A == 9)) ...
+	move.b	(a0),d0                         	| [$08F4: ld   a,(hl)]
+	cmp.b	#3,d0                            	| [$08F5: cp   #3] status 3 is what?
+	jeq	mctl_fltpn_dspchr                  		| [$08F7: jr   z,mctl_fltpn_dspchr]
+	cmp.b	#9,d0                            	| [$08F9: cp   #9] if 8800[L]==9 ... flying into formation or diving out.
+	jeq	mctl_fltpn_dspchr                  		| [$08FB: jr   z,mctl_fltpn_dspchr]
+	cmp.b	#7,d0                            	| [$08FD: cp   #7] if 8800[L]==7 ... spawning (new stage)
 * ... then ...
 * status==4 ... shot a non-flying capturing boss (ship will soon go rogue and launch out)
 * HL==8830, *HL==04, 8831==40
-	jne	case_make_object_inactive_0e49     		| [jp   nz,case_make_object_inactive_0e49] sets object state to $80
+	jne	case_make_object_inactive_0e49     		| [$08FF: jp   nz,case_make_object_inactive_0e49] sets object state to $80
 
 
 mctl_fltpn_dspchr:
@@ -1621,7 +1621,7 @@ d_0920_jp_tbl:
 	.long case_0B16   | 1: attack elements that break formation to attack ship (level 3+)
 	.long case_0B46   | 2: returning to base: moths or bosses from top of screen, bees from bottom of loop-around.
 	.long case_0B4E   | 3: bee dive and starting loopback, or boss left position and starting dive down
-	.long case_0AA0   | 4: attack wave element hits turning point and heads to home
+	.long case_heads_to_home_0aa0   | 4: attack wave element hits turning point and heads to home
 	.long case_0BD1   | 5: bee has flown under bottom of screen and now turns for home
 	.long case_0B5F   | 6: bee has flown under bottom of screen and now turns for home
 	.long case_0B87   | 7: tractor beam reaches ship
@@ -1728,40 +1728,38 @@ l_098F_do_split_off_bonus_bee:
 	exg		d0,d7                              	| [ex   af,af'] stash index of spawning yellow alien
 
 * find available slot or getout
-	lea	ds_bug_motion_que_9100+0xF0-1,a0    	| [ld   hl,#ds_bug_motion_que_9100 + 0xF0 - 1] start at end/top of segment
-	move.w	#-0x14,d3                       	| [ld   de,#-0x14] sizeof array element
-	move.b	#0x0C,d1                        	| [ld   b,#0x0C] nbr of object in the array
-l_09A3:
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	and.b	#0x01,d0                         	| [and  #0x01] check if this slot available
-	jeq	l_09AE_doit                        	| [jr   z,l_09AE_doit]
-	add.w	d3,a0                            	| [add  hl,de]
-	subq.b	#1,d1                           	| [...]
-	jne	l_09A3                             	| [djnz l_09A3]
-
-	jra	l_09FA_bonusbee_creat_fail         	| [jp   l_09FA_bonusbee_creat_fail]
-
-l_09AE_doit:
-	add.w	d3,a0                           | [add  hl,de]
-	addq.w	#1,a0                           | [inc  hl]
-	move.b	(a2),d0                    	    | [ld   a,0x00(ix)] coordinate of parent alien
-	move.l	a2,a1
-											| [ld   e,ixl]
-											| [ld   d,ixh]
-	exg	a1,a0                              	| [ex   de,hl]
-	move.l	a1,a3							| [ld   iyl,e]
-											| [ld   iyh,d]
-	move.w	#0x06,d1                        | [ld   bc,#0x0006] 6
-	jbsr	ldir                            | [ldir]
-	move.w	#6,d1                           | [ld   c,#6]
-	add.w	d1,a0                           | [add  hl,bc]
-	exg	a1,a0                              	| [ex   de,hl]
-	add.w	d3,a0                           | [add  hl,de]
-	exg	a1,a0                              	| [ex   de,hl]
-	move.w	#4,d1                           | [ld   c,#4]
-	jbsr	ldir                            | [ldir]
-	move.b	(0x13,a2),d0                    | [$0E54: ld   a,0x13(ix)] 0x13(iy)
-	move.b	d0,(0x13,a3)                    | [ld   0x13(iy),a]
+	lea	ds_bug_motion_que_9100+0xF0-1,a0        | [ld   hl,#ds_bug_motion_que_9100 + 0xF0 - 1] start at end/top of segment
+	move.w	#-0x14,d3                           | [ld   de,#-0x14] sizeof array element
+	move.w	#0x0C-1,d1                          | [ld   b,#0x0C] nbr of object in the array
+l_09A3:                                         
+	move.b	(a0),d0                             | [ld   a,(hl)]
+	and.b	#0x01,d0                            | [and  #0x01] check if this slot available
+	jeq	l_09AE_doit                        	    | [jr   z,l_09AE_doit]
+	add.w	d3,a0                               | [add  hl,de]
+	dbf		d1,l_09A3                           | [djnz l_09A3]
+	jra	l_09FA_bonusbee_creat_fail         	    | [jp   l_09FA_bonusbee_creat_fail]
+											    
+l_09AE_doit:                                    
+	add.w	d3,a0                               | [add  hl,de]
+	addq.w	#1,a0                               | [inc  hl]
+	move.b	(a2),d0                    	        | [ld   a,0x00(ix)] coordinate of parent alien
+	move.l	a2,a1                               
+											    | [ld   e,ixl]
+											    | [ld   d,ixh]
+	exg	a1,a0                              	    | [ex   de,hl]
+	move.l	a1,a3							    | [ld   iyl,e]
+											    | [ld   iyh,d]
+	move.w	#0x06,d1                            | [ld   bc,#0x0006] 6
+	jbsr	ldir                                | [ldir]
+	move.w	#6,d1                               | [ld   c,#6]
+	add.w	d1,a0                               | [add  hl,bc]
+	exg	a1,a0                              	    | [ex   de,hl]
+	add.w	d3,a0                               | [add  hl,de]
+	exg	a1,a0                              	    | [ex   de,hl]
+	move.w	#4,d1                               | [ld   c,#4]
+	jbsr	ldir                                | [ldir]
+	move.b	(0x13,a2),d0                        | [$0E54: ld   a,0x13(ix)] 0x13(iy)
+	move.b	d0,(0x13,a3)                        | [ld   0x13(iy),a]
 
 * load new data pointer from data and store in flite q object
 	move.l	(sp)+,a0                        	| [pop  hl] special attack, pushes hl right away
@@ -1889,7 +1887,7 @@ l_0A73:
 	move.b	#0x48,d3                        	| [ld   d,#0x48]
 	move.b	(0x01,a2),d5                    	| [ld   h,0x01(ix)]
 	move.b	(0x03,a2),d6                    	| [ld   l,0x03(ix)]
-	jbsr	c_0E5B                            	| [call c_0E5B] HL = c_0E5B(DE, H, L) ... determine rotation angle
+	jbsr	compute_rotation_angle_0e5b                            	| [call compute_rotation_angle_0e5b] HL = compute_rotation_angle_0e5b(DE, H, L) ... determine rotation angle
 	lsr.b	#1,d5                            	| [srl  h]
 	roxr.b	#1,d6                           	| [rr   l]
 	move.b	d6,(0x04,a2)                    	| [ld   0x04(ix),l]
@@ -1906,39 +1904,36 @@ l_0A73:
 	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
 
 * attack wave element hits turning point and heads to home
-case_0AA0:  | 0x04
-	move.l	a0,-(sp)                        	| [$0AA0: push hl] ptr to data table
-	move.b	(0x10,a2),d6                    	| [$0AA1: ld   l,0x10(ix)] update object disposition ... i.e. 8800[L]
-	lea	b_8800,a0                      	        | [$0AA4: ld   h,#>b_8800]
+case_heads_to_home_0aa0:  | 0x04
+	move.l	a0,-(sp)                        	| [$0AA0: $0AA0: push hl] ptr to data table
+	move.b	(0x10,a2),d6                    	| [$0AA1: $0AA1: ld   l,0x10(ix)] update object disposition ... i.e. 8800[L]
+	lea	b_8800,a0                      	        | [$0AA4: $0AA4: ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#9,(a0)                         	| [$0AA6: ld   (hl),#9] disposition = 9: diving/homing (currently 3)
-	lea	sprt_fmtn_hpos,a0              	        | [ld   h,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
+	lea	sprt_fmtn_hpos,a0              	        | [$0AA6: ld   h,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
 	add.w	d6,a0
-	move.b	(a0)+,d2                         	| [ld   c,(hl)] row index
-	                           	                | [inc  l]
-	move.b	(a0),d6                         	| [ld   l,(hl)] column index
-	lea	ds_hpos_loc_t,a0               	        | [ld   h,#>ds_hpos_loc_t]
+	move.b	(a0)+,d2                         	| [$0AAA: ld   c,(hl)] row index
+	                           	                | [$0AAB: inc  l]
+	move.b	(a0),d6                         	| [$0AAC: ld   l,(hl)] column index
+	lea	ds_hpos_loc_t,a0               	        | [$0AAD: ld   h,#>ds_hpos_loc_t]
 	add.w	d6,a0
-	move.b	(a0)+,d1                         	| [ld   b,(hl)] x offset
-	                           	                | [inc  l]
-	move.b	(a0),d4                         	| [ld   e,(hl)] x coordinate (ds_hpos_loc_orig_9900)
-	move.b	d2,d6                           	| [ld   l,c] row position index
-
-	lea	ds_hpos_loc_t,a0               	| [ld   h,#>ds_hpos_loc_t]
+	move.b	(a0)+,d1                         	| [$0AAF: ld   b,(hl)] x offset
+	                           	                | [$0AB0: inc  l]
+	move.b	(a0),d4                         	| [$0AB1: ld   e,(hl)] x coordinate (ds_hpos_loc_orig_9900)
+	move.b	d2,d6                           	| [$0AB2: ld   l,c] row position index
+	lea	ds_hpos_loc_t,a0               	        | [$0AB3: ld   h,#>ds_hpos_loc_t]
 	add.w	d6,a0
-	move.b	(a0)+,d2                         	| [ld   c,(hl)] y offset
-	                           	                | [inc  l]
-	move.b	(a0),d3                         	| [ld   d,(hl)] y coordinate (ds_hpos_loc_orig_9900)
-	lsr.b	#1,d4                            	| [srl  e] x coordinate
-	movem.w	d3/d4,-(sp)                    		| [push de] y coord, x coord >> 1
-
-	move.b	d1,(0x11,a2)                    	| [ld   0x11(ix),b] step x coord (x offset)
-	move.b	d2,(0x12,a2)                    	| [ld   0x12(ix),c] step y coord (y offset)
-
-	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
-	                               	            | [and  a]
-	jeq	l_0ACD                             	    | [jr   z,l_0ACD]
+	move.b	(a0)+,d2                         	| [$0AB3: ld   c,(hl)] y offset
+	                          	                | [$0AB4: inc  l]
+	move.b	(a0),d3                         	| [$0AB5: ld   d,(hl)] y coordinate (ds_hpos_loc_orig_9900)
+	lsr.b	#1,d4                            	| [$0AB6: srl  e] x coordinate
+	movem.w	d3/d4,-(sp)                    		| [$0AB8: push de] y coord, x coord >> 1
+	move.b	d1,(0x11,a2)                    	| [$0AB9: ld   0x11(ix),b] step x coord (x offset)
+	move.b	d2,(0x12,a2)                    	| [$0ABC: ld   0x12(ix),c] step y coord (y offset)
+	move.b	b_9215_flip_screen,d0           	| [$0ABF: ld   a,(b_9215_flip_screen)]
+	                               	            | [$0AC2: and  a]
+	jeq	l_0ACD                             	    | [$0AC3: jr   z,l_0ACD]
 * flipped ... negate the steps
 	move.b	d1,d0                           	| [$0AC5: ld   a,b]
 	neg.b	d0                               	| [$0AC6: neg]
@@ -1982,11 +1977,13 @@ l_0ACD:
 	move.b	d4,d5                           	| [$0AF7: ld   h,e] y, .b01 (bits<8:1> of integer portion)
 	move.b	d3,d2                           	| [$0AF8: ld   c,d] C is not used?
 	movem.w	(sp)+,d3/d4                    		| [$0AF9: pop  de] abs row pix coord & abs col pix coord >> 1
-	jbsr	c_0E5B                            	| [$0AFA: call c_0E5B] HL = mctl_rotn_hp(DE, H, L)
+	jbsr	osd_break
+	jbsr	compute_rotation_angle_0e5b         | [$0AFA: call compute_rotation_angle_0e5b] HL = mctl_rotn_hp(DE, H, L)
 	lsr.b	#1,d5                            	| [$0AFD: srl  h]
 	roxr.b	#1,d6                           	| [$0AFF: rr   l]
 	move.b	d6,(0x04,a2)                    	| [$0B01: ld   0x04(ix),l]
 	move.b	d5,(0x05,a2)                    	| [$0B04: ld   0x05(ix),h]
+	LOG_REGS	B07
 	move.b	d3,(0x06,a2)                    	| [$0B07: ld   0x06(ix),d] origin home position y (bits 15:8) ... from hpos_loc_orig.x
 	move.b	d4,(0x07,a2)                    	| [$0B0A: ld   0x07(ix),e] origin home position x (bits 15:8) ... from hpos_loc_orig.y
 	bset.b	#6,(0x13,a2)                    	| [$0B0D: set  6,0x13(ix)] if set, flite path handler checks for home
@@ -2176,7 +2173,6 @@ l_0BF7:
 	CONVERT_SUBROM_A0_TO_D5D6
 	
 l_flite_pth_skip_load_0BFF:
-	lea		ds_bug_motion_que_9100,a3   | temp to compare
 	* update flight path pointers. They are initialized in maincpu at 0x10A1
 	move.b	d6,(0x08,a2)                    	| [$0BFF: ld   0x08(ix),l] update pointer.b0
 	move.b	d5,(0x09,a2)                    	| [$0C02: ld   0x09(ix),h] update pointer.b1
@@ -2186,7 +2182,6 @@ l_flite_pth_skip_load_0BFF:
 l_0C05_flite_pth_cont:
 	btst.b	#6,(0x13,a2)                    | [$0C05: bit  6,0x13(ix)] if set, check if home
 	jeq	l_0C2D_flite_pth_step              	| [$0C09: jr   z,l_0C2D_flite_pth_step]
-
 * transitions to the next segment of the flight pattern
 * if (    (b01==b06 || (b01-b06)==1|| (b06-b01)==1)
 *      && (b03==b07 || (b03-b07)==1|| (b07-b03)==1) ) ...
@@ -2738,7 +2733,7 @@ case_make_object_inactive_0e49: | 0x0
 * end f_bug_motion_runner_08d3
 
 *=============================================================================
-* c_0E5B()
+* compute_rotation_angle_0e5b()
 *  Description:
 *    Determine rotation angle ... (ix)0x04, (ix)0x05
 *    Parameters are all bits<1:8> of the integer portion (upper-byte)
@@ -2752,69 +2747,67 @@ case_make_object_inactive_0e49: | 0x0
 * PRESERVES:
 *  BC, DE
 *-----------------------------------------------------------------------------
-c_0E5B:
-	movem.w	d1/d2,-(sp)                    	| [push bc]
-	movem.w	d3/d4,-(sp)                    	| [push de]
+compute_rotation_angle_0e5b:
+	movem.w	d1/d2,-(sp)                    	    | [$0E5B: push bc]
+	movem.w	d3/d4,-(sp)                    	    | [$0E5C: push de]
 
 * dx
-	move.b	d4,d0                           	| [ld   a,e]
-	clr.b	d1                               	| [ld   b,#0]
-	sub.b	d6,d0                            	| [sub  l]
-	jcc	l_0E67                             	| [jr   nc,l_0E67]
-	bset.b	#0,d1                           	| [set  0,b]
-	neg.b	d0                               	| [neg]
+	move.b	d4,d0                           	| [$0E5D: ld   a,e]
+	clr.b	d1                               	| [$0E5E: ld   b,#0]
+	sub.b	d6,d0                            	| [$0E5F: sub  l]
+	jcc	l_0E67                             	    | [$0E61: jr   nc,l_0E67]
+	bset.b	#0,d1                           	| [$0E63: set  0,b]
+	neg.b	d0                               	| [$0E65: neg]
 l_0E67:
-	move.b	d0,d2                           	| [ld   c,a]
+	move.b	d0,d2                           	| [$0E67: ld   c,a]
 
 * dy
-	move.b	d3,d0                           	| [ld   a,d]
-	sub.b	d5,d0                            	| [sub  h]
-	jcc	l_0E76                             	| [jr   nc,l_0E76]
-	move.b	d0,d3                           	| [ld   d,a]
-	move.b	d1,d0                           	| [ld   a,b] 1 if carried
-	eor.b	#0x01,d0                         	| [xor  #0x01]
-	or.b	#0x02,d0                          	| [or   #0x02]
-	move.b	d0,d1                           	| [ld   b,a]
-	move.b	d3,d0                           	| [ld   a,d]
-	neg.b	d0                               	| [neg]
+	move.b	d3,d0                           	| [$0E68: ld   a,d]
+	sub.b	d5,d0                            	| [$0E69: sub  h]
+	jcc	l_0E76                             	    | [$0E6A: jr   nc,l_0E76]
+	move.b	d0,d3                           	| [$0E6C: ld   d,a]
+	move.b	d1,d0                           	| [$0E6D: ld   a,b] 1 if carried
+	eor.b	#0x01,d0                         	| [$0E6E: xor  #0x01]
+	or.b	#0x02,d0                          	| [$0E70: or   #0x02]
+	move.b	d0,d1                           	| [$0E72: ld   b,a]
+	move.b	d3,d0                           	| [$0E73: ld   a,d]
+	neg.b	d0                               	| [$0E74: neg]
 
 l_0E76:
-	cmp.b	d2,d0                            	| [cp   c]
+	cmp.b	d2,d0                            	| [$0E76: cp   c]
 	SET_X_FROM_C
-	move.w	d0,-(sp)                        	| [push af]
-	roxl.b	#1,d0                           	| [rla]
-	eor.b	d1,d0                            	| [xor  b]
-	roxr.b	#1,d0                           	| [rra]
-	INVERT_XC_FLAGS                            	| [ccf] complement Cy
-	roxl.b	#1,d1                           	| [rl   b]
-	movem.w	(sp)+,d0                        	| [pop  af]
-	jcc	l_0E84                             	| [jr   nc,l_0E84]
-	move.b	d2,d3                           	| [ld   d,c]
-	move.b	d0,d2                           	| [ld   c,a]
-	move.b	d3,d0                           	| [ld   a,d]
-
+	scs		d7
+	move.w	d0,-(sp)                        	| [$0E77: push af]
+	roxl.b	#1,d0                           	| [$0E78: rla]
+	eor.b	d1,d0                            	| [$0E79: xor  b]
+	roxr.b	#1,d0                           	| [$0E7A: rra]
+	INVERT_XC_FLAGS                            	| [$0E7B: ccf] complement Cy
+	roxl.b	#1,d1                           	| [$0E7C: rl   b]
+	movem.w	(sp)+,d0                        	| [$0E7E: pop  af]
+	tst.b	d7
+	jeq	l_0E84                             	    | [$0E7F: jr   nc,l_0E84]
+	move.b	d2,d3                           	| [$0E81: ld   d,c]
+	move.b	d0,d2                           	| [$0E82: ld   c,a]
+	move.b	d3,d0                           	| [$0E83: ld   a,d]
 l_0E84:
-	move.b	d2,d5                           	| [ld   h,c]
-	clr.b	d6                               	| [ld   l,#0]
+	move.b	d2,d5                           	| [$0E84: ld   h,c]
+	clr.b	d6                               	| [$0E85: ld   l,#0]
 
 * HL = HL / A
-	jbsr	c_divide_d5d6_by_d0_0EAA                            	| [call c_divide_d5d6_by_d0_0EAA] HL = HL / A
-
-	move.b	d5,d0                           	| [ld   a,h]
-	eor.b	d1,d0                            	| [xor  b]
-	and.b	#0x01,d0                         	| [and  #0x01]
-	jeq	l_0E93                             	| [jr   z,l_0E93]
-	move.b	d6,d0                           	| [ld   a,l]
-	not.b	d0                               	| [cpl]
-	move.b	d0,d6                           	| [ld   l,a]
+	jbsr	c_divide_d5d6_by_d0_0EAA            | [$0E87: call c_divide_d5d6_by_d0_0EAA] HL = HL / A
+	move.b	d5,d0                           	| [$0E8A: ld   a,h]
+	eor.b	d1,d0                            	| [$0E8B: xor  b]
+	and.b	#0x01,d0                         	| [$0E8C: and  #0x01]
+	jeq	l_0E93                             	    | [$0E8E: jr   z,l_0E93]
+	                                         	| [$0E90: ld   a,l]
+	not.b	d6                               	| [$0E91: cpl]
+	                                            | [$0E92: ld   l,a]
 
 l_0E93:
-	move.b	d1,d5                           	| [ld   h,b]
-
-	movem.w	(sp)+,d3/d4                    	| [pop  de]
-	movem.w	(sp)+,d1/d2                    	| [pop  bc]
-
-	rts                                    	| [ret]
+	move.b	d1,d5                           	| [$0E93: ld   h,b]
+	movem.w	(sp)+,d3/d4                      	| [$0E94: pop  de]
+	movem.w	(sp)+,d1/d2                      	| [$0E95: pop  bc]
+	rts                                      	| [$0E96: ret]
 
 *=============================================================================
 * mul_16_0E97()
@@ -2850,35 +2843,32 @@ mul_16_0E97:
 *-----------------------------------------------------------------------------
 c_divide_d5d6_by_d0_0EAA:
 	LOAD_D5_16_FROM_D5D6
-	movem.w	d1/d2,-(sp)                    	| [push bc]
-	move.b	d0,d2                           	| [ld   c,a]
-	CLEAR_XC_FLAGS                               	| [xor  a] clears Cy
-	move.b	#0x11,d1                        	| [ld   b,#0x11]
+	movem.w	d1/d2,-(sp)                    	| [$0EAA: push bc]
+	move.b	d0,d2                           | [$0EAB: ld   c,a]
+	clr.b	d0                              | [$0EAC: xor  a] clears Cy
+	CLEAR_XC_FLAGS
+	move.w	#0x11-1,d1                      | [$0EAD: ld   b,#0x11]
 l_0EAF:
-	addx.b	d0,d0					| [adc  a,a]
-	jcs	l_0EBD                             	| [jr   c,l_0EBD]
-	cmp.b	d2,d0                            	| [cp   c]
-	jcs	l_0EB6                             	| [jr   c,l_0EB6]
-	sub.b	d2,d0                            	| [sub  c]
+	addx.b	d0,d0					        | [$0EAF: adc  a,a]
+	jcs	l_0EBD                             	| [$0EB0: jr   c,l_0EBD]
+	cmp.b	d2,d0                           | [$0EB2: cp   c]
+	jcs	l_0EB6                             	| [$0EB3: jr   c,l_0EB6]
+	sub.b	d2,d0                           | [$0EB5: sub  c]
 l_0EB6:
 * flip the Cy: i.e. set it if the "sub c" was done, otherwise clear it.
-	INVERT_XC_FLAGS                            	| [ccf]
-
+	INVERT_XC_FLAGS                         | [$0EB6: ccf]
 l_0EB7:
-	addx.w	d5,d5			| adc  hl,hl
-	subq.b	#1,d1                           	| [...]
-	jne	l_0EAF                             	| [djnz l_0EAF]
+	addx.w	d5,d5			                | [$0EB7: adc  hl,hl]
+	dbf		d1,l_0EAF                       | [$0EB9: djnz l_0EAF]
 
-
-	movem.w	(sp)+,d1/d2                    	| [pop  bc]
+	movem.w	(sp)+,d1/d2                    	| [$0EBB: pop  bc]
 	LOAD_D5D6_FROM_D5_16
-	rts                                    	| [ret]
+	rts                                    	| [$0EBC: ret]
 
 l_0EBD:
-	sub.b	d2,d0                            	| [sub  c]
-	SET_XC_FLAGS                           	| [scf]
-	jra	l_0EB7                             	| [jp   l_0EB7]
-
+	sub.b	d2,d0                           | [$0EBD: sub  c]
+	SET_XC_FLAGS                           	| [$0EBE: scf]
+	jra	l_0EB7                             	| [$0EBF: jp   l_0EB7]
 
 
 *=============================================================================

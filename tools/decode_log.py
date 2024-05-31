@@ -1,5 +1,6 @@
 import os,struct
 
+# save log like S log $100 $4000
 with open(r"C:\Users\Public\Documents\Amiga Files\WinUAE\log","rb") as f:
     contents = f.read()
 
@@ -42,7 +43,7 @@ with open("amiga.tr","w") as f:
 
 # generated using log: trace galaga.tr,,,{tracelog "A=%02X, B=%02X, C=%02X, D=%02X, E=%02X, H=%02X, L=%02X, IX=%04X ",a,b,c,d,e,h,l,ix}
 
-with open(r"K:\Emulation\MAME\galaga_traj.tr") as f, open("mame.tr","w") as fw:
+with open(r"K:\Emulation\MAME\galaga.tr") as f, open("mame.tr","w") as fw:
     l = len("A=01, B=00, C=3F, D=93, E=81, H=93, L=01, ")
     for line in f:
         if line.startswith("A="):
