@@ -4800,11 +4800,11 @@ l_1BDF:
 	move.b	d0,d2                           	| [$1BE2: ld   c,a] stash A
 l_1BE3_while:
 * if ( disposition == STAND_BY ) && ...
-	move.b	(a0),d0                         	| [ld   a,(hl)] obj_status[L].state
-	subq.b	#1,d0                           	| [dec  a]
-	jne	l_1BEB_next                        	| [jr   nz,l_1BEB_next]
+	move.b	(a0),d0                         	| [$1BE3: ld   a,(hl)] obj_status[L].state
+	subq.b	#1,d0                           	| [$1BE4: dec  a]
+	jne	l_1BEB_next                        	    | [$1BE5: jr   nz,l_1BEB_next]
 * ... ( L != bonus_bee_index ) then l_1BF0_found_one
-	move.b	d2,d0                           	| [ld   a,c] unstash A ... offset_to_bonus_bee
+	move.b	d2,d0                           	| [$1BE7: ld   a,c] unstash A ... offset_to_bonus_bee
 	
 	COMPUTE_LSB_A0_D6		b_8800		| recompute offset from original a0
 	cmp.b	d6,d0                            	| [cp   l]
@@ -4841,20 +4841,19 @@ case_bmbr_boss_1C01:
 	jne	l_1C30                             		| [$1C0D: jr   nz,l_1C30]
 
 * capture-mode select: for each boss, first one that status==standby beomes capture-boss
-	move.b	#2,ixl		| ld   ixl,2
-	move.w	#db_0454,d5                     	| [ld   iy,#db_0454]
-	lea	b_8800+0x30,a1                 			| [ld   de,#b_8800 + 0x30] bosses start at $30 ... object/index of bomber to _1CAE
-	move.b	#0x04,d1                        	| [ld   b,#0x04] there are 4 of these evil creatures
+	move.b	#2,ixl		                        | [$1C0F: ld   ixl,2]
+	move.w	#db_0454,d5                     	| [$1C12: ld   iy,#db_0454]
+	lea	b_8800+0x30,a1                 			| [$1C16: ld   de,#b_8800 + 0x30] bosses start at $30 ... object/index of bomber to _1CAE
+	move.b	#0x04,d1                        	| [$1C19: ld   b,#0x04] there are 4 of these evil creatures
 
 l_1C1B_while:
-	move.b	(a1),d0                         	| [ld   a,(de)] sprt_mctl_objs[de].state
-	subq.b	#1,d0                           	| [dec  a] if disposition STAND_BY,  1->0
-	jeq	l_1C24_is_standby                  	| [jr   z,l_1C24_is_standby]
-	addq.w	#2,a1                           	| [inc  e] status bytes, evens ... i.e. 8830, 32, etc.
+	move.b	(a1),d0                         	| [$1C1B: ld   a,(de)] sprt_mctl_objs[de].state
+	subq.b	#1,d0                           	| [$1C1C: dec  a] if disposition STAND_BY,  1->0
+	jeq	l_1C24_is_standby                  	| [$1C1D: jr   z,l_1C24_is_standby]
+	addq.w	#2,a1                           	| [$1C1F: inc  e] status bytes, evens ... i.e. 8830, 32, etc.
 	subq.b	#1,d1                           	| [...]
-	jne	l_1C1B_while                       	| [djnz l_1C1B_while]
-
-	rts                                    	| [ret]
+	jne	l_1C1B_while                       	| [$1C20: djnz l_1C1B_while]
+	rts                                    	| [$1C21: ret]
 
 l_1C24_is_standby:
 	COMPUTE_LSB_A1_D4	b_8800
@@ -4917,37 +4916,37 @@ l_1C5B:
 	move.b	#4,d1                           	| [ld   b,#4]
 
 l_1C65_while:
-	move.b	d2,d0                           	| [ld   a,c]
-	and.b	#0x07,d0                         	| [and  #0x07]
+	move.b	d2,d0                           	| [$1C65: ld   a,c]
+	and.b	#0x07,d0                         	| [$1C66: and  #0x07]
 	beq.b	0f                               	| [...]
-	jbsr	bmbr_boss_activate_1c8d                            	| [call nz,bmbr_boss_activate_1c8d] _boss_activate(0xFF, 1, b, 0xFFFF)
+	jbsr	bmbr_boss_activate_1c8d                 | [$1C68: call nz,bmbr_boss_activate_1c8d] _boss_activate(0xFF, 1, b, 0xFFFF)
 0:
-	ror.b	#1,d2                           	| [rr   c]
+	ror.b	#1,d2                           	| [$1C6B: rr   c]
 	subq.b	#1,d1                           	| [...]
-	jne	l_1C65_while                       	| [djnz l_1C65_while]
+	jne	l_1C65_while                       	| [$1C6D: djnz l_1C65_while]
 
 * third pass: take any available boss
 	addq.b	#1,ixl                          	| [inc  ixl] 2
 	lea	b_8800+0x30,a1                 	| [ld   de,#b_8800 + 0x30] boss objects are 30 34 36 32
 	move.b	#4,d1                           	| [ld   b,#4]
 l_1C76_while:
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	subq.b	#1,d0                           	| [dec  a]
-	jeq	j_1CA0                             	| [jr   z,j_1CA0] _boss_activate(e, 2, b, 0xFFFF) ... status==STANDBY, skip index selection
-	addq.w	#2,a1                           	| [inc  e]
+	move.b	(a1),d0                         	| [$1C76: ld   a,(de)]
+	subq.b	#1,d0                           	| [$1C77: dec  a]
+	jeq	j_1CA0                             	    | [$1C78: jr   z,j_1CA0] _boss_activate(e, 2, b, 0xFFFF) ... status==STANDBY, skip index selection
+	addq.w	#2,a1                           	| [$1C7A: inc  e]*2
 	subq.b	#1,d1                           	| [...]
-	jne	l_1C76_while                       	| [djnz l_1C76_while]
+	jne	l_1C76_while                       	| [[$1C7B: djnz l_1C76_while]
 
 * last pass: no boss available ... check for available rogue fighter (objects 00, 02, 04, 06)
-	lea	b_8800,a0                      	| [ld   hl,#b_8800]
-	move.b	#4,d1                           	| [ld   b,#4]
+	lea	b_8800,a0                      	| [$1C7E: ld   hl,#b_8800]
+	move.b	#4,d1                           	| [$1C81: ld   b,#4]
 l_1C83_while:
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	subq.b	#1,d0                           	| [dec  a]
-	jeq	l_1D25                             	| [jp   z,l_1D25]
-	addq.w	#2,a0                           	| [inc  l]
+	move.b	(a0),d0                         	| [$1C83: ld   a,(hl)]
+	subq.b	#1,d0                           	| [$1C84: dec  a]
+	jeq	l_1D25                             	    | [$1C85: jp   z,l_1D25]
+	addq.w	#2,a0                           	| [$1C88: inc  l]
 	subq.b	#1,d1                           	| [...]
-	jne	l_1C83_while                       	| [djnz l_1C83_while]
+	jne	l_1C83_while                       	| [$1C8A: djnz l_1C83_while]
 
 	rts                                    	| [ret]
 
