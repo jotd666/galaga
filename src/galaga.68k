@@ -4869,7 +4869,7 @@ l_1C30:
 * escort object/IDs order in data right->left so bit will shift out left->right
 	lea	d_1D2C_wingmen,a0              	| [ld   hl,#d_1D2C_wingmen]
 	and.w	#0xFF,d4
-	move.b	#6,d1                 	| [ld   bc,#6 * 256 + 0] check 6 objects (B) and clear C None
+	move.w	#6-1,d1                 	| [ld   bc,#6 * 256 + 0] check 6 objects (B) and clear C None
 	move.w	#0,d2                 	| [ld   bc,#6 * 256 + 0] check 6 objects (B) and clear C None
 l_1C38_while:
 	move.b	(a0)+,d4                         	| [$1C38: ld   e,(hl)]
@@ -4885,8 +4885,7 @@ l_1C38_while:
 	subq.b	#2,d0                           	| [$1C41: dec  a + sub  $01] one byte opcode ... affects X
 l_1C44:
 	roxl.b	#1,d2                           	| [rl   c] shifts in a bit from Cy if object status was 1 (00 - 01 = FF)
-	subq.b	#1,d1                           	| [...]
-	jne	l_1C38_while                       		| [djnz l_1C38_while]
+	dbf		d1,l_1C38_while                       		| [djnz l_1C38_while]
 
 	move.b	#0,ixl                              | flag for 1st and 2nd loop?
 	move.b	#4,d1                           	| [ld   b,#4]
@@ -4908,47 +4907,44 @@ l_1C4F_while:
 l_1C5B:
 	roxr.b	#1,d2                           	| [rr   c]
 	subq.b	#1,d1                           	| [...]
-	jne	l_1C4F_while                       	| [djnz l_1C4F_while]
+	jne	l_1C4F_while                       	    | [djnz l_1C4F_while] can't use dbf here we need d1 as-is
 
 * second pass: look for 1 available escort
 	addq.b	#1,ixl                          	| [inc  ixl] 1
 	move.b	ixh,d2                         		| [ld   c,ixh] restore previous C
 	move.b	#4,d1                           	| [ld   b,#4]
-
 l_1C65_while:
 	move.b	d2,d0                           	| [$1C65: ld   a,c]
 	and.b	#0x07,d0                         	| [$1C66: and  #0x07]
 	beq.b	0f                               	| [...]
-	jbsr	bmbr_boss_activate_1c8d                 | [$1C68: call nz,bmbr_boss_activate_1c8d] _boss_activate(0xFF, 1, b, 0xFFFF)
+	jbsr	bmbr_boss_activate_1c8d             | [$1C68: call nz,bmbr_boss_activate_1c8d] _boss_activate(0xFF, 1, b, 0xFFFF)
 0:
-	ror.b	#1,d2                           	| [$1C6B: rr   c]
+	roxr.b	#1,d2                           	| [$1C6B: rr   c]
 	subq.b	#1,d1                           	| [...]
-	jne	l_1C65_while                       	| [$1C6D: djnz l_1C65_while]
+	jne	l_1C65_while                       	    | [$1C6D: djnz l_1C65_while] can't use dbf: we need d1 index as-is
 
 * third pass: take any available boss
-	addq.b	#1,ixl                          	| [inc  ixl] 2
-	lea	b_8800+0x30,a1                 	| [ld   de,#b_8800 + 0x30] boss objects are 30 34 36 32
-	move.b	#4,d1                           	| [ld   b,#4]
+	addq.b	#1,ixl                          	| [$1C6F: inc  ixl] 2
+	lea	b_8800+0x30,a1                 	        | [$1C71: ld   de,#b_8800 + 0x30] boss objects are 30 34 36 32
+	move.w	#4-1,d1                           	| [$1C74: ld   b,#4]
 l_1C76_while:
 	move.b	(a1),d0                         	| [$1C76: ld   a,(de)]
 	subq.b	#1,d0                           	| [$1C77: dec  a]
 	jeq	j_1CA0                             	    | [$1C78: jr   z,j_1CA0] _boss_activate(e, 2, b, 0xFFFF) ... status==STANDBY, skip index selection
 	addq.w	#2,a1                           	| [$1C7A: inc  e]*2
-	subq.b	#1,d1                           	| [...]
-	jne	l_1C76_while                       	| [[$1C7B: djnz l_1C76_while]
+	dbf		d1,l_1C76_while                     | [$1C7B: djnz l_1C76_while]
 
 * last pass: no boss available ... check for available rogue fighter (objects 00, 02, 04, 06)
 	lea	b_8800,a0                      	| [$1C7E: ld   hl,#b_8800]
-	move.b	#4,d1                           	| [$1C81: ld   b,#4]
+	move.w	#4-1,d1                           	| [$1C81: ld   b,#4]
 l_1C83_while:
 	move.b	(a0),d0                         	| [$1C83: ld   a,(hl)]
 	subq.b	#1,d0                           	| [$1C84: dec  a]
 	jeq	l_1D25                             	    | [$1C85: jp   z,l_1D25]
 	addq.w	#2,a0                           	| [$1C88: inc  l]
-	subq.b	#1,d1                           	| [...]
-	jne	l_1C83_while                       	| [$1C8A: djnz l_1C83_while]
+	dbf	d1,l_1C83_while                       	| [$1C8A: djnz l_1C83_while]
 
-	rts                                    	| [ret]
+	rts                                    	    | [$1C8C: ret]
 
 *=============================================================================
 * bmbr_boss_activate()
