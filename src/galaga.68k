@@ -776,7 +776,7 @@ l_05A3_while:
 	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] actv_plyr_state[0x1F]
 	move.b	ds_plyr_actv+_b_sndflag,d0      	| [ld   a,(ds_plyr_actv +_b_sndflag)] _fx[0] ... enable for pulsing_sound
 	move.b	d0,b_9AA0+0x00                  	| [ld   (b_9AA0 + 0x00),a] enable for pulsing_sound
-	jbsr	draw_resv_ships                   	| [call draw_resv_ships]
+	jbsr	draw_resv_ships_136c                   	| [call draw_resv_ships_136c]
 
 * if ( _enmy_ct_actv != 0 ) ...
 	move.b	ds_plyr_actv+_b_enmy_ct_actv,d0 	| [ld   a,(ds_plyr_actv +_b_enmy_ct_actv)]
@@ -1241,7 +1241,7 @@ l_07BD:
 	*move.b	d0,b_9AA0+0x0A                  	| [ld   (b_9AA0 + 0x0A),a] sound-fx count/enable registers, bonus ship awarded sound (set non-zero)
 	lea	ds_plyr_actv+_b_nships,a0      	| [ld   hl,#ds_plyr_actv +_b_nships]
 	addq.b	#1,(a0)                         	| [inc  (hl)]
-	jbsr	draw_resv_ships                   	| [call draw_resv_ships] new spare ship added
+	jbsr	draw_resv_ships_136c                   	| [call draw_resv_ships_136c] new spare ship added
 	lea	b16_99EA_bonus_ct_bcd+1,a0     	| [ld   hl,#b16_99EA_bonus_ct_bcd + 1]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	moveq	#1,d7
@@ -2674,109 +2674,111 @@ l_1171:
 *-----------------------------------------------------------------------------
 c_new_level_tokens_117f:
 *  memset($8002,$24,$12)
-	lea	0x8000+2,a0                	| [ld   hl,#0x8000 + 2] second row from bottom at right
-	move.b	#0x12,d1                        	| [ld   b,#0x12]
-	move.b	#0x24,d0                        	| [ld   a,#0x24]
-	jbsr	rst_18_video                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	lea	0x8000+2,a0                	            | [$117F: ld   hl,#0x8000 + 2] second row from bottom at right
+	move.b	#0x12,d1                        	| [$1182: ld   b,#0x12]
+	move.b	#0x24,d0                        	| [$1184: ld   a,#0x24]
+	jbsr	rst_18_video                        | [$1186: rst  0x18] memset((HL), A=fill, B=ct)
 *  memset($8022,$24,$12)                          | bottom row at right
-	move.b	#0x22,d6                        	| [ld   l,#0x22]
-	move.b	#0x12,d1                        	| [ld   b,#0x12]
-	jbsr	rst_18_video                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	move.b	#0x22,d6                        	| [$1187: ld   l,#0x22]
+	move.b	#0x12,d1                        	| [$1189: ld   b,#0x12]
+	jbsr	rst_18_video                        | [$118B: rst  0x18] memset((HL), A=fill, B=ct)
 
-	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] c_new_level_tokens_117f
-	clr.b	d1                               	| [ld   b,#0] tmp_quotient 50
-	lea	0x8000+1,a0                	| [ld   hl,#0x8000 + 1] offset into tile ram
+	move.b	ds_plyr_actv+_b_stgctr,d0       	| [$118C: ld   a,(ds_plyr_actv +_b_stgctr)] c_new_level_tokens_117f
+	clr.b	d1                               	| [$118F: ld   b,#0] tmp_quotient 50
+	lea	0x8000+1,a0                	            | [$1191: ld   hl,#0x8000 + 1] offset into tile ram
 
 
 * stage_ctr/50 and stage_ctr%50 (by brute force!)
 
 *  while ( tmp_stage_ctr >= 50 ) {
 l_1194_while:
-	cmp.b	#50,d0                           	| [cp   #50]
-	jcs	l_119F                             	| [jr   c,l_119F]
-	sub.b	#50,d0                           	| [sub  #50] tmp_modulus
-	addq.b	#1,d1                           	| [inc  b] tmp_quotient
+	cmp.b	#50,d0                           	| [$1194: cp   #50]
+	jcs	l_119F                             	    | [$1196: jr   c,l_119F]
+	sub.b	#50,d0                           	| [$1198: sub  #50] tmp_modulus
+	addq.b	#1,d1                           	| [$119A: inc  b] tmp_quotient
 * offset tileram ptr 2 columns to the left... *50 icons are 2 tiles wide
-	addq.w	#2,a0                           	| [inc  l]
-	jra	l_1194_while                       	| [jr   l_1194_while]
+	addq.w	#2,a0                           	| [$119C: inc  l]*2
+	jra	l_1194_while                       	    | [$119D: jr   l_1194_while]
 
 l_119F:
-	exg	a1,a0                              	| [ex   de,hl] stash the tileram offset in DE
-	move.b	d0,d6                           	| [ld   l,a] stage_ctr % 50
+	exg	a1,a0                              	    | [$119F: ex   de,hl] stash the tileram offset in DE
+	move.b	d0,d6                           	| [$11A0: ld   l,a] stage_ctr % 50
 
-	clr.b	d5                               	| [ld   h,#0]
-	move.b	#10,d0                          	| [ld   a,#10]
-	jbsr	c_divmod                          	| [call c_divmod] HL = HL / 10
-	move.b	d0,d5                           	| [ld   h,a] A = HL % 10 ... (still have L==HL/10)
+	clr.b	d5                               	| [$11A1: ld   h,#0]
+	move.b	#10,d0                          	| [$11A3: ld   a,#10]
+	jbsr	c_divmod                          	| [$11A5: call c_divmod] HL = HL / 10
+	move.b	d0,d5                           	| [$11A8: ld   h,a] A = HL % 10 ... (still have L==HL/10)
 
 
-	movem.w	d5/d6,-(sp)                        	| [push hl] stack the quotient and mod10 result
-	exg	a1,a0                              	| [ex   de,hl]
+	movem.w	d5/d6,-(sp)                        	| [$11A9: push hl] stack the quotient and mod10 result
+	exg	a1,a0                              		| [$11AA: ex   de,hl]
+	exg	d6,d4
+	exg	d3,d5
 
 * now HL == tile_ram address  and  DE == div10 and mod10 result
 
 * offset base pointer in HL by the nbr of tile columns needed:
 
 * if ( A >= 5 )  { C = A = A - 4 }  ... if mod10 > 5 then only 1 tile for the 5, plus nbr of 1's
-	cmp.b	#5,d0                            	| [cp   #5]
-	jcs	l_11B1_add_total                   	| [jr   c,l_11B1_add_total]
-	subq.b	#4,d0                           	| [sub  #4]
+	cmp.b	#5,d0                            	| [$11AB: cp   #5]
+	jcs	l_11B1_add_total                   	    | [$11AD: jr   c,l_11B1_add_total]
+	subq.b	#4,d0                           	| [$11AF: sub  #4]
 
 l_11B1_add_total:
-	move.b	d0,d2                           	| [ld   c,a] nbr of columns for 5's and 1's (not including 50's)
+	move.b	d0,d2                           	| [$11B1: ld   c,a] nbr of columns for 5's and 1's (not including 50's)
 
 * Add up the total additional columns needed for 10, 10, 20, 30, 40 in A.
 * 'bit 0' catches the odd div10 result and sets A=2. Noteing the 40 needs 4 columns,
 * the div10 result does the right thing for 0, 20, and 40.
-	move.b	d4,d0                           	| [ld   a,e] div10result
-	btst.b	#0,d0                           	| [bit  0,a] even or odd
-	jeq	l_11B9                             	| [jr   z,l_11B9]
-	move.b	#2,d0                           	| [ld   a,#2]
+	move.b	d4,d0                           	| [$11B2: ld   a,e] div10result
+	btst.b	#0,d0                           	| [$11B3: bit  0,a] even or odd
+	jeq	l_11B9                             	    | [$11B5: jr   z,l_11B9]
+	move.b	#2,d0                           	| [$11B7: ld   a,#2]
 l_11B9:
-	add.b	d2,d0                            	| [add  a,c] nbr of additional tile columns
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
+	add.b	d2,d0                            	| [$11B9: add  a,c] nbr of additional tile columns
+	jbsr	add_d0_to_a0_0010                   | [$11BA: rst  0x10] HL += A
 
 * B == count of 50's markers, if any
-	addq.b	#1,d1                           	| [inc  b] pre-increment for djnz ... B is at least 1
+	addq.b	#1,d1                           	| [$11BB: inc  b] pre-increment for djnz ... B is at least 1
 
 l_11BC_loop:
 	subq.b	#1,d1                           	| [...]
-	jne	l_11DC_show_50s_tokens             	| [djnz l_11DC_show_50s_tokens]
+	jne	l_11DC_show_50s_tokens             	    | [$11BC: djnz l_11DC_show_50s_tokens]
 
-	movem.w	(sp)+,d1/d2                    	| [pop  bc] pop the quotient and mod10 result
-	move.b	d2,d0                           	| [ld   a,c] div10 result
-	jbsr	c_11E3_show_tokens_1              	| [call c_11E3_show_tokens_1]
+	movem.w	(sp)+,d1/d2                    	    | [$11BE: pop  bc] pop the quotient and mod10 result
+	move.b	d2,d0                           	| [$11BF: ld   a,c] div10 result
+	jbsr	c_11E3_show_tokens_1              	| [$11C0: call c_11E3_show_tokens_1]
 
 * if ( mod10result < 5 )
-	move.b	d1,d0                           	| [ld   a,b] mod10 result
-	cmp.b	#5,d0                            	| [cp   #5]
-	jcs	l_11D0_do_1s_tokens                	| [jr   c,l_11D0_do_1s_tokens]
+	move.b	d1,d0                           	| [$11C3: ld   a,b] mod10 result
+	cmp.b	#5,d0                            	| [$11C4: cp   #5]
+	jcs	l_11D0_do_1s_tokens                	    | [$11C6: jr   c,l_11D0_do_1s_tokens]
 * else
-	move.b	#0x36+2,d3                      	| [ld   d,#0x36 + 2] tile nbr of top of '5' token ... bottom tile of token is next tile nbr
-	jbsr	c_build_token_1                   	| [call c_build_token_1] show the 5 token
+	move.b	#0x36+2,d3                      	| [$11C8: ld   d,#0x36 + 2] tile nbr of top of '5' token ... bottom tile of token is next tile nbr
+	jbsr	c_build_token_1                   	| [$11CA: call c_build_token_1] show the 5 token
 
 * do 1's ... mod10result -= 5
-	move.b	d1,d0                           	| [ld   a,b]
-	subq.b	#5,d0                           	| [sub  #5]
+	move.b	d1,d0                           	| [$11CD: ld   a,b]
+	subq.b	#5,d0                           	| [$11CE: sub  #5]
 
 l_11D0_do_1s_tokens:
-	move.b	d0,d1                           	| [ld   b,a] nbr of 1's tokens
-	addq.b	#1,d1                           	| [inc  b] pre-increment for djnz
+	move.b	d0,d1                           	| [$11D0: 4ld   b,a] nbr of 1's tokens
+	addq.b	#1,d1                           	| [$11D1: 0inc  b] pre-increment for djnz
 
 l_11D2_show_1s_loop:
 	subq.b	#1,d1                           	| [...]
-	jne	l_11D5_while                       	| [djnz l_11D5_while]
-	rts                                    	| [ret]
+	jne	l_11D5_while                       	    | [$11D2: djnz l_11D5_while]
+	rts                                    	    | [$11D4: ret]
 
 l_11D5_while:
-	move.b	#0x36,d3                        	| [ld   d,#0x36] tile nbr of top of '1' token ... bottom tile of token is next tile nbr
-	jbsr	c_build_token_1                   	| [call c_build_token_1] show the token
-	jra	l_11D2_show_1s_loop                	| [jr   l_11D2_show_1s_loop]
+	move.b	#0x36,d3                            | [$11D5: ld   d,#0x36] tile nbr of top of '1' token ... bottom tile of token is next tile nbr
+	jbsr	c_build_token_1                     | [$11D7: call c_build_token_1] show the token
+	jra	l_11D2_show_1s_loop                	    | [$11DA: jr   l_11D2_show_1s_loop]
 
 l_11DC_show_50s_tokens:
-	move.b	#4,d0                           	| [ld   a,#4]
-	jbsr	c_11E9                            	| [call c_11E9] show the token
-	jra	l_11BC_loop                        	| [jr   l_11BC_loop]
+	move.b	#4,d0                               | [$11DC: ld   a,#4]
+	jbsr	c_11E9                              | [$11DE: call c_11E9] show the token
+	jra	l_11BC_loop                        	    | [$11E1: jr   l_11BC_loop]
 
 
 *=============================================================================
@@ -2791,33 +2793,33 @@ l_11DC_show_50s_tokens:
 c_11E3_show_tokens_1:
 
 * branch off depending on div10result ... do nothing for 0
-	tst.b	d0                               	| [and  a] A==div10 result
+	tst.b	d0                               	| [$11E3: and  a] A==div10 result
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] [...]
+	rts                                    	    | [$11E4:ret  z] [...]
 0:
 * handle 40's separately
-	cmp.b	#4,d0                            	| [cp   #4]
-	jeq	l_11F0_do_40s                      	| [jr   z,l_11F0_do_40s]
+	cmp.b	#4,d0                            	| [$11E5: cp   #4]
+	jeq	l_11F0_do_40s                      	    | [$11E7: jr   z,l_11F0_do_40s]
 
 c_11E9:
 * get offset of of start of tiles for 10, 20, and 30 ... div10result * 4
-	rol.b	#2,d0                            	| [rlca] * 2
-	add.b	#0x36,d0                         	| [add  a,#0x36] base offset of icon tiles
-	move.b	d0,d3                           	| [ld   d,a]
-	jra	l_11FA_show_10s_20s_30s_50s        	| [jr   l_11FA_show_10s_20s_30s_50s]
+	rol.b	#2,d0                            	| [$11EA: rlca] * 2
+	add.b	#0x36,d0                         	| [$11EB: add  a,#0x36] base offset of icon tiles
+	move.b	d0,d3                           	| [$11ED: ld   d,a]
+	jra	l_11FA_show_10s_20s_30s_50s        	    | [$11EE: jr   l_11FA_show_10s_20s_30s_50s]
 
 l_11F0_do_40s:
-	move.b	#0x36+4*3,d3                    	| [ld   d,#0x36 + 4 * 3] offset to 30's tiles group
-	jbsr	c_build_token_1                   	| [call c_build_token_1]
-	jbsr	c_build_token_2                   	| [call c_build_token_2]
+	move.b	#0x36+4*3,d3                    	| [$11F0: ld   d,#0x36 + 4 * 3] offset to 30's tiles group
+	jbsr	c_build_token_1                   	| [$11F2: call c_build_token_1]
+	jbsr	c_build_token_2                   	| [$11F5: call c_build_token_2]
 
-	move.b	#0x36+4,d3                      	| [ld   d,#0x36 + 4] offset to 10's tiles group
+	move.b	#0x36+4,d3                      	| [$11F8: ld   d,#0x36 + 4] offset to 10's tiles group
 
 l_11FA_show_10s_20s_30s_50s:
-	jbsr	c_build_token_1                   	| [call c_build_token_1]
-	jbsr	c_build_token_2                   	| [call c_build_token_2]
+	jbsr	c_build_token_1                   	| [$11FA: call c_build_token_1]
+	jbsr	c_build_token_2                   	| [$11FD: call c_build_token_2]
 
-	rts                                    	| [ret]
+	rts                                    	    | [$1200: ret]
 
 *=============================================================================
 * c_build_token()
@@ -2888,38 +2890,38 @@ c_build_token_1:
 c_build_token_2:
 	move.l	a0,d7
 	exg		d0,d3
-	jbsr	osd_w_videoram			| [ld   (hl),d]
+	jbsr	osd_w_videoram			            | [$1216: ld   (hl),d]
 	exg		d0,d3
                          	
-	addq.b	#1,d3                           	| [inc  d] next tile
-	bset.b	#5,d7                           	| [set  5,l] +=32 ... advance one row down
+	addq.b	#1,d3                           	| [$1217: inc  d] next tile
+	bset.b	#5,d7                           	| [$1218: set  5,l] +=32 ... advance one row down
 	exg		d0,d3
-	jbsr	osd_w_videoram			| [ld   (hl),d]
+	jbsr	osd_w_videoram			            | [$121A: ld   (hl),d]
 	exg		d0,d3
 
-	addq.b	#1,d3                           	| [inc  d]
-	add.w	#0x400,d7                           	| [set  2,h] +=$0400 ... colorram
+	addq.b	#1,d3                           	| [$121B: inc  d]
+	add.w	#0x400,d7                           | [$121C: set  2,h] +=$0400 ... colorram
 
 * if ( D & $0C  > 8 ) { A = 2  else A = 1 }
-	move.b	d3,d0                           	| [ld   a,d]
-	and.b	#0x0C,d0                         	| [and  #0x0C]
-	cmp.b	#8,d0                            	| [cp   #8]
-	jeq	l_1228                             	| [jr   z,l_1228]
-	move.b	#1,d0                           	| [ld   a,#1]
-	addq.b	#1,d0                           	| [inc  a]
+	move.b	d3,d0                           	| [$121E: ld   a,d]
+	and.b	#0x0C,d0                         	| [$121F: and  #0x0C]
+	cmp.b	#8,d0                            	| [$1221: cp   #8]
+	jeq	l_1228                             	    | [$1223: jr   z,l_1228]
+	move.b	#2,d0                           	| [$1225: ld   a,#1]
+	                                         	| [$1227: inc  a]
 	bra.b	0f
 * set the color codes, resetting the bits and updating HL as we go
 l_1228:
 	move.b	#1,d0                           	| [ld   a,#1]
 0:
-	jbsr	osd_w_colorram                         	| [ld   (hl),a]
-	bclr.b	#5,d7                           	| [res  5,l]
-	jbsr	osd_w_colorram                         	| [ld   (hl),a]
-	sub.w	#0x400,d7                           	| [res  2,h]
-	subq.w	#1,d7                           	| [dec  l] offset tileram pointer 1 column to the right
+	jbsr	osd_w_colorram                      | [$1228: ld   (hl),a]
+	bclr.b	#5,d7                           	| [$1229: res  5,l]
+	jbsr	osd_w_colorram                      | [$122B: ld   (hl),a]
+	sub.w	#0x400,d7                           | [$122C: res  2,h]
+	subq.w	#1,d7                           	| [$122E: dec  l] offset tileram pointer 1 column to the right
 
 	move.l	d7,a0
-	rts                                    	| [ret]
+	rts                                    	    | [$122F: ret]
 
 *=============================================================================
 * c_init_taskman_structs_1230()
@@ -3309,7 +3311,7 @@ l_133A_while:
 	move.b	b_bugs_flying_nbr_9287,d0           | [$133A: ld   a,(b_bugs_flying_nbr_9287)]
 										        | [$133D: and  a]
 	jne	l_133A_while                            | [$133E: jr   nz,l_133A_while] wait for all bugs to stop flying								        
-	jbsr	draw_resv_ships                     | [$1340: call draw_resv_ships] updates reserve ships in lower left corner (wipes CREDIT X)
+	jbsr	draw_resv_ships_136c                | [$1340: call draw_resv_ships_136c] updates reserve ships in lower left corner (wipes CREDIT X)
 
 * put the ship out there
 												| [$1343: ld   hl,#0x0900 + 0x0006] two bytes, code 6, color 9
@@ -3356,20 +3358,20 @@ l_135A:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-draw_resv_ships:
-	move.b	ds_plyr_actv+_b_nships,d0       	| [ld   a,(ds_plyr_actv +_b_nships)]
-	not.b	d0                               	| [cpl]
-	addq.b	#6,d0                           	| [add  a,#6] max nr of icons
-	move.b	d0,d4                           	| [ld   e,a]
-	move.b	#0x49,d3                        	| [ld   d,#0x49] $4A,$4B,$4C,$4D ... / \ [ ]
-	move.w	#0x8000+0x1D,d7      	| [ld   hl,#0x8000 + 0x0000 + 0x1D]
-	jbsr	draw_resv_ship_tile               	| [call draw_resv_ship_tile]
-	subq.w	#1,d7                           	| [dec  l] advance 1 column right
-	jbsr	draw_resv_ship_tile               	| [call draw_resv_ship_tile]
-	bset.b	#5,d7                           	| [set  5,l] +=32 (down 1 row)
-	addq.w	#1,d7                           	| [inc  l] 1 column to the left
-	jbsr	draw_resv_ship_tile               	| [call draw_resv_ship_tile]
-	subq.w	#1,d7                           	| [dec  l] advance 1 column right
+draw_resv_ships_136c:
+	move.b	ds_plyr_actv+_b_nships,d0       	| [$136C: ld   a,(ds_plyr_actv +_b_nships)]
+	not.b	d0                               	| [$136F: cpl]
+	addq.b	#6,d0                           	| [$1370: add  a,#6] max nr of icons
+	move.b	d0,d4                           	| [$1372: ld   e,a]
+	move.b	#0x49,d3                        	| [$1373: ld   d,#0x49] $4A,$4B,$4C,$4D ... / \ [ ]
+	move.w	#0x8000+0x1D,d7      	            | [$1375: ld   hl,#0x8000 + 0x0000 + 0x1D]
+	jbsr	draw_resv_ship_tile               	| [$1378: call draw_resv_ship_tile]
+	subq.w	#1,d7                           	| [$137B: dec  l] advance 1 column right
+	jbsr	draw_resv_ship_tile               	| [$137C: call draw_resv_ship_tile]
+	bset.b	#5,d7                           	| [$137F: set  5,l] +=32 (down 1 row)
+	addq.w	#1,d7                           	| [$1381: inc  l] 1 column to the left
+	jbsr	draw_resv_ship_tile               	| [$1382: call draw_resv_ship_tile]
+	subq.w	#1,d7                           	| [$1385: dec  l] advance 1 column right
 *       call draw_resv_ship_tile
 
 *=============================================================================
@@ -3391,24 +3393,24 @@ draw_resv_ships:
 *-----------------------------------------------------------------------------
 draw_resv_ship_tile:
 
-	move.w	d7,-(sp)                        	| [push hl]
-	addq.b	#1,d3                           	| [inc  d]
-	move.b	d3,d1                           	| [ld   b,d]
-	move.b	#6-1,d0                         	| [ld   a,#6 - 1] max nr of resv ship icon
+	move.w	d7,-(sp)                        	| [$1386: push hl]
+	addq.b	#1,d3                           	| [$1387: inc  d] next ship tile
+	move.b	d3,d1                           	| [$1388: ld   b,d]
+	move.b	#6-1,d0                         	| [$1389: ld   a,#6 - 1] max nr of resv ship icon
 l_138B:
-	cmp.b	d4,d0                            	| [cp   e]
-	jne	l_1390                             	| [jr   nz,l_1390]
-	move.b	#0x24,d1                        	| [ld   b,#0x24] space character tile
+	cmp.b	d4,d0                            	| [$138B: cp   e]
+	jne	l_1390                             	    | [$138C: jr   nz,l_1390]
+	move.b	#0x24,d1                        	| [$138E: ld   b,#0x24] space character tile
 l_1390:
 	exg		d0,d1
-	jbsr	osd_w_videoram					| [ld   (hl),b]
+	jbsr	osd_w_videoram					    | [$1390: ld   (hl),b]
 	exg		d0,d1                        	
-	subq.w	#2,d7                           	| [dec  l]
-	subq.b	#1,d0                           	| [dec  a]
-	jne	l_138B                             	| [jr   nz,l_138B]
+	subq.w	#2,d7                           	| [$1392: dec  l]*2
+	subq.b	#1,d0                           	| [$1393: dec  a]
+	jne	l_138B                             	    | [$1394: jr   nz,l_138B]
 
-	move.w	(sp)+,d7                        	| [pop  hl]
-	rts                                    	| [ret]
+	move.w	(sp)+,d7                        	| [$1396: pop  hl]
+	rts                                    	    | [$1397: ret]
 
 *=============================================================================
 * c_string_out_1398()
@@ -3936,7 +3938,7 @@ f_manage_attract_mode_17B2:
 
 * switch( demo_idx )
 	move.b	ds_9200_glbls+0x03,d0           	| [ld   a,(ds_9200_glbls + 0x03)] demo state variable (jp to "switch-case")
-	lea	d_17C3_jptbl,a0                	| [ld   hl,#d_17C3_jptbl] table_base
+	lea	d_demo_jump_table_17C3,a0                	| [ld   hl,#d_demo_jump_table_17C3] table_base
 	CHECK_D0W_UPPER_BOUND	0xF
 	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
 	move.l	(a0),a0                        	| [ld   e,(hl)]
@@ -3945,7 +3947,8 @@ f_manage_attract_mode_17B2:
 	                              	| [ex   de,hl]
 	jra	(a0)                               	| [jp   (hl)]
 
-d_17C3_jptbl:
+* state 0x04 is the main state where aliens attack in the demo and fighter shoots them to show various scoring
+d_demo_jump_table_17C3:
 	.long case_clear_video_ram_1940                   | 0x00 . clear tile and sprite ram
 	.long case_setup_info_screen_1948                 | 0x01   setup info-screen: sprite tbl index, text index, preload tmr[2]==2
 	.long case_info_screen_sequencer_1984             | 0x02   tmr[2]=2,  sequence info-text and sprite tiles indices 1 sec intervals
@@ -3970,7 +3973,7 @@ case_end_of_demo_17E1:
 	jeq	l_17EC                             	| [jr   z,l_17EC]
 * else if ( game_timers[3] == 1 )  advance state
 	subq.b	#1,d0                           	| [dec  a]
-	jeq	l_attmode_state_step               	| [jp   z,l_attmode_state_step]
+	jeq	l_attmode_state_step_19a7               	| [jp   z,l_attmode_state_step_19a7]
 * else break
 	rts                                    	| [ret]
 l_17EC:
@@ -3993,7 +3996,7 @@ case_delay_before_game_over_17F5:
 	move.b	d0,ds_cpu0_task_actv_9000+0x05       	| [ld   (ds_cpu0_task_actv_9000 + 0x05),a] 1 ... f_misc_gameplay_events_0857
 	move.b	#2,d2                           	| [ld   c,#2] index of string
 	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("GAME OVER")
-	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
+	jra	l_attmode_state_step_19a7               	| [jp   l_attmode_state_step_19a7]
 
 * 10: enable fighter control demo
 case_enable_fighter_control_demo_1808:
@@ -4005,7 +4008,7 @@ case_enable_fighter_control_demo_1808:
 	move.b	d0,ds_cpu0_task_actv_9000+0x03    | [ld   (ds_cpu0_task_actv_9000 + 0x03),a] 1  (f_ship_demo_controls_1700 ... fighter control in training/demo mode)
 	move.b	d0,ds_cpu0_task_actv_9000+0x15    | [ld   (ds_cpu0_task_actv_9000 + 0x15),a] 1  (f_read_fire_button_1f04 ... fire button input))
 	move.b	d0,ds_cpu1_task_actv+0x05         | [ld   (ds_cpu1_task_actv + 0x05),a] 1  (cpu1:f_05EE ... fighter collision detection)
-	jra	l_attmode_state_step               	  | [jp   l_attmode_state_step]
+	jra	l_attmode_state_step_19a7               	  | [jp   l_attmode_state_step_19a7]
 
 * demo fighter vectors demo level after capture
 d_181F:
@@ -4025,7 +4028,7 @@ case_init_taskman_disable_bugs_1840:
 * have to re-set enable bit for this flag after init_structs
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,ds_cpu0_task_actv_9000+0x02      | [ld   (ds_cpu0_task_actv_9000 + 0x02),a] 1 ... f_manage_attract_mode_17B2 (attract-mode control)
-	jra	l_attmode_state_step               	    | [jp   l_attmode_state_step]
+	jra	l_attmode_state_step_19a7               	    | [jp   l_attmode_state_step_19a7]
 
 * 08: init demo (following training mode) ... "GAME OVER" showing
 case_init_demo_1852:
@@ -4048,7 +4051,7 @@ case_init_demo_1852:
 	addq.b	#1,d0                           	| [$187D: inc  a]
 	move.b	d0,ds_new_stage_parms_99c0+0x04     | [$187E: ld   (ds_new_stage_parms_99c0 + 0x04),a] 2 ... max_bombers (demo)
 	move.b	d0,ds_new_stage_parms_99c0+0x05     | [$1881: ld   (ds_new_stage_parms_99c0 + 0x05),a] 2 ... increases max bombers in certain conditions (demo)
-	jra	l_attmode_state_step               		| [$1884: jp   l_attmode_state_step]
+	jra	l_attmode_state_step_19a7               		| [$1884: jp   l_attmode_state_step_19a7]
 
 * demo fighter vectors demo level before capture
 d_1887:
@@ -4066,7 +4069,7 @@ case_copyright_text_sync_18AC:
 	jeq	l_18BB                             	| [jr   z,l_18BB]
 * else  if (1 == tmr[2])  state++ | break
 	subq.b	#1,d0                           	| [dec  a]
-	jeq	l_attmode_state_step               	| [jp   z,l_attmode_state_step]
+	jeq	l_attmode_state_step_19a7               	| [jp   z,l_attmode_state_step_19a7]
 * else  if (6 == tmr)  copyright_info | break
 	cmp.b	#5,d0                            	| [cp   #5]
 	jeq	l_18C6                             	| [jr   z,l_18C6]
@@ -4093,10 +4096,10 @@ l_18C6:
 * 04, 09, 11: wait for fighter control task to disable itself
 case_wait_for_fighter_task_18D1:
 * if (0 == task_actv_tbl_0[0x03])  attmode_state_step()
-	move.b	ds_cpu0_task_actv_9000+0x03,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x03)] wait for task[f_ship_demo_controls_1700 fighter ctrl ]==0 before advance state
-	                               	| [and  a]
-	jeq	l_attmode_state_step               	| [jp   z,l_attmode_state_step]
-	rts                                    	| [ret]
+	move.b	ds_cpu0_task_actv_9000+0x03,d0      | [$18D1: ld   a,(ds_cpu0_task_actv_9000 + 0x03)] wait for task[f_ship_demo_controls_1700 fighter ctrl ]==0 before advance state
+	                               	            | [$18D4: and  a]
+	jeq	l_attmode_state_step_19a7               | [$18D5: jp   z,l_attmode_state_step_19a7]
+	rts                                    	    | [$18D8: ret]
 
 * 03: one time init for 7 enemies in training mode
 case_init_7_aliens_for_training_mode_18D9:
@@ -4126,8 +4129,7 @@ l_18DB_while:
 	move.b	d5,b_92C0+0x02                  	| [$18F3: ld   (b_92C0 + 0x01),hl] demo ... timrs_ini[0x06] = $FF
 	move.b	d6,b_92C0+0x00                  	| [$18F6: ld   (b_92C0 + 0x00),hl] demo ... timrs_ini
 	move.b	d5,b_92C0+0x01                  	| [$18F6: ld   (b_92C0 + 0x00),hl] demo ... timrs_ini
-
-* now: 92C0  0D FF FF xx 0D FF FF
+* now: 92C0  0D FF FF FE 0D FF FF. FE is there from system tests, and has no effect
 
 	lea	d_1928,a0                      			| [$18F9: ld   hl,#d_1928] demo fighter vectors
 	move.l	a0,pdb_demo_fghtrvctrs_9282         | [$18FC: ld   (pdb_demo_fghtrvctrs_9282),hl] &d_1928[0] ... demo fighter vectors
@@ -4152,7 +4154,7 @@ l_18DB_while:
 
 	jbsr	c_game_or_demo_init               	| [call c_game_or_demo_init]
 
-	jra	l_attmode_state_step               	| [jp   l_attmode_state_step]
+	jra	l_attmode_state_step_19a7               	| [jp   l_attmode_state_step_19a7]
 
 * demo fighter vectors training mode
 d_1928:
@@ -4163,7 +4165,7 @@ d_1928:
 case_clear_video_ram_1940:
 	jbsr	c_sctrl_playfld_clr_0160               	| [call c_sctrl_playfld_clr_0160]
 	jbsr	c_sctrl_sprite_ram_clr_003c            	| [call c_sctrl_sprite_ram_clr_003c]
-	jra	l_attmode_state_step               	| [jr   l_attmode_state_step]
+	jra	l_attmode_state_step_19a7               	| [jr   l_attmode_state_step_19a7]
 
 * 01: setup info-screen: sprite tbl index, text index, timer[2]
 case_setup_info_screen_1948:
@@ -4176,7 +4178,7 @@ case_setup_info_screen_1948:
 
 	move.b	#2,d0                           	| [ld   a,#2]
 	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] 2 (1 sec)
-	jra	l_attmode_state_step               	| [jr   l_attmode_state_step]
+	jra	l_attmode_state_step_19a7               	| [jr   l_attmode_state_step_19a7]
 
 * parameters for sprite tiles used in attract mode, 4-bytes each:
 *  0: offset/index of object to use
@@ -4215,7 +4217,7 @@ case_info_screen_sequencer_1984:
 * . if (index == 5) then  state++ | break
 	move.b	ds_9200_glbls+0x05,d0           	| [ld   a,(ds_9200_glbls + 0x05)] if 5 ... demo_scrn_txt_indx
 	cmp.b	#5,d0                            	| [cp   #5]
-	jeq	l_attmode_state_step               	| [jr   z,l_attmode_state_step]
+	jeq	l_attmode_state_step_19a7               	| [jr   z,l_attmode_state_step_19a7]
 * . else
 * .. txt_index++ | show text
 	addq.b	#1,d0                           	| [$1995: inc  a]
@@ -4234,7 +4236,7 @@ case_info_screen_sequencer_1984:
 
 	rts                                    	| [ret]
 
-l_attmode_state_step:
+l_attmode_state_step_19a7:
 * .demo_idx++
 	lea	ds_9200_glbls+0x03,a0          	| [ld   hl,#ds_9200_glbls + 0x03] advance state variable
 	addq.b	#1,(a0)                         	| [inc  (hl)]
@@ -4742,14 +4744,14 @@ check_bomber_for_ready_status_1ba8:
 	move.b	#3,d1                           	| [$1BAB: ld   b,#3]
 l_1BAD:
 	subq.b	#1,(a0)                         	| [$1BAD: dec  (hl)] check if this one timed out
-	jeq	l_1BB4                             		| [$1BAE: jr   z,l_1BB4] b used below argument to "switch" to select type of alien launched?
+	jeq	demo_boss_attacks_1BB4                  | [$1BAE: jr   z,demo_boss_attacks_1BB4] b used below argument to "switch" to select type of alien launched?
 	addq.w	#1,a0                           	| [$1BB0: inc  l]
 	subq.b	#1,d1                           	| [...]
 	jne	l_1BAD                             		| [$1BB1: djnz l_1BAD]
 	rts                                    		| [$1BB3: ret] none are ready
 
-* called when first boss formation is attacking in the demo
-l_1BB4:
+* called when boss formations or single boss is attacking in the demo
+demo_boss_attacks_1BB4:
 * if (bugs_flying_nbr >= max_flying_bugs_this_rnd) then ...
 	move.b	ds_new_stage_parms_99c0+0x04,d0     | [$1BB4: ld   a,(ds_new_stage_parms_99c0 + 0x04)] max_bombers
 	move.b	d0,d2                           	| [$1BB7: ld   c,a]
@@ -4763,23 +4765,23 @@ l_1BB4:
 * else ... launch another bombing excursion
 l_1BC0:
 * b_92C0_0[n] =  b_92C0_0[n + 4] ... set next timeout for this bomber type
-												| [set  2,l] offset += 4
-	move.b	(4,a0),d0                         	| [ld   a,(hl)] $92C0[n+4]
-												| [res  2,l]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+												| [$1BC0: set  2,l] offset += 4
+	move.b	(4,a0),d0                         	| [$1BC2: ld   a,(hl)] $92C0[n+4]
+												| [$1BC3: res  2,l]
+	move.b	d0,(a0)                         	| [$1BC5: ld   (hl),a] reset counter for next bomber
 
-	move.b	d1,d0                           	| [ld   a,b] ... b from loop l_1bad above decremented from 3
-	subq.b	#1,d0                           	| [dec  a] offset for 0 based indexing of "switch"
+	move.b	d1,d0                           	| [$1BC6: ld   a,b] ... b from loop l_1bad above decremented from 3
+	subq.b	#1,d0                           	| [$1BC7: dec  a] offset for 0 based indexing of "switch"
 
 * switch(A)
-	lea	d_1BD1,a0                      	| [ld   hl,#d_1BD1]
+	lea	d_1BD1,a0                      	        | [$1BC8: ld   hl,#d_1BD1]
 	CHECK_D0W_UPPER_BOUND	3
-	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
-	                       	| [ld   a,(hl)]
-	                       	| [inc  hl]
-	                       	| [ld   h,(hl)]
-	move.l	(a0),a0                       	| [ld   l,a]
-	jra	(a0)                               	| [jp   (hl)]
+	jbsr	add_4_times_d0_to_a0_0008           | [$1BCB: rst  0x08] HL += 2A
+	                       	                    | [$1BCC: ld   a,(hl)]
+	                       	                    | [$1BCD: inc  hl]
+	                       	                    | [$1BCE: ld   h,(hl)]
+	move.l	(a0),a0                       	    | [$1BCF: ld   l,a]
+	jra	(a0)                               	    | [$1BD0: jp   (hl)]
 d_1BD1:
 * jp table in order of bomber launch timers
 	.long case_bmbr_yellow
@@ -4789,13 +4791,13 @@ d_1BD1:
 * set bee launch params
 case_bmbr_yellow:
 	move.b	#20,d1                          	| [ld   b,#20] number of yellow aliens
-	lea	b_8800+0x08,a0                 	| [ld   hl,#b_8800 + 0x08] $08-$2E
-	move.w	#db_flv_atk_yllw_034F,d3             	| [ld   de,#db_flv_atk_yllw]
+	lea	b_8800+0x08,a0                 	        | [$1BD9: ld   hl,#b_8800 + 0x08] $08-$2E
+	move.w	#db_flv_atk_yllw_034F,d3            | [$1BDC: ld   de,#db_flv_atk_yllw]
 
 * this section common to both bee and moth launcher, check for next one, skip if already active
 l_1BDF:
-	move.b	ds_plyr_actv+_b_bbee_obj,d0     	| [ld   a,(ds_plyr_actv +_b_bbee_obj)] load bonus-bee parameter
-	move.b	d0,d2                           	| [ld   c,a] stash A
+	move.b	ds_plyr_actv+_b_bbee_obj,d0     	| [$1BDF: ld   a,(ds_plyr_actv +_b_bbee_obj)] load bonus-bee parameter
+	move.b	d0,d2                           	| [$1BE2: ld   c,a] stash A
 l_1BE3_while:
 * if ( disposition == STAND_BY ) && ...
 	move.b	(a0),d0                         	| [ld   a,(hl)] obj_status[L].state
@@ -4856,11 +4858,11 @@ l_1C1B_while:
 
 l_1C24_is_standby:
 	COMPUTE_LSB_A1_D4	b_8800
-	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 1 ... force next bomber-boss to wingman mode (suppress capture-boss select)
-	move.b	d4,d0                           	| [ld   a,e]
-	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] object/index of bomber to _1CAE ... bosses start at $30
-	jra	j_1CAE                             		| [jp   j_1CAE] _boss_activate(e, ixl, b, iy) ... C?
+	move.b	#1,d0                           	| [$1C24: ld   a,#1]
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [$1C26: ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 1 ... force next bomber-boss to wingman mode (suppress capture-boss select)
+	move.b	d4,d0                           	| [$1C29: ld   a,e]
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [$1C2A: ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] object/index of bomber to _1CAE ... bosses start at $30
+	jra	j_1CAE                             		| [$1C2D: jp   j_1CAE] _boss_activate(e, ixl, b, iy) ... C?
 
 * already in capture-mode, or capture-mode select is suppressed this time ... look for a wingman
 * get red alien index, check if already flagged by plyr_state.clone_attkr_en
@@ -4893,8 +4895,8 @@ l_1C44:
 
 * first pass: look for 2 adjoining escorts available occuring in 3 adjacent spaces
 l_1C4F_while:
-	move.b	d2,d0                           	| [ld   a,c]
-	and.b	#0x07,d0                         	| [and  #0x07]
+	move.b	d2,d0                           	| [$1C4F: ld   a,c]
+	and.b	#0x07,d0                         	| [$1C50: and  #0x07]
 * if (a==3 || a==5|| a==6) ...
 	cmp.b	#4,d0                            	| [cp   #4] (a ! 4) ...
 	jeq	l_1C5B                             	    | [jr   z,l_1C5B]
@@ -4970,7 +4972,7 @@ bmbr_boss_activate_1c8d:
 *  3 -> 2 -> 2 -> 4
 *  2 -> 3 -> 3 -> 6
 *  1 -> 1 -> 1 -> 2
-	lea	b_8800,a1			| reset LSB of DE
+	lea	b_8800,a1			| reset MSB of DE
 	move.b	d1,d0                           	| [ld   a,b]
 	btst.b	#1,d0                           	| [bit  1,a]
 	jeq	l_1C94                             	    | [jr   z,l_1C94]
@@ -4990,11 +4992,12 @@ l_1C94:
 	move.l	(sp)+,a0                        	| [pop  hl] will return to task manager eventually
 
 j_1CA0:
-	move.w	#db_flv_0411,d5                 	| [ld   iy,#db_flv_0411]
-	move.b	ds_9200_glbls+0x0B,d0           	| [ld   a,(ds_9200_glbls + 0x0B)] enemy enable, select data ptr boss launch: if (0), iy=$00F1, else iy=$0411
-	                               	| [and  a]
-	jne	j_1CAE                             	| [jr   nz,l_1CAE]
-	move.w	#db_flv_00f1,d5                 	| [ld   iy,#db_flv_00f1] training-mode
+	COMPUTE_LSB_A1_D4	b_8800
+	move.w	#db_flv_0411,d5                 	| [$1CA0: ld   iy,#db_flv_0411]
+	move.b	ds_9200_glbls+0x0B,d0           	| [$1CA4: ld   a,(ds_9200_glbls + 0x0B)] enemy enable, select data ptr boss launch: if (0), iy=$00F1, else iy=$0411
+	                               	            | [$1CA7: and  a]
+	jne	j_1CAE                             	    | [$1CA8: jr   nz,l_1CAE]
+	move.w	#db_flv_00f1,d5                 	| [$1CAA: ld   iy,#db_flv_00f1] training-mode
 
 
 *-----------------------------------------------------------------------------

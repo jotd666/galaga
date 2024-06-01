@@ -1,7 +1,5 @@
 - demo: ship misses first boss on first shot (debug/log ship coords again?)
 - demo: second boss not exploding when shot the second time, no score
-- demo: shot goes up the screen: seems to stop too late (blitter out of range error): we should add 16 pixels on the top too
-  for the buffer and allow off-screen negative ranges
 - demo: third boss (alone) does not attack, explodes but no score
 - demo: boss explosions: some frames shifted
 - demo: trajectories are wrong, return to swarm doesn't work (check sub: 0E08) bees never stop
@@ -10,7 +8,8 @@
 - 2 first rows not shown (attribute/color is black!!!)
 - start game: ship shoots all the time & goes left, probably demo controls
   completely saturated
-- player lives: 5 lives??? and stage flag immediately following, and wrong colors
+- player lives: 5 lives??? dip switch issue and wrong colors
+- stage flag not drawn, and wrong colors
 - sprite priorities wrong: stars should be behind
 - stars & colors trashed near the PAL wait region: copperlist conflict between sprite/color
 - remove red timer flashes, maybe speedup using F10?

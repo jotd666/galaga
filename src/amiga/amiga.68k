@@ -2337,8 +2337,8 @@ update_bg_tile:
 	and.w	#0xFF,d0	| mask up to 255
 
 	bsr		compute_tile_xy
-	cmp.w	#29,d7
-	jcc	0f				| above 28: ignore
+	cmp.w	#30,d7
+	jcc	0f				| above 30: ignore
 	cmp.w	#2,d7
 	jcs	0f				| below 2: ignore
 
