@@ -1,4 +1,4 @@
-import os,struct
+import os,struct,re
 
 # save log like S log $100 $4000
 with open(r"C:\Users\Public\Documents\Amiga Files\WinUAE\log","rb") as f:
@@ -29,25 +29,50 @@ pcs = set()
 
 len_block = 12
 
+sorted_cmp = False
+avoid_regs = "abcdhl"
+regslist = "abcdehl"
+
+lst = []
+for i in range(0,len(contents),len_block):
+    chunk = contents[i:i+len_block]
+    if len(chunk)<len_block:
+        break
+    regs=dict()
+    regs["pc"],regs["a"],regs["b"],regs["c"],regs["d"],regs["e"],regs["h"],regs["l"],regs["d7"],end = struct.unpack_from(">HBBBBBBBBH",chunk)
+    if end==0xCCCC:
+        break
+    pcs.add(regs["pc"])
+
+    regstr = ["{}={:02X}".format(reg.upper(),regs[reg]) for reg in regslist if reg not in avoid_regs]
+    rest = ", ".join(regstr)
+
+    out = f"{regs['pc']:04X}: {rest}\n"
+
+    lst.append(out)
+
+if sorted_cmp:
+    lst.sort()
+
 with open("amiga.tr","w") as f:
-    for i in range(0,len(contents),len_block):
-        chunk = contents[i:i+len_block]
-        if len(chunk)<len_block:
-            break
-        pc,a,b,c,d,e,h,l,d7,end = struct.unpack_from(">HBBBBBBBBH",chunk)
-        if end==0xCCCC:
-            break
-        pcs.add(pc)
-        out = f"{pc:04X}: A={a:02X}, B={b:02X}, C={c:02X}, D={d:02X}, E={e:02X}, H={h:02X}, L={l:02X}\n"
-        f.write(out)
+    f.writelines(lst)
 
 # generated using log: trace galaga.tr,sub,,{tracelog "A=%02X, B=%02X, C=%02X, D=%02X, E=%02X, H=%02X, L=%02X, IX=%04X ",a,b,c,d,e,h,l,ix}
-
-with open(r"K:\Emulation\MAME\galaga.tr") as f, open("mame.tr","w") as fw:
+#  main cpu:           trace galaga.tr,maincpu,,{tracelog "A=%02X, B=%02X, C=%02X, D=%02X, E=%02X, H=%02X, L=%02X, IX=%04X ",a,b,c,d,e,h,l,ix}
+lst = []
+with open(r"K:\Emulation\MAME\galaga.tr") as f:
     l = len("A=01, B=00, C=3F, D=93, E=81, H=93, L=01, ")
     for line in f:
-        if line.startswith("A="):
+        m = re.match("A=(..), B=(..), C=(..), D=(..), E=(..), H=(..), L=(..)",line)
+        if m:
             pc = line[l+8:l+12]
+            regs = dict()
             if int(pc,16) in pcs:
-                rest = line[:l-2]
-                fw.write(f"{pc}: {rest}\n")
+                regs["a"],regs["b"],regs["c"],regs["d"],regs["e"],regs["h"],regs["l"] = m.groups()
+                regstr = ["{}={}".format(reg.upper(),regs[reg]) for reg in regslist if reg not in avoid_regs]
+                rest = ", ".join(regstr)
+                lst.append(f"{pc}: {rest}\n")
+if sorted_cmp:
+    lst.sort()
+with open("mame.tr","w") as fw:
+    fw.writelines(lst)

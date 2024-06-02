@@ -1,8 +1,6 @@
 - demo: ship misses first boss on first shot (debug/log ship coords again?)
-- demo: second boss not exploding when shot the second time, no score
-- demo: third boss (alone) does not attack, explodes but no score
+- demo: second/third boss not exploding when shot the second time, no score
 - demo: boss explosions: some frames shifted
-- demo: trajectories are wrong, return to swarm doesn't work (check sub: 0E08) bees never stop
 - ACTIVE_BITPLANE_MASK not implemented
 - generate sprite_cluts for hw sprite
 - 2 first rows not shown (attribute/color is black!!!)
@@ -13,10 +11,9 @@
 - sprite priorities wrong: stars should be behind
 - stars & colors trashed near the PAL wait region: copperlist conflict between sprite/color
 - remove red timer flashes, maybe speedup using F10?
-
+- original swarm: missing 1 boss, and 1 column of red bees!
 
 traj issues: Traj computed in subcpu D23 / D50 probe there!
 
-homing traj OK but final positions wrong
 
-break in E08 see when happens???
+E3A sub: set pos check current x/Y vs homing in MAME then in amiga

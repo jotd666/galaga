@@ -14,26 +14,7 @@
 
 	.global galaga1_reset
 	.global galaga1_irq
-	
-	.macro	LOG_REGS	z80pc
-	move.w	sr,-(a7)
-	move.l	a6,-(a7)
-	move.l	log_ptr,a6
-	move.w	#0x\z80pc,(a6)+
-	move.b	d0,(a6)+
-	move.b	d1,(a6)+
-	move.b	d2,(a6)+
-	move.b	d3,(a6)+
-	move.b	d4,(a6)+
-	move.b	d5,(a6)+
-	move.b	d6,(a6)+
-	move.b	d7,(a6)+
-	move.w	#0xDEAD,(a6)+
-	move.l	a6,log_ptr
-	move.l	(a7)+,a6
-	move.w	(a7)+,sr
-	.endm
-	
+		
 	.macro		CONVERT_SUBROM_A0_TO_D5D6
 	move.l	a0,d5
 	sub.l	#galaga_sub_rom,d5
@@ -2478,7 +2459,7 @@ l_0D23:
 	subq.b	#1,d4                           	| [$0D37: dec  e] compliment bit-0 of 9-bit integer portion (done before add)
 	add.b	#0x4F,d0          					| [$0D34: add  a,#(<(-0x0160 - 0x02))>>1] not flipped ... lsb of result, right-shift 1
 	not.b	d0                               	| [$0D36: cpl]
-l_0D38:
+*l_0D38:
 * E<0> <- Cy <- 7 6 5 4 3 2 1 0 <- Cy <- E<0>
 	roxr.b	#1,d4                           	| [$0D38: rr   e] bit-0 of 9-bit integer portion into Cy
 	roxl.b	#1,d0                           	| [$0D3A: rla] Cy (bit0) into lsb, bit8 into Cy
@@ -2924,5 +2905,3 @@ exx:
     movem.l (a7)+,d1-d4/a0/a1/a4
     rts
 
-log_ptr:
-	dc.l	0x100

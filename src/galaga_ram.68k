@@ -9,6 +9,7 @@
 	.global	ixl
 	.global	regscopy_cpu0
 	.global	regscopy_cpu1
+	.global log_ptr
 	
 	.ifdef   __amiga__
 	.ascii	"RAM_STRT"
@@ -64,6 +65,11 @@ high_score_beaten:
 	.word	0
 stack_top:
 	.long	0
+	
+
+log_ptr:
+	dc.l	0x100
+	
 invincible_flag:
 	.byte	0
 infinite_lives_flag:

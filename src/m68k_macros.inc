@@ -162,6 +162,25 @@
 
 	
 	.ifndef	RELEASE
+	.macro	LOG_REGS	z80pc
+	move.w	sr,-(a7)
+	move.l	a6,-(a7)
+	move.l	log_ptr,a6
+	move.w	#0x\z80pc,(a6)+
+	move.b	d0,(a6)+
+	move.b	d1,(a6)+
+	move.b	d2,(a6)+
+	move.b	d3,(a6)+
+	move.b	d4,(a6)+
+	move.b	d5,(a6)+
+	move.b	d6,(a6)+
+	move.b	d7,(a6)+
+	move.w	#0xDEAD,(a6)+
+	move.l	a6,log_ptr
+	move.l	(a7)+,a6
+	move.w	(a7)+,sr
+	.endm
+
 check_d0w_upper_bound_error:
 	.asciz	"jump table index too high D1 >= D2!"
 compute_lsb_a0_d6_base_mismatch_msg:
