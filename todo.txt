@@ -2,7 +2,7 @@
 - demo: second/third boss not exploding when shot the second time, no score
 - demo: boss explosions: some frames shifted
 - ACTIVE_BITPLANE_MASK not implemented
-- generate sprite_cluts for hw sprite
+- start game screen: all extra ship scores are 00000
 - 2 first rows not shown (attribute/color is black!!!)
 - start game: ship shoots all the time & goes left, probably demo controls
   completely saturated
@@ -15,5 +15,13 @@
 
 traj issues: Traj computed in subcpu D23 / D50 probe there!
 
+case_nearly_fatally_shot_24B2: ok (almost) for static (150) shot
+but not when shooting flying boss
 
 E3A sub: set pos check current x/Y vs homing in MAME then in amiga
+
+
+demo: boss disappearing because case_make_object_inactive_0e49 (sub) is called from for__pool_idx_08E4
+right after having been shot (because status = 4)
+should update sprite (explosion) by calling case_nearly_fatally_shot_24B2 several times
+debug in MAME!!

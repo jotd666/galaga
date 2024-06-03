@@ -7130,7 +7130,6 @@ l_249B:
 	move.b	(a0)+,d0                         	| [$24A8: ld   a,(hl)] (+inc l)
 	move.b	d0,(a1)                         	| [$24A9: ld   (de),a] Y pix coordinate
 	lea	ds_sprite_ctrl_9B00,a1              	| [$24AA: ld   d,#>ds_sprite_ctrl_9B00] sprite.ctrl[n].sY (bit 8 into MSB)
-	and.w	#0xFF,d4
 	add.w	d4,a1
 	addq.b	#1,d6                           	| [$24AC: inc  l] [a0 coherence]
 	move.b	(a0),d0                         	| [$24AD: ld   a,(hl)]
@@ -7138,6 +7137,7 @@ l_249B:
 	jra	l_reset_index_and_continue_2413         | [$24AF: jp   l_reset_index_and_continue_2413] reset index to .b0 and continue
 
 * 04: rckt_hit_hdlr
+* here handles enemy explosion: called at each explosion stage
 case_nearly_fatally_shot_24B2:
 	move.b	d4,d6                           	| [$24B2: ld   l,e] will be used below!
 	addq.w	#1,a1                           	| [$24B3: inc  e] .b1
@@ -7171,53 +7171,53 @@ l_24C2:
 												| [$24CE: ld   a,(hl)]
 * subtract only in bits<7:0> then flip b9 on Cy
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300		| pre-compute d6
-	sub.b	#8,(a0)                            	| [sub  #8]
-	* no need to use register & we need C flag  | [ld   (hl),a]
-	jcc	l_24DA                             		| [jr   nc,l_24DA]
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] killed boss that had the ship in the demo (not in game?)
+	sub.b	#8,(a0)                            	| [$24CF: sub  #8]
+	* no need to use register & we need C flag  | [$24D1: ld   (hl),a]
+	jcc	l_24DA                             		| [$24D2: jr   nc,l_24DA]
+	lea	ds_sprite_ctrl_9B00,a0              	| [$24D4: ld   h,#>ds_sprite_ctrl_9B00] killed boss that had the ship in the demo (not in game?)
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	eor.b	#0x01,d0                         	| [xor  #0x01]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+	move.b	(a0),d0                         	| [$24D6: ld   a,(hl)]
+	eor.b	#0x01,d0                         	| [$24D7: xor  #0x01]
+	move.b	d0,(a0)                         	| [$24D9: ld   (hl),a]
 l_24DA:
-	subq.b	#1,d6                           	| [dec  l] .b0 [a0 coherence]
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
+	subq.b	#1,d6                           	| [$24DA: dec  l] .b0 [a0 coherence]
+	lea	ds_sprite_ctrl_9B00,a0              	| [$24DB: ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#0x0C,(a0)                      	| [ld   (hl),#0x0C]
-	exg		d7,d0                               | [ex   af,af'] unstash A which is the count
+	move.b	#0x0C,(a0)                      	| [$24DD: ld   (hl),#0x0C]
+	exg		d7,d0                               | [$24DF: ex   af,af'] unstash A which is the count
 l_24E0:
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
+	lea	ds_sprite_code_8B00,a0              	| [$24E0: ld   h,#>ds_sprite_code_8B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	jra	l_2416                             	| [jp   l_2416]
+	move.b	d0,(a0)                         	| [$24E2: ld   (hl),a]
+	jra	l_2416                             	    | [$24E3: jp   l_2416]
 
 l_24E6_i_am_at_45:
 	subq.b	#1,d4                           	| [dec  e] [a1 coherence]
-	subq.w	#1,a1                           	| [dec  e] restore pointer to .b0
-	lea	b_obj_collsn_notif_9200,a0     	| [ld   h,#>b_obj_collsn_notif_9200] 1?
+	subq.w	#1,a1                           	| [$24E6: dec  e] restore pointer to .b0
+	lea	b_obj_collsn_notif_9200,a0     	        | [$24E7: ld   h,#>b_obj_collsn_notif_9200] 1?
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)] .b0 ... stash the code for l_24FD
+	move.b	(a0),d0                         	| [$24E9: ld   a,(hl)] .b0 ... stash the code for l_24FD
 * if 1 ... (not special sprite code)
-	cmp.b	#0x01,d0                         	| [cp   #0x01] hit-status register at 9200[i]==$01, unless it shows small score indicator
-	jne	l_24FD                             	| [jr   nz,l_24FD]
+	cmp.b	#0x01,d0                         	| [$24EA: cp   #0x01] hit-status register at 9200[i]==$01, unless it shows small score indicator
+	jne	l_24FD                             	    | [$24EC: jr   nz,l_24FD]
 * ... then ...
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	lea	ds_sprite_posn_9300,a0              	| [$24EE: ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	clr.b	(a0)                             	| [ld   (hl),#0]
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
+	clr.b	(a0)                             	| [$24F0: ld   (hl),#0]
+	lea	ds_sprite_ctrl_9B00,a0              	| [$24F2: ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	clr.b	(a0)                             	| [ld   (hl),#0]
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
+	clr.b	(a0)                             	| [$24F4: $24F4: ld   (hl),#0]
+	lea	b_8800,a0                      	        | [$24F6: $24F6: ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] $80 is code for inactive sprite
-	jra	l_2416                             	| [jp   l_2416]
+	move.b	#0x80,(a0)                      	| [$24F8: ld   (hl),#0x80] $80 is code for inactive sprite
+	jra	l_2416                             	    | [$24FA: jp   l_2416]
 
 * Show the sprite with the small score text for shots that award bonus points:
 *  Boss .. $35 (400)  $37 (800)  $3A (1600)  ... see d_1CFD
@@ -7234,6 +7234,7 @@ l_24FD:
 	jcs	l_250E                             	| [jr   c,l_250E]
 	move.b	#0x0D,d2                        	| [ld   c,#0x0D] color
 	addq.w	#1,a0                           	| [inc  l]
+	addq.b	#1,d6                           	| [inc  l] coherence
 	cmp.b	#0x3A,d0                         	| [cp   #0x3A]
 	jcs	l_250C                             	| [jr   c,l_250C] if code < 3A, goto 250C
 	addq.b	#1,d2                           	| [inc  c] color++
