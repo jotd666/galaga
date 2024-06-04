@@ -1311,6 +1311,7 @@ update_bobs:
 	bpl.b	13f
 	* missing mirror
 	move.w	#0x00F,_custom+color
+	lsr		#2,d3
 	sub.w	#(NB_BOBS_PLANES+1)*4,a0
 	.endif
 13:

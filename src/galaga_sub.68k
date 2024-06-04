@@ -1342,9 +1342,9 @@ l_hdl_flyng_bug_081e:
 	move.b	(a0),d0                         	| [$0823: ld   a,(hl)] sprt_mctl_objs[L].mctl_idx
 	lea	ds_bug_motion_que_9100,a0           	| [$0824: ld   h,#>ds_bug_motion_que_9100] bug_motion_que[A].b13 = 0 (release this slot)
 	and.w	#0xFF,d6
-	add.w	d6,a0
 	add.b	#0x13,d0                         	| [$0826: add  a,#0x13]
 	move.b	d0,d6                           	| [$0828: ld   l,a]
+	add.w	d6,a0
 	clr.b	(a0)                             	| [$0829: ld   (hl),#0]
 	lea	b_bug_flyng_hits_p_round,a0    			| [$082B: ld   hl,#b_bug_flyng_hits_p_round] +=1
 	addq.b	#1,(a0)                         	| [$082E: inc  (hl)]

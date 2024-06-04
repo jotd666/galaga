@@ -5345,11 +5345,11 @@ l_1DA8:
 *
 *-----------------------------------------------------------------------------
 f_update_enemy_status_1db3:
-	lea	b_obj_collsn_notif_9200,a0     	| [ld   hl,#b_obj_collsn_notif_9200] $30 bytes ... test bit-7
+	lea	b_obj_collsn_notif_9200,a0     			| [ld   hl,#b_obj_collsn_notif_9200] $30 bytes ... test bit-7
 	move.b	#0x30,d1                        	| [ld   b,#0x30]
 l_1DB8:
 	btst.b	#7,(a0)                         	| [bit  7,(hl)] bit-7 set ($81) by cpu1 (l_07DB) if the orc has been hit
-	jne	l_1DC1_make_him_dead               	| [jr   nz,l_1DC1_make_him_dead]
+	jne	l_1DC1_make_him_dead               		| [jr   nz,l_1DC1_make_him_dead]
 	addq.w	#1,a0                           	| [inc  l]
 l_1DBD:
 	addq.w	#1,a0                           	| [inc  l]
@@ -5359,24 +5359,24 @@ l_1DBD:
 	rts                                    	| [ret]
 
 l_1DC1_make_him_dead:
-	bclr.b	#7,(a0)                         	| [res  7,(hl)] b_obj_collsn_notif_9200[n] for rckt_hit_hdlr
+	bclr.b	#7,(a0)                         	| [$1DC1: res  7,(hl)] b_obj_collsn_notif_9200[n] for rckt_hit_hdlr
 	
 	* compute relative offset/index to apply to 88xx
 	COMPUTE_LSB_A0_D6	b_obj_collsn_notif_9200
-	lea	b_8800,a0                      	| [ld   h,#>b_8800] disposition = 4 (dying/exploding)
+	lea	b_8800,a0                      	        | [$1DC3: ld   h,#>b_8800] disposition = 4 (dying/exploding)
 	add.w	d6,a0
-	move.b	#4,(a0)+                         	| [ld   (hl),#4]
-	addq	#1,d6		| d6 offset follows for later
+	move.b	#4,(a0)+                         	| [$1DC5: ld   (hl),#4]
+	addq	#1,d6		                        | d6 offset follows for later
 * use obj_status[].mctl_q_index for explosion counter (que object should already have been released at l_081E_hdl_flyng_bug
-	                           	| [inc  l]
-	move.b	#0x40,(a0)                      	| [ld   (hl),#0x40] start value for the explosion (40...45)
+	                           	                | [$1DC7: inc  l]
+	move.b	#0x40,(a0)                      	| [$1DC8: ld   (hl),#0x40] start value for the explosion (40...45)
 	
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
-	add.w	d6,a0			| apply offset to sprite code too
-	move.b	#0x0A,(a0)                      	| [ld   (hl),#0x0A] update color for inactive/dead sprite
-	lea	b_obj_collsn_notif_9200,a0     	| [ld   h,#>b_obj_collsn_notif_9200] reload ptr
-	add.w	d6,a0			| and there too
-	jra	l_1DBD                             	| [jr   l_1DBD]
+	lea	ds_sprite_code_8B00,a0              	| [$1DCA: ld   h,#>ds_sprite_code_8B00]
+	add.w	d6,a0			                    | apply offset to sprite code too
+	move.b	#0x0A,(a0)                      	| [$1DCC: ld   (hl),#0x0A] update color for inactive/dead sprite
+	lea	b_obj_collsn_notif_9200,a0     	        | [$1DCE: ld   h,#>b_obj_collsn_notif_9200] reload ptr
+	add.w	d6,a0			                    | and there too
+	jra	l_1DBD                             	    | [$1DD0: jr   l_1DBD]
 * end 1DB3
 
 *=============================================================================
