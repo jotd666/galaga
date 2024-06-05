@@ -1662,17 +1662,16 @@ case_0968:  | 0x0E
 	add.w	d4,a1
 	move.b	(a1),d0                         	| [$096D: ld   a,(de)] row position index
 	move.b	d0,d4                           	| [$096E: ld   e,a]
-	lea	ds_hpos_loc_orig_9900,a1            	        | [$096F: ld   d,#>ds_hpos_loc_orig_9900] b1: copy of origin data
+	lea	ds_hpos_loc_orig_9900,a1            	| [$096F: ld   d,#>ds_hpos_loc_orig_9900] b1: copy of origin data
 	add.w	d4,a1
 	addq.w	#1,a1                           	| [inc  e]
 	move.b	(a1),d0                         	| [ld   a,(de)] copy of origin data
 	add.b	#0x20,d0                         	| [add  a,#0x20]
 	move.b	d0,(0x01,a2)                    	| [ld   0x01(ix),a] sY<8:1>
-	jra	l_0B8B                             	| [jp   l_0B8B] inc hl and finalize
+	jra	l_0B8B                             	    | [jp   l_0B8B] inc hl and finalize
 
 * yellow alien special attack leader started dive ready to replicate
 case_097B:  | 0x0D
-
 	move.l	a0,-(sp)                        	| [push hl] ptr to data table
 	move.b	(0x10,a2),d4                    	| [ld   e,0x10(ix)] object offset of bee that is to be split
 * find an inactive ($80) yellow alien or getout.
@@ -1681,124 +1680,122 @@ case_097B:  | 0x0D
 l_0984:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	rol.b	#1,d0                            	| [rlca] test bit 7 (0x80 if disposition == inactive)
-	jcs	l_098F_do_split_off_bonus_bee      	| [jr   c,l_098F_do_split_off_bonus_bee]
+	jcs	l_098F_do_split_off_bonus_bee      	    | [jr   c,l_098F_do_split_off_bonus_bee]
 	addq.w	#2,a0                           	| [inc  l] * 2
 	subq.b	#1,d1                           	| [...]
-	jne	l_0984                             	| [djnz l_0984]
-	jra	l_09FA_bonusbee_creat_fail         	| [jp   l_09FA_bonusbee_creat_fail]
+	jne	l_0984                             	    | [djnz l_0984]
+	jra	l_09FA_bonusbee_creat_fail         	    | [jp   l_09FA_bonusbee_creat_fail]
 
 l_098F_do_split_off_bonus_bee:
 	COMPUTE_LSB_A0_D6	b_8800
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
+	lea	ds_sprite_code_8B00,a0              	| [$098F: ld   h,#>ds_sprite_code_8B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	* game transfers msb to a1
 
 	lea	ds_sprite_code_8B00,a1              	| [ld   h,#>ds_sprite_code_8B00]
 	and.w	#0xFF,d4
-	add.w	d4,a1                           	| [ld   d,h]
-	move.b	(a1)+,(a0)+                         	| [ld   a,(de)] _sprite_code[index attack leader]
-	                         	| [ld   (hl),a]
-	                           	| [inc  l] .b1
-	                           	| [inc  e] .b1
-	move.b	(a1),d0                         	| [ld   a,(de)] _sprite_cclr[index attack leader]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	subq.w	#1,a0                           	| [dec  l] .b0
+	add.w	d4,a1                           	| [$0991: ld   d,h]
+	move.b	(a1)+,(a0)+                         | [$0992: ld   a,(de)] _sprite_code[index attack leader]
+	                         	                | [$0993: ld   (hl),a]
+	                           	                | [$0994: inc  l] .b1
+	                           	                | [$0995: inc  e] .b1
+	move.b	(a1),d0                         	| [$0996: ld   a,(de)] _sprite_cclr[index attack leader]
+	move.b	d0,(a0)                         	| [$0997: ld   (hl),a]
+	subq.w	#1,a0                           	| [$0998: dec  l] .b0
 	COMPUTE_LSB_A0_D6		ds_sprite_code_8B00
-	move.b	d6,d0                           	| [ld   a,l]
-	exg		d0,d7                              	| [ex   af,af'] stash index of spawning yellow alien
+	move.b	d6,d0                           	| [$0998: ld   a,l]
+	exg		d0,d7                              	| [$0999: ex   af,af'] stash index of spawning yellow alien
 
 * find available slot or getout
-	lea	ds_bug_motion_que_9100+0xF0-1,a0        | [ld   hl,#ds_bug_motion_que_9100 + 0xF0 - 1] start at end/top of segment
-	move.w	#-0x14,d3                           | [ld   de,#-0x14] sizeof array element
-	move.w	#0x0C-1,d1                          | [ld   b,#0x0C] nbr of object in the array
+	lea	ds_bug_motion_que_9100+0xF0-1,a0        | [$099B: ld   hl,#ds_bug_motion_que_9100 + 0xF0 - 1] start at end/top of segment
+	move.w	#-0x14,d3                           | [$099E: ld   de,#-0x14] sizeof array element
+	move.w	#0x0C-1,d1                          | [$09A1: ld   b,#0x0C] nbr of object in the array
 l_09A3:                                         
-	move.b	(a0),d0                             | [ld   a,(hl)]
-	and.b	#0x01,d0                            | [and  #0x01] check if this slot available
-	jeq	l_09AE_doit                        	    | [jr   z,l_09AE_doit]
-	add.w	d3,a0                               | [add  hl,de]
-	dbf		d1,l_09A3                           | [djnz l_09A3]
-	jra	l_09FA_bonusbee_creat_fail         	    | [jp   l_09FA_bonusbee_creat_fail]
+	move.b	(a0),d0                             | [$09A3: ld   a,(hl)]
+	and.b	#0x01,d0                            | [$09A4: and  #0x01] check if this slot available
+	jeq	l_09AE_doit                        	    | [$09A6: jr   z,l_09AE_doit]
+	add.w	d3,a0                               | [$09A8: add  hl,de]
+	dbf		d1,l_09A3                           | [$09A9: djnz l_09A3]
+	jra	l_09FA_bonusbee_creat_fail         	    | [$09AB: jp   l_09FA_bonusbee_creat_fail]
 											    
 l_09AE_doit:                                    
-	add.w	d3,a0                               | [add  hl,de]
-	addq.w	#1,a0                               | [inc  hl]
-	move.b	(a2),d0                    	        | [ld   a,0x00(ix)] coordinate of parent alien
+	add.w	d3,a0                               | [$09AE: add  hl,de]
+	addq.w	#1,a0                               | [$09AF: inc  hl]
+	move.b	(a2),d0                    	        | [$09B0: ld   a,0x00(ix)] coordinate of parent alien
 	move.l	a2,a1                               
-											    | [ld   e,ixl]
-											    | [ld   d,ixh]
-	exg	a1,a0                              	    | [ex   de,hl]
-	move.l	a1,a3							    | [ld   iyl,e]
-											    | [ld   iyh,d]
-	move.w	#0x06,d1                            | [ld   bc,#0x0006] 6
-	jbsr	ldir                                | [ldir]
-	move.w	#6,d1                               | [ld   c,#6]
-	add.w	d1,a0                               | [add  hl,bc]
-	exg	a1,a0                              	    | [ex   de,hl]
-	add.w	d3,a0                               | [add  hl,de]
-	exg	a1,a0                              	    | [ex   de,hl]
-	move.w	#4,d1                               | [ld   c,#4]
-	jbsr	ldir                                | [ldir]
-	move.b	(0x13,a2),d0                        | [$0E54: ld   a,0x13(ix)] 0x13(iy)
-	move.b	d0,(0x13,a3)                        | [ld   0x13(iy),a]
+											    | [$09B3: ld   e,ixl]
+											    | [$09B5: ld   d,ixh]
+	exg	a1,a0                              	    | [$09B7: ex   de,hl]
+	move.l	a1,a3							    | [$09B8: ld   iyl,e]
+											    | [$09BA: ld   iyh,d]
+	move.w	#0x06,d1                            | [$09BC: ld   bc,#0x0006] 6
+	jbsr	ldir                                | [$09BF: ldir]
+	move.w	#6,d1                               | [$09C1: ld   c,#6]
+	add.w	d1,a0                               | [$09C3: add  hl,bc]
+	exg	a1,a0                              	    | [$09C4: ex   de,hl]
+	add.w	d3,a0                               | [$09C5: add  hl,de]
+	exg	a1,a0                              	    | [$09C6: ex   de,hl]
+	move.w	#4,d1                               | [$09C7: ld   c,#4]
+	jbsr	ldir                                | [$09C9: ldir]
+	move.b	(0x13,a2),d0                        | [$09CB: $0E54: ld   a,0x13(ix)] 0x13(iy)
+	move.b	d0,(0x13,a3)                        | [$09CE: ld   0x13(iy),a]
 
 * load new data pointer from data and store in flite q object
-	move.l	(sp)+,a0                        	| [pop  hl] special attack, pushes hl right away
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	(a0)+,d0                         	| [ld   a,(hl)]
-	move.b	d0,(0x08,a3)                    	| [ld   0x08(iy),a]
-	                           	                | [inc  hl]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	move.b	d0,(0x09,a3)                    	| [ld   0x09(iy),a]
+	move.l	(sp)+,a0                        	| [$09D1: pop  hl] special attack, pushes hl right away
+	addq.w	#1,a0                           	| [$09D2: inc  hl]
+	move.b	(a0)+,d0                         	| [$09D3: ld   a,(hl)]
+	move.b	d0,(0x08,a3)                    	| [$09D4: ld   0x08(iy),a]
+	                           	                | [$09D7: inc  hl]
+	move.b	(a0),d0                         	| [$09D8: ld   a,(hl)]
+	move.b	d0,(0x09,a3)                    	| [$09D9: ld   0x09(iy),a]
 
-	move.b	#0x01,(0x0A,a3)                 	| [ld   0x0A(iy),#0x01]
-	move.b	#0x02,(0x0B,a3)                 	| [ld   0x0B(iy),#0x02]
-	move.b	#0x01,(0x0D,a3)                 	| [ld   0x0D(iy),#0x01]
-	exg		d0,d7                              	| [ex   af,af'] index of spawning yellow alien
-	move.b	d0,(0x10,a3)                    	| [ld   0x10(iy),a]
-	move.b	d0,d4                           	| [ld   e,a]
-	lea	b_8800,a1                      	        | [ld   d,#>b_8800]
+	move.b	#0x01,(0x0A,a3)                 	| [$09DC: ld   0x0A(iy),#0x01]
+	move.b	#0x02,(0x0B,a3)                 	| [$09E0: ld   0x0B(iy),#0x02]
+	move.b	#0x01,(0x0D,a3)                 	| [$09E4: ld   0x0D(iy),#0x01]
+	exg		d0,d7                              	| [$09E8: ex   af,af'] index of spawning yellow alien
+	move.b	d0,(0x10,a3)                    	| [$09E9: ld   0x10(iy),a]
+	move.b	d0,d4                           	| [$09EC: ld   e,a]
+	lea	b_8800,a1                      	        | [$09ED: ld   d,#>b_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	move.b	#9,d0                           	| [ld   a,#9] 09: diving -> 8800[i]
-	move.b	d0,(a1)+                         	| [ld   (de),a]
-												| [inc  e]
+	move.b	#9,d0                           	| [$09EF: ld   a,#9] 09: diving -> 8800[i]
+	move.b	d0,(a1)+                         	| [$09F1: ld   (de),a]
+												| [$09F2: inc  e]
 	COMPUTE_LSB_A3_D0	ds_bug_motion_que_9100  | [$09F3: ld   a,iyl]
-	move.b	d0,(a1)                         	| [ld   (de),a]
-	addq.w	#1,a0                           	| [inc  hl] new ptr loaded to b08/b09, but HL is advanced, still in same data series
-	jra	j_090E_flite_path_init             	    | [jp   j_090E_flite_path_init]
+	move.b	d0,(a1)                         	| [$09F5: ld   (de),a]
+	addq.w	#1,a0                           	| [$09F6: inc  hl] new ptr loaded to b08/b09, but HL is advanced, still in same data series
+	jra	j_090E_flite_path_init             	    | [$09F7: jp   j_090E_flite_path_init]
 
 l_09FA_bonusbee_creat_fail:
 * skip two bytes of 16-bit address and inc hl to next data
-	move.l	(sp)+,a0                        	| [pop  hl] ptr to data table
-	addq.w	#3,a0                           	| [inc  hl] * 3
-	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
+	move.l	(sp)+,a0                        	| [$09FA: pop  hl] ptr to data table
+	addq.w	#3,a0                           	| [$09FB: inc  hl] * 3
+	jra	j_090E_flite_path_init             	    | [$09FE: jp   j_090E_flite_path_init]
 
 * Red alien element has left formation - use deltaX to fighter to select flight
 * plan. This occurs when approximately mid-screen, after initial jump from
 * formation.
 case_0A01:  | 0x0C
 * stash 2 copies of hl
-
-	move.l	a0,-(sp)                        	| [push hl] ptr to data table
-	exg	a1,a0                              	| [ex   de,hl]
-
-	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
-	move.b	d0,d2                           	| [ld   c,a]
+	move.l	a0,-(sp)                        	| [$0A01: push hl] ptr to data table
+	exg	a1,a0                              	    | [$0A02: ex   de,hl]
+	move.b	b_9215_flip_screen,d0           	| [$0A03: ld   a,(b_9215_flip_screen)]
+	move.b	d0,d2                           	| [$0A06: ld   c,a]
 
 * setup horizontal limits for targetting
-	move.b	ds_sprite_posn_9300+0x62,d0          	| [ld   a,(ds_sprite_posn_9300 + 0x62)] ship_1_position
+	move.b	ds_sprite_posn_9300+0x62,d0         | [ld   a,(ds_sprite_posn_9300 + 0x62)] ship_1_position
 	cmp.b	#0x1E,d0                         	| [cp   #0x1E]
-	jcc	l_0A10                             	| [jr   nc,l_0A10]
+	jcc	l_0A10                             	    | [jr   nc,l_0A10]
 	move.b	#0x1E,d0                        	| [ld   a,#0x1E]
 l_0A10:
 	cmp.b	#0xD1,d0                         	| [cp   #0xD1]
-	jcs	l_0A16                             	| [jr   c,l_0A16]
+	jcs	l_0A16                             	    | [jr   c,l_0A16]
 	move.b	#0xD1,d0                        	| [ld   a,#0xD1]
 
 l_0A16:
 	btst.b	#0,d2                           	| [bit  0,c]
-	jeq	l_0A1E                             	| [jr   z,l_0A1E]
+	jeq	l_0A1E                             	    | [jr   z,l_0A1E]
 	add.b	#0x0E,d0                         	| [add  a,#0x0E]
 	neg.b	d0                               	| [neg]
 
@@ -1814,9 +1811,9 @@ l_0A1E:
 
 l_0A2C_:
 * test if offset'ed result still out of range negative (overflow if addition to negative delta is greater than 0)
-	add.b	#0x30>>1,d0                       	| $0A2C: [add  a,#0x30>>1] offset to positive range for selection of index
-	jpl	l_0A32                             	    | $0A2E: [jp   p,l_0A32]
-	clr.b	d0                               	| $0A31: [xor  a] result still negative (S is set )
+	add.b	#0x30>>1,d0                       	| [$0A2C: add  a,#0x30>>1] offset to positive range for selection of index
+	jpl	l_0A32                             	    | [$0A2E: jp   p,l_0A32]
+	clr.b	d0                               	| [$0A31: xor  a] result still negative (S is set )
 l_0A32:
 	cmp.b	#0x30,d0                         	| [$0A32: cp   #0x30]
 	jcs	l_0A38                             	    | [$0A34: jr   c,l_0A38]
@@ -1853,7 +1850,7 @@ case_capturing_boss_starts_dive_0A53:  | 0x0B
 	jcc	l_0A66                             	    | [$0A62: jr   nc,l_0A66]
 	move.b	#0x29,d0                        	| [$0A64: ld   a,#0x29]
 l_0A66:
-	cmp.b	#404>>1,d0			                | cp   #404 >> 1                             | 0xCA
+	cmp.b	#404>>1,d0			                | [cp   #404 >> 1]  0xCA
 	jcs	l_0A6C                             	    | [jr   c,l_0A6C]
 	move.b	#402>>1,d0                      	| [ld   a,#402 >> 1] $C9
 l_0A6C:
@@ -1882,7 +1879,7 @@ l_0A73:
 	move.b	d0,ds_plyr_actv+_b_cboss_slot   	| [ld   (ds_plyr_actv +_b_cboss_slot),a] ixl ... offset of slot used by capture boss, referenced by cpu0:f_21CB
 	move.l	(sp)+,a0                        	| [pop  hl] ptr to data table
 	addq.w	#1,a0                           	| [inc  hl]
-	jra	j_090E_flite_path_init             	| [jp   j_090E_flite_path_init]
+	jra	j_090E_flite_path_init             	    | [jp   j_090E_flite_path_init]
 
 * attack wave element hits turning point and heads to home
 case_heads_to_home_0aa0:  | 0x04
@@ -1984,13 +1981,13 @@ case_0B16:  | 0x01
 	addq.b	#1,d0                           	| [$0B24: inc  a]
 	subq.b	#1,d0                           	| [$0B25: dec  a]
 	scs	d7
-	jne	l_0B2A                             		| [jr   nz,l_0B2A]
-	move.b	#0x80,d0                        	| [ld   a,#0x80]
+	jne	l_0B2A                             		| [$0B26: jr   nz,l_0B2A]
+	move.b	#0x80,d0                        	| [$0B28: ld   a,#0x80]
 l_0B2A:
 	tst.b	d7
-	jne	l_0B30                             		| [jr   c,l_0B30]
-	neg.b	d0                               	| [neg]
-	add.b	#0xF2,d0                         	| [add  a,#0xF2]
+	jne	l_0B30                             		| [$0B2A: jr   c,l_0B30]
+	neg.b	d0                               	| [$0B2C: neg]
+	add.b	#0xF2,d0                         	| [$0B2E: add  a,#0xF2]
 l_0B30:
 	add.b	#0x0E,d0                         	| [$0B30: add  a,#0x0E]
 	move.b	d0,d5                           	| [$0B32: ld   h,a]
@@ -2012,14 +2009,14 @@ l_0B30:
 case_0B46: | 0x02
 l_0B46:
 * ld new data ptr into de and ex into hl ... resultant de not used
-	addq.w	#1,a0                           	| [inc  hl] ptr to data table
-	move.b	(a0)+,d4                         	| [ld   e,(hl)]
-	                           	                | [inc  hl]
-	move.b	(a0),d3                         	| [ld   d,(hl)]
+	addq.w	#1,a0                           	| [$0B46: inc  hl] ptr to data table
+	move.b	(a0)+,d4                         	| [$0B47: ld   e,(hl)]
+	                           	                | [$0B48: inc  hl]
+	move.b	(a0),d3                         	| [$0B49: ld   d,(hl)]
 	illegal
 	dc.w	2073
-	exg	a1,a0                              	    | [ex   de,hl] new pointer to HL
-	jra	j_090E_flite_path_init             	    | [jp   j_090E_flite_path_init]
+	exg	a1,a0                              	    | [$0B4A: ex   de,hl] new pointer to HL
+	jra	j_090E_flite_path_init             	    | [$0B4B: jp   j_090E_flite_path_init]
 
 * bee dive and starting loopback, or boss left position and starting dive down
 case_0B4E:  | 0x03
@@ -2035,40 +2032,39 @@ case_0B4E:  | 0x03
 * red alien flew through bottom of screen to top, heading for home
 * yellow alien flew under bottom of screen and now turns for home
 case_0B5F:  | 0x06
-	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
-	move.b	d0,d2                           	| [ld   c,a]
+	move.b	b_9215_flip_screen,d0           	| [$0B5F: ld   a,(b_9215_flip_screen)]
+	move.b	d0,d2                           	| [$0B62: ld   c,a]
 
-	move.b	(0x10,a2),d4                    	| [ld   e,0x10(ix)] home_posn_rc[ obj_id + 1 ]
-	addq.b	#1,d4                           	| [inc  e]
-	lea	sprt_fmtn_hpos,a1              	| [ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) + 1 ] ... column position index
+	move.b	(0x10,a2),d4                    	| [$0B63: ld   e,0x10(ix)] home_posn_rc[ obj_id + 1 ]
+	addq.b	#1,d4                           	| [$0B66: inc  e]
+	lea	sprt_fmtn_hpos,a1              	        | [$0B67: ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) + 1 ] ... column position index
 	and.w	#0xFF,d4
 	add.w	d4,a1
 
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	move.b	d0,d4                           	| [ld   e,a]
-	lea	ds_hpos_spcoords_9800,a1            	| [ld   d,#>ds_hpos_spcoords_9800] col pix coordinate, lsb only
+	move.b	(a1),d0                         	| [$0B69: ld   a,(de)]
+	move.b	d0,d4                           	| [$0B6A: ld   e,a]
+	lea	ds_hpos_spcoords_9800,a1            	| [$0B6B: ld   d,#>ds_hpos_spcoords_9800] col pix coordinate, lsb only
 	and.w	#0xFF,d4
 	add.w	d4,a1
 
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	btst.b	#0,d2                           	| [bit  0,c] check if flip-screen
-	jeq	l_0B76                             	| [jr   z,l_0B76]
-	add.b	#0x0E,d0                         	| [add  a,#0x0E]
-	neg.b	d0                               	| [neg]
+	move.b	(a1),d0                         	| [$0B6D: ld   a,(de)]
+	btst.b	#0,d2                           	| [$0B6E: bit  0,c] check if flip-screen
+	jeq	l_0B76                             	    | [$0B70: jr   z,l_0B76]
+	add.b	#0x0E,d0                         	| [$0B72: add  a,#0x0E]
+	neg.b	d0                               	| [$0B74: neg]
 l_0B76:
-	lsr.b	#1,d0                            	| [srl  a]
-	move.b	d0,(0x03,a2)                    	| [ld   0x03(ix),a] .cx.pair.b1
-	move.b	b_92A0+0x0A,d0                  	| [ld   a,(b_92A0 + 0x0A)] if continuous bombing flag is set, trigger dive attack sound b_9AA0[0x13]
-												| [and  a]
-	jeq	l_0B8B                             		| [jp   z,l_0B8B] inc hl and finalize
-
-	move.b	d0,b_9AA0+0x13                  	| [ld   (b_9AA0 + 0x13),a] ~0 ... sound-fx count/enable registers, bug dive attack sound
-	jra	l_0B8B                             		| [jr   l_0B8B] inc hl and finalize
+	lsr.b	#1,d0                            	| [$0B76: srl  a]
+	move.b	d0,(0x03,a2)                    	| [$0B78: ld   0x03(ix),a] .cx.pair.b1
+	move.b	b_92A0+0x0A,d0                  	| [$0B7B: ld   a,(b_92A0 + 0x0A)] if continuous bombing flag is set, trigger dive attack sound b_9AA0[0x13]
+												| [$0B7E: and  a]
+	jeq	l_0B8B                             		| [$0B7F: jp   z,l_0B8B] inc hl and finalize
+	move.b	d0,b_9AA0+0x13                  	| [$0B82: ld   (b_9AA0 + 0x13),a] ~0 ... sound-fx count/enable registers, bug dive attack sound
+	jra	l_0B8B                             		| [$0B85: jr   l_0B8B] inc hl and finalize
 
 * red alien flew through bottom of screen to top, heading for home
 * yellow alien flew under bottom of screen and now turns for home
 case_0B87:  | 0x07
-	move.b	0x0138>>1,(0x01,a2)             	| [ld   0x01(ix),#0x0138>>1] sY<15:8> ... $0138==312 ... $0138/2=$9C
+	move.b	#0x0138>>1,(0x01,a2)             	| [ld   0x01(ix),#0x0138>>1] sY<15:8> ... $0138==312 ... $0138/2=$9C
 l_0B8B:
 	addq.w	#1,a0                           	| [inc  hl] data pointer
 	CONVERT_SUBROM_A0_TO_D5D6

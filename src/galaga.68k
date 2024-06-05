@@ -6612,6 +6612,7 @@ l_2246:
 	move.b	#6,d2                           	| [ld   c,#6]
 l_224D:
 	move.b	#0x0A,d1                        	| [ld   b,#0x0A]
+	illegal		| d5/d6 from RAM => convert to A0
 l_224F:
 	move.b	d0,(a0)+                         	| [ld   (hl),a]
 	                           	| [inc  l]
