@@ -1,5 +1,6 @@
-- demo: ship misses first boss on first shot (debug/log ship coords again?)
+- demo: ship misses first boss on first shot: missile detection not 100% accurate!
 - demo: boss explosions: some frames shifted
+- demo: shoots all both missiles immediately (main: 1766)
 - ACTIVE_BITPLANE_MASK not implemented
 - enemy bombs: sometimes stop!
 - start game screen: all extra ship scores are 00000
@@ -15,7 +16,4 @@
 
 traj issues: Traj computed in subcpu D23 / D50 probe there!
 
-
-
-E3A sub: set pos check current x/Y vs homing in MAME then in amiga
 
