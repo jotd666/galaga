@@ -2593,8 +2593,8 @@ osd_r_videoram:
 	rts
 
 BIT_LEFT = 3
-BIT_RIGHT = 4
-BIT_FIRE = 9
+BIT_RIGHT = 1
+BIT_FIRE = 4
 
 * < *A0: number of credits
 * < *A0+1: player 1 controls
@@ -2615,10 +2615,10 @@ osd_update_inputs:
 	beq.b	0f
 	bset	#JPB_BTN_FORWARD,d1
 0:
-	tst.b	(2,a1)		| "2" key like in MAME
-	beq.b	0f
-	bset	#3,d0
-0:	
+*	tst.b	(2,a1)		| "2" key like in MAME
+*	beq.b	0f
+*	bset	#3,d0
+*0:	
 
 
 *0:
@@ -2665,7 +2665,7 @@ osd_update_inputs:
 	beq.b	0f
 	bclr	#BIT_RIGHT,d0
 0:
-	tst.b	(0x63,a0)		| "ctrl" key
+	tst.b	(0x63,a1)		| "ctrl" key
 	beq.b	0f
 	bclr	#BIT_FIRE,d0
 0:
@@ -2689,35 +2689,6 @@ osd_update_inputs:
 	movem.l	(a7)+,a1/d0-d4
 	rts
 	
-osd_read_in_1:
-	moveq	#-1,d0
-	rts
-	
-
-
-osd_read_in_0:
-	moveq	#0,d0
-	movem.l	a0/d1,-(a7)
-	* keyboard directions
-	lea		keyboard_table(pc),a0
-
-	* joystick directions
-	move.l	_joypad_state(pc),d1
-	btst	#JPB_BTN_UP,d1
-	beq.b	0f
-	bset	#2,d0
-0:
-	btst	#JPB_BTN_DOWN,d1
-	beq.b	0f
-	bset	#3,d0
-0:
-	
-
-	
-
-	movem.l	(a7)+,a0/d1
-
-	rts
 	
 	
 osd_read_dsw_1:
