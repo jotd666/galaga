@@ -4917,13 +4917,14 @@ l_1C65_while:
 * third pass: take any available boss
 	addq.b	#1,ixl                          	| [$1C6F: inc  ixl] 2
 	lea	b_8800+0x30,a1                 	        | [$1C71: ld   de,#b_8800 + 0x30] boss objects are 30 34 36 32
-	move.w	#4-1,d1                           	| [$1C74: ld   b,#4]
+	move.b	#4,d1                           	| [$1C74: ld   b,#4]
 l_1C76_while:
 	move.b	(a1),d0                         	| [$1C76: ld   a,(de)]
 	subq.b	#1,d0                           	| [$1C77: dec  a]
 	jeq	j_1CA0                             	    | [$1C78: jr   z,j_1CA0] _boss_activate(e, 2, b, 0xFFFF) ... status==STANDBY, skip index selection
 	addq.w	#2,a1                           	| [$1C7A: inc  e]*2
-	dbf		d1,l_1C76_while                     | [$1C7B: djnz l_1C76_while]
+	subq.b	#1,d1                               | we need original D1 value!! no dbf!!!
+	jne		l_1C76_while                        | [$1C7B: djnz l_1C76_while]
 
 * last pass: no boss available ... check for available rogue fighter (objects 00, 02, 04, 06)
 	lea	b_8800,a0                      	| [$1C7E: ld   hl,#b_8800]
@@ -4932,9 +4933,9 @@ l_1C83_while:
 	move.b	(a0),d0                         	| [$1C83: ld   a,(hl)]
 	subq.b	#1,d0                           	| [$1C84: dec  a]
 	jeq	l_1D25                             	    | [$1C85: jp   z,l_1D25]
-	addq.w	#2,a0                           	| [$1C88: inc  l]
-	dbf	d1,l_1C83_while                       	| [$1C8A: djnz l_1C83_while]
-
+	addq.w	#2,a0                           	| [$1C88: inc  l] * 2
+	subq.b	#1,d1                               | we need original D1 value!! no dbf!!!
+	jne		l_1C83_while                       	| [$1C8A: djnz l_1C83_while]
 	rts                                    	    | [$1C8C: ret]
 
 *=============================================================================
@@ -5165,8 +5166,8 @@ l_1D16:
 *-----------------------------------------------------------------------------
 l_1D25:
 	move.w	#db_flv_rogefgter_0444,d3           	| [ld   de,#db_fltv_rogefgter]
-	jbsr	c_diving_movement_1083                            	| [call c_diving_movement_1083] rogue fighter
-	rts                                    	| [ret]
+	jbsr	c_diving_movement_1083                  | [call c_diving_movement_1083] rogue fighter
+	rts                                    	        | [ret]
 
 *=============================================================================
 * 6 escort aliens (right to left under the 4 bosses )

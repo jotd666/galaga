@@ -12,7 +12,8 @@
 - sprite priorities wrong: stars should be behind
 - stars & colors trashed near the PAL wait region: copperlist conflict between sprite/color
 - remove red timer flashes, maybe speedup using F10?
-- sometimes enemies can't find home and roam aimlessly (but it's random...)
+- leading enemy can't find home and roams aimlessly
+  => possible regression: try earlier versions!!! check djnz!!!
 - sometimes trajectory path (8/9+a2) is too low ex $000C
 
 traj issues: Traj computed in subcpu D23 / D50 probe there!

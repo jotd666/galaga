@@ -15,6 +15,12 @@
 	.global galaga1_reset
 	.global galaga1_irq
 		
+	.macro      CONVERT_D3D4_TO_SUBROM_A1
+	LOAD_D3_16_FROM_D3D4
+	lea		galaga_sub_rom,a1
+	add.w	d3,a1
+	.endm
+	
 	.macro		CONVERT_SUBROM_A0_TO_D5D6
 	move.l	a0,d5
 	sub.l	#galaga_sub_rom,d5
@@ -2001,8 +2007,7 @@ l_0B46:
 	move.b	(a0)+,d4                         	| [$0B47: ld   e,(hl)]
 	                           	                | [$0B48: inc  hl]
 	move.b	(a0),d3                         	| [$0B49: ld   d,(hl)]
-	illegal
-	dc.w	2073
+	CONVERT_D3D4_TO_SUBROM_A1
 	exg	a1,a0                              	    | [$0B4A: ex   de,hl] new pointer to HL
 	jra	j_090E_flite_path_init             	    | [$0B4B: jp   j_090E_flite_path_init]
 
