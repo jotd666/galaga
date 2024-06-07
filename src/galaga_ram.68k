@@ -5,9 +5,6 @@
 	.global start_level
 	.global vb_ticks_count
 	.global break_at_startup_flag
-	.global	ixh
-	.global	ixl
-	.global	regscopy_cpu0
 	.global	regscopy_cpu1
 	.global log_ptr
 	
@@ -45,12 +42,6 @@ ATTRIBUTE_RAM:						| $8400
 	.include	"galaga_game_ram.68k"
 *VARIABLES_END:
 
-	.align	2
-regscopy_cpu0:	
-	ds.b	64
-regscopy_cpu1:	
-	ds.b	64
-	
 
 	ds.b	2
 sprite_ram_8FF2:
@@ -86,11 +77,7 @@ vbl_sync_counter:
 	.byte	0
 break_at_startup_flag:
 	.byte	0
-* fake IXH register
-ixh:
-	.byte	0
-ixl:
-	.byte	0
+
 start_level:
 	.byte	0
 	.ascii	"RAM_END!"

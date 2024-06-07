@@ -2037,10 +2037,10 @@ c_puts_hitmiss_ratio_0A72:
 * if ( shots fired  == 0 )
 	move.w	ds_plyr_actv+_w_shot_ct,d3  	| [ld   de,(ds_plyr_actv +_w_shot_ct)]
 											| [ld   a,d]
-												| [or   e]
+											| [or   e]
 	jne	l_0A82                             	| [jr   nz,l_0A82]
 * then
-								| [ld   de,#0x0000] uhh...isn't DE already 0? 0
+								            | [ld   de,#0x0000] uhh...isn't DE already 0? 0
 	jra	l_0AD3                             	| [jr   l_0AD3]
 * else
 *   determine ratio: first, use left-shifts to up-scale the dividend and divisor
@@ -5728,7 +5728,7 @@ f_read_fire_button_1f04:
 	rts                                    	    | [ret  nz] active low input [...]
 0:
 * else
-       * call c_init_rocket_sprites_1F0F
+* call c_init_rocket_sprites_1F0F
 
 *=============================================================================
 * c_init_rocket_sprites_1F0F()
@@ -5783,7 +5783,6 @@ l_1F2B:
 	subq.b	#1,d4								| [a1 coherence]
 	COMPUTE_LSB_A0_D6	ds_sprite_ctrl_9B00
 	lea	ds_sprite_posn_9300,a0              	| [$1F2D: ld   h,#>ds_sprite_posn_9300]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	lea	ds_sprite_posn_9300,a1                  | [$1F2F: ld   d,h] stash it
 	add.w	d4,a1
@@ -10986,7 +10985,7 @@ jp_Task_man_0237:
 	move.l	a0,-(sp)                        	| [push hl]
 	move.l	a2,-(sp)                        	| [push ix]
 	move.l	a3,-(sp)                        	| [push iy]
-
+	move.w	ix,-(sp)
 * determine star_ctrl param bits based on some modulus of frame timer?
 * $A000-$A005 starfield scroll speed (only bit 0 is significant)
 *	move.b	_sfr_dsw5,d0                    	| [ld   a,(_sfr_dsw5)] DSWA: freeze video
@@ -11099,16 +11098,17 @@ l_02A8_pop_regs_and_exit:
 	move.b	#1,d0                           	| [ld   a,#1]
 	jbsr	osd_interrupt_control                    	| [ld   (_sfr_6820),a] 1 ... enable IRQ1
 
+	move.w	(sp)+,ix
 	move.l	(sp)+,a3                        	| [pop  iy]
 	move.l	(sp)+,a2                        	| [pop  ix]
 	move.l	(sp)+,a0                        	| [pop  hl]
 	move.l	(sp)+,a1                        	| [pop  de]
-	movem.w	(sp)+,d3/d4                    	| [pop  de]
+	movem.w	(sp)+,d3/d4                    	    | [pop  de]
 
-	movem.w	(sp)+,d1/d2                    	| [pop  bc]
+	movem.w	(sp)+,d1/d2                    	    | [pop  bc]
 	move.w	(sp)+,d0                        	| [pop  af]
 	move.w	(sp)+,d7                        	| [pop  af]
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 * } end 'rst  $0038' handler
 
 *=============================================================================
@@ -11209,25 +11209,5 @@ l_02CC:
 
 
 
-
-
-* < all registers d1-d4/a0/a1/a4
-* > all registers swapped
-*: note regscopy must be defined somewhere in RAM
-*: with a size of 56
-exx:
-    lea     regscopy_cpu0+28,a6
-    * save current regs in region 1
-    movem.l d1-d4/a0/a1/a4,-(a6)
-    * restore old regs from region 2
-    lea     regscopy_cpu0+28,a6
-    movem.l (a6),d1-d4/a0/a1/a4
-    * now copy region 1 to region 2
-    movem.l d1-d4/a0/a1/a4,-(a7)
-    lea     regscopy_cpu0,a6
-    movem.l (a6)+,d1-d4/a0/a1/a4
-    movem.l d1-d4/a0/a1/a4,(a6)
-    movem.l (a7)+,d1-d4/a0/a1/a4
-    rts
-
-
+	.include	"register_op.inc"
+	

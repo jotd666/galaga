@@ -175,6 +175,8 @@
 	move.b	d5,(a6)+
 	move.b	d6,(a6)+
 	move.b	d7,(a6)+
+	move.b	ixh,(a6)+
+	move.b	ixl,(a6)+
 	move.w	#0xDEAD,(a6)+
 	move.l	a6,log_ptr
 	move.l	(a7)+,a6

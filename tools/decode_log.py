@@ -20,6 +20,8 @@ pcs = set()
     move.b    d5,(a6)+
     move.b    d6,(a6)+
     move.b    d7,(a6)+
+    move.b    ixh,(a6)+
+    move.b    ixl,(a6)+
     move.w    #0xDEAD,(a6)+
     move.l    a6,log_ptr
     move.l    (a7)+,a6
@@ -27,11 +29,11 @@ pcs = set()
     .endm
 """
 
-len_block = 12
+len_block = 14
 
 sorted_cmp = False
-avoid_regs = "bh" #"abcdhl"
-regslist = "abcdehl"
+avoid_regs = "h" #"abcdhl"
+regslist = list("abcdehl")+["ixh","ixl"]
 
 lst = []
 for i in range(0,len(contents),len_block):
@@ -39,7 +41,7 @@ for i in range(0,len(contents),len_block):
     if len(chunk)<len_block:
         break
     regs=dict()
-    regs["pc"],regs["a"],regs["b"],regs["c"],regs["d"],regs["e"],regs["h"],regs["l"],regs["d7"],end = struct.unpack_from(">HBBBBBBBBH",chunk)
+    regs["pc"],regs["a"],regs["b"],regs["c"],regs["d"],regs["e"],regs["h"],regs["l"],regs["d7"],regs["ixh"],regs["ixl"],end = struct.unpack_from(">HBBBBBBBBBBH",chunk)
     if end==0xCCCC:
         break
     pcs.add(regs["pc"])
@@ -61,14 +63,14 @@ with open("amiga.tr","w") as f:
 #  main cpu:           trace galaga.tr,maincpu,,{tracelog "A=%02X, B=%02X, C=%02X, D=%02X, E=%02X, H=%02X, L=%02X, IX=%04X ",a,b,c,d,e,h,l,ix}
 lst = []
 with open(r"K:\Emulation\MAME\galaga.tr") as f:
-    l = len("A=01, B=00, C=3F, D=93, E=81, H=93, L=01, ")
+    l = len("A=01, B=00, C=3F, D=93, E=81, H=93, L=01, IX=XXXX ")
     for line in f:
-        m = re.match("A=(..), B=(..), C=(..), D=(..), E=(..), H=(..), L=(..)",line)
+        m = re.match("A=(..), B=(..), C=(..), D=(..), E=(..), H=(..), L=(..), IX=(..)(..)",line)
         if m:
-            pc = line[l+8:l+12]
+            pc = line[l:l+4]
             regs = dict()
             if int(pc,16) in pcs:
-                regs["a"],regs["b"],regs["c"],regs["d"],regs["e"],regs["h"],regs["l"] = m.groups()
+                regs["a"],regs["b"],regs["c"],regs["d"],regs["e"],regs["h"],regs["l"],regs["ixh"],regs["ixl"] = m.groups()
                 regstr = ["{}={}".format(reg.upper(),regs[reg]) for reg in regslist if reg not in avoid_regs]
                 rest = ", ".join(regstr)
                 lst.append(f"{pc}: {rest}\n")

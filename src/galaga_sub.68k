@@ -667,7 +667,7 @@ f_05EE:
 	                               	| [and  a]
 	jeq	l_0613                             	| [jr   z,l_0613]
 
-	jbsr	hitd_fghtr_notif                  	| [call hitd_fghtr_notif] HL == &sprite_posn_base[0x60]  ...ship2 position
+	jbsr	hitd_fghtr_notif_0681                  	| [call hitd_fghtr_notif_0681] HL == &sprite_posn_base[0x60]  ...ship2 position
 	move.b	b8_ship_collsn_detectd_status,d0	| [ld   a,(b8_ship_collsn_detectd_status)] fighter hit notif (2)
 	                               	| [and  a]
 	jeq	l_0613                             	| [jr   z,l_0613]
@@ -685,7 +685,7 @@ l_0613:
 	rts                                    	| [ret  z] [...]
 0:
 
-	jbsr	hitd_fghtr_notif                  	| [call hitd_fghtr_notif] HL == sprite_posn_base + 0x62 ... fighter (1) position (only L significant)
+	jbsr	hitd_fghtr_notif_0681                  	| [call hitd_fghtr_notif_0681] HL == sprite_posn_base + 0x62 ... fighter (1) position (only L significant)
        * L passed to c_0681_ship_collisn_detect preserved in E
 	move.b	b8_ship_collsn_detectd_status,d0	| [ld   a,(b8_ship_collsn_detectd_status)] fighter hit notif (1)
 	                               	| [and  a]
@@ -774,17 +774,17 @@ l_064F:
 
 * if no_restart_stg  ret ...
 	move.b	ds_9200_glbls+0x17,d0           	| [ld   a,(ds_9200_glbls + 0x17)] no_restart_stg is set if docked fighters
-	                               	| [and  a]
+	                               	            | [and  a]
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    	    | [ret  nz] [...]
 0:
 * ... else  set restart_stg_flag
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,ds_9200_glbls+0x13           	| [ld   (ds_9200_glbls + 0x13),a] 1  ... restart stage flag (ship-input-movement flag not active )
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 *=============================================================================
-* hitd_fghtr_notif()
+* hitd_fghtr_notif_0681()
 *  Description:
 *   hit notification for fighter
 * IN:
@@ -792,64 +792,62 @@ l_064F:
 * OUT:
 *  E == preserved offset passed as argument in L
 *-----------------------------------------------------------------------------
-hitd_fghtr_notif:
+hitd_fghtr_notif_0681:
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,b8_ship_collsn_detectd_status	| [ld   (b8_ship_collsn_detectd_status),a] 0 ... fighter hit notif
+	clr.b	d0                               	| [$0681: xor  a]
+	move.b	d0,b8_ship_collsn_detectd_status	| [$0682: ld   (b8_ship_collsn_detectd_status),a] 0 ... fighter hit notif
 
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                      	        | [$0685: ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	move.b	(a0),d0                         	| [$0687: ld   a,(hl)]
+	lea	ds_sprite_posn_9300,a0              	| [$0688: ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	cmp.b	#8,d0                            	| [cp   #8] fighter disposition 08 if already dooomed ...
+	cmp.b	#8,d0                            	| [$068A: cp   #8] fighter disposition 08 if already dooomed ...
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] ... so gtf out! [...]
+	rts                                    	    | [$068C: ret  z] ... so gtf out! [...]
 0:
 
-	move.b	(a0)+,d0                         	| [ld   a,(hl)] sprite.pos.x
-	move.b	d0,ixl
-	                           	                | [inc  l]
-	move.b	(a0),d1                         	| [ld   b,(hl)] get row bits 0:7
+	move.b	(a0)+,d0                         	| [$068D: ld   a,(hl)] sprite.pos.x
+	move.b	d0,ixl                              | [$068E: ld   ixl,a]
+	                           	                | [$0690: inc  l]
+	move.b	(a0),d1                         	| [$0691: ld   b,(hl)] get row bits 0:7
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] get row bit-8
+	lea	ds_sprite_ctrl_9B00,a0              	| [$0692: ld   h,#>ds_sprite_ctrl_9B00] get row bit-8
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	ror.b	#1,d0                            	| [rrca] y<8> -> Cy
+	move.b	(a0),d0                         	| [$0694: ld   a,(hl)]
+	ror.b	#1,d0                            	| [$0695: rrca] y<8> -> Cy
 	SET_X_FROM_C
-	roxr.b	#1,d1                           	| [rr   b] Cy -> b<7>
-	move.b	d1,ixh			| ld   ixh,b                                 ; y<15:8> of fixed-point
-	subq.w	#1,a0                           	| [dec  l]
+	roxr.b	#1,d1                           	| [$0696: rr   b] Cy -> b<7>
+	move.b	d1,ixh			                    | [$0698: ld   ixh,b]         ; y<15:8> of fixed-point
+	subq.w	#1,a0                           	| [$069A: dec  l]
 	COMPUTE_LSB_A0_D6	ds_sprite_ctrl_9B00
-
-	move.b	d6,d4                           	| [ld   e,l] preserved object/index of fighter passed as argument in L
+	move.b	d6,d4                           	| [$069B: ld   e,l] preserved object/index of fighter passed as argument in L
 
 * if ( cpu0:f_2916  active ) ...
-	move.b	ds_cpu0_task_actv_9000+0x08,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x08)] cpu0:f_2916 ...supervises attack waves
-	                               	| [and  a]
-	jeq	l_06A8                             	| [jr   z,l_06A8]
+	move.b	ds_cpu0_task_actv_9000+0x08,d0      | [$069C: ld   a,(ds_cpu0_task_actv_9000 + 0x08)] cpu0:f_2916 ...supervises attack waves
+	                               	            | [$069F: and  a]
+	jeq	l_06A8                             	    | [$06A0: jr   z,l_06A8]
 * ... then ...
        * only transients can do collision in attack wave
-	move.b	#0x38,d6                        	| [ld   l,#0x38] transients
-	move.b	#0x04,d1                        	| [ld   b,#0x04]
-	jra	l_06AC_                            	| [jr   l_06AC_]
+	move.b	#0x38,d6                        	| [$06A2: ld   l,#0x38] transients
+	move.b	#0x04,d1                        	| [$06A4: ld   b,#0x04]
+	jra	l_06AC_                            	    | [$06A6: jr   l_06AC_]
 
 * ... else ...not attack wave, set parameters to check all
 l_06A8:
-	clr.b	d6                               	| [ld   l,#0x00] check objects $00 - $5E
-	move.b	#0x30,d1                        	| [ld   b,#0x30]
+	clr.b	d6                               	| [$06A8: ld   l,#0x00] check objects $00 - $5E
+	move.b	#0x30,d1                        	| [$06AA: ld   b,#0x30]
 
 l_06AC_:
-	jbsr	hitd_det_fghtr                    	| [call hitd_det_fghtr]
+	jbsr	hitd_det_fghtr                    	| [$06AC: call hitd_det_fghtr]
 
-	move.b	#0x68,d6                        	| [ld   l,#0x68] bombs
-	move.b	#0x08,d1                        	| [ld   b,#0x08]
-	jbsr	hitd_det_fghtr                    	| [call hitd_det_fghtr]
-
-	rts                                    	| [ret]
+	move.b	#0x68,d6                        	| [$06AF: ld   l,#0x68] bombs
+	move.b	#0x08,d1                        	| [$06B1: ld   b,#0x08]
+	jbsr	hitd_det_fghtr                    	| [$06B3: call hitd_det_fghtr]
+	rts                                    	    | [$06B6: ret]
 
 *=============================================================================
 * hitd_det_fghtr()
@@ -865,40 +863,36 @@ l_06AC_:
 *-----------------------------------------------------------------------------
 hitd_det_fghtr:
 while_06B7:
-	lea	b_obj_collsn_notif_9200,a0     	| [ld   h,#>b_obj_collsn_notif_9200] sprt_hit_notif
+	lea	b_obj_collsn_notif_9200,a0     	        | [ld   h,#>b_obj_collsn_notif_9200] sprt_hit_notif
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                      	        | [ld   h,#>b_8800]
 	add.w	d6,a0
 	or.b	(a0),d0                           	| [or   (hl)]
 	rol.b	#1,d0                            	| [rlca]
-	jcs	l_06F0                             	| [jr   c,l_06F0]
+	jcs	l_06F0                             	    | [jr   c,l_06F0]
 
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	and.b	#0xFE,d0                         	| [and  #0xFE]
 	cmp.b	#4,d0                            	| [cp   #4]
-	jeq	l_06F0                             	| [jr   z,l_06F0]
-
+	jeq	l_06F0                             	    | [jr   z,l_06F0]
 	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	| [and  a]
-	jeq	l_06F0                             	| [jr   z,l_06F0]
-
+	                               	            | [and  a]
+	jeq	l_06F0                             	    | [jr   z,l_06F0]
 	sub.b	ixl,d0                           	| [sub  ixl] x<7:0>
 	subq.b	#7,d0                           	| [sub  #7]
 	add.b	#13,d0                           	| [add  a,#13]
-	jcc	l_06F0                             	| [jr   nc,l_06F0]
-
+	jcc	l_06F0                             	    | [jr   nc,l_06F0]
 	addq.w	#1,a0                           	| [inc  l]
 	addq.w	#1,d6                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-
 	move.b	(a0),d2                         	| [ld   c,(hl)]
 	subq.w	#1,a0                           	| [dec  l]
 	subq.b	#1,d6                           	| [dec  l] [a0 coherence]
@@ -908,20 +902,17 @@ while_06B7:
 	sub.b	ixh,d0                           	| [sub  ixh]
 	subq.b	#4,d0                           	| [sub  #4]
 	addq.b	#7,d0                           	| [add  a,#7]
-	jcc	l_06F0                             	| [jr   nc,l_06F0]
-
+	jcc	l_06F0                             	    | [jr   nc,l_06F0]
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,b8_ship_collsn_detectd_status	| [ld   (b8_ship_collsn_detectd_status),a] 1 ... fighter hit notif
-
-	tst.b	d0                             	| [or   a] nz if fighter hit
-	sne	d7                              	| [ex   af,af']
-	jra	hitd_dspchr_07c1                    | [jp   hitd_dspchr_07c1] return to 'call hitd_det_fghtr'
+	tst.b	d0                               	| [or   a] nz if fighter hit
+	sne	d7                              	    | [ex   af,af']
+	jra	hitd_dspchr_07c1                        | [jp   hitd_dspchr_07c1] return to 'call hitd_det_fghtr'
 l_06F0:
 	addq.b	#2,d6                           	| [inc  l] * 2  [a0 coherence]
 	subq.b	#1,d1                           	| [...]
-	jne	while_06B7                         	| [djnz while_06B7]
-
-	rts                                    	| [ret]
+	jne	while_06B7                         	    | [djnz while_06B7]
+	rts                                    	    | [ret]
 
 *=============================================================================
 * f_rocket_hit_detection_06f5()
@@ -1147,27 +1138,25 @@ l_076A_while_object:
 	ror.b	#1,d3                            	| [$0782: rrc  d]
 	SET_X_FROM_C
 	roxr.b	#1,d0                           	| [$0784: rra]
-	subq.w	#1,a0                           	| [$0785: dec  l] [a0 coherence]
+	subq.w	#1,a0                           	| [$0785: dec  l]
 	subq.w	#1,d6                           	| [$0785: dec  l] [a0 coherence]
 	sub.b	ixh,d0                           	| [$0786: sub  ixh] sprite.sy<1:8> -= rocket.sy<1:8>
 	subq.b	#3,d0                           	| [$0788: sub  #3] tolerance for hit-check (divided by 2 to account for scaling)
 	addq.b	#6,d0                           	| [$078A: add  a,#6]
 	jcc	l_07B4_next_object                 		| [$078C: jr   nc,l_07B4_next_object]
-
 * check X coordinate
 	move.b	d2,d0                           	| [$078E: ld   a,c] reload object status e.g. 8800[L]
 	subq.b	#1,d0                           	| [$078F: dec  a]
 	and.b	#0xFE,d0                         	| [$0790: and  #0xFE]
 	exg		d0,d7                              	| [$0792: ex   af,af'] object status to hitd_dspchr_07c1
-	                                    		| [$0793: ld   a,(ds_plyr_actv +_b_2ship)]
-												| [$0796: and  a]
+	                                    		| [$0793: ld   a,(ds_plyr_actv +_b_2ship)]	
 	move.b	(a0),d0                         	| [$0797: ld   a,(hl)] sprite.sX
-	tst.b	ds_plyr_actv+_b_2ship				| flags from this value, but d0 loaded with sX
+	tst.b	ds_plyr_actv+_b_2ship				| [$0796: and  a] flags from this value, but d0 loaded with sX
 	jne	l_07A4                             		| [$0798: jr   nz,l_07A4] and  a
 	sub.b	ixl,d0                           	| [$079A: sub  ixl] sprite.sX -= rocket.sX
 	subq.b	#6,d0                           	| [$079C: sub  #6]
 	add.b	#11,d0                           	| [$079E: add  a,#11]
-	jcs	hitd_dspchr_07c1_rckt_07b9                   | [$07A0: jr   c,hitd_dspchr_07c1_rckt_07b9]
+	jcs	hitd_dspchr_07c1_rckt_07b9              | [$07A0: jr   c,hitd_dspchr_07c1_rckt_07b9]
 	jra	l_07B4_next_object                 		| [$07A2: jr   l_07B4_next_object]
 
 l_07A4:
@@ -1236,7 +1225,6 @@ hitd_dspchr_07c1:
 	lea	ds_sprite_ctrl_9B00,a1              	| [$07C6: ld   d,#>ds_sprite_ctrl_9B00] _sprite_ctrl[E].b0 = 0 ... attributes
 	add.w	d4,a1
 	move.b	d0,(a1)                         	| [ld   (de),a]
-
 	addq.b	#1,d6                           	| [inc  l] [a0 coherence]
 	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00] sprite.cclr.b1 ...
 	and.w	#0xFF,d6
@@ -2882,22 +2870,4 @@ f_0ECA:
 	
 * end of ROM
 
-* < all registers d1-d4/a0/a1/a4
-* > all registers swapped
-*: note regscopy must be defined somewhere in RAM
-*: with a size of 56
-exx:
-    lea     regscopy_cpu1+28,a6
-    * save current regs in region 1
-    movem.l d1-d4/a0/a1/a4,-(a6)
-    * restore old regs from region 2
-    lea     regscopy_cpu1+28,a6
-    movem.l (a6),d1-d4/a0/a1/a4
-    * now copy region 1 to region 2
-    movem.l d1-d4/a0/a1/a4,-(a7)
-    lea     regscopy_cpu1,a6
-    movem.l (a6)+,d1-d4/a0/a1/a4
-    movem.l d1-d4/a0/a1/a4,(a6)
-    movem.l (a7)+,d1-d4/a0/a1/a4
-    rts
-
+	.include	"register_op.inc"
