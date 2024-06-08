@@ -32,7 +32,7 @@ pcs = set()
 len_block = 14
 
 sorted_cmp = False
-avoid_regs = "h" #"abcdhl"
+avoid_regs = ["b","ixl","ixh","h"]
 regslist = list("abcdehl")+["ixh","ixl"]
 
 lst = []
@@ -59,10 +59,11 @@ if sorted_cmp:
 with open("amiga.tr","w") as f:
     f.writelines(lst)
 
-# generated using log: trace galaga.tr,sub,,{tracelog "A=%02X, B=%02X, C=%02X, D=%02X, E=%02X, H=%02X, L=%02X, IX=%04X ",a,b,c,d,e,h,l,ix}
-#  main cpu:           trace galaga.tr,maincpu,,{tracelog "A=%02X, B=%02X, C=%02X, D=%02X, E=%02X, H=%02X, L=%02X, IX=%04X ",a,b,c,d,e,h,l,ix}
+# generated using log:     trace galaga.tr,,,{tracelog "A=%02X, B=%02X, C=%02X, D=%02X, E=%02X, H=%02X, L=%02X, IX=%04X ",a,b,c,d,e,h,l,ix}
+# note: sub cpu log has a bug: trace won't consider tracelog instruction if "sub" is specified. So instead, break into subcpu
+# then use trace on current cpu
 lst = []
-with open(r"K:\Emulation\MAME\galaga.tr") as f:
+with open(r"K:\Emulation\MAME\galaga_1_bug.tr") as f:
     l = len("A=01, B=00, C=3F, D=93, E=81, H=93, L=01, IX=XXXX ")
     for line in f:
         m = re.match("A=(..), B=(..), C=(..), D=(..), E=(..), H=(..), L=(..), IX=(..)(..)",line)

@@ -7256,7 +7256,7 @@ l_251C:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 * mrw_sprite.cclr[ L ].b1 ^= (0 != AF.pair.b1)|
-	jcc	l_2529                             	| [jr   nc,l_2529]
+	jcc	l_2529                             	    | [jr   nc,l_2529]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	eor.b	#0x01,d0                         	| [xor  #0x01]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
@@ -7959,7 +7959,7 @@ l_2953_next_pair:
 * otherwise it is clear for trailing formation i.e. delay before launching.
 * if ( 0 == *.p_atkwav_tbl & 0x80 ) ...
 	btst.b	#7,d0                           	| [bit  7,a]
-	jne	l_295E                             	| [jr   nz,l_295E]
+	jne	insert_bug_in_queue_295e                             	| [jr   nz,insert_bug_in_queue_295e]
 * then ...
 	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x07,d0                         	| [and  #0x07]
@@ -7968,7 +7968,7 @@ l_2953_next_pair:
 0:
 
 * ready to stick another bug in the flying queue
-l_295E:
+insert_bug_in_queue_295e:
 * make byte offset into lut at db_word_address_table_2a3c  (_finalize_object) ... also we're done with bit-7
 	asl.b	#1,d2                            	| [sla  c]
 
@@ -7978,60 +7978,56 @@ l_295E:
 	lea	ds_bug_motion_que_9100,a2           	| [ld   ix,#ds_bug_motion_que_9100]
 l_2969_while:
 	btst.b	#0,(0x13,a2)                    	| [bit  0,0x13(ix)]
-	jeq	l_2974_got_slot                    	| [jr   z,l_2974_got_slot]
+	jeq	l_2974_got_slot                    	    | [jr   z,l_2974_got_slot]
 	add.w	d3,a2                            	| [add  ix,de] advance pointer
 	subq.b	#1,d1                           	| [...]
-	jne	l_2969_while                       	| [djnz l_2969_while]
-
-	rts                                    	| [ret] can't find a slot... bummer
+	jne	l_2969_while                       	    | [djnz l_2969_while]
+	rts                                    	    | [ret] can't find a slot... bummer
 
 * each time is another bug of a new wave formation getting ready to appear
 l_2974_got_slot:
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	(a0),d0                         	| [ld   a,(hl)] atkwav_tbl[n].pair.h ... object ID/offset, e.g. 58
-	move.b	d0,d1                           	| [ld   b,a] stash it
+	addq.w	#1,a0                           	| [$2974: inc  hl]
+	move.b	(a0),d0                         	| [$2975: ld   a,(hl)] atkwav_tbl[n].pair.h ... object ID/offset, e.g. 58
+	move.b	d0,d1                           	| [$2976: ld   b,a] stash it
 
 * if object >= $78  &&  object < $80 ) ...
-	and.b	#0x78,d0                         	| [and  #0x78]
-	cmp.b	#0x78,d0                         	| [cp   #0x78]
-	jne	l_2980                             	| [jr   nz,l_2980]
-	move.b	d1,d0                           	| [ld   a,b]
+	and.b	#0x78,d0                         	| [$2977: and  #0x78]
+	cmp.b	#0x78,d0                         	| [$2979: cp   #0x78]
+	jne	l_2980                             	    | [$297C: jr   nz,l_2980]
+	move.b	d1,d0                           	| [$297B: ld   a,b]
 * ...  then ...
-	bclr.b	#6,d0                           	| [res  6,a] what object is > $78?
+	bclr.b	#6,d0                           	| [$297E: res  6,a] what object is > $78?
 	bra.b	0f
 l_2980:
-	move.b	d1,d0                           	| [ld   a,b]
+	move.b	d1,d0                           	| [$297B: ld   a,b]
 0:
-	move.b	d0,(0x10,a2)                    	| [ld   0x10(ix),a] object index
+	move.b	d0,(0x10,a2)                    	| [$2980: ld   0x10(ix),a] object index
+	addq.w	#1,a0                           	| [$2983: inc  hl]
+	move.l	a0,ds_plyr_actv+_p_atkwav_tbl   	| [$2984: ld   (ds_plyr_actv +_p_atkwav_tbl),hl] advance to next token-pair e.g. HL:=8923
 
-	addq.w	#1,a0                           	| [inc  hl]
-	move.l	a0,ds_plyr_actv+_p_atkwav_tbl   	| [ld   (ds_plyr_actv +_p_atkwav_tbl),hl] advance to next token-pair e.g. HL:=8923
-
-	move.b	d0,d6                           	| [ld   l,a]
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                      	        | [$2987: ld   h,#>b_8800]
+	move.b	d0,d6                           	| [$2989: ld   l,a]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#7,(a0)+                         	| [ld   (hl),#7] 8800[L].l ... disposition = "spawning" ... i.e. case_spawning_orc_2590
+	move.b	#7,(a0)+                         	| [$298A: ld   (hl),#7] 8800[L].l ... disposition = "spawning" ... i.e. case_spawning_orc_2590
 
 * store the slot index (offset) for this object
-	                           	| [inc  l]
-	move.b	ixl,d4                         	| [ld   e,ixl]
-	move.b	d4,(a0)                         	| [ld   (hl),e] 8800[L].h ... offset of slot (n*$14)
-
-	addq.w	#1,d6		| follow lsb offset
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	addq.w	#1,d6              	                | [$298C: inc  l]
+	move.b	ixl,d4                         	    | [$298D: ld   e,ixl]
+	move.b	d4,(a0)                         	| [$298F: ld   (hl),e] 8800[L].h ... offset of slot (n*$14)
+	lea	ds_sprite_posn_9300,a0              	| [$2990: ld   h,#>ds_sprite_posn_9300]
 	add.w	d6,a0
 
 * if ( object >= $38 && object < $40 ) then goto _setup_transients
-	and.b	#0x38,d0                         	| [and  #0x38]
-	cmp.b	#0x38,d0                         	| [cp   #0x38]
-	jeq	l_29B3_setup_transients            	| [jr   z,l_29B3_setup_transients]
+	and.b	#0x38,d0                         	| [$2992: and  #0x38]
+	cmp.b	#0x38,d0                         	| [$2994: cp   #0x38]
+	jeq	l_29B3_setup_transients            	    | [$2996: jr   z,l_29B3_setup_transients]
 * else ...
 * Init routine c_2896 has populated the sprite code buffer such that each even
 * byte consists of the "primary" code (multiple of 8), AND'd with the color.
-	subq.w	#1,a0                           	| [dec  l] e.g. HL=9358
+	subq.w	#1,a0                           	| [$2998: dec  l] e.g. HL=9358
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00] sprite[L].code.b0 &= 0x78
+	lea	ds_sprite_code_8B00,a0              	| [$2999: ld   h,#>ds_sprite_code_8B00] sprite[L].code.b0 &= 0x78
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$299B: ld   a,(hl)]
@@ -8214,14 +8210,14 @@ f_lateral_movement_at_round_start_2a90:
 	subq.b	#1,d0                           	| [dec  a] why -1 ?
 	and.b	#0x03,d0                         	| [and  #0x03]
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    	    | [ret  nz] [...]
 0:
 
 * check for exit condition
-*  if  ! ( num_bugs != 0                	||  f_insert_attackers_2916_active )  then ...
+*  if  ! ( num_bugs != 0 ||  f_insert_attackers_2916_active )  then ...
 	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
 	move.b	d0,d1                           	| [ld   b,a]
-	move.b	ds_cpu0_task_actv_9000+0x08,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x08)] f_insert_attackers_2916 supervises attack waves
+	move.b	ds_cpu0_task_actv_9000+0x08,d0      | [ld   a,(ds_cpu0_task_actv_9000 + 0x08)] f_insert_attackers_2916 supervises attack waves
 	or.b	d1,d0                             	| [or   b]
 	jeq	l_2AE9_done                        	| [jr   z,l_2AE9_done]
 

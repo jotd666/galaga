@@ -2,6 +2,9 @@
 UNLESS PLAYER SHIP IS PLACED HARD RIGHT AT START IN WHICH CASE FORMATION
 ENDS UP PERFECT!!!!!!!!!!!!!!!!
 interaction between ship Y (X) and homing locations, debug!!
+
+root cause: case_heads_to_home_0aa0 probably buggy: speed increased like crazy there
+
 - demo: ship misses first boss on first shot: desync, hack it: if intro running
   then be nicer with detection around 0788 (sub) (add 3 of tolerance)
 - demo: boss explosions: some frames shifted
