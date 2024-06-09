@@ -1042,10 +1042,7 @@ update_hardware_sprites:
 	* we'll add 0 to 12 to select the proper orientation depending on the attributes
 	moveq	#0,d3
 	move.b	(SPRITE_CLUT,a2),d3
-	cmp.b	#0x44,d2		| elevator (kludge)
-	bne.b	251f
-	move.b	#0x10,d3		| extra clut
-251:
+
 	bclr	#7,d3
 	beq.b	26f
 	addq	#8,a5		| y flip
@@ -1221,7 +1218,14 @@ update_bobs:
 	.ifne	SPRITE_X_CORRECTION
 	add.w	#SPRITE_X_CORRECTION,d0
 	.endif	
-
+	cmp.b	#0x20,d2
+	bcs.b	16f
+	cmp.b	#0x30,d2
+	bcc.b	16f
+	* sprites 0x20,0x24,0x28,0x2C are double width/height (ship explosion)
+	bsr		restore_32x_background	
+	jra		11f
+16:
 	bsr		restore_16x_background
 11:
 	addq	#PREVIOUS_SPRITE_SIZE,a4
@@ -1276,7 +1280,7 @@ update_bobs:
 	* not known/registered: we should log that!
 	move.w	#0xF00,0xDFF180
 	move.b	d2,d2
-	bra.b	211f
+	jra	211f
 11:
 
 	
@@ -1315,12 +1319,9 @@ update_bobs:
 	sub.w	#(NB_BOBS_PLANES+1)*4,a0
 	.endif
 13:
-	move.l	(NB_BOBS_PLANES*4,a0),d2	| mask plane is after bob data
+	move.l	(NB_BOBS_PLANES*4,a0),d3	| mask plane is after bob data
 	beq.b	22f		| mask is zero: blank tile => skip
-	move.l	d2,a3
-	moveq	#0,d2	| no y-clip
-	move.w	#16,d3	| height = 16 for all bobs
-
+	move.l	d3,a3
 
 	.ifne	SPRITE_Y_CORRECTION
 	add.w	#SPRITE_Y_CORRECTION,d1
@@ -1329,8 +1330,23 @@ update_bobs:
 	add.w	#SPRITE_X_CORRECTION,d0
 	.endif
 
+	movem.l	d7/a4/a5,-(a7)
 
-	movem.l	d7/a5,-(a7)
+	* normal or double w/h?
+	cmp.b	#0x20,d2
+	bcs.b	16f
+	cmp.b	#0x30,d2
+	bcc.b	16f
+	* sprites 0x20,0x24,0x28,0x2C are double width/height (ship explosion)
+	moveq	#0,d2	| no y-clip
+	move.w	#32,d3	| height = 32
+	lea		blit_planes_cookie_cut_32x(pc),a4
+	
+16:
+	moveq	#0,d2	| no y-clip
+	move.w	#16,d3	| height = 16 for all bobs
+	lea		blit_planes_cookie_cut_16x(pc),a4
+
 
 	* check if bitplanes are zeroed
 	* note: only checks 4 bitplanes
@@ -1352,9 +1368,9 @@ update_bobs:
 	tst.b	d5
 	bne.b	14f
 
-	bsr		blit_planes_cookie_cut_16x
+	jsr		(a4)
 21:
-	movem.l	(a7)+,d7/a5
+	movem.l	(a7)+,d7/a4/a5
 22:
 	move.l	(a7)+,a0
 211:
@@ -1385,6 +1401,31 @@ restore_16x_background:
 	move.w	#NB_BOBS_PLANES,d3
 	move.l	bg_drawed_screen_ptr(pc),a1
 	move.w	#16,d4
+	lea		_custom,a5
+	bsr.b	clear_planes_any_blitter_internal
+	movem.l	(a7)+,d2-d7/a0-a5
+0:
+	.ifndef	RELEASE
+	movem.l	(a7)+,d0/d1
+	.endif
+	rts
+	
+* what: erases the 4 planes used for BOBs
+* args:
+* < D0: X (rounded to smaller 8-multiple)
+* < D1: Y
+
+restore_32x_background:
+	.ifndef	RELEASE
+	movem.l	d0/d1,-(a7)
+	.endif
+	tst.w	d1
+	bmi.b	0f
+	movem.l	d2-d7/a0-a5,-(a7)
+	moveq	#6,d2			| 48 bits blit
+	move.w	#NB_BOBS_PLANES,d3
+	move.l	bg_drawed_screen_ptr(pc),a1
+	move.w	#32,d4
 	lea		_custom,a5
 	bsr.b	clear_planes_any_blitter_internal
 	movem.l	(a7)+,d2-d7/a0-a5
@@ -1493,6 +1534,34 @@ blit_planes_cookie_cut_16x_flipped:
     moveq  #4,d2       | 16 pixels + 2 shift bytes
     jra blit_planes_any_internal_cookie_cut
 
+* what: blits 32x? data on one plane, cookie cut
+* args:
+* < A0: pointers on 16x? data
+* < A1: plane  (40 rows)
+* < A2: background (40 rows) to mix with cookie cut
+* < A3: source mask for cookie cut (16x16)
+* < D0: X
+* < D1: Y
+* < D2: source y-offset
+* < D3: height of data
+* trashes: D0-D1
+blit_planes_cookie_cut_32x:
+	.ifndef	RELEASE
+	move.w	d0,last_x_blit
+	move.w	d1,last_y_blit
+	move.w	d3,last_blit_height
+	.endif
+	tst.w	d1
+	bpl.b	0f
+	rts
+0:
+    lea _custom,A5
+	move.w	d2,d5
+	move.w	d3,d4
+	moveq	#NB_BOBS_PLANES,d3
+    moveq  #6,d2       | 32 pixels + 2 shift bytes
+	bra.b	blit_planes_any_internal_cookie_cut
+	
 * what: blits 16x? data on one plane, cookie cut
 * args:
 * < A0: pointers on 16x? data

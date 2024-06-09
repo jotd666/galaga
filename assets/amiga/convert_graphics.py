@@ -103,7 +103,7 @@ def dump_asm_bytes(*args,**kwargs):
 sprite_config = dict()
 
 def add_sprite_block(start,end,prefix,cluts,sprite_type=ST_BOB,mirror=False,
-flip=False):
+flip=False,double_wh=False,):
 
     if isinstance(cluts,int):
         cluts = [cluts]
@@ -114,12 +114,13 @@ flip=False):
         else:
             sprite_config[i] = {"name":f"{prefix}_{i:02x}","cluts":cluts,
                                 "sprite_type":sprite_type,
+                                "double_wh":double_wh,
                                 "mirror":mirror,
                                 "flip":flip  # only relevant for HW sprites, else it's handled by blitter
                                 }
 
-def add_sprite(code,prefix,cluts,sprite_type=ST_BOB,mirror=False,flip=False):
-    add_sprite_block(code,code+1,prefix,cluts,sprite_type,mirror,flip=flip)
+def add_sprite(code,prefix,cluts,sprite_type=ST_BOB,mirror=False,flip=False,double_wh=False):
+    add_sprite_block(code,code+1,prefix,cluts,sprite_type,mirror,flip=flip,double_wh=double_wh)
 
 add_sprite_block(0x8,0x10,"boss_ship",[0,1,10],mirror=True)   # 10: yellow when about to explode
 # I'd like to hack player ship into a sprite only for clut 2
@@ -144,7 +145,8 @@ add_sprite(0x37,"score_800",0xD)
 add_sprite(0x38,"score_1000",0)  # wrong clut
 add_sprite(0x39,"score_1500",0)  # wrong clut
 add_sprite(0x3A,"score_1600",0)  # wrong clut
-add_sprite_block(0x20,0x30,"explosion",0xB)  # wrong clut
+for i in [0x20,0x24,0x28,0x2C]:
+    add_sprite(i,"explosion",0xB,double_wh=True)
 
 
 block_dict = {}
@@ -427,6 +429,17 @@ if True:
                     plane_list = []
                     print(f"converting {name}, code {k}, clut {cidx}, {[[hex(c) for c in x]for x in sprite_clut[cidx] ]}")
 
+                    if sprconf["double_wh"]:
+                        img_new = Image.new("RGB",(32,32))
+                        for sx in range(0,20,10):
+                            for sy in range(0,32,16):
+                                for x in range(0,16):
+                                    for y in range(0,16):
+                                        p = img.getpixel((x,y))
+                                        if p != (0,0,0):
+                                            img_new.putpixel((x+sx,y+sy),p)
+                        img_to_raw = img_new
+
                     for mirrored in range(2):
                         bitplanes = bitplanelib.palette_image2raw(img_to_raw,None,bobs_palette,forced_nb_planes=NB_BOB_PLANES,
                             palette_precision_mask=0xFF,generate_mask=True,blit_pad=True)
@@ -447,7 +460,7 @@ if True:
                                     plane_next_index += 1
                                 plane_list.append(plane_index)
                         if cs["mirror"] and mirrored==0:
-                            # we need do re-iterate with opposite Y-flip image (donkey kong)
+                            # we need do re-iterate with opposite Y-flip image
                             img_to_raw = ImageOps.mirror(img_to_raw)
                         else:
                             # no mirror: don't do it once more
@@ -477,7 +490,6 @@ with open(os.path.join(src_dir,"graphics.68k"),"w") as f:
     f.write("\t.global\tsprite_table\n")
     f.write("\t.global\tbob_table\n")
     f.write("\t.global\thardware_sprite_flag_table\n")
-    f.write("\t.global\tfour_barrels_bitmap\n")
 
     f.write("\nhardware_sprite_flag_table:")
     bitplanelib.dump_asm_bytes(hw_sprite_flag,f,mit_format=True)

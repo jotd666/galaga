@@ -10512,7 +10512,7 @@ l_2C23:
 	jra	l_2C46                             	| [jr   l_2C46]
 l_2C3F:
 * else if 0xFF == (plyr_state_actv.stage_ctr	| 0x0FC)
-	or.b	~0x03,d0                          	| [or   #~0x03] challenge stages numbered so that bit_0 + bit_1 == 11b
+	or.b	#~0x03,d0                          	| [or   #~0x03] challenge stages numbered so that bit_0 + bit_1 == 11b
 	addq.b	#1,d0                           	| [inc  a]
 	jeq	l_2C46                             	| [jr   z,l_2C46]
 * ... then

@@ -735,7 +735,7 @@ l_0639_not_two_ship:
 *  ...
 *-----------------------------------------------------------------------------
 hitd_fghtr_hit_0649:
-	exg	a1,a0                              	    | [$0649: ex   de,hl]
+	exg	a1,a0                              	    | [$0649: ex   de,hl] useful?
 	exg	d4,d6                              	    | [$0649: ex   de,hl]
 	lea	ds_sprite_posn_9300,a0              	| [$064A: ld   h,#>ds_sprite_posn_9300] read directly from SFRs (not buffer RAM) ... already 0'd by hitd_dspchr_07c1
 	and.w	#0xFF,d6
@@ -1573,7 +1573,7 @@ mctl_fltpn_dspchr:
 	cmp.w	#0x1000,d5
 	bcs.b	0f
 	jbsr	osd_break
-	* flight path pointer cannot be above that value
+	* flight path pointer cannot be above that value (ROM end!!)
 	illegal
 	illegal
 0:
