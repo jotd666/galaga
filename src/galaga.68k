@@ -1115,7 +1115,7 @@ gctl_supv_score:
 	move.b	#0xE4,d0                        	| [ld   a,#0xE4] offset to 10's place from _tile_ram + 0x0300 (plyr 2)
 
 l_0732:
-	move.b	d0,ixl							| ld   ixl,a                                 | parameter to c_scoreman_incr_add (tile ram offset)
+	move.b	d0,ixl							| [ld   ixl,a]   parameter to c_scoreman_incr_add (tile ram offset)
 
 	move.b	#0x10,d1                        	| [ld   b,#0x10] sizeof scoreman_inc_lut[]
 	lea	ds_bug_collsn_hit_mult,a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x00]
@@ -1136,14 +1136,14 @@ l_0740:
 	exg	a1,a0                              	| [ex   de,hl] DE := &bug_collsn[0x00]
 
 	lea		0x8300,a0        	| [ld   h,#>(0x8000 + 0x0300)] tile rows 32-35:  $83C0 - 83FF	
-	jbsr	read_ixl_into_d0                         	| [ld   a,ixl] offset to 10's place in tile ram
+	jbsr	read_ixl_into_d0                   | [ld   a,ixl] offset to 10's place in tile ram
 	add.w	d0,a0                           	| [ld   l,a]
 	move.b	d2,d0                           	| [ld   a,c] scoreman_inc_lut[B-1]
 	and.b	#0x0F,d0                         	| [and  #0x0F]
 	jbsr	c_scoreman_incr_add               	| [call c_scoreman_incr_add] add to 10's
 
 	lea		0x8300,a0
-	jbsr	read_ixl_into_d0                         	| [ld   a,ixl] increment offset to 10's place in tile ram
+	jbsr	read_ixl_into_d0                    | [ld   a,ixl] increment offset to 10's place in tile ram
 	addq.b	#1,d0                           	| [inc  a]
 	add.w	d0,a0                           	| [ld   l,a]
 	move.b	d2,d0                           	| [ld   a,c] scoreman_inc_lut[B-1]
@@ -1157,7 +1157,7 @@ l_0762:
 	subq.b	#1,d1                           	| [...]
 	jne	l_0739_while_B                     	| [djnz l_0739_while_B]
 	
-	jbsr	read_ixl_into_d0                         	| [ld   a,ixl]
+	jbsr	read_ixl_into_d0                    | [ld   a,ixl]
 	addq.b	#4,d0                           	| [add  a,#4]
 												
 	lea	0x8000+0x03E0+0x12,a0      	| [ld   hl,#0x8000 + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2)
@@ -1194,7 +1194,7 @@ l_0788:
 	jne	l_0788                             	| [djnz l_0788]
 
 l_078E:
-	jbsr	read_ixl_into_d0                         	| [ld   a,ixl]
+	jbsr	read_ixl_into_d0                    | [ld   a,ixl]
 	addq.b	#4,d0                           	| [add  a,#4]
 	* replace a0 lower nibble
 	move.w	a0,d6
@@ -2479,7 +2479,10 @@ l_10A0_got_one:
 	exg		d0,d7                              	| [$10B7: ex   af,af'] unstash d0
 	move.b	d0,d3                           	| [$10B8: ld   d,a] function parameter from A' to 0x13(ix)
 	move.b	#9,(a0)+                         	| [$10B9: ld   (hl),#9] obj_status[l].state ... disposition = diving attack
-	jbsr	read_ixl_into_d0                    | [$10BB: ld   a,ixl]
+	* we reuse a macro with A3 as base, with a couple of exg
+	exg		a3,a2
+	COMPUTE_LSB_A3_D0	ds_bug_motion_que_9100  | [$10BB: ld   a,ixl]
+	exg		a3,a2
 	*addq.b	#1,d6								| [$10BD: inc  l] [a0 coherence]
 	move.b	d0,(a0)                         	| [$10BE: ld   (hl),a] obj_status[L].idx ... index into flying que
 	move.b	b_9215_flip_screen,d0           	| [$10BF: ld   a,(b_9215_flip_screen)]
@@ -6514,15 +6517,15 @@ f_boss_diving_down_to_capture_ship_21cb:
 
 	moveq	#0,d0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	lea		ds_bug_motion_que_9100,a2                 | ld   ixl,a
-                                                 |  ld   ixh,>ds_bug_motion_que_9100
+	lea		ds_bug_motion_que_9100,a2           | [ld   ixl,a]
+                                                | [ld   ixh,>ds_bug_motion_que_9100]
 
 	add.w	d0,a2
 	
 	move.b	(0x0A,a2),d0                    	| [ld   a,0x0A(ix)] while !0, capture boss is diving
-	                               	| [and  a]
+	                               	            | [and  a]
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    	    | [ret  nz] [...]
 0:
 
 	move.b	#0x0C,d0                        	| [ld   a,#0x0C]
@@ -7330,15 +7333,15 @@ case_state_progression_254D:
 * in range ... if not a bomb then go increment count
 	move.b	(a1),d0                         	| [ld   a,(de)] b_8800[e].obj_status
 	cmp.b	#6,d0                            	| [cp   #6]
-	jne	l_2414_inc_active                  	| [jp   nz,l_2414_inc_active] if not a bomb
-	jra	l_2416                             	| [jp   l_2416] it's a bomb
+	jne	l_2414_inc_active                  	    | [jp   nz,l_2414_inc_active] if not a bomb
+	jra	l_2416                             	    | [jp   l_2416] it's a bomb
 
 l_2571:
-	sub.b	#0x80,d6                 	| [res  7,l]  subs 0x80 to l
-	sub.w	#0x80,a0                 	| [res  7,l]
+	sub.b	#0x80,d6                 	        | [res  7,l]  subs 0x80 to l
+	sub.w	#0x80,a0                 	        | [res  7,l]
 	move.b	(a1),d0                         	| [ld   a,(de)]
 	cmp.b	#3,d0                            	| [cp   #3] check if flying bug object
-	jeq	l_2582_kill_bug_q_slot             	| [jr   z,l_2582_kill_bug_q_slot] if bug object
+	jeq	l_2582_kill_bug_q_slot             	    | [jr   z,l_2582_kill_bug_q_slot] if bug object
 
 l_2578_mk_obj_inactive:
 	move.b	#0x80,d0                        	| [ld   a,#0x80]
@@ -7347,7 +7350,7 @@ l_2578_mk_obj_inactive:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [ld   (hl),#0]
-	jra	l_2416                             	| [jp   l_2416]
+	jra	l_2416                             	    | [jp   l_2416]
 
 l_2582_kill_bug_q_slot:
 							                    | [$2582: inc  e]
@@ -8013,7 +8016,11 @@ l_2980:
 
 * store the slot index (offset) for this object
 	addq.w	#1,d6              	                | [$298C: inc  l]
-	move.b	ixl,d4                         	    | [$298D: ld   e,ixl]
+	* here this isn't ixl but a2-ds_bug_motion_que_9100, for this
+	* we use a macro that we have, just swapping registers
+	exg		a1,a2
+	COMPUTE_LSB_A1_D4	ds_bug_motion_que_9100  | [$298D: ld   e,ixl]
+	exg		a1,a2            	    
 	move.b	d4,(a0)                         	| [$298F: ld   (hl),e] 8800[L].h ... offset of slot (n*$14)
 	lea	ds_sprite_posn_9300,a0              	| [$2990: ld   h,#>ds_sprite_posn_9300]
 	add.w	d6,a0

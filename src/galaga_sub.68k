@@ -1537,8 +1537,8 @@ for__pool_idx_08E4:
 	btst.b	#0,(mq_state_13,a2)                 | [$08E4: bit  0,0x13(ix)] check for activated state
 	jeq	next__pool_idx_0dfb                     | [$08E8: jp   z,next__pool_idx_0dfb]
 	* uncomment to enable just 1 bug per wave
-	cmp.l	#ds_bug_motion_que_9100,a2
-	bne		next__pool_idx_0dfb
+	*cmp.l	#ds_bug_motion_que_9100,a2
+	*bne		next__pool_idx_0dfb
 	
 	lea	b_bugs_flying_cnt,a0           			| [$08EB: ld   hl,#b_bugs_flying_cnt] +=1
 	addq.b	#1,(a0)                         	| [$08EE: inc  (hl)]
@@ -1971,7 +1971,6 @@ case_heads_to_home_0aa0:  | 0x04
 	LOAD_D5_16_FROM_D5D6
 	sub.w	d1,d5                            	| [$0AEE: sbc  hl,bc] should be sub
 	LOAD_D5D6_FROM_D5_16
-	LOG_REGS	AF0
 	move.b	d6,(mq_fine_x_02,a2)                | [$0AF0: ld   0x02(ix),l] .b00
 	move.b	d5,(mq_x_03,a2)                    	| [$0AF3: ld   0x03(ix),h] .b01
 	move.b	d5,d6                           	| [$0AF6: ld   l,h] x, .b01 (bits<8:1> of integer portion)
@@ -2226,11 +2225,11 @@ l_0C3E:
 * load DE with local copy of rotation value and go ahead and update pool slot
 l_0C46:
 	move.b	(0x0C,a2),d1                    	| [$0C46: ld   b,0x0C(ix)] add to (ix)0x04
-	move.b	(mq_angle_lsb_04,a2),d0                    	| [$0C49: ld   a,0x04(ix)]
+	move.b	(mq_angle_lsb_04,a2),d0             | [$0C49: ld   a,0x04(ix)]
 	move.b	d0,d4                           	| [$0C4C: ld   e,a] need this later ...
 	add.b	d1,d0                            	| [$0C4D: add  a,b] need this below for rra ...
-	move.b	d0,(mq_angle_lsb_04,a2)                    	| [$0C4E: ld   0x04(ix),a] .b04 += .b0C
-	move.b	(mq_angle_msb_05,a2),d3                    	| [$0C51: ld   d,0x05(ix)] need this later ...
+	move.b	d0,(mq_angle_lsb_04,a2)             | [$0C4E: ld   0x04(ix),a] .b04 += .b0C
+	move.b	(mq_angle_msb_05,a2),d3             | [$0C51: ld   d,0x05(ix)] need this later ...
 * sign of subtrahend determines signedness of carry
 	move.b	#1,d6                           	| [$0C54: ld   l,#1]
 	btst.b	#7,d1                           	| [$0C56: bit  7,b] (ix)0x0C

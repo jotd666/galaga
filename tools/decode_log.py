@@ -32,7 +32,7 @@ pcs = set()
 len_block = 14
 
 sorted_cmp = False
-avoid_regs = ["b","ixl","ixh","h"]
+avoid_regs = ["d","ixl","ixh"]
 regslist = list("abcdehl")+["ixh","ixl"]
 
 lst = []

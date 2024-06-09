@@ -1,25 +1,17 @@
-- leading enemy can't find home and roams aimlessly
-UNLESS PLAYER SHIP IS PLACED HARD RIGHT AT START IN WHICH CASE FORMATION
-ENDS UP PERFECT!!!!!!!!!!!!!!!!
-interaction between ship Y (X) and homing locations, debug!!
-
-root cause: case_heads_to_home_0aa0 probably buggy: speed increased like crazy there
-
+- capture ship doesn't capture
+- illegal/break when ship is hit by bomb
 - demo: ship misses first boss on first shot: desync, hack it: if intro running
   then be nicer with detection around 0788 (sub) (add 3 of tolerance)
 - demo: boss explosions: some frames shifted
 - demo: shoots all both missiles immediately (main: 1766), also in-game
-- ACTIVE_BITPLANE_MASK not implemented
 - enemy bombs: sometimes stop!
 - start game screen: all extra ship scores are 00000
 - 2 first rows not shown (attribute/color is black!!!)
-- illegal/break when ship is hit by bomb
 - player lives: 5 lives??? dip switch issue and wrong colors
-- stage flag not drawn, and wrong colors
+- stage 1 flag not drawn, and wrong colors
 - sprite priorities wrong: stars should be behind
 - stars & colors trashed near the PAL wait region: copperlist conflict between sprite/color
-- remove red timer flashes, maybe speedup using F10?
-- sometimes trajectory path (8/9+a2) is too low ex $000C
+- ACTIVE_BITPLANE_MASK not implemented
 
 traj issues: Traj computed in subcpu D23 / D50 probe there!
 
