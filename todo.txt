@@ -1,9 +1,10 @@
 - capture ship doesn't capture
-- illegal/break when ship is hit by bomb
+- illegal/break when ship is hit by bomb: break 649 sub HL????
+- second wave: one boss does something different (init issue?)
+- shoots all both missiles immediately (main: 1766), demo AND in-game
 - demo: ship misses first boss on first shot: desync, hack it: if intro running
   then be nicer with detection around 0788 (sub) (add 3 of tolerance)
 - demo: boss explosions: some frames shifted
-- demo: shoots all both missiles immediately (main: 1766), also in-game
 - enemy bombs: sometimes stop!
 - start game screen: all extra ship scores are 00000
 - 2 first rows not shown (attribute/color is black!!!)

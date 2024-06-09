@@ -127,8 +127,8 @@ add_sprite_block(0x8,0x10,"boss_ship",[0,1,10],mirror=True)   # 10: yellow when 
 #add_sprite_block(0,0x8,"ship",[2,9])
 add_sprite_block(0,0x8,"ship",9) #,sprite_type=ST_HW_SPRITE)
 add_sprite_block(0,0x8,"ship",2)
-add_sprite_block(0x10,0x18,"red_bee",2,mirror=True)
-add_sprite_block(0x18,0x20,"blue_bee",3,mirror=True)
+add_sprite_block(0x10,0x18,"red_bee",[2,0xA],mirror=True)
+add_sprite_block(0x18,0x20,"blue_bee",[3,0xA],mirror=True)
 add_sprite_block(0x50,0x57,"mutant_galaxian_boss",4,sprite_type=ST_HW_SPRITE,mirror=True)
 add_sprite_block(0x58,0x5F,"mutant_scorpion",5,sprite_type=ST_HW_SPRITE,mirror=True)
 add_sprite_block(0x60,0x67,"mutant_green",6,sprite_type=ST_HW_SPRITE,mirror=True)
@@ -138,13 +138,13 @@ add_sprite_block(0x78,0x7F,"challenge_rocket",7,mirror=True)
 add_sprite_block(0x30,0x34,"bomb",[0x9,0xB])
 add_sprite_block(0x41,0x49,"enemy_explosion",0xA,mirror=True)
 add_sprite(0x34,"score_150",0xA)
-add_sprite(0x35,"score_400",0)  # wrong clut
+add_sprite(0x35,"score_400",0xA)  # wrong clut
 add_sprite(0x36,"score_500",0)  # wrong clut
 add_sprite(0x37,"score_800",0xD)
 add_sprite(0x38,"score_1000",0)  # wrong clut
 add_sprite(0x39,"score_1500",0)  # wrong clut
 add_sprite(0x3A,"score_1600",0)  # wrong clut
-add_sprite_block(0x20,0x30,"explosion",0)  # wrong clut
+add_sprite_block(0x20,0x30,"explosion",0xB)  # wrong clut
 
 
 block_dict = {}

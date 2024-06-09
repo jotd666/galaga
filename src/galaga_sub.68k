@@ -462,7 +462,7 @@ l_0537:
 	MOVE_TO_VAR	d5,ds3_frame_cts_92A0+1         	| [ld   (ds3_frame_cts_92A0 + 1),hl] [1]: 32-frame ... ~2Hz timer
 
 * flag = ( num_bugs < param07 ) && ds_cpu0_task_actv_9000[0x15]
-	move.b	ds_new_stage_parms_99c0+0x07,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x07)] number of aliens left when continous bombing can start
+	move.b	ds_new_stage_parms_99c0+0x07,d0     | [ld   a,(ds_new_stage_parms_99c0 + 0x07)] number of aliens left when continous bombing can start
 	move.b	d0,d4                           	| [ld   e,a]
 	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
 	cmp.b	d4,d0                            	| [cp   e]
@@ -476,15 +476,15 @@ l_0537:
 * find the first ready task.. may run more than one.
 	clr.w	d2                               	| [ld   c,#0]
 l_054F_while:
-	lea	ds_cpu1_task_actv,a0           	| [ld   hl,#ds_cpu1_task_actv]
-	add.w	d2,a0										| [ld   a,c]
+	lea	ds_cpu1_task_actv,a0           	        | [ld   hl,#ds_cpu1_task_actv]
+	add.w	d2,a0								| [ld   a,c]
 												| [add  a,l]
-											| [ld   l,a]
+											    | [ld   l,a]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	| [and  a]
-	jne	l_055C                             	| [jr   nz,l_055C]
+	                               	            | [and  a]
+	jne	l_055C                             	    | [jr   nz,l_055C]
 	addq.b	#1,d2                           	| [inc  c]
-	jra	l_054F_while                       	| [jr   l_054F_while]
+	jra	l_054F_while                       	    | [jr   l_054F_while]
 
 l_055C:
 	move.b	d0,d1                           	| [ld   b,a] A == task status
@@ -664,21 +664,21 @@ f_05EE:
 
 * if ( plyr_is_two_ship ) ...
 	move.b	ds_plyr_actv+_b_2ship,d0        	| [ld   a,(ds_plyr_actv +_b_2ship)]
-	                               	| [and  a]
-	jeq	l_0613                             	| [jr   z,l_0613]
+	                               	            | [and  a]
+	jeq	l_0613                             	    | [jr   z,l_0613]
 
 * ... handle 2-ship configuration
 	lea	ds_sprite_posn_9300+0x60,a0         	| [ld   hl,#ds_sprite_posn_9300 + 0x60] fighter2 position
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	| [and  a]
-	jeq	l_0613                             	| [jr   z,l_0613]
+	                               	            | [and  a]
+	jeq	l_0613                             	    | [jr   z,l_0613]
 
-	jbsr	hitd_fghtr_notif_0681                  	| [call hitd_fghtr_notif_0681] HL == &sprite_posn_base[0x60]  ...ship2 position
+	jbsr	hitd_fghtr_notif_0681               | [call hitd_fghtr_notif_0681] HL == &sprite_posn_base[0x60]  ...ship2 position
 	move.b	b8_ship_collsn_detectd_status,d0	| [ld   a,(b8_ship_collsn_detectd_status)] fighter hit notif (2)
-	                               	| [and  a]
-	jeq	l_0613                             	| [jr   z,l_0613]
+	                               	            | [and  a]
+	jeq	l_0613                             	    | [jr   z,l_0613]
 
-	jbsr	hitd_fghtr_hit                    	| [call hitd_fghtr_hit] fighter2 collision
+	jbsr	hitd_fghtr_hit_0649                 | [call hitd_fghtr_hit_0649] fighter2 collision
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
 
@@ -686,97 +686,95 @@ l_0613:
 * if ( ship position == 0 ) return
 	lea	ds_sprite_posn_9300+0x62,a0         	| [ld   hl,#ds_sprite_posn_9300 + 0x62] fighter1 position
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	| [and  a]
+	                               	            | [and  a]
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] [...]
+	rts                                    	    | [ret  z] [...]
 0:
 
 	jbsr	hitd_fghtr_notif_0681                  	| [call hitd_fghtr_notif_0681] HL == sprite_posn_base + 0x62 ... fighter (1) position (only L significant)
        * L passed to c_0681_ship_collisn_detect preserved in E
 	move.b	b8_ship_collsn_detectd_status,d0	| [ld   a,(b8_ship_collsn_detectd_status)] fighter hit notif (1)
-	                               	| [and  a]
+	                               	            | [and  a]
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] [...]
+	rts                                    	    | [ret  z] [...]
 0:
 
 * 621 bug or bomb collided with ship
 	move.b	ds_plyr_actv+_b_2ship,d0        	| [ld   a,(ds_plyr_actv +_b_2ship)]
-	                               	| [and  a]
-	jeq	l_0639_not_two_ship                	| [jr   z,l_0639_not_two_ship]
+	                               	            | [and  a]
+	jeq	l_0639_not_two_ship                	    | [jr   z,l_0639_not_two_ship]
 
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
-	move.b	ds_sprite_posn_9300+0x60,d0          	| [ld   a,(ds_sprite_posn_9300 + 0x60)] get ship 2 position
-	move.b	d0,ds_sprite_posn_9300+0x62          	| [ld   (ds_sprite_posn_9300 + 0x62),a] ship_1_position = ship_2_position
-	move.b	sfr_sprite_posn_9380+0x62,d0         	| [ld   a,(sfr_sprite_posn_9380 + 0x62)]
+	move.b	ds_sprite_posn_9300+0x60,d0         | [ld   a,(ds_sprite_posn_9300 + 0x60)] get ship 2 position
+	move.b	d0,ds_sprite_posn_9300+0x62         | [ld   (ds_sprite_posn_9300 + 0x62),a] ship_1_position = ship_2_position
+	move.b	sfr_sprite_posn_9380+0x62,d0        | [ld   a,(sfr_sprite_posn_9380 + 0x62)]
 	lea	sfr_sprite_posn_9380+0x60,a0        	| [ld   hl,#sfr_sprite_posn_9380 + 0x60]
-	jra	l_064F                             	| [jr   l_064F] handle ship collision
+	jra	l_064F                             	    | [jr   l_064F] handle ship collision
 
 l_0639_not_two_ship:
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x14       	| [ld   (ds_cpu0_task_actv_9000 + 0x14),a] 0 ... f_1F85 (input and fighter movement)
-	move.b	d0,ds_cpu0_task_actv_9000+0x15       	| [ld   (ds_cpu0_task_actv_9000 + 0x15),a] 0 ... f_1F04 (fire button input)
+	move.b	d0,ds_cpu0_task_actv_9000+0x14      | [ld   (ds_cpu0_task_actv_9000 + 0x14),a] 0 ... f_1F85 (input and fighter movement)
+	move.b	d0,ds_cpu0_task_actv_9000+0x15      | [ld   (ds_cpu0_task_actv_9000 + 0x15),a] 0 ... f_1F04 (fire button input)
 	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 0 ... f_05EE (this task, fighter hit-detection)
 	move.b	d0,ds_99B9_star_ctrl+0x00       	| [ld   (ds_99B9_star_ctrl + 0x00),a] 0 ... 1 when fighter on screen
 	move.b	d0,ds_9200_glbls+0x17           	| [ld   (ds_9200_glbls + 0x17),a] 0 ... no_restart_stg (not docked fighters)
 
-* hitd_fghtr_hit(tmpSx, SPR_IDX_SHIP + 0, 0)
+* hitd_fghtr_hit_0649(tmpSx, SPR_IDX_SHIP + 0, 0)
 
 *=============================================================================
-* hitd_fghtr_hit()
+* hitd_fghtr_hit_0649()
 *  Description:
 *   handle a collision detected on fighter
 * IN:
-*   HL == &sprite_posn_base[0x60]  ... ship2 position (if call hitd_fghtr_hit)
+*   HL == &sprite_posn_base[0x60]  ... ship2 position (if call hitd_fghtr_hit_0649)
 *   HL == &sprite_posn_sfr[0x60] ... (if jp  l_064F)
 
 *   E == object/index of fighter1 or fighter2 .b0
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-hitd_fghtr_hit:
-	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
-
-	exg	a1,a0                              	    | [ex   de,hl]
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300] read directly from SFRs (not buffer RAM) ... already 0'd by hitd_dspchr_07c1
+hitd_fghtr_hit_0649:
+	exg	a1,a0                              	    | [$0649: ex   de,hl]
+	exg	d4,d6                              	    | [$0649: ex   de,hl]
+	lea	ds_sprite_posn_9300,a0              	| [$064A: ld   h,#>ds_sprite_posn_9300] read directly from SFRs (not buffer RAM) ... already 0'd by hitd_dspchr_07c1
 	and.w	#0xFF,d6
-	bset.b	#7,d6                           	| [set  7,l]
+	bset.b	#7,d6                           	| [$064C: set  7,l]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
+	move.b	(a0),d0                         	| [$064E: ld   a,(hl)]
 
 l_064F:
-	sub.b	#8,d0                            	| [sub  #8]
-	sub.w	#0x80,A0                           	| [res  7,l]
-	move.b	d0,(a0)+                         	| [ld   (hl),a]
-	                           	                | [inc  l]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	sub.b	#8,d0                            	| [sub  #8]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+	sub.b	#8,d0                            	| [$064F: sub  #8]
+	sub.w	#0x80,A0                           	| [$0651: res  7,l]
+	move.b	d0,(a0)+                         	| [$0653: ld   (hl),a]
+	                           	                | [$0654: inc  l]
+	move.b	(a0),d0                         	| [$0655: ld   a,(hl)]
+	sub.b	#8,d0                            	| [$0656: sub  #8]
+	move.b	d0,(a0)                         	| [$0658: ld   (hl),a]
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
+	lea	ds_sprite_code_8B00,a0              	| [$0659: ld   h,#>ds_sprite_code_8B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#0x0B,(a0)                      	| [ld   (hl),#0x0B] color
-	                           	                | [dec  l]
-	move.b	#0x20,-(a0)                      	| [ld   (hl),#0x20] explosion tile
+	move.b	#0x0B,(a0)                      	| [$065B: ld   (hl),#0x0B] color
+	                           	                | [$065D: dec  l]
+	move.b	#0x20,-(a0)                      	| [$065E: ld   (hl),#0x20] explosion tile
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                            	| [$0660: ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#8,(a0)                         	| [ld   (hl),#8] .state, disposition from $80 to "exploding"
-	                           	                | [inc  l]
-	move.b	#0x0F,(1,a0)                      	| [ld   (hl),#0x0F] mctrl_q index used for explosion counter
-	                                         	| [dec  l]
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
+	move.b	#8,(a0)                         	| [$0662: ld   (hl),#8] .state, disposition from $80 to "exploding"
+	                           	                | [$0664: inc  l]
+	move.b	#0x0F,(1,a0)                      	| [$0665: ld   (hl),#0x0F] mctrl_q index used for explosion counter
+	                                         	| [$0667: dec  l]
+	lea	ds_sprite_ctrl_9B00,a0              	| [$0668: ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#0x08+0x04,(a0)                            	|0x04,(a0)| [ld   (hl),#0x08| 0x04] dblh, dblw
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_plyr_actv+_b_2ship        	| [ld   (ds_plyr_actv +_b_2ship),a] 0
-
-	move.b	b8_game_state_9201,d0           	| [ld   a,(b8_game_state_9201)]
-	subq.b	#1,d0                           	| [dec  a]
-	move.b	d0,b_9AA0+0x19                  	| [ld   (b_9AA0 + 0x19),a] sound-fx count/enable registers, "bang" sound (not in Attract Mode)
+	move.b	#0x08+0x04,(a0)                     | [$066A: ld   (hl),#0x08+0x04] dblh, dblw
+	clr.b	d0                               	| [$066C: xor  a]
+	move.b	d0,ds_plyr_actv+_b_2ship        	| [$066D: ld   (ds_plyr_actv +_b_2ship),a] 0
+	move.b	b8_game_state_9201,d0           	| [$0670: ld   a,(b8_game_state_9201)]
+	subq.b	#1,d0                           	| [$0673: dec  a]
+	move.b	d0,b_9AA0+0x19                  	| [$0674: ld   (b_9AA0 + 0x19),a] sound-fx count/enable registers, "bang" sound (not in Attract Mode)
 
 * if no_restart_stg  ret ...
 	move.b	ds_9200_glbls+0x17,d0           	| [ld   a,(ds_9200_glbls + 0x17)] no_restart_stg is set if docked fighters
@@ -915,6 +913,7 @@ while_06B7:
 	sne	d7                              	    | [ex   af,af']
 	jra	hitd_dspchr_07c1                        | [jp   hitd_dspchr_07c1] return to 'call hitd_det_fghtr'
 l_06F0:
+	addq.w	#2,a0
 	addq.b	#2,d6                           	| [inc  l] * 2  [a0 coherence]
 	subq.b	#1,d1                           	| [...]
 	jne	while_06B7                         	    | [djnz while_06B7]
@@ -1220,7 +1219,7 @@ hitd_dspchr_07c1_rckt_07b9:
 * OUT:
 *  ...
 * RETURN:
-*  ...
+*  D6: properly set ...
 *-----------------------------------------------------------------------------
 hitd_dspchr_07c1:
 	lea	ds_sprite_posn_9300,a1              	| [$07C1: ld   d,#>ds_sprite_posn_9300] _sprite_posn[E].b0 = 0 ... sX
