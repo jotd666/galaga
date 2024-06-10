@@ -608,21 +608,21 @@ gctl_plyr_terminate:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	subq.b	#1,(a0)                         	| [dec  (hl)]
 	tst.b	d0                               	| [and  a]
-	jne	j_0579_terminate                   	| [jp   nz,j_0579_terminate] active ship terminated but not game over
+	jne	j_0579_terminate                   	    | [jp   nz,j_0579_terminate] active ship terminated but not game over
 *  if  ( two_plyr_game ) ...
 	move.b	b8_99B3_two_plyr_game,d0        	| [ld   a,(b8_99B3_two_plyr_game)]
-	                               	| [and  a]
-	jeq	l_04FD_end_of_game                 	| [jr   z,l_04FD_end_of_game]
+	                               	            | [and  a]
+	jeq	l_04FD_end_of_game                 	    | [jr   z,l_04FD_end_of_game]
 *  then ... adjust message text for two player game-over
-	lea	0x8000+0x0240+0x0E,a0      	| [ld   hl,#0x8000 + 0x0240 + 0x0E]
+	lea	0x8000+0x0240+0x0E,a0      	            | [ld   hl,#0x8000 + 0x0240 + 0x0E]
 	move.b	ds_plyr_actv+_b_plyr_nbr,d0     	| [ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
 	addq.b	#4,d0                           	| [add  a,#4]
 	move.b	d0,d2                           	| [ld   c,a] string index
-	jbsr	c_string_out_1398                      	| [call c_string_out_1398] "PLAYER X" (for "PLAYER X GAME OVER")
+	jbsr	c_string_out_1398                   | [call c_string_out_1398] "PLAYER X" (for "PLAYER X GAME OVER")
 
 l_04FD_end_of_game:
 	move.b	#0x02,d2                        	| [ld   c,#0x02] string index
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "GAME OVER"
+	jbsr	string_out_pe_30                    | [rst  0x30] string_out_pe "GAME OVER"
 
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
@@ -631,38 +631,35 @@ l_04FD_end_of_game:
 	lea	ds_cpu0_task_actv_9000+0x18,a0      	| [ld   hl,#ds_cpu0_task_actv_9000 + 0x18] f_boss_starts_tractor_beam_2222 (Boss starts tractor beam) wait for task inactive
 l_0509_while:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	| [and  a]
-	jne	l_0509_while                       	| [jr   nz,l_0509_while]
-
+	                               	            | [and  a]
+	jne	l_0509_while                       	    | [jr   nz,l_0509_while]
 	jbsr	rst_28                            	| [rst  0x28] memset(mctl_mpool,0,$$14 * 12)
-
-	jbsr	c_sctrl_sprite_ram_clr_003c            	| [call c_sctrl_sprite_ram_clr_003c]
-	jbsr	c_sctrl_playfld_clr_0160               	| [call c_sctrl_playfld_clr_0160]
-
+	jbsr	c_sctrl_sprite_ram_clr_003c         | [call c_sctrl_sprite_ram_clr_003c]
+	jbsr	c_sctrl_playfld_clr_0160            | [call c_sctrl_playfld_clr_0160]
 	move.b	#0x15,d2                        	| [ld   c,#0x15] string index
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("-RESULTS-")
+	jbsr	string_out_pe_30                    | [rst  0x30] string_out_pe ("-RESULTS-")
 	move.b	#0x16,d2                        	| [ld   c,#0x16] string index
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("SHOTS FIRED")
+	jbsr	string_out_pe_30                    | [rst  0x30] string_out_pe ("SHOTS FIRED")
 
-	lea	0x8000+0x0120+0x12,a1      	| [ld   de,#0x8000 + 0x0120 + 0x12]
+	lea	0x8000+0x0120+0x12,a1      	            | [ld   de,#0x8000 + 0x0120 + 0x12]
 	MOVE_TO_REG	ds_plyr_actv+_w_shot_ct,d5  	| [ld   hl,(ds_plyr_actv +_w_shot_ct)] puts game shots fired count
-	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] puts game shots fired count
+	jbsr	c_text_out_i_to_d_0A53              | [call c_text_out_i_to_d_0A53] puts game shots fired count
 
 	move.b	#0x18,d2                        	| [ld   c,#0x18] string index
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("NUMBER OF HITS")
+	jbsr	string_out_pe_30                    | [rst  0x30] string_out_pe ("NUMBER OF HITS")
 
 	lea	0x8000+0x0120+0x15,a1      	| [ld   de,#0x8000 + 0x0120 + 0x15]
 	MOVE_TO_REG	ds_plyr_actv+_w_hit_ct,d5   	| [ld   hl,(ds_plyr_actv +_w_hit_ct)] puts game number of hits
-	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] puts game number of hits
+	jbsr	c_text_out_i_to_d_0A53              | [call c_text_out_i_to_d_0A53] puts game number of hits
 
 	move.b	#0x19,d2                        	| [ld   c,#0x19] string index
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("HIT-MISS RATIO")
+	jbsr	string_out_pe_30                    | [rst  0x30] string_out_pe ("HIT-MISS RATIO")
 
 	jbsr	c_puts_hitmiss_ratio_0A72         	| [call c_puts_hitmiss_ratio_0A72]
 
-	exg	a1,a0                              	| [ex   de,hl] HL becomes c_string_out_1398<IN:position in tile RAM>
+	exg	a1,a0                              	    | [ex   de,hl] HL becomes c_string_out_1398<IN:position in tile RAM>
 	move.b	#0x1A,d2                        	| [ld   c,#0x1A] string index
-	jbsr	c_string_out_1398                      	| [call c_string_out_1398] "%" after hit-miss number
+	jbsr	c_string_out_1398                   | [call c_string_out_1398] "%" after hit-miss number
 
        * wait for the timer
 	lea	ds4_game_tmrs_92ac+2,a0             	| [ld   hl,#ds4_game_tmrs_92ac + 2]
@@ -4393,62 +4390,62 @@ l_1A31:
 	move.b	(a0),d7
 	eor.b	d7,d0                            	| [xor  (hl)]
 	move.b	d0,(a1)                         	| [ld   (de),a] update ship sprite ctrl (e.g. 9B03)
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 * ...boss status e.g. 8830[n] == $02  (rotating into position)
 * d4 contains LSB of DE
 l_1A3F_join_ship_to_group:
 * if ( counter > 0 ) goto 1A4B
-	lea	ds5_928A_captr_status+0x01,a0  	| [ld   hl,#ds5_928A_captr_status + 0x01] counter while captured ship is joined with the collective
-	move.b	(a0),d0                         	| [ld   a,(hl)] a=0
-	                               	| [and  a]
-	jne	l_1A4B_test_positioning_timer      	| [jr   nz,l_1A4B_test_positioning_timer]
+	lea	ds5_928A_captr_status+0x01,a0  	        | [$1A3F: ld   hl,#ds5_928A_captr_status + 0x01] counter while captured ship is joined with the collective
+	move.b	(a0),d0                             | [$1A42: ld   a,(hl)] a=0
+	                               	            | [$1A43: and  a]
+	jne	l_1A4B_test_positioning_timer           | [$1A44: jr   nz,l_1A4B_test_positioning_timer]
 * else initialize_ship_sprite
-	lea	ds_sprite_code_8B00,a1              	| [ld   d,#>ds_sprite_code_8B00]
+	lea	ds_sprite_code_8B00,a1              	| [$1A46: ld   d,#>ds_sprite_code_8B00]
 	add.w	d4,a1
-	move.b	#6,d0                           	| [ld   a,#6] ship sprite code
-	move.b	d0,(a1)                         	| [ld   (de),a]
+	move.b	#6,d0                           	| [$1A48: ld   a,#6] ship sprite code
+	move.b	d0,(a1)                         	| [$1A4A: ld   (de),a]
 l_1A4B_test_positioning_timer:
-	addq.b	#1,(a0)                         	| [inc  (hl)] *( ds5_928A_captr_status + 1 )++
-	cmp.b	#0x24,d0                         	| [cp   #0x24]
-	jeq	l_1A6A_ship_in_position            	| [jr   z,l_1A6A_ship_in_position]
+	jbsr	osd_break
+	addq.b	#1,(a0)                         	| [$1A4B: inc  (hl)] *( ds5_928A_captr_status + 1 )++
+	cmp.b	#0x24,d0                         	| [$1A4C: cp   #0x24]
+	jeq	l_1A6A_ship_in_position            	    | [$1A4E: jr   z,l_1A6A_ship_in_position]
 
 * set position increment +1 for inverted screen, otherwise -1
-	move.b	#1,d1                           	| [ld   b,#1]
-	btst.b	#0,d2                           	| [bit  0,c] C == flip_screen
-	jne	l_1A58                             	| [jr   nz,l_1A58]
-	subq.b	#2,d1                           	| [dec  b] * 2
+	move.b	#1,d1                           	| [$1A50: ld   b,#1]
+	btst.b	#0,d2                           	| [$1A52: bit  0,c] C == flip_screen
+	jne	l_1A58                             	    | [$1A54: jr   nz,l_1A58]
+	subq.b	#2,d1                           	| [$1A56: dec  b] * 2
 l_1A58:
 	moveq	#0,d6
-	move.b	d4,d6                           	| [ld   l,e] TODO value of A1 to compute D4????
-	addq.b	#1,d6                           	| [inc  l] set vertical position (odd-byte) [a0 coherence]
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	move.b	d4,d6                           	| [$1A58: ld   l,e]
+	addq.b	#1,d6                           	| [$1A59: inc  l] set vertical position (odd-byte) [a0 coherence]
+	lea	ds_sprite_posn_9300,a0              	| [$1A5A: ld   h,#>ds_sprite_posn_9300]
 	add.w	d6,a0
-	move.b	d1,d0                           	| [ld   a,b]
-	add.b	(a0),d0                          	| [add  a,(hl)]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	roxr.b	#1,d0                           	| [rra]
-	eor.b	d1,d0                            	| [xor  b]
-	rol.b	#1,d0                            	| [rlca]
+	move.b	d1,d0                           	| [$1A5C: ld   a,b]
+	add.b	(a0),d0                          	| [$1A5D: add  a,(hl)]
+	move.b	d0,(a0)                         	| [$1A5E: ld   (hl),a]
+	roxr.b	#1,d0                           	| [$1A5F: rra]
+	eor.b	d1,d0                            	| [$1A60: xor  b]
+	rol.b	#1,d0                            	| [$1A61: rlca]
 	bcs.b	0f                               	| [...]
-	rts                                    	| [ret  nc] [...]
+	rts                                    	    | [$1A62: ret  nc] [...]
 0:
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
+	lea	ds_sprite_ctrl_9B00,a0              	| [$1A63: ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	eor.b	#0x01,d0                         	| [xor  #0x01]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	rts                                    	| [ret]
+	move.b	(a0),d0                         	| [$1A65: ld   a,(hl)]
+	eor.b	#0x01,d0                         	| [$1A66: xor  #0x01]
+	move.b	d0,(a0)                         	| [$1A68: ld   (hl),a]
+	rts                                    	    | [$1A69: ret]
 
 l_1A6A_ship_in_position:
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x11       	| [ld   (ds_cpu0_task_actv_9000 + 0x11),a] 0: this task
+	move.b	d0,ds_cpu0_task_actv_9000+0x11      | [ld   (ds_cpu0_task_actv_9000 + 0x11),a] 0: this task
 	move.b	d0,b_9AA0+0x09                  	| [ld   (b_9AA0 + 0x09),a] 0: sound-fx count/enable registers
 
 	COMPUTE_LSB_A1_D4	ds_sprite_code_8B00		| extract offset from ds_sprite_code_8B00 to apply to 8800
-
-	lea	b_8800,a1                      	| [ld   d,#>b_8800]
+	lea	b_8800,a1                      	        | [ld   d,#>b_8800]
 	add.w	d4,a1
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,(a1)                         	| [ld   (de),a] 1: b_8800[n] (stand-by position)
@@ -4456,7 +4453,7 @@ l_1A6A_ship_in_position:
 	move.b	d0,ds_99B9_star_ctrl+0x00       	| [ld   (ds_99B9_star_ctrl + 0x00),a] 1: when fighter on screen
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,ds_9200_glbls+0x13           	| [ld   (ds_9200_glbls + 0x13),a] 2: restart-stage flag (fighter captured)
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 *=============================================================================
 * f_clone_attack_manager_1A80()
@@ -6504,68 +6501,63 @@ l_21C7:
 *-----------------------------------------------------------------------------
 f_boss_diving_down_to_capture_ship_21cb:
 * if ( HOMING == b_8800[ plyr_actv.captr_boss_id ] )
-	lea	ds_plyr_actv+_b_bmbr_boss_cobj,a0	| [ld   hl,#ds_plyr_actv +_b_bmbr_boss_cobj]
-	move.b	(a0),d4                         	| [ld   e,(hl)]
-	lea	b_8800,a1                      	| [ld   d,#>b_8800]
-	and.w	#0xFF,d4
-	add.w	d4,a1
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	cmp.b	#9,d0                            	| [cp   #9]
-	jne	l_221A                             	| [jr   nz,l_221A] exit
+	lea	ds_plyr_actv+_b_bmbr_boss_cobj,a0	    | [$21CB: ld   hl,#ds_plyr_actv +_b_bmbr_boss_cobj] = $9828
+	move.b	(a0),d4                             | [$21CE: ld   e,(hl)]
+	lea	b_8800,a1                      	        | [$21CF: ld   d,#>b_8800]
+	and.w	#0xFF,d4                            
+	add.w	d4,a1                               
+	move.b	(a1),d0                             | [$21D1: ld   a,(de)]
+	cmp.b	#9,d0                               | [$21D2: cp   #9]
+	jne	l_221A                             	    | [$21D4: jr   nz,l_221A] exit
 * ... then ...
-
+	move.w	#0xF00,0xDFF180
 * get the element of the bug_motion_que being used by this object. The byte-
 * offset of the element is stored by plyr_actv.b09
-	addq.w	#1,a0                           	| [inc  l] _b09_cboss_slot ... set by cpu-b as capturing boss starts dive
-
+	addq.w	#1,a0                           	| [$21D6: inc  l] _b09_cboss_slot ... set by cpu-b as capturing boss starts dive
 	moveq	#0,d0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	lea		ds_bug_motion_que_9100,a2           | [ld   ixl,a]
-                                                | [ld   ixh,>ds_bug_motion_que_9100]
-
-	add.w	d0,a2
-	
-	move.b	(0x0A,a2),d0                    	| [ld   a,0x0A(ix)] while !0, capture boss is diving
-	                               	            | [and  a]
+	move.b	(a0),d0                         	| [$21D7: ld   a,(hl)]
+	lea		ds_bug_motion_que_9100,a2           | [$21D8: ld   ixl,a]
+    add.w	d0,a2                               | [$21DA: ld   ixh,>ds_bug_motion_que_9100]
+	tst.b	(0x0A,a2)                    	    | [$21DD: ld   a,0x0A(ix)] while !0, capture boss is diving
+	                               	            | [$21E0: and  a]
 	beq.b	0f                               	| [...]
-	rts                                    	    | [ret  nz] [...]
+	rts                                    	    | [$21E1: ret  nz] [...]
 0:
-
-	move.b	#0x0C,d0                        	| [ld   a,#0x0C]
-	btst.b	#0,(0x05,a2)                    	| [bit  0,0x05(ix)] if set, negate (ix)0x0C ... capture boss nearly in position
-	jeq	l_21EC                             	| [jr   z,l_21EC]
-	neg.b	d0                               	| [neg]
+	move.b	#0x0C,d0                        	| [$21E2: ld   a,#0x0C]
+	btst.b	#0,(0x05,a2)                    	| [$21E4: bit  0,0x05(ix)] if set, negate (ix)0x0C ... capture boss nearly in position
+	jeq	l_21EC                             	    | [$21E8: jr   z,l_21EC]
+	neg.b	d0                               	| [$21EA: neg]
 l_21EC:
-	move.b	d0,(0x0C,a2)                    	| [ld   0x0C(ix),a] 12 or -12 if (ix)0x05:0 set
-	move.b	(0x05,a2),d0                    	| [ld   a,0x05(ix)]
-	ror.b	#1,d0                            	| [rrca]
+	move.b	d0,(0x0C,a2)                    	| [$21EC: ld   0x0C(ix),a] 12 or -12 if (ix)0x05:0 set
+	move.b	(0x05,a2),d0                    	| [$21EF: ld   a,0x05(ix)]
+	ror.b	#1,d0                            	| [$21F2: rrca]
 	SET_X_FROM_C
-	move.b	(0x04,a2),d0                    	| [ld   a,0x04(ix)]
-	roxr.b	#1,d0                           	| [rra]
-	sub.b	#0x78,d0                         	| [sub  #0x78]
-	cmp.b	#0x10,d0                         	| [cp   #0x10]
+	move.b	(0x04,a2),d0                    	| [$21F3: ld   a,0x04(ix)]
+	roxr.b	#1,d0                           	| [$21F6: rra]
+	sub.b	#0x78,d0                         	| [$21F7: sub  #0x78]
+	cmp.b	#0x10,d0                         	| [$21F9: cp   #0x10]
 	bcs.b	0f                               	| [...]
-	rts                                    	| [ret  nc] [...]
+	rts                                    	    | [$21FB: ret  nc] [...]
 0:
 
 * in position
-	move.b	ds_new_stage_parms_99c0+0x06,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x06)] plyr_state_actv[0x0A] ... ship capture status
-	move.b	d0,ds_plyr_actv+_b_captr_flag   	| [ld   (ds_plyr_actv +_b_captr_flag),a] new_stage_parms[ 6 ]
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,(0x0C,a2)                    	| [ld   0x0C(ix),a] 0
-	move.b	d0,ds_cpu0_task_actv_9000+0x19       	| [ld   (ds_cpu0_task_actv_9000 + 0x19),a] 0 (f_boss_diving_down_to_capture_ship_21cb)
-	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 0
-	move.b	d0,ds_9200_glbls+0x0D           	| [ld   (ds_9200_glbls + 0x0D),a] 0
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x18       	| [ld   (ds_cpu0_task_actv_9000 + 0x18),a] 1 (f_boss_starts_tractor_beam_2222 ... Boss starts tractor beam)
-	move.b	d0,ds5_928A_captr_status+0x02   	| [ld   (ds5_928A_captr_status + 0x02),a] 1
-	move.b	d0,ds5_928A_captr_status+0x03   	| [ld   (ds5_928A_captr_status + 0x03),a] 1
-	rts                                    	| [ret]
+	move.b	ds_new_stage_parms_99c0+0x06,d0     | [$21FC: ld   a,(ds_new_stage_parms_99c0 + 0x06)] plyr_state_actv[0x0A] ... ship capture status
+	move.b	d0,ds_plyr_actv+_b_captr_flag   	| [$21FF: ld   (ds_plyr_actv +_b_captr_flag),a] new_stage_parms[ 6 ]
+	clr.b	d0                               	| [$2202: xor  a]
+	move.b	d0,(0x0C,a2)                    	| [$2203: ld   0x0C(ix),a] 0
+	move.b	d0,ds_cpu0_task_actv_9000+0x19      | [$2206: ld   (ds_cpu0_task_actv_9000 + 0x19),a] 0 (f_boss_diving_down_to_capture_ship_21cb)
+	move.b	d0,ds5_928A_captr_status+0x01   	| [$2209: ld   (ds5_928A_captr_status + 0x01),a] 0
+	move.b	d0,ds_9200_glbls+0x0D           	| [$220C: ld   (ds_9200_glbls + 0x0D),a] 0
+	addq.b	#1,d0                           	| [$220F: inc  a]
+	move.b	d0,ds_cpu0_task_actv_9000+0x18      | [$2210: ld   (ds_cpu0_task_actv_9000 + 0x18),a] 1 (f_boss_starts_tractor_beam_2222 ... Boss starts tractor beam)
+	move.b	d0,ds5_928A_captr_status+0x02   	| [$2213: ld   (ds5_928A_captr_status + 0x02),a] 1
+	move.b	d0,ds5_928A_captr_status+0x03   	| [$2216: ld   (ds5_928A_captr_status + 0x03),a] 1
+	rts                                    	    | [$2219: ret]
 l_221A:
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x19       	| [ld   (ds_cpu0_task_actv_9000 + 0x19),a] 0 (f_boss_diving_down_to_capture_ship_21cb)
-	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
-	rts                                    	| [ret]
+	clr.b	d0                               	| [$221A: xor  a]
+	move.b	d0,ds_cpu0_task_actv_9000+0x19      | [$221B: ld   (ds_cpu0_task_actv_9000 + 0x19),a] 0 (f_boss_diving_down_to_capture_ship_21cb)
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [$221E: ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
+	rts                                    	    | [$2221: ret]
 * end 21CB
 
 *=============================================================================
@@ -6583,7 +6575,7 @@ f_boss_starts_tractor_beam_2222:
 	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)] frame_ct%4 ... (provides 15Hz timer)
 	move.b	d0,d2                           	| [ld   c,a]
 	and.b	#0x03,d0                         	| [and  #0x03]
-	jne	l_2257                             	| [jr   nz,l_2257]
+	jne	l_2257                             	    | [jr   nz,l_2257]
 *  else
 	move.b	ds5_928A_captr_status+0x00,d0   	| [ld   a,(ds5_928A_captr_status + 0x00)] beam started
 	neg.b	d0                               	| [neg]
@@ -6607,18 +6599,19 @@ l_2246:
 	add.b	#0x17,d0                         	| [add  a,#0x17]
 	move.w	#0x0016,d3                      	| [ld   de,#0x0016] 22
 	move.b	#6,d2                           	| [ld   c,#6]
+	LOAD_D5_16_FROM_D5D6
 l_224D:
 	move.b	#0x0A,d1                        	| [ld   b,#0x0A]
-	illegal		| d5/d6 from RAM => convert to A0
+	move.w	d5,d7
 l_224F:
-	move.b	d0,(a0)+                         	| [ld   (hl),a]
-	                           	| [inc  l]
+	jbsr	osd_w_colorram                     	| [ld   (hl),a]
+	addq.w	#1,d7              	                | [inc  l]
 	subq.b	#1,d1                           	| [...]
-	jne	l_224F                             	| [djnz l_224F]
+	jne	l_224F                             	    | [djnz l_224F]
 
-	add.w	d3,a0                            	| [add  hl,de]
+	add.w	d3,d7                            	| [add  hl,de]
 	subq.b	#1,d2                           	| [dec  c]
-	jne	l_224D                             	| [jr   nz,l_224D]
+	jne	l_224D                             	    | [jr   nz,l_224D]
 
 l_2257:
 	lea	ds5_928A_captr_status+0x01,a0  	| [ld   hl,#ds5_928A_captr_status + 0x01] check bit 7
@@ -6744,7 +6737,7 @@ l_22E3:
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] 1 ... why 1?
 	move.b	d0,(a1)                         	| [ld   (de),a] bug_flite_que[plyr.cboss_slot].b0D = 1 ... token expiration on next step
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 * ... else ... (connected with ship)
 l_2305:

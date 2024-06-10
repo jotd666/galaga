@@ -1404,7 +1404,7 @@ l_0852:
 * captured ship is diving
 
 	movem.l	a0/d6,-(sp)                        	| [push hl] stash the boss object locator e.g. b_8830
-	exg	a1,a0                              		| 	[ex   de,hl] HL := &sprt_mctl_objs[ ].b0
+	exg	a1,a0                              		| [ex   de,hl] HL := &sprt_mctl_objs[ ].b0
 	addq.w	#1,a0                           	| [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)] sprt_mctl_objs[ HL ].mctl_idx
 	add.b	#0x13,d0                         	| [add  a,#0x13] mctl_mpool[n].b13
@@ -2043,9 +2043,9 @@ case_0B4E:  | 0x03
 	addq.w	#1,a0                           	| [$0B4E: inc  hl] ptr to data table
 	move.b	(a0)+,d4                         	| [$0B4F: ld   e,(hl)]
 	                                         	| [$0B50: inc  hl]
-	move.b	d4,(mq_home_position_y_06,a2)                    	| [$0B51: ld   0x06(ix),e] origin home position y (bits 15:8)
-	clr.b	(mq_home_position_x_07,a2)                        	| [$0B54: ld   0x07(ix),#0] origin home position x (bits 15:8)
-	bset.b	#5,(mq_state_13,a2)                    	| [$0B58: set  5,0x13(ix)] bee or boss dive
+	move.b	d4,(mq_home_position_y_06,a2)       | [$0B51: ld   0x06(ix),e] origin home position y (bits 15:8)
+	clr.b	(mq_home_position_x_07,a2)          | [$0B54: ld   0x07(ix),#0] origin home position x (bits 15:8)
+	bset.b	#5,(mq_state_13,a2)                 | [$0B58: set  5,0x13(ix)] bee or boss dive
 	CONVERT_SUBROM_A0_TO_D5D6
 	jra	l_flite_pth_skip_load_0BFF         	    | [$0B5C: jp   l_flite_pth_skip_load_0BFF] save pointer and goto _flite_pth_cont
 
@@ -2122,8 +2122,8 @@ l_0BB4:
 	roxl.b	#1,d2                           	| [$0BB8: rl   c]
 	asl.b	#1,d0                            	| [$0BBA: sla  a]
 	roxl.b	#1,d2                           	| [$0BBC: rl   c]
-	move.b	d0,(mq_angle_lsb_04,a2)                    	| [$0BBE: ld   0x04(ix),a]
-	move.b	d2,(mq_angle_msb_05,a2)                    	| [$0BC1: ld   0x05(ix),c]
+	move.b	d0,(mq_angle_lsb_04,a2)            	| [$0BBE: ld   0x04(ix),a]
+	move.b	d2,(mq_angle_msb_05,a2)            	| [$0BC1: ld   0x05(ix),c]
 	move.b	#0x1E,(0x0E,a2)                 	| [$0BC4: ld   0x0E(ix),#0x1E] bomb drop counter
 	move.b	b_92C0+0x08,d0                  	| [$0BC8: ld   a,(b_92C0 + 0x08)] bomb drop enable flags
 	move.b	d0,(0x0F,a2)                    	| [$0BCB: ld   0x0F(ix),a] b_92C0[$08] ... bomb drop enable flags
@@ -2157,14 +2157,14 @@ l_flite_pth_load_0BDC:
 	move.b	d0,(0x0B,a2)                    	| [$0BEA: ld   0x0B(ix),a] hi-nibble (right shifted into bits<0:3>
 	move.b	(a0)+,d0                         	| [$0BED: ld   a,(hl)] data[ n + 1 ] ... to (ix)0x0C
 												| [$0BEE: inc  hl]
-	btst.b	#7,(mq_state_13,a2)                    	| [$0BEF: bit  7,0x13(ix)] if set then negate data to (ix)0x0C
+	btst.b	#7,(mq_state_13,a2)                 | [$0BEF: bit  7,0x13(ix)] if set then negate data to (ix)0x0C
 	jeq	l_0BF7                             		| [$0BF3: jr   z,l_0BF7]
 	neg.b	d0                               	| [$0BF5: neg]
 l_0BF7:
 	move.b	d0,(0x0C,a2)                    	| [$0BF7: ld   0x0C(ix),a]
 	move.b	(a0)+,d0                         	| [$0BFA: ld   a,(hl)] data[ n + 2 ] ... to (ix)0x0D
 												| [$0BFB: inc  hl]
-	move.b	d0,(mq_timeout_0d,a2)                    	| [$0BFC: ld   0x0D(ix),a] expiration counter from data[ n + 2 ]
+	move.b	d0,(mq_timeout_0d,a2)               | [$0BFC: ld   0x0D(ix),a] expiration counter from data[ n + 2 ]
 	CONVERT_SUBROM_A0_TO_D5D6
 	
 l_flite_pth_skip_load_0BFF:
@@ -2180,39 +2180,39 @@ l_0C05_flite_pth_cont:
 * transitions to the next segment of the flight pattern
 * if (    (b01==b06 || (b01-b06)==1|| (b06-b01)==1)
 *      && (b03==b07 || (b03-b07)==1|| (b07-b03)==1) ) ...
-	move.b	(mq_y_01,a2),d0                 | [$0C0B: ld   a,0x01(ix)]
-	sub.b	(mq_home_position_y_06,a2),d0   | [$0C0E: sub  0x06(ix)] (ix)0x01 - (ix)0x06
-	jeq	l_0C1B                             	| [$0C11: jr   z,l_0C1B]
-	jpl	l_0C18                             	| [$0C13: jp   p,l_0C18] check overflow
-	neg.b	d0                              | [$0C16: neg] negate if overflow (gets absolute value)
-l_0C18:
-	subq.b	#1,d0                           | [$0C18: dec  a]
-	jne	l_0C2D_flite_pth_step              	| [$0C19: jr   nz,l_0C2D_flite_pth_step]
-l_0C1B:
-	move.b	(mq_x_03,a2),d0                    | [$0C1B: ld   a,0x03(ix)] detection of homespot... (ix)0x03-(ix)0x07 == 0
-	sub.b	(mq_home_position_x_07,a2),d0                    | [$0C1E: sub  0x07(ix)] detection of homespot... (ix)0x03-(ix)0x07 == 0
-	jeq	l_0E08_imhome                      	| [$0C21: jp   z,l_0E08_imhome]
-	jpl	l_0C29                             	| [$0C24: jp   p,l_0C29] check overflow
-	neg.b	d0                              | [$0C27: neg] negate if overflow (gets absolute value)
-l_0C29:
-	subq.b	#1,d0                           | [$0C29: dec  a]
-	jeq	l_0E08_imhome                      	| [$0C2A: jp   z,l_0E08_imhome]
+	move.b	(mq_y_01,a2),d0                       | [$0C0B: ld   a,0x01(ix)]
+	sub.b	(mq_home_position_y_06,a2),d0         | [$0C0E: sub  0x06(ix)] (ix)0x01 - (ix)0x06
+	jeq	l_0C1B                                   	| [$0C11: jr   z,l_0C1B]
+	jpl	l_0C18                                   	| [$0C13: jp   p,l_0C18] check overflow
+	neg.b	d0                                    | [$0C16: neg] negate if overflow (gets absolute value)
+l_0C18:                                          
+	subq.b	#1,d0                                 | [$0C18: dec  a]
+	jne	l_0C2D_flite_pth_step                    	| [$0C19: jr   nz,l_0C2D_flite_pth_step]
+l_0C1B:                                          
+	move.b	(mq_x_03,a2),d0                       | [$0C1B: ld   a,0x03(ix)] detection of homespot... (ix)0x03-(ix)0x07 == 0
+	sub.b	(mq_home_position_x_07,a2),d0         | [$0C1E: sub  0x07(ix)] detection of homespot... (ix)0x03-(ix)0x07 == 0
+	jeq	l_0E08_imhome                            	| [$0C21: jp   z,l_0E08_imhome]
+	jpl	l_0C29                                   	| [$0C24: jp   p,l_0C29] check overflow
+	neg.b	d0                                    | [$0C27: neg] negate if overflow (gets absolute value)
+l_0C29:                                          
+	subq.b	#1,d0                                 | [$0C29: dec  a]
+	jeq	l_0E08_imhome                            	| [$0C2A: jp   z,l_0E08_imhome]
 
 
 l_0C2D_flite_pth_step:
 * if ( b13 & 0x20 && ( b01 == b06 || (b01 - b06) == 1|| (b06 - b01) == 1 ) ...
-	btst.b	#5,(mq_state_13,a2)                    | [$0C2D: bit  5,0x13(ix)] check if bee or boss dive
-	jeq	l_0C46                             	| [$0C31: jr   z,l_0C46]
-	move.b	(mq_y_01,a2),d0                    | [$0C33: ld   a,0x01(ix)] 0C33 boss: launched out of position, bee movement, 0x01(ix) counting down
-	sub.b	(mq_home_position_y_06,a2),d0                    | [$0C36: sub  0x06(ix)] origin home position y (bits 15:8)
-	jeq	l_0C3E                             	| [$0C39: jr   z,l_0C3E]
-	addq.b	#1,d0                           | [$0C3B: inc  a]
-	jne	l_0C46                             	| [$0C3C: jr   nz,l_0C46]
+	btst.b	#5,(mq_state_13,a2)                  | [$0C2D: bit  5,0x13(ix)] check if bee or boss dive
+	jeq	l_0C46                             	     | [$0C31: jr   z,l_0C46]
+	move.b	(mq_y_01,a2),d0                      | [$0C33: ld   a,0x01(ix)] 0C33 boss: launched out of position, bee movement, 0x01(ix) counting down
+	sub.b	(mq_home_position_y_06,a2),d0        | [$0C36: sub  0x06(ix)] origin home position y (bits 15:8)
+	jeq	l_0C3E                             	     | [$0C39: jr   z,l_0C3E]
+	addq.b	#1,d0                                | [$0C3B: inc  a]
+	jne	l_0C46                             	     | [$0C3C: jr   nz,l_0C46]
 * ... then ...
 l_0C3E:
 * set it up to expire on next step
-	move.b	#1,(mq_timeout_0d,a2)                    | [$0C3E: ld   0x0D(ix),#1] bee dived down and begins loop around, boss reached position to start beam
-	bclr.b	#5,(mq_state_13,a2)                    | [$0C42: res  5,0x13(ix)] (ix)0x0D == 1
+	move.b	#1,(mq_timeout_0d,a2)               | [$0C3E: ld   0x0D(ix),#1] bee dived down and begins loop around, boss reached position to start beam
+	bclr.b	#5,(mq_state_13,a2)                 | [$0C42: res  5,0x13(ix)] (ix)0x0D == 1
 
 * advance the rotation angle. Step-size in .b0C and 10-bit angle in .b04+.b05
 *               90          - angle in degrees

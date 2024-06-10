@@ -431,13 +431,19 @@ if True:
 
                     if sprconf["double_wh"]:
                         img_new = Image.new("RGB",(32,32))
-                        for sx in range(0,20,10):
-                            for sy in range(0,32,16):
-                                for x in range(0,16):
-                                    for y in range(0,16):
-                                        p = img.getpixel((x,y))
-                                        if p != (0,0,0):
-                                            img_new.putpixel((x+sx,y+sy),p)
+                        others = iter([img]+[generate_16x16_image(cidx,block_dict["sprite"]["data"][k2],sprite_config.get(k)) for k2 in range(k+1,k+4)])
+
+                        img_new.paste(next(others),(16,0))
+                        img_new.paste(next(others),(16,16))
+                        img_new.paste(next(others),(0,0))
+                        img_new.paste(next(others),(0,16))
+
+
+
+                        if dump_sprites:
+                            scaled = ImageOps.scale(img_new,2,0)
+                            scaled.save(os.path.join(dump_sprites_dir,f"{name}_{cidx}_DOUBLE.png"))
+
                         img_to_raw = img_new
 
                     for mirrored in range(2):
