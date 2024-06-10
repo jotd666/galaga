@@ -1,11 +1,11 @@
-- level 2: wrong flight path, but maybe needs masking, check MAME
-- implement level start / level skip
+- implement level skip & other trainer
 - ship explosion: double size is wrong
 - capture ship doesn't capture
 - first level second wave: one boss does something different (init issue?)
 - shoots all both missiles immediately (main: 1766), demo AND in-game
 - demo: boss explosions: some frames shifted
 - enemy bombs: sometimes stop!
+- challenge stage: wrong enemy shot count
 - start game screen: all extra ship scores are 00000
 - 2 first rows not shown (attribute/color is black!!!)
 - player lives: 5 lives??? dip switch issue and wrong colors

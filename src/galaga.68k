@@ -8105,7 +8105,12 @@ l_29DC:
 * rld (hl): Performs a 4-bit leftward rotation of the 12-bit number whose
 * 4 most significant bits are the 4 least significant bits of A
 	clr.b	d0                               	| [$29EA: xor  a]
+	* BUT (a0) points to ROM in the original game. We don't want to change
+	* the value, so we back it up and restore it afterwards
+	* (this could act as a pretty efficient protection against bootlegs!)
+	move.b	(a0),d1
 	jbsr	rld                               	| [$29EB: rld]
+	move.b	d1,(a0)
 	move.b	d0,d1                           	| [$29ED: ld   b,a]
 
 * ds_bug_move_queue[IX].b09  = db_word_address_table_2a3c[C + 1] & 0x1F ... MSB of data pointer
@@ -10829,7 +10834,11 @@ c_sctrl_playfld_clr_0160:
 *-----------------------------------------------------------------------------
 stg_init_splash_0185:
 * plyr_state_active.stage_ctr++
-	lea	ds_plyr_actv+_b_stgctr,a0      	        | [$0185: ld   hl,#ds_plyr_actv +_b_stgctr] ++ ($9821)
+	lea	ds_plyr_actv+_b_stgctr,a0      	        | [$0185: ld   hl,#ds_plyr_actv +_b_stgctr] ++ ($9821)	
+	tst.b	(a0)
+	bne		0f
+	move.b	start_level,(a0)
+0:
 	addq.b	#1,(a0)                         	| [$0188: inc  (hl)]
 
 * plyr_state_active.not_chllng_stg = *HL & 0x03  ... gives 0 for challenge stage

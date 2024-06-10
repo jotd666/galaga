@@ -60,7 +60,6 @@ stack_top:
 
 log_ptr:
 	dc.l	0x100
-	
 invincible_flag:
 	.byte	0
 infinite_lives_flag:
