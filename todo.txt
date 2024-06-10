@@ -1,10 +1,10 @@
 - implement level skip & other trainer
+- level 4: wrong traj (after mutating aliens?): EA04
 - ship explosion: double size is wrong
 - capture ship doesn't capture
 - first level second wave: one boss does something different (init issue?)
 - shoots all both missiles immediately (main: 1766), demo AND in-game
 - demo: boss explosions: some frames shifted
-- enemy bombs: sometimes stop!
 - challenge stage: wrong enemy shot count
 - start game screen: all extra ship scores are 00000
 - 2 first rows not shown (attribute/color is black!!!)

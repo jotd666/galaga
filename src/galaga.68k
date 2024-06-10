@@ -915,7 +915,11 @@ plyr_respawn_rdy:
 *-----------------------------------------------------------------------------
 gctl_chllng_stg_end:
 
-	move.b	b_bug_flyng_hits_p_round,d0     	| [ld   a,(b_bug_flyng_hits_p_round)]
+	move.b	b_bug_flyng_hits_p_round_9288,d0     	| [ld   a,(b_bug_flyng_hits_p_round_9288)]
+	tst.b	perfect_challenge_stage_flag
+	jeq		0f
+	move.b	#40,d0
+0:
 	move.b	d0,d4                           	| [ld   e,a]
 
 	lea	b_9AA0+0x0E,a0                 	| [ld   hl,#b_9AA0 + 0x0E] sound-fx count/enable registers, default melody for challenge stage
@@ -940,8 +944,8 @@ l_065E:
 
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 
-* if (0x40 != b_bug_flyng_hits_p_round) ...
-	move.b	b_bug_flyng_hits_p_round,d0     	| [ld   a,(b_bug_flyng_hits_p_round)] if 40
+* if (0x40 != b_bug_flyng_hits_p_round_9288) ...
+	move.b	b_bug_flyng_hits_p_round_9288,d0     	| [ld   a,(b_bug_flyng_hits_p_round_9288)] if 40
 	cmp.b	#40,d0                           	| [cp   #40]
 	jeq	l_0699_special_bonus               	| [jr   z,l_0699_special_bonus]
 * then ...
@@ -952,8 +956,8 @@ l_065E:
 
 	exg	a1,a0                              	| [ex   de,hl] DE = HL
 
-* if (0 != b_bug_flyng_hits_p_round) ...
-	move.b	b_bug_flyng_hits_p_round,d0     	| [ld   a,(b_bug_flyng_hits_p_round)] if !0
+* if (0 != b_bug_flyng_hits_p_round_9288) ...
+	move.b	b_bug_flyng_hits_p_round_9288,d0     	| [ld   a,(b_bug_flyng_hits_p_round_9288)] if !0
 	                               	| [and  a]
 	jeq	l_0693_put_ones                    	| [jr   z,l_0693_put_ones]
 * then ...
@@ -967,7 +971,7 @@ l_065E:
 
 l_0693_put_ones:
 	jbsr	write_videoram_to_a1                         	| [ld   (de),a] putc(0) ... 1's place of bonus pts awarded
-	move.b	b_bug_flyng_hits_p_round,d0     	| [ld   a,(b_bug_flyng_hits_p_round)]
+	move.b	b_bug_flyng_hits_p_round_9288,d0     	| [ld   a,(b_bug_flyng_hits_p_round_9288)]
 	jra	l_06BA                             	| [jr   l_06BA]
 
 l_0699_special_bonus:
@@ -5599,37 +5603,37 @@ d_1E64_bitmap_tables:
 f_bomb_position_updater_1ea4:
 * Determine y-increment: each frame alternates 2 or 3 pixels-per-frame
 * increment to provide the average Y velocity, and negated for inverted screen.
-	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
-	and.b	#0x01,d0                         	| [and  #0x01]
-	addq.b	#2,d0                           	| [add  a,#2]
-	move.b	d0,d1                           	| [ld   b,a]
-	                               	| [and  a]
-	move.b	d1,d0                           	| [ld   a,b]
-	tst.b	b_9215_flip_screen           	| [ld   a,(b_9215_flip_screen)]
-	jeq	l_1EB5                             	| [jr   z,l_1EB5]
-	neg.b	d0                               	| [neg]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [$1EA4: ld   a,(ds3_frame_cts_92A0 + 0)]
+	and.b	#0x01,d0                         	| [$1EA7: and  #0x01]
+	addq.b	#2,d0                           	| [$1EA9: add  a,#2]
+	move.b	d0,d1                           	| [$1EAB: ld   b,a]
+	                               	            | [$1EAC: and  a]
+	move.b	d1,d0                           	| [$1EAF: ld   a,b]
+	tst.b	b_9215_flip_screen           	    | [$1EB0: ld   a,(b_9215_flip_screen)]
+	jeq	l_1EB5                             	    | [$1EB1: jr   z,l_1EB5]
+	neg.b	d0                               	| [$1EB3: neg]
 
 l_1EB5:
-	move.b	d0,ixh			| [ld   ixh,a]
+	move.b	d0,ixh			                    | [ld   ixh,a]
 	move.b	#0x68,d6                        	| [ld   l,#0x68] offset into object group for missiles
-	lea	b_92B0,a1                 	| [ld   de,#b_92B0 + 0x00] bomb h-rate array ( 8 * 2 )
-	move.b	#8,ixl			| [ld   ixl,0x08]
+	lea	b_92B0,a1                 	            | [ld   de,#b_92B0 + 0x00] bomb h-rate array ( 8 * 2 )
+	move.b	#8,ixl			                    | [ld   ixl,0x08]
 
 l_1EBF_while:
 * if sprite[bomb + n].code == $30 ...
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
+	lea	ds_sprite_code_8B00,a0              	| [$1EBF: ld   h,#>ds_sprite_code_8B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	cmp.b	#0x30,d0                         	| [cp   #0x30] bomb sprite codes don't show up until some new-game inits are done
-	jne	l_1EFF                             	| [jr   nz,l_1EFF]
+	move.b	(a0),d0                         	| [$1EC1: ld   a,(hl)]
+	cmp.b	#0x30,d0                         	| [$1EC2: cp   #0x30] bomb sprite codes don't show up until some new-game inits are done
+	jne	l_1EFF                             	    | [$1EC4: jr   nz,l_1EFF]
 * ... sprite[bomb + n].posn.x != 0
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	lea	ds_sprite_posn_9300,a0              	| [$1EC6: ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	| [and  a]
-	jeq	l_1EFF                             	| [jr   z,l_1EFF]
+	move.b	(a0),d0                         	| [$1EC8: ld   a,(hl)]
+	                               	            | [$1EC9: and  a]
+	jeq	l_1EFF                             	    | [$1ECA: jr   z,l_1EFF]
 
 * Fun fixed point math: X rate in 92B0[ even ] has a scale factor of
 * 32-counts -> 1 pixel-per-frame. Each frame, the (unchanging) dividend
@@ -5639,16 +5643,16 @@ l_1EBF_while:
 * to the offset every nth frame. Easy peasy!
 * BTW there really is odd values in 92B0, but we just seem to not care about it i.e. mask 7E.
 
-	exg	a1,a0                              	| [ex   de,hl] stash &sprite_posn[n].b0 in DE
+	exg	a1,a0                              	    | [ex   de,hl] stash &sprite_posn[n].b0 in DE
 	move.b	(a0)+,d1                         	| [ld   b,(hl)] bomb_rate[n].b0
 	move.b	d1,d0                           	| [ld   a,b]
 	and.b	#0x7E,d0                         	| [and  #0x7E] Bit-7 for negative ... and we don't want the 1 ???
-	                           	| [inc  l]
+	                                        	| [inc  l]
 	add.b	(a0),d0                          	| [add  a,(hl)]
 	move.b	d0,d2                           	| [ld   c,a] C = A = A + 92B0[odd] ... accumulated division remainder
 	and.b	#0x1F,d0                         	| [and  #0x1F] MOD 32
 	move.b	d0,(a0)+                         	| [ld   (hl),a] bomb_rate[n].b1
-	                           	| [inc  l]
+	                                        	| [inc  l]
 * a >>= 5 (divide-by-32)
 	move.b	d2,d0                           	| [ld   a,c]
 	rol.b	#3,d0                            	| [rlca] * 3
@@ -5666,7 +5670,7 @@ l_1EE4:
 	move.b	d0,(a0)+                         	| [ld   (hl),a] 9868[ even ] += A
 
 * update Y, and handle Cy for value > $ff
-	                          	| [inc  l]
+	                                        	| [inc  l]
  	move.b	(a0),d0                         	| [ld   a,(hl)]
 	add.b	ixh,d0                           	| [add  a,ixh]
 	move.b	d0,(a0)                         	| [ld   (hl),a] sprite[n].y<7:0> += ixh
@@ -5674,33 +5678,32 @@ l_1EE4:
 	roxr.b	#1,d0                           	| [rra] shifts CY into bit-7 on overflow from addition
 	move.b	ixh,d7
 	eor.b	d7,d0                            	| [xor  ixh]
+	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 	rol.b	#1,d0                            	| [rlca] Cy xor'd with ixh<7> ... to Cy
-	jcc	l_1EF9                             	| [jr   nc,l_1EF9]
+	jcc	l_1EF9                             	    | [jr   nc,l_1EF9]
 
 * update "bit-8" of Y coordinate ... should only overflow the Y coordinate once.
-	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] sY<8>
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d7
-	ror.b	#1,d7                          	| [rrc  (hl)] sY<8> into Cy
-	INVERT_XC_FLAGS                        	| [ccf]
-	roxl.b	#1,d7                         	| [rl   (hl)] sY<8>
+	ror.b	#1,d7                          	    | [rrc  (hl)] sY<8> into Cy
+	INVERT_XC_FLAGS                        	    | [ccf]
+	roxl.b	#1,d7                         	    | [rl   (hl)] sY<8>
 	move.b	d7,(a0)
 l_1EF9:
 	*addq.w	#1,a0                           	| [inc  l]
 	addq.w	#1,d6                           	| [inc  l]  [a0 coherence]
 
 	subq.b	#1,ixl                          	| [dec  ixl]
-	jne	l_1EBF_while                       	| [jr   nz,l_1EBF_while]
-
-	rts                                    	| [ret]
+	jne	l_1EBF_while                       	    | [jr   nz,l_1EBF_while]
+	rts                                    	    | [ret]
 
 l_1EFF:
 	*addq.w	#1,a0                           	| [inc  l]
 	addq.w	#1,d6                           	| [inc  l] [a0 coherence]
-	addq.w	#2,a1                           	| [inc  e]
-	jra	l_1EF9                             	| [jr   l_1EF9]
+	addq.w	#2,a1                           	| [inc  e] * 2
+	jra	l_1EF9                             	    | [jr   l_1EF9]
 
 *=============================================================================
 * f_read_fire_button_1f04()
@@ -10925,7 +10928,7 @@ l_01DF:
 	move.b	d0,ds_cpu0_task_actv_9000+0x09      | [$01E4: ld   (ds_cpu0_task_actv_9000 + 0x09),a] 0  (f_pulsating_swarm_movement_1de6 ... collective bug movement)
 	move.b	d0,ds_cpu0_task_actv_9000+0x10      | [$01E7: ld   (ds_cpu0_task_actv_9000 + 0x10),a] 0  (f_manage_bomber_attacks_1b65 ... manage bomber attack )
 	move.b	d0,ds_cpu0_task_actv_9000+0x04      | [$01EA: ld   (ds_cpu0_task_actv_9000 + 0x04),a] 0  (f_clone_attack_manager_1A80 ... bonus-bee manager)
-	move.b	d0,b_bug_flyng_hits_p_round     	| [$01ED: ld   (b_bug_flyng_hits_p_round),a] 0
+	move.b	d0,b_bug_flyng_hits_p_round_9288     	| [$01ED: ld   (b_bug_flyng_hits_p_round_9288),a] 0
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_wingm	| [$01F0: ld   (ds_plyr_actv +_b_bmbr_boss_wingm),a] 0: bomber boss wingman-enable will toggle to 1 on first boss-bomber launch
 	move.b	d0,ds_plyr_actv+_b_bbee_tmr     	| [$01F3: ld   (ds_plyr_actv +_b_bbee_tmr),a] 0: bonus bee launch timer
 	move.b	d0,ds_plyr_actv+_b_atk_wv_enbl  	| [$01F6: ld   (ds_plyr_actv +_b_atk_wv_enbl),a] 0: attack_wave_enable

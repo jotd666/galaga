@@ -1339,7 +1339,7 @@ l_hdl_flyng_bug_081e:
 	move.b	d0,d6                           	| [$0828: ld   l,a]
 	add.w	d6,a0
 	clr.b	(a0)                             	| [$0829: ld   (hl),#0]
-	lea	b_bug_flyng_hits_p_round,a0    			| [$082B: ld   hl,#b_bug_flyng_hits_p_round] +=1
+	lea	b_bug_flyng_hits_p_round_9288,a0    			| [$082B: ld   hl,#b_bug_flyng_hits_p_round_9288] +=1
 	addq.b	#1,(a0)                         	| [$082E: inc  (hl)]
 
 * bug_flying_hit_cnt is probably only meaningful in challenge rounds. In other

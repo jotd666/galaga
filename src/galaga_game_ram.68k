@@ -142,7 +142,7 @@
 	.global		pdb_demo_fghtrvctrs_9282
 	.global		b_bugs_flying_cnt
 	.global		b_bugs_flying_nbr_9287
-	.global		b_bug_flyng_hits_p_round
+	.global		b_bug_flyng_hits_p_round_9288
 	.global		b_bug_que_idx_9289
 	.global		ds5_928A_captr_status
 	.global		ds_bug_collsn_hit_mult
@@ -456,7 +456,7 @@ b_bugs_flying_cnt:
 b_bugs_flying_nbr_9287:
        ds.b     0x01       | nbr of flying pests in flite-q (previous frame)
 
-b_bug_flyng_hits_p_round:
+b_bug_flyng_hits_p_round_9288:
        ds.b     0x01
 b_bug_que_idx_9289:
        ds.b     0x01       | cpu1:f_08D3 local loop counter

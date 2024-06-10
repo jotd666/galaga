@@ -129,7 +129,7 @@ add_sprite_block(0x8,0x10,"boss_ship",[0,1,10],mirror=True)   # 10: yellow when 
 add_sprite_block(0,0x8,"ship",9) #,sprite_type=ST_HW_SPRITE)
 add_sprite_block(0,0x8,"ship",2)
 add_sprite_block(0x10,0x18,"red_bee",[2,0xA],mirror=True)
-add_sprite_block(0x18,0x20,"blue_bee",[3,0xA],mirror=True)
+add_sprite_block(0x18,0x20,"blue_bee",[3,0xA,0x5],mirror=True)
 add_sprite_block(0x50,0x57,"mutant_galaxian_boss",4,sprite_type=ST_HW_SPRITE,mirror=True)
 add_sprite_block(0x58,0x5F,"mutant_scorpion",5,sprite_type=ST_HW_SPRITE,mirror=True)
 add_sprite_block(0x60,0x67,"mutant_green",6,sprite_type=ST_HW_SPRITE,mirror=True)

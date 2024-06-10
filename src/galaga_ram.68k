@@ -1,6 +1,7 @@
 	.global	bg_videoram
 	.global	bg_colorram
 	.global infinite_lives_flag
+	.global perfect_challenge_stage_flag
 	.global invincible_flag
 	.global start_level
 	.global vb_ticks_count
@@ -64,7 +65,7 @@ invincible_flag:
 	.byte	0
 infinite_lives_flag:
 	.byte	0
-no_intermissions_flag:
+perfect_challenge_stage_flag:
 	.byte	0
 vb_ticks_count:
 	.byte	0
