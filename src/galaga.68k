@@ -1936,23 +1936,23 @@ l_0A2C:
 	                           	| [inc  e]
 *  if ( char != $24 ) goto 0a33  // if space, then a:=0
 	cmp.b	#0x24,d0                         	| [cp   #0x24] space character
-	jne	l_0A33                             	| [jr   nz,l_0A33]
+	jne	l_0A33                             	    | [jr   nz,l_0A33]
 	clr.b	d0                               	| [xor  a]
 l_0A33:
 	jbsr	rrd                               	| [rrd]
 	btst.b	#0,d1                           	| [bit  0,b]
-	jne	l_0A3A                             	| [jr   nz,l_0A3A]
+	jne	l_0A3A                             	    | [jr   nz,l_0A3A]
 	subq.w	#1,a0                           	| [dec  l]
 l_0A3A:
 	subq.b	#1,d1                           	| [...]
-	jne	l_0A2C                             	| [djnz l_0A2C]
+	jne	l_0A2C                             	    | [djnz l_0A2C]
 
 	clr.b	d0                               	| [xor  a]
 	jbsr	rrd                               	| [rrd] one more rrd to fix the last digit
-	                           	| [dec  l]
+	                           	                | [dec  l]
 	clr.b	-(a0)                             	| [ld   (hl),#0] *9100:=0 (score is now "00054321")
-	lea	ds_9100_tmp+0x03,a0                           	| [ld   l,#3] HL:=9103
-	lea	b32_99E2_sum_score_bcd+3,a1    	| [ld   de,#b32_99E2_sum_score_bcd + 3]
+	lea	ds_9100_tmp+0x03,a0                     | [ld   l,#3] HL:=9103
+	lea	b32_99E2_sum_score_bcd+3,a1    	        | [ld   de,#b32_99E2_sum_score_bcd + 3]
 	move.b	#0x04,d1                        	| [ld   b,#0x04]
 	CLEAR_XC_FLAGS	                            	| [and  a] clear the carry flag?
 l_0A4A:
@@ -1963,9 +1963,8 @@ l_0A4A:
 	subq.w	#1,a1                           	| [dec  e]
 	subq.w	#1,a0                           	| [dec  l]
 	subq.b	#1,d1                           	| [...]
-	jne	l_0A4A                             	| [djnz l_0A4A]
-
-	rts                                    	| [ret]
+	jne	l_0A4A                             	    | [djnz l_0A4A]
+	rts                                    	    | [ret]
 
 *=============================================================================
 * c_text_out_i_to_d_0A53()
@@ -1987,7 +1986,7 @@ l_0A55:
 											| [dec  h]
 	tst.b	d5                           	| [inc  h]
 	jne	l_0A5E                             	| [jr   nz,l_0A5E]
-* ...                                   	|| ( L > $0A ) )
+* ... || ( L > $0A ) )
 	move.b	d6,d0                           	| [ld   a,l]
 	cmp.b	#0x0A,d0                         	| [cp   #0x0A] CY is set if A < $0A
 
@@ -2010,7 +2009,6 @@ l_0A68:
 	jbsr	c_0A6E                            	| [call c_0A6E]
 	subq.b	#1,d1                           	| [...]
 	jne	l_0A67                             	| [djnz l_0A67]
-
 	exg		d7,a1
 	rts                                    	| [ret]
 
@@ -2048,13 +2046,13 @@ c_puts_hitmiss_ratio_0A72:
 l_0A82:
 l_0A82_while:
 * while !(0x80 & d) && !(0x80 & h) de <<= 1, hl <<= 1
-	btst.b	#15,d3                           	| [bit  7,d]
+	btst.b	#15,d3                          | [bit  7,d]
 	jne	l_0A90                             	| [jr   nz,l_0A90]
-	btst.b	#15,d6                           	| [bit  7,h]
+	btst.b	#15,d6                          | [bit  7,h]
 	jne	l_0A90                             	| [jr   nz,l_0A90]
-	add.w	d6,d6                            	| [add  hl,hl]
+	add.w	d6,d6                           | [add  hl,hl]
 	exg	d3,d6                              	| [ex   de,hl]
-	add.w	d6,d6                            	| [add  hl,hl]
+	add.w	d6,d6                           | [add  hl,hl]
 	exg	d3,d6                              	| [ex   de,hl]
 	jra	l_0A82_while                       	| [jr   l_0A82_while]
 
@@ -2073,7 +2071,6 @@ l_0A90:
 * HL = hl_adjusted_hits / (de_adjusted_shots / 0x0100)
 	move.b	d3,d0                           	| [ld   a,d] divisor in A
 	jbsr	c_divmod                          	| [call c_divmod] HL=HL/A (preserves DE)
-
 	movem.w D5/D6,-(sp)                        	| [push hl]
 
 * HL = modulus / (de_adjusted_shots / 0x0100)
@@ -2083,40 +2080,38 @@ l_0A90:
 	jbsr	c_divmod                          	| [call c_divmod] HL=HL/A (preserves DE)
 
 * SP points to lsb of 1st quotient (msb)
-	bsr		exg_sp_d5d6                            	| [ex   (sp),hl] restore msw (1st quotient) into HL, lsw (2nd quotient) to (SP), (SP+1)
-	lea	b16_99B0_tmp,a1                	| [ld   de,#b16_99B0_tmp] pointer to hit-miss ratio calc.
+	bsr		exg_sp_d5d6                         | [ex   (sp),hl] restore msw (1st quotient) into HL, lsw (2nd quotient) to (SP), (SP+1)
+	lea	b16_99B0_tmp,a1                	        | [ld   de,#b16_99B0_tmp] pointer to hit-miss ratio calc.
 	move.b	#4,d1                           	| [ld   b,#4] loop counter to calculate percentage to 2 decimal places
 	move.b	d5,d0                           	| [ld   a,h] msb of msw (first quotient), only low 4 bits significant (would be 0 or 1)
 	clr.b	d5                               	| [ld   h,#0] done with this byte
 l_0AA5_while:
-	exg	a1,a0                              	| [ex   de,hl] pointer->HL, lsb of HL+A -> DE
+	exg	a1,a0                              	    | [ex   de,hl] pointer->HL, lsb of HL+A -> DE
 * 4-bit leftward rotation of the 12-bit number whose 4 most signigifcant bits
 * are the 4 least significant bits of A, and its 8 least significant bits are at (HL)
-	jbsr	rld                               	| [rld] rld (hl) ... 1st product msb + sum msb in A
+	jbsr	rld                               	| [rld] rld (hl) ... 1st product msb + sum msb in A (hl in ram)
 * advance the byte pointer when b==3 (case of b==1 not significant)
 	btst.b	#0,d1                           	| [bit  0,b]
-	jeq	l_0AAD                             	| [jr   z,l_0AAD]
+	jeq	l_0AAD                             	    | [jr   z,l_0AAD]
 	addq.w	#1,a0                           	| [inc  l]
 l_0AAD:
-	exg	a1,a0                              	| [ex   de,hl] lsb of HL+A -> HL, pointer to DE
+	exg	a1,a0                              	    | [ex   de,hl] lsb of HL+A -> HL, pointer to DE
 	jbsr	c_0B06                            	| [call c_0B06] HL *= 10 ... MSB->A
-	exg	d0,d7                              	| [ex   af,af'] stash 1st product msb
-
-	bsr		exg_sp_d5d6                            	| [ex   (sp),hl] 2nd product to HL, 1st product to (SP)
+	exg	d0,d7                              	    | [ex   af,af'] stash 1st product msb
+	bsr		exg_sp_d5d6                         | [ex   (sp),hl] 2nd product to HL, 1st product to (SP)
 	jbsr	c_0B06                            	| [call c_0B06] HL *= 10 ... MSB->A
-	bsr		exg_sp_d5d6                            	| [ex   (sp),hl] 1st product to HL, 2nd product to (SP)
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A ... 1st product + 2nd product (msb)
+	bsr		exg_sp_d5d6                         | [ex   (sp),hl] 1st product to HL, 2nd product to (SP)
+	jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A ... 1st product + 2nd product (msb)
 	exg		d0,d7                              	| [ex   af,af'] 1st product msb -> A, stash sum lsb
 	add.b	d5,d0                            	| [add  a,h] 1st product msb + sum msb
 	clr.b	d5                               	| [ld   h,#0] done with this byte
 	subq.b	#1,d1                           	| [...]
-	jne	l_0AA5_while                       	| [djnz l_0AA5_while]
-
-	movem.w	(sp)+,d3/d4                    	| [pop  de] restore SP
+	jne	l_0AA5_while                       	    | [djnz l_0AA5_while]
+	movem.w	(sp)+,d3/d4                    	    | [pop  de] restore SP
 
 * if (A >= 5)
 	cmp.b	#5,d0                            	| [cp   #5]
-	jcs	l_0AD7                             	| [jr   c,l_0AD7]
+	jcs	l_0AD7                             	    | [jr   c,l_0AD7]
 * then
 	MOVE_TO_REG	b16_99B0_tmp,d3             	| [ld   de,(b16_99B0_tmp)] temp register for hit-miss ratio calc.
 	LOAD_D3D4_FROM_D3_16
@@ -2147,7 +2142,7 @@ l_0AD7:
 l_0AE1_while:
 * if ( b==1 ) then ...
 	subq.b	#1,d1                           	| [dec  b]
-	jne	l_0AE8                             	| [jr   nz,l_0AE8]
+	jne	l_0AE8                             	    | [jr   nz,l_0AE8]
 * ... show dot character left of to 10ths place
 	move.b	#0x2A,d0                        	| [ld   a,#0x2A] '.' (dot) character.
 	jbsr	write_videoram_to_a1                         	| [ld   (de),a]
@@ -2155,13 +2150,11 @@ l_0AE1_while:
 
 l_0AE8:
 	addq.b	#1,d1                           	| [inc  b] restore B from test at l_0AE1
-
 	clr.b	d0                               	| [xor  a] clear A before rotating H<7:4> into it
-	jbsr	rld                               	| [rld] rld (hl) ... (HL<7:4>) to A<3:0> ... HL used as pointer
-
-* if (b == 3                            	|| b==1) advance pointer to .b1  ... b==1 irrelevant
+	jbsr	rld                               	| [rld] rld (hl) ... (HL<7:4>) to A<3:0> ... HL used as pointer, is in RAM
+* if (b == 3 || b==1) advance pointer to .b1  ... b==1 irrelevant
 	btst.b	#0,d1                           	| [bit  0,b] even count of b
-	jeq	l_0AF1                             	| [jr   z,l_0AF1]
+	jeq	l_0AF1                             	    | [jr   z,l_0AF1]
 	addq.w	#1,a0                           	| [inc  l] HL++
  
 l_0AF1:
@@ -2169,10 +2162,10 @@ l_0AF1:
 * state and keep going
 * if ( A != 0 )
 	tst.b	d0                               	| [and  a]
-	jne	l_0AF8                             	| [jr   nz,l_0AF8]
-*                                       	|| (0 != C & 0x01) ...
+	jne	l_0AF8                             	    | [jr   nz,l_0AF8]
+* || (0 != C & 0x01) ...
 	btst.b	#0,d2                           	| [bit  0,c] check flag
-	jeq	l_0AFC                             	| [jr   z,l_0AFC]
+	jeq	l_0AFC                             	    | [jr   z,l_0AFC]
 * ... then
 l_0AF8:
 	bset.b	#0,d2                           	| [set  0,c] set flag
@@ -2184,14 +2177,13 @@ l_0AFC:
 * if ( B != 3 )
 	move.b	d1,d0                           	| [ld   a,b]
 	cmp.b	#3,d0                            	| [cp   #3]
-	jne	l_0B03                             	| [jr   nz,l_0B03]
+	jne	l_0B03                             	    | [jr   nz,l_0B03]
 * else
 	bset.b	#0,d2                           	| [set  0,c]
 l_0B03:
 	subq.b	#1,d1                           	| [...]
-	jne	l_0AE1_while                       	| [djnz l_0AE1_while]
-
-	rts                                    	| [ret]
+	jne	l_0AE1_while                       	    | [djnz l_0AE1_while]
+	rts                                    	    | [ret]
 
 *=============================================================================
 * c_0B06()
@@ -2210,7 +2202,7 @@ c_0B06:
 	jbsr	c_104E_mul_16_8                   	| [call c_104E_mul_16_8] HL = HL * A
 	move.b	d5,d0                           	| [ld   a,h]
 	clr.b	d5                               	| [ld   h,#0x00] %256
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 
 _l_0B0F:
@@ -2253,20 +2245,20 @@ _l_0B0F:
 c_1000:
 
 	move.l	a0,-(sp)                        	| [push hl]
-	jbsr	osd_get_random                           	| [ld   a,r]
+	jbsr	osd_get_random                      | [ld   a,r]
 	move.b	d0,d5                           	| [ld   h,a]
 	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	add.b	d5,d0                            	| [add  a,h]
 	move.b	d0,d6                           	| [ld   l,a]
-	lea	db_obj_home_posn_rc,a0         	| [ld   h,#>db_obj_home_posn_rc]
+	lea	db_obj_home_posn_rc,a0         	        | [ld   h,#>db_obj_home_posn_rc]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	move.b	d0,d5                           	| [ld   h,a]
-	jbsr	osd_get_random                           	| [ld   a,r]
+	jbsr	osd_get_random                      | [ld   a,r]
 	add.b	d5,d0                            	| [add  a,h]
 	move.l	(sp)+,a0                        	| [pop  hl]
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 **=============================================================================
 ** dead_code
@@ -2409,15 +2401,13 @@ c_divmod:
 c_1079:
 	COMPUTE_LSB_A0_D6	b_8800
 	move.b	d6,d0                           	| [ld   a,l]
-
 	and.b	#0x80,d0                         	| [and  #0x80] if set then negate rotation angle to (ix)0x0C
 	addq.b	#1,d0                           	| [inc  a] set bit-0, .b13<0> makes object slot active
 	exg		d0,d7                              	| [ex   af,af']
-
 	bclr.b	#7,d6                           	| [res  7,l]
 	lea		b_8800,a0
 	add.w	d6,a0
-	jra	setup_motion_for_attackers_108a                             	| [jp   setup_motion_for_attackers_108a]
+	jra	setup_motion_for_attackers_108a         | [jp   setup_motion_for_attackers_108a]
 
 *=============================================================================
 * c_diving_movement_1083()
@@ -2459,13 +2449,12 @@ setup_motion_for_attackers_108a:
 	lea	ds_bug_motion_que_9100,a2           	| [ld   ix,#ds_bug_motion_que_9100]
 l_1094:
 	btst.b	#0,(0x13,a2)                    	| [bit  0,0x13(ix)] check for activated state
-	jeq	l_10A0_got_one                     	| [jr   z,l_10A0_got_one]
+	jeq	l_10A0_got_one                     	    | [jr   z,l_10A0_got_one]
 	add.w	d3,a2                            	| [add  ix,de]
 	subq.b	#1,d1                           	| [...]
-	jne	l_1094                             	| [djnz l_1094]
-
-	movem.w	(sp)+,d3/d4                    	| [pop  de]
-	rts                                    	| [ret]
+	jne	l_1094                             	    | [djnz l_1094]
+	movem.w	(sp)+,d3/d4                      	| [pop  de]
+	rts                                      	| [ret]
 
 l_10A0_got_one:
 	movem.w	(sp)+,d3/d4                    	    | [$10A0: pop  de] pointer to table
