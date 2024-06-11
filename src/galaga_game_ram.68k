@@ -174,7 +174,7 @@
 	.global		ds_hpos_loc_t
 	.global		ds10_9920
 	.global		ds_mchn_cfg
-	.global		w_mchn_cfg_bonus
+	.global		w_mchn_cfg_bonus_9980
 	.global		b_mchn_cfg_nships
 	.global		b_mchn_cfg_cab_type
 	.global		b_mchn_cfg_rank
@@ -628,7 +628,7 @@ ds10_9920:
 
 ds_mchn_cfg:
 
-w_mchn_cfg_bonus:
+w_mchn_cfg_bonus_9980:
        ds.b     0x02
 b_mchn_cfg_nships:
        ds.b     0x01

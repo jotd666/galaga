@@ -42,7 +42,7 @@ _STRUCT  | plyr_state
 
   _DS  _ds_bmbr_boss_scode   8   | 0x10  bonus code/score attributes e.g. "01B501B501B501B5"
   _DS  _unused               6-2   | 0x18-0x1D ?
-  _DS  _b_mcfg_bonus         1   | 0x1E  load at game start from w_mchn_cfg_bonus ... $9980
+  _DS  _b_mcfg_bonus         1   | 0x1E  load at game start from w_mchn_cfg_bonus_9980 ... $9980
   _DS  _b_plyr_swap_tmr      1   | 0x1F  game_tmr_2, player1/2 switch
   _DS  _b_plyr_nbr           1   | 0x20  0==plyr1, 1==plyr2
   _DS  _b_bbee_tmr           1   | 0x21  bonus bee launch timer

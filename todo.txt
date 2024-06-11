@@ -4,9 +4,7 @@
 - ship explosion: double size is wrong
 - capture ship doesn't capture. f_boss_diving_down_to_capture_ship_21cb is called indefinitely
   check if l_1A4B_test_positioning_timer is reached which calls l_1A6A_ship_in_position
-- first level second wave: one boss does something different (init issue?)
 - shoots all both missiles immediately (main: 1766), demo AND in-game
-- demo: boss explosions: some frames shifted
 - challenge stage: wrong enemy shot count
 - start game screen: all extra ship scores are 00000
 - 2 first rows not shown (attribute/color is black!!!)
@@ -21,3 +19,7 @@
 traj issues: Traj computed in subcpu D23 / D50 probe there!
 
 
+maybe fixed already:
+
+- first level second wave: one boss does something different (init issue?)
+- demo: boss explosions: some frames shifted

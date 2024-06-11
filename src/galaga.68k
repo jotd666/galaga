@@ -272,7 +272,7 @@ l_game_state_ready_039d:
 	move.l	a0,p_attrmode_sptiles_9280          | [$03AA: ld   (p_attrmode_sptiles_9280),hl] &_attrmode_sptiles[0] ... parameter to _sprite_tiles_displ()
 
 * if ( 0xFF == mchn_cfg_bonus[0] ) goto l_While_Ready
-	move.b	w_mchn_cfg_bonus+0,d0           	| [$03AD: ld   a,(w_mchn_cfg_bonus + 0)]
+	move.b	w_mchn_cfg_bonus_9980+0,d0          | [$03AD: ld   a,(w_mchn_cfg_bonus_9980 + 0)]
 	cmp.b	#0xFF,d0                         	| [$03B0: cp   #0xFF]
 	jeq	j_0003D8_wrdy                      	    | [$03B2: jr   z,j_0003D8_wrdy]
 	move.b	d0,d4                           	| [$03B4: ld   e,a] E=bonus score digit
@@ -280,7 +280,7 @@ l_game_state_ready_039d:
 	jbsr	c_game_bonus_info_show_line_043d 	| [$03B7: call c_game_bonus_info_show_line_043d]
 
 * if ( 0xFF == mchn_cfg_bonus[1] ) goto l_While_Ready
-	move.b	w_mchn_cfg_bonus+1,d0           	| [$03BA: ld   a,(w_mchn_cfg_bonus + 1)]
+	move.b	w_mchn_cfg_bonus_9980+1,d0          | [$03BA: ld   a,(w_mchn_cfg_bonus_9980 + 1)]
 	cmp.b	#0xFF,d0                         	| [$03BD: cp   #0xFF]
 	jeq	j_0003D8_wrdy                      	    | [$03BF: jr   z,j_0003D8_wrdy]
 	and.b	#0x7F,d0                         	| [$03C1: and  #0x7F]
@@ -289,7 +289,7 @@ l_game_state_ready_039d:
 	jbsr	c_game_bonus_info_show_line_043d  	| [$03C6: call c_game_bonus_info_show_line_043d] bugs from demo mode have disappeared!
 
 * if bit 7 is set, the third bonus award does not apply
-	move.b	w_mchn_cfg_bonus+1,d0           	| [$03C9: ld   a,(w_mchn_cfg_bonus + 1)]
+	move.b	w_mchn_cfg_bonus_9980+1,d0          | [$03C9: ld   a,(w_mchn_cfg_bonus_9980 + 1)]
 	btst.b	#7,d0                           	| [$03CC: bit  7,a]
 	jne	j_0003D8_wrdy                      	    | [$03CE: jr   nz,j_0003D8_wrdy]
 	and.b	#0x7F,d0                         	| [$03D0: and  #0x7F]
@@ -371,7 +371,7 @@ l_0414_while_tmr_3:
 	move.b	#1,d0                           	| [ld   a,#1]
 	move.b	d0,ds_plyr_susp+_b_plyr_nbr     	| [ld   (ds_plyr_susp +_b_plyr_nbr),a] 1==plyr2
 
-	move.b	w_mchn_cfg_bonus,d0             	| [ld   a,(w_mchn_cfg_bonus)]
+	move.b	w_mchn_cfg_bonus_9980,d0             	| [ld   a,(w_mchn_cfg_bonus_9980)]
 	move.b	d0,ds_plyr_actv+_b_mcfg_bonus   	| [ld   (ds_plyr_actv +_b_mcfg_bonus),a]
 	move.b	d0,ds_plyr_susp+_b_mcfg_bonus   	| [ld   (ds_plyr_susp +_b_mcfg_bonus),a]
 
@@ -1225,7 +1225,7 @@ l_07A8:
 	beq.b	0f                               	| [...]
 	rts                                    	| [ret  nz] [...]
 0:
-	move.b	w_mchn_cfg_bonus+0x01,d0        	| [ld   a,(w_mchn_cfg_bonus + 0x01)] looks like a bonus may be awarded.
+	move.b	w_mchn_cfg_bonus_9980+0x01,d0        	| [ld   a,(w_mchn_cfg_bonus_9980 + 0x01)] looks like a bonus may be awarded.
 	move.b	d0,d1                           	| [ld   b,a]
 	and.b	#0x7F,d0                         	| [and  #0x7F]
 	move.b	d0,d2                           	| [ld   c,a]
@@ -9489,14 +9489,15 @@ c_svc_updt_dsply:
 * picture will turn updside down and stay that way until you release the buttons.
 * If the buttons are not pushed, the picture stays inverted momentarily until
 * a 0 is read from the IO chip (due to residual non-zero value left from memory test).
-	move.b	ds3_io_input_99b5+0x00,d0       	| [ld   a,(ds3_io_input_99b5 + 0x00)]
-	clr.b	d2                               	| [ld   c,#0]
-	and.b	#0x0C,d0                         	| [and  #0x0C] 08->2plyr_start, 04->1plyr_start
-	jne	l_380F                             	    | [jr   nz,l_380F]
-	addq.b	#1,d2                           	| [inc  c] c:=1  (flips the screen)
-l_380F:
-	move.b	d2,d0                           	| [ld   a,c]
-	*move.b	d0,0xA007                       	| [ld   (0xA007),a] flip screen control
+*	move.b	ds3_io_input_99b5+0x00,d0       	| [ld   a,(ds3_io_input_99b5 + 0x00)]
+*	clr.b	d2                               	| [ld   c,#0]
+*	and.b	#0x0C,d0                         	| [and  #0x0C] 08->2plyr_start, 04->1plyr_start
+*	jne	l_380F                             	    | [jr   nz,l_380F]
+*	addq.b	#1,d2                           	| [inc  c] c:=1  (flips the screen)
+*l_380F:
+*	move.b	d2,d0                           	| [ld   a,c]
+	                                         	| [ld   (0xA007),a] flip screen control
+	moveq	#0,d2
 
 * DIFFICULTY LEVEL SETTING (DSWA)
 *    0x00  = 0 -> A (MEDIUM)
@@ -9532,13 +9533,14 @@ l_380F:
 *     0xC0 -> 5
 
 * configuration setting is "number of fighters - 1"
-	*lea	_sfr_dsw7,a0                   	| [ld   hl,#_sfr_dsw7] get DSWB#7 (sfr_dsw7:0)
-	*move.b	(a0)+,d0                         	| [ld   a,(hl)] hi-bit
-	moveq	#3,d0
-										| [inc  hl] get DSWB#8 (sfr_dsw8:0)
-	move.b	(a0),d2                         	| [ld   c,(hl)] lo-bit
+	jbsr	osd_read_dsw_7                 	    | [ld   hl,#_sfr_dsw7] get DSWB#7 (sfr_dsw7:0)
+	                         	                | [ld   a,(hl)] hi-bit
+	move.b		d0,d7
+	jbsr	osd_read_dsw_8   			        | [inc  hl] get DSWB#8 (sfr_dsw8:0)
+	move.b	d0,d2                         	    | [ld   c,(hl)] lo-bit
+	move.b	d7,d0
 	roxr.b	#1,d2                           	| [rr   c] "right-shift" lo-bit into Cy flag.
-	addx.b	d0,d0								| adc  a,a                                   | "left-shift" the hi-bit and add the lo-bit from Cy flag.
+	addx.b	d0,d0								| [adc  a,a]   | "left-shift" the hi-bit and add the lo-bit from Cy flag.
 	and.b	#0x03,d0                         	| [and  #0x03]
 	addq.b	#1,d0                           	| [inc  a] this gives "cfg = nbr_of_ships - 1"
 	move.b	d0,b_mchn_cfg_nships            	| [ld   (b_mchn_cfg_nships),a]
@@ -9650,21 +9652,28 @@ l_38A0:
 * AND EVERY XX0000 PTS
 
 l_38AB:
-	illegal
-	* TODO point on something valid
-	**lea	_sfr_dsw4,a0                   	| [ld   hl,#_sfr_dsw4] bonus levels
+	sub.w	#4,a7
+	move.l	a7,a0
+	jbsr		osd_read_dsw_4
+	move.b	d0,(a0)
+	jbsr		osd_read_dsw_5
+	move.b	d0,(1,a0)
+	jbsr		osd_read_dsw_6
+	move.b	d0,(2,a0)
+	                                    		| [ld   hl,#_sfr_dsw4] bonus levels
 
 	move.b	#3,d1                           	| [ld   b,#3] 3 positions to read
 	clr.b	d0                               	| [xor  a]
 	CLEAR_XC_FLAGS
 l_38B1:
-	move.b	(a0),d2                         	| [ld   c,(hl)]
+	move.b	(a0)+,d2                         	| [ld   c,(hl)]
 	roxr.b	#1,d2                           	| [rr   c] "right-shift" lo-bit into Cy flag.
 	addx.b	d0,d0				                | [adc  a,a]  "left-shift" the hi-bit and add the lo-bit from Cy flag.
-	addq.w	#1,a0                           	| [inc  hl]
+	                           	| [inc  hl]
 	subq.b	#1,d1                           	| [...]
 	jne	l_38B1                             	| [djnz l_38B1]
 
+	addq.w	#4,a7
 *  if ( 0 == switch_selection ) goto 392D  // display "BONUS NOTHING", ret to 35be
 	and.b	#0x07,d0                         	| [and  #0x07]
 	jeq	l_392D                             	| [jp   z,l_392D]
@@ -9677,7 +9686,7 @@ l_38B1:
 	add.b	d0,d0                            	| [add  a,a] a:=a*2 ... use as offset into table
 	lea	str_3AA4,a0                    	| [ld   hl,#str_3AA4] bonus config data
 	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A...A==2,C,4,6,E,8,A
-	lea	w_mchn_cfg_bonus,a1            	| [ld   de,#w_mchn_cfg_bonus] ld two-bytes (str_3AA4)
+	lea	w_mchn_cfg_bonus_9980,a1            	| [ld   de,#w_mchn_cfg_bonus_9980] ld two-bytes (str_3AA4)
 	jbsr	ldi                               	| [ldi]
 	jbsr	ldi                               	| [ldi]
 	subq.w	#1,a0                           	| [dec  hl] point to second byte of two-byte Table entry
@@ -9695,18 +9704,19 @@ l_38B1:
 *  ...
 *-----------------------------------------------------------------------------
 c_38DA:
+	moveq	#0,d0
 	move.b	(a0),d0                         	| [ld   a,(hl)] ld one byte from the two-byte table entry
 	addq.b	#1,d0                           	| [inc  a] setup test for $FF in the bonus-none parameters
 	jeq	l_393B                             	    | [jp   z,l_393B] if 'bonus none', skip the 'second and every' display (when?)
 	move.b	d2,d0                           	| [ld   a,c] first-pass (second-and-every) indicated by 1, second-pass indicated by 0..
 	add.b	d0,d0                            	| [add  a,a] ...so A==2 or A==0  (offset from 3B1A to string address loaded into HL)
 	move.l	a0,-(sp)                        	| [push hl] save address of table-entry
-	lea	str_3B1A,a0                    	        | [ld   hl,#str_3B1A] i.e., 1E 3B "1ST BONUS ", 36 3B "2ND BONUS"
-	jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A                                  | HL += A
-	move.b	(a0)+,d0                         	| [ld   a,(hl)] get LSB of src address
+	lea	bonus_text_ptr_table_3b1a,a0                    	        | [ld   hl,#str_3B1A] i.e., 1E 3B "1ST BONUS ", 36 3B "2ND BONUS"
+	add.b	d0,d0                   | [rst  0x10] HL += A                                  | HL += A
+	move.l	(a0,d0.w),a0                         	| [ld   a,(hl)] get LSB of src address
 	                                        	| [inc  hl]
-	move.b	(a0),d5                         	| [ld   h,(hl)] get MSB of src address
-	move.b	d0,d6                           	| [ld   l,a] ld LSB to L
+                                               	| [ld   h,(hl)] get MSB of src address
+                                               	| [ld   l,a] ld LSB to L
 	movem.w	d1/d2,-(sp)                    	    | [push bc] C holds the so-called 'first-bonus/second-bonus' flag, save it!
 	jbsr	c_text_out                        	| [call c_text_out] display "2ND BONUS" or "1ST BONUS"
 	jbsr	c_text_out                        	| [call c_text_out] display "0000 PTS" of "??? BONUS XX0000 PTS"...
@@ -9772,9 +9782,9 @@ l_3928:
 	rts                                    	| [ret] end 'call _391E'
 * jp here from 38BA
 l_392D:
-	lea	str_3B64,a0                    	| [ld   hl,#str_3B64] "BONUS NOTHING"
+	lea	str_3B64,a0                    	        | [ld   hl,#str_3B64] "BONUS NOTHING"
 	jbsr	c_text_out                        	| [call c_text_out]
-	lea	w_mchn_cfg_bonus,a0            	| [ld   hl,#w_mchn_cfg_bonus]
+	lea	w_mchn_cfg_bonus_9980,a0            	| [ld   hl,#w_mchn_cfg_bonus_9980]
 	move.b	#0xFF,(a0)+                      	| [ld   (hl),#0xFF]
 	                           	| [inc  hl]
 	move.b	#0xFF,(a0)                      	| [ld   (hl),#0xFF]
@@ -9787,9 +9797,9 @@ l_393B:
 l_3941:
 	move.b	#0x24,d0                      	| [ld   (hl),#0x24] space ' '
 	jbsr	osd_w_videoram
-	move.b	#0xE0,d0                        	| [ld   a,#0xE0]
-	sub.w	#0x100,d7                           	| [dec  h] effectively, HL:-=$100
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A, which adds back $E0, effectively we've done HL:-=$20
+	                        	| [ld   a,#0xE0]
+	sub.w	#0x20,d7                           	| [dec  h] effectively, HL:-=$100
+	                            	| [rst  0x10] HL += A, which adds back $E0, effectively we've done HL:-=$20
 	subq.b	#1,d1                           	| [...]
 	jne	l_3941                             	| [djnz l_3941]
 
@@ -9800,15 +9810,14 @@ l_3949:
 l_394E:
 	move.b	#0x24,d0                      	| [ld   (hl),#0x24]
 	jbsr	osd_w_videoram
-	move.b	#0xE0,d0                        	| [ld   a,#0xE0]
-	sub.w	#0x100,d7                           	| [dec  h]
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
+	                        	| [ld   a,#0xE0]
+	sub.w	#0x20,d7                           	| [dec  h]
+	                            	| [rst  0x10] HL += A
 	subq.b	#1,d1                           	| [...]
 	jne	l_394E                             	| [djnz l_394E]
 	exg	a1,a0                              	| [ex   de,hl] see 393b
 	rts                                    	| [ret] if jp'd to _392D, ret to _35BE... end 'call _37F4' (displaying dsw options)
                                                   * if jp'd to _393B,l_3949 end 'call 38DA', ret to _35BE
-
 *=============================================================================
 * c_tileram_regs_clr()
 *  Description:
@@ -10158,7 +10167,7 @@ str_3B04:
 	.byte 0x0F,0x1B,0x0E,0x0E,0x24,0x19,0x15,0x0A,0x22 || "FREE PLAY"
 	.byte 0x24,0x24,0x24,0x24,0x24,0x24,0x24,0x24,0x24
 	.byte 0x24 || extra space character?
-str_3B1A:
+bonus_text_ptr_table_3b1a:
 	.long str_1ST_BONUS
 	.long str_2ND_BONUS
 str_1ST_BONUS:
@@ -11203,6 +11212,23 @@ l_02CC:
 	jne	l_02CC                             	| [djnz l_02CC]
 
 * let the fun begin!
+*=============================================================================
+* j_Test_menu_init()
+*  Description:
+*   jr here from completion of ROM tests.
+*   'RAM OK' and 'ROM OK' actually shown right side up, but then in ShowCfg the
+*   flip screen gets set because of the check that is done on the IO input value.
+* IN:
+*  ...
+* OUT:
+*  ...
+*-----------------------------------------------------------------------------
+	lea	str_3B88(pc),a0                    	    | [ld   hl,#str_3B88] ld src address of string "ROM  OK"
+	jbsr	c_text_out                        	| [call c_text_out] display "ROM OK"
+	jbsr	c_svc_updt_dsply                  	| [call c_svc_updt_dsply] prints remaining dsw configured options (upside down)
+* Initialize scheduler table before interrupts are enabled (otherwise task scheduler could infinite loop!)
+	move.b	#0x20,d0                        	| [ld   a,#0x20]
+	move.b	d0,ds_cpu0_task_actv_9000+0          	| [ld   (ds_cpu0_task_actv + 0),a] $20 ... only task 0 (empty task) can be called
 	jra	jp_RAM_test                        	| [jp   jp_RAM_test]
 
 

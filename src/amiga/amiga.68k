@@ -227,6 +227,12 @@ start:
 		.global osd_get_random
 		.global osd_read_dsw_1
 		.global osd_read_dsw_2
+		.global osd_read_dsw_3
+		.global osd_read_dsw_4
+		.global osd_read_dsw_5
+		.global osd_read_dsw_6
+		.global osd_read_dsw_7
+		.global osd_read_dsw_8
 		.global osd_read_in_2
 		.global osd_read_in_0
 		.global osd_read_high_scores
@@ -2768,6 +2774,36 @@ osd_read_dsw_1:
 	rts
 
 osd_read_dsw_2:
+	moveq	#0,d0
+	rts
+	
+osd_read_dsw_3:
+	moveq	#0,d0
+	rts
+	
+osd_read_dsw_4:
+	moveq	#1,d0
+	rts
+	
+osd_read_dsw_5:
+	moveq	#1,d0
+	rts
+	
+osd_read_dsw_6:
+	moveq	#0,d0
+	rts
+
+* NUMBER OF FIGHTERS (DSWB)
+*     0x00 -> 2
+*     0x40 -> 4
+*     0x80 -> 3
+*     0xC0 -> 5
+
+osd_read_dsw_7:
+	moveq	#0,d0
+	rts
+	
+osd_read_dsw_8:
 	moveq	#0,d0
 	rts
 	
