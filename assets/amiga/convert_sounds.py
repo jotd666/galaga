@@ -31,6 +31,9 @@ sound_dict = {
 
 # third channel
 "EXTRA_LIFE_SND"               :{"index":1,"channel":3,"sample_rate":hq_sample_rate},
+"SHOT_SND"               :{"index":0x9,"channel":2,"sample_rate":hq_sample_rate},
+"CHALLENGING_STAGE_SND"               :{"index":0xD,"channel":0,"sample_rate":hq_sample_rate},
+"ATTACK_SND"               :{"index":0x13,"channel":3,"sample_rate":hq_sample_rate},
 
 }
 

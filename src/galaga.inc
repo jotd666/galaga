@@ -12,15 +12,12 @@
     * score is decimal format
 	* all options must be zeroed for release
     OPT_START_SCORE=0
-	OPT_SKIP_THANKS_SCREEN=0
+
 	OPT_SKIP_TITLE_SCREEN=0
-	OPT_SKIP_ICE_PACK_SCREEN=0
+
 	OPT_SKIP_GAME_DEMO=0
 	OPT_ONLY_ONE_LIFE=0
-	* test mode: only first snobee is active
-	OPT_ONLY_ONE_SNOBEE=0
-	* make diamonds almost grouped
-	OPT_ALMOST_GROUP_DIAMONDS=0
+
 ***
 *** end of BUILD OPTIONS
 ***
@@ -32,5 +29,8 @@
 
     .equ  CREDIT_SND,         0x00
     .equ  EXTRA_LIFE_SND,     0x01
+    .equ  SHOT_SND,           0x9
+	.equ  CHALLENGING_STAGE_SND, 0xD
+    .equ  ATTACK_SND,         0x13
 
     

@@ -919,26 +919,22 @@ gctl_chllng_stg_end:
 0:
 	move.b	d0,d4                           	| [ld   e,a]
 
-	lea	b_9AA0+0x0E,a0                 	| [ld   hl,#b_9AA0 + 0x0E] sound-fx count/enable registers, default melody for challenge stage
+	lea	b_9AA0+0x0E,a0                 	        | [ld   hl,#b_9AA0 + 0x0E] sound-fx count/enable registers, default melody for challenge stage
 	cmp.b	#40,d0                           	| [cp   #40] nbr of bugs in challenge round
-	jne	l_065E                             	| [jr   nz,l_065E]
-	lea	b_9AA0+0x14,a0                 	| [ld   hl,#b_9AA0 + 0x14] sound effect count/enable registers, "perfect!" melody, challenge stg
+	jne	l_065E                                  | [jr   nz,l_065E]
+	lea	b_9AA0+0x14,a0                 	        | [ld   hl,#b_9AA0 + 0x14] sound effect count/enable registers, "perfect!" melody, challenge stg
 l_065E:
 	move.b	#1,(a0)                         	| [ld   (hl),#1]
-
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
-
 	move.b	#0x08,d2                        	| [ld   c,#0x08]
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe ("NUMBER OF HITS")
-
+	jbsr	string_out_pe_30                    | [rst  0x30] string_out_pe ("NUMBER OF HITS")
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 
 * DE = adjusted offset into tile ram on return
 	clr.w	d5                               	| [ld   h,#0]
 	move.b	d4,d5                           	| [ld   l,e] E==nbr of flying bugs hit this round
-	lea	0x8000+0x0100+0x10,a1      	| [ld   de,#0x8000 + 0x0100 + 0x10]
-	jbsr	c_text_out_i_to_d_0A53                 	| [call c_text_out_i_to_d_0A53] HL contains number to display (number of hits)
-
+	lea	0x8000+0x0100+0x10,a1      	            | [ld   de,#0x8000 + 0x0100 + 0x10]
+	jbsr	c_text_out_i_to_d_0A53              | [call c_text_out_i_to_d_0A53] HL contains number to display (number of hits)
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 
 * if (0x40 != b_bug_flyng_hits_p_round_9288) ...
@@ -2391,10 +2387,10 @@ c_divmod:
 *  Description:
 *   Called once for each of boss + 1 or 2 wingmen.
 * IN:
-*   HL == &b_8800[n] ... bits 0:6 ... loaded at l_launch_boss_wing_mission_1b8b from boss_wing_slots[n + 0]
+*   A0 == &b_8800[n] ... bits 0:6 ... loaded at l_launch_boss_wing_mission_1b8b from boss_wing_slots[n + 0]
 *         if bit-7 set then negate rotation angle to (ix)0x0C
 *         (creature originating on right side)
-*   DE == pointer to object data (in cpu-sub1 code space)
+*   D3.W == pointer to object data (in cpu-sub1 code space)
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
@@ -3779,7 +3775,7 @@ case_boss_wingmen_near_171F:  | 0x02
 	beq.b	0f                               	| [...]
 	rts                                    		| [$1729: ret  nz] [...]
 0:
-	jra	case_demo_1766                          		| [$172A: jp   case_demo_1766] training mode, far-right boss exploding
+	jra	case_demo_1766                          | [$172A: jp   case_demo_1766] training mode, far-right boss exploding
 
 * appearance of first enemy formation in Demo
 case_172D:  | 0x05
@@ -4457,40 +4453,39 @@ l_1A6A_ship_in_position:
 f_clone_attack_manager_1A80:
 * check parameter for condition to enable the bonus-bee feature.
 * if ( num_bugs > num_bugs_for_bonus_bee ) then return
-	move.b	ds_new_stage_parms_99c0+0x0A,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x0A)] bonus-bee when bug count reaches this
-	move.b	d0,d2                           	| [ld   c,a]
-	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
-	cmp.b	d2,d0                            	| [cp   c]
+	move.b	ds_new_stage_parms_99c0+0x0A,d0     | [$1A80: ld   a,(ds_new_stage_parms_99c0 + 0x0A)] bonus-bee when bug count reaches this
+	move.b	d0,d2                           	| [$1A83: ld   c,a]
+	move.b	b_bugs_actv_nbr,d0              	| [$1A84: ld   a,(b_bugs_actv_nbr)]
+	cmp.b	d2,d0                            	| [$1A87: cp   c]
 	bcs.b	0f                               	| [...]
-	rts                                    	| [ret  nc] [...]
+	rts                                    	    | [$1A88: ret  nc] [...]
 0:
 
 * if ( activated_one_already ) goto 1AD5
-	move.b	ds_plyr_actv+_b_bbee_tmr,d0     	| [ld   a,(ds_plyr_actv +_b_bbee_tmr)]
-	                               	| [and  a]
-	jne	l_1AD5_in_one_already              	| [jr   nz,l_1AD5_in_one_already]
+	move.b	ds_plyr_actv+_b_bbee_tmr,d0         | [$1A89: ld   a,(ds_plyr_actv +_b_bbee_tmr)]
+	                               	            | [$1A8C: and  a]
+	jne	l_1AD5_in_one_already              	    | [$1A8D: jr   nz,l_1AD5_in_one_already]
 * else ... find_available
-	lea	b_8800+0x07,a0                 	| [ld   hl,#b_8800 + 0x07] first object of bee group (minus 1)
-	             	                | [ld   bc,#20 * 256 + 0xFF] 20 of these pests (we don't care about C) None
-	move.w	#0x20,d1             	| [ld   bc,#20 * 256 + 0xFF] 20 of these pests (we don't care about C) None
-	move.b	#1,d0                           	| [ld   a,#1] 1 == resting
+	lea	b_8800+0x07,a0                 	        | [$1A8F: ld   hl,#b_8800 + 0x07] first object of bee group (minus 1)
+	move.w	#20,d1             	                | [$1A92: ld   bc,#20 * 256 + 0xFF] 20 of these pests (we don't care about C)
+	move.b	#1,d0                           	| [$1A95: ld   a,#1] 1 == resting
 l_1A97:
-	addq.w	#1,a0                           	| [inc  l] increment to next even offset
-	jbsr	cpi                               	| [cpi] A-(HL), HL <- HL+1, BC <- BC-1
-	jeq	l_1AAB_found_one                   	| [jr   z,l_1AAB_found_one]
+	addq.w	#1,a0                           	| [$1A97: inc  l] increment to next even offset
+	jbsr	cpi                               	| [$1A98: cpi] A-(HL), HL <- HL+1, BC <- BC-1
+	jeq	l_1AAB_found_one                   	    | [$1A9A: jr   z,l_1AAB_found_one]
 	subq.b	#1,d1                           	| [...]
-	jne	l_1A97                             	| [djnz l_1A97]
+	jne	l_1A97                             	    | [$1A9C: djnz l_1A97]
 
 * iterate through moth group and find one that is resting
-	lea	b_8800+0x40-1,a0               	        | [ld   hl,#b_8800 + 0x40 - 1] offset into moth group
-	move.w	#0x10,d1                        	| [ld   b,#0x10] 16 of the vermin
+	lea	b_8800+0x40-1,a0               	        | [$1A9E: ld   hl,#b_8800 + 0x40 - 1] offset into moth group
+	move.w	#0x10,d1                        	| [$1AA1: ld   b,#0x10] 16 of the vermin
 l_1AA3:
-	addq.w	#1,a0                           	| [inc  l] increment to next even offset
-	jbsr	cpi                               	| [cpi]
-	jeq	l_1AAB_found_one                   	    | [jr   z,l_1AAB_found_one]
+	addq.w	#1,a0                           	| [$1AA3: inc  l] increment to next even offset
+	jbsr	cpi                               	| [$1AA4: cpi]
+	jeq	l_1AAB_found_one                   	    | [$1AA6: jr   z,l_1AAB_found_one]
 	subq.b	#1,d1                           	| [...]
-	jne	l_1AA3                             	    | [djnz l_1AA3]
-	rts                                    	    | [ret]
+	jne	l_1AA3                             	    | [$1AA8: djnz l_1AA3]
+	rts                                    	    | [$1AAA: ret]
 
 l_1AAB_found_one:
 	move.b	#0xC0,d0                        	| [ld   a,#0xC0]
@@ -4501,9 +4496,9 @@ l_1AAB_found_one:
 	moveq	#0,d4
  	move.b	d6,d4                           	| [ld   e,l]
 	add.w	d4,a1
-	                          	| [inc  e]
+	                          	                | [inc  e]
 	move.b	(1,a1),d0                         	| [ld   a,(de)]
-	                           	| [dec  e]
+	                           	                | [dec  e]
 	move.b	d0,d2                           	| [ld   c,a]
 	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] "Bonus-bee" manager
 	lsr.b	#2,d0                            	| [srl  a] * 2
@@ -4616,8 +4611,7 @@ l_1B00:
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
 	lea	b_8800,a0                      			| [$1B4F: ld   h,#>b_8800]
 	add.w	d6,a0
-
-	jbsr	c_diving_movement_1083                            	| [$1B51: call c_diving_movement_1083] bomber setup, clone-attack mgr
+	jbsr	c_diving_movement_1083              | [$1B51: call c_diving_movement_1083] bomber setup, clone-attack mgr
 l_1B54_getout:
 	clr.b	d0                               	| [$1B54: xor  a]
 	move.b	d0,ds_cpu0_task_actv_9000+0x04      | [$1B55: ld   (ds_cpu0_task_actv_9000 + 0x04),a] 0: f_clone_attack_manager_1A80 ... this task
@@ -4768,13 +4762,13 @@ l_1BC0:
 	jra	(a0)                               	    | [$1BD0: jp   (hl)]
 d_1BD1:
 * jp table in order of bomber launch timers
-	.long case_bmbr_yellow
+	.long case_bmbr_yellow_1BD7
 	.long case_bmbr_red_1BF7
 	.long case_bmbr_boss_1C01
 
 * set bee launch params
-case_bmbr_yellow:
-	move.b	#20,d1                          	| [ld   b,#20] number of yellow aliens
+case_bmbr_yellow_1BD7:
+	move.b	#20,d1                          	| [$1BD7: ld   b,#20] number of yellow aliens
 	lea	b_8800+0x08,a0                 	        | [$1BD9: ld   hl,#b_8800 + 0x08] $08-$2E
 	move.w	#db_flv_atk_yllw_034F,d3            | [$1BDC: ld   de,#db_flv_atk_yllw]
 
@@ -4789,27 +4783,28 @@ l_1BE3_while:
 	jne	l_1BEB_next                        	    | [$1BE5: jr   nz,l_1BEB_next]
 * ... ( L != bonus_bee_index ) then l_1BF0_found_one
 	move.b	d2,d0                           	| [$1BE7: ld   a,c] unstash A ... offset_to_bonus_bee
-	
-	COMPUTE_LSB_A0_D6		b_8800		| recompute offset from original a0
+	COMPUTE_LSB_A0_D6		b_8800		        | recompute offset from original a0
 	cmp.b	d6,d0                            	| [cp   l]
-	jne	l_1BF0_found_one                   	| [jr   nz,l_1BF0_found_one]
+	jne	l_1BF0_found_one                   	    | [jr   nz,l_1BF0_found_one]
 l_1BEB_next:
-	addq.w	#2,a0                           	| [inc  l]
+	addq.w	#2,a0                           	| [inc  l]*2
 	subq.b	#1,d1                           	| [...]
-	jne	l_1BE3_while                       	| [djnz l_1BE3_while]
+	jne	l_1BE3_while                       	    | [djnz l_1BE3_while]
+	rts                                    	    | [ret]
 
-	rts                                    	| [ret]
-
+* bee or moth perform a diving attack
 l_1BF0_found_one:
 	move.b	d0,b_9AA0+0x13                  	| [ld   (b_9AA0 + 0x13),a] from C, !0 ... sound-fx count/enable registers, bug dive attack sound
-	jbsr	c_diving_movement_1083                            	| [call c_diving_movement_1083] bomber setup, red or yellow alien
+	move.w	#ATTACK_SND,d0
+	jbsr	osd_sound_start
+	jbsr	c_diving_movement_1083              | [call c_diving_movement_1083] bomber setup, red or yellow alien
 	rts                                    		| [ret]
 
 * set red moth launch params
 case_bmbr_red_1BF7:
 	move.b	#16,d1                          	| [$1BF7: ld   b,#16] number of red aliens
 	lea	b_8800+0x40,a0                 			| [$1BF9: ld   hl,#b_8800 + 0x40] red moths $40-$5E
-	move.w	#db_flv_atk_red_03a9,d3              			| [$1BFC: ld   de,#db_flv_atk_red]
+	move.w	#db_flv_atk_red_03a9,d3             | [$1BFC: ld   de,#db_flv_atk_red]
 	jra	l_1BDF                             		| [$1BFF: jr   l_1BDF] common to red and yellow alien
 
 * boss launcher... only enable capture-mode for every other one ( %2 )
@@ -5886,6 +5881,8 @@ l_1F71:
 	move.b	#6,(a0)                         	| [$1F76: ld   (hl),#6] L == offsetof(rocket)
 	move.b	#1,d0                           	| [$1F78: ld   a,#1]
 	move.b	d0,b_9AA0+0x0F                  	| [$1F7A: ld   (b_9AA0 + 0x0F),a] 1 ... sound-fx count/enable registers, shot-sound
+	move.w	#SHOT_SND,d0
+	jbsr	osd_sound_start
 	MOVE_TO_REG	ds_plyr_actv+_w_shot_ct,d5  	| [$1F7D: ld   hl,(ds_plyr_actv +_w_shot_ct)]
 	addq.w	#1,d5                           	| [$1F80: inc  hl]	just to count shots fired probably
 	MOVE_TO_VAR	d5,ds_plyr_actv+_w_shot_ct      | [$1F81: ld   (ds_plyr_actv +_w_shot_ct),hl] game shots fired count ++
@@ -6238,6 +6235,7 @@ l_20BF:
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_cpu0_task_actv_9000+0x1D       	| [ld   (ds_cpu0_task_actv_9000 + 0x1D),a] 0 ... this task
 	move.b	d0,b_9AA0+0x11                  	| [ld   (b_9AA0 + 0x11),a] 0 ... sound-fx count/enable registers, stop "rescued ship" music
+	jbsr	osd_sound_stop
 	rts                                    	| [ret]
 
 l_20C7:                                           | *( ds5_928A_captr_status + 0x01 ) == 0
@@ -7881,96 +7879,97 @@ f_insert_attackers_2916:
 
 * check for end of table
 * if ( 7f == current_token ) goto complete
-	move.l	ds_plyr_actv+_p_atkwav_tbl,a0	| [ld   hl,(ds_plyr_actv +_p_atkwav_tbl)] &ds_8920[n]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	cmp.b	#0x7F,d0                         	| [cp   #0x7F]
-	jeq	l_2A29_attack_waves_complete       	| [jp   z,l_2A29_attack_waves_complete]
+	move.l	ds_plyr_actv+_p_atkwav_tbl,a0	    | [$2916: ld   hl,(ds_plyr_actv +_p_atkwav_tbl)] &ds_8920[n]
+	move.b	(a0),d0                         	| [$2919: ld   a,(hl)]
+	cmp.b	#0x7F,d0                         	| [$291A: cp   #0x7F]
+	jeq	l_2A29_attack_waves_complete       	    | [$291C: jp   z,l_2A29_attack_waves_complete]
 
 * check for start of table structure
 * if ( 7e == token ) then .... else .... goto _next_pair
-	cmp.b	#0x7E,d0                         	| [cp   #0x7E]
-	jne	l_2953_next_pair                   	| [jr   nz,l_2953_next_pair]
+	cmp.b	#0x7E,d0                         	| [$291F: cp   #0x7E]
+	jne	l_2953_next_pair                   	    | [$2921: jr   nz,l_2953_next_pair]
 
 * if ( ! _attack_wave_enable ) return
-	move.b	ds_plyr_actv+_b_atk_wv_enbl,d0  	| [ld   a,(ds_plyr_actv +_b_atk_wv_enbl)] 0 if restarting the stage (respawning player ship)
-	                               	| [and  a]
+	move.b	ds_plyr_actv+_b_atk_wv_enbl,d0  	| [$2923: ld   a,(ds_plyr_actv +_b_atk_wv_enbl)] 0 if restarting the stage (respawning player ship)
+	                               	            | [$2926: and  a]
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] [...]
+	rts                                    	    | [$2927: ret  z] [...]
 0:
 
 * if ( 0 != bugs_flying_nbr ) goto _set_tmr0
-	move.b	b_bugs_flying_nbr_9287,d0            	| [ld   a,(b_bugs_flying_nbr_9287)]
-	                               	| [and  a]
-	jne	l_294D_set_tmr0                    	| [jr   nz,l_294D_set_tmr0]
+	move.b	b_bugs_flying_nbr_9287,d0           | [$2928: ld   a,(b_bugs_flying_nbr_9287)]
+                                                | [$292B: and  a]
+	jne	l_294D_set_tmr0                    	    | [$292C: jr   nz,l_294D_set_tmr0]
 
 * if ( 0 == not_challenge_stg ) ...
-	move.b	ds_plyr_actv+_b_not_chllg_stg,d0	| [ld   a,(ds_plyr_actv +_b_not_chllg_stg)] ==(stg_ctr+1)%4 ...i.e. 0 if challenge stage
-	move.b	d0,d1                           	| [ld   b,a] this does nothing |)
-	tst.b	d0                               	| [and  a]
-	jne	l_2944_attack_wave_start           	| [jr   nz,l_2944_attack_wave_start]
+	move.b	ds_plyr_actv+_b_not_chllg_stg,d0	| [$292E: ld   a,(ds_plyr_actv +_b_not_chllg_stg)] ==(stg_ctr+1)%4 ...i.e. 0 if challenge stage
+								                | [$2931: ld   b,a] this does nothing |)
+	                                         	| [$2932: and  a]
+	jne	l_2944_attack_wave_start           	    | [$2933: jr   nz,l_2944_attack_wave_start]
 * ...
 *  if ( 1 == game_tmrs[0] ) ..
-	move.b	ds4_game_tmrs_92ac+0,d0              	| [ld   a,(ds4_game_tmrs_92ac + 0)] if tmr==1 ( on stage 3 ..challenge stage)
-	cmp.b	#1,d0                            	| [cp   #1]
-	jne	l_2942_chk_tmr0                    	| [jr   nz,l_2942_chk_tmr0]
+	move.b	ds4_game_tmrs_92ac+0,d0             | [$2935: ld   a,(ds4_game_tmrs_92ac + 0)] if tmr==1 ( on stage 3 ..challenge stage)
+	cmp.b	#1,d0                            	| [$2938: cp   #1]
+	jne	l_2942_chk_tmr0                    	    | [$293A: jr   nz,l_2942_chk_tmr0]
 *  ..
-	move.b	#8,d0                           	| [ld   a,#8]
-	move.b	d0,w_bug_flying_hit_cnt_92a8         	| [ld   (w_bug_flying_hit_cnt_92a8),a] 8 ... count down each flying bug hit
-	rts                                    	| [ret]
+	move.b	#8,d0                           	| [$293C: ld   a,#8]
+	move.b	d0,w_bug_flying_hit_cnt_92a8        | [$293E: ld   (w_bug_flying_hit_cnt_92a8),a] 8 ... count down each flying bug hit
+	rts                                    	    | [$2941: ret]
 *  ..
 * if ( 0 != game_tmrs[0] ) return
 l_2942_chk_tmr0:
-	tst.b	d0                               	| [and  a] game_tmr0
+	tst.b	d0                               	| [$2942: and  a] game_tmr0
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    	    | [$2943: ret  nz] [...]
 0:
 * ...
 
 * Finally... sending out next wave of creatures. We are on start token 7E so do nothing on this time step.
+* this is called only when creatures arrive in the level, not when they attack from the existing swarm
 l_2944_attack_wave_start:
-	addq.w	#1,a0                           	| [inc  hl]
-	move.l	a0,ds_plyr_actv+_p_atkwav_tbl   	| [ld   (ds_plyr_actv +_p_atkwav_tbl),hl] +=1 (first element of byte-pair following the 7e)
-	lea	ds_plyr_actv+_b_attkwv_ctr,a0  	| [ld   hl,#ds_plyr_actv +_b_attkwv_ctr] +=1
-	addq.b	#1,(a0)                         	| [inc  (hl)]
-	rts                                    	| [ret]
+	addq.w	#1,a0                           	| [$2944: inc  hl]
+	move.l	a0,ds_plyr_actv+_p_atkwav_tbl   	| [$2945: ld   (ds_plyr_actv +_p_atkwav_tbl),hl] +=1 (first element of byte-pair following the 7e)
+	lea	ds_plyr_actv+_b_attkwv_ctr,a0  	        | [$2948: ld   hl,#ds_plyr_actv +_b_attkwv_ctr] +=1
+	addq.b	#1,(a0)                         	| [$294B: inc  (hl)]
+	rts                                    	    | [$294C: ret]
 
 l_294D_set_tmr0:
-	move.b	#2,d0                           	| [ld   a,#2]
-	move.b	d0,ds4_game_tmrs_92ac+0              	| [ld   (ds4_game_tmrs_92ac + 0),a] 2
-	rts                                    	| [ret]
+	move.b	#2,d0                           	| [$294D: ld   a,#2]
+	move.b	d0,ds4_game_tmrs_92ac+0             | [$294F: ld   (ds4_game_tmrs_92ac + 0),a] 2
+	rts                                    	    | [$2952: ret]
 * ....
 
 * finally, next token-pair !
 l_2953_next_pair:
-	move.b	d0,d2                           	| [ld   c,a] *.p_atkwav_tbl ... stash for later
+	move.b	d0,d2                           	| [$2953: ld   c,a] *.p_atkwav_tbl ... stash for later
 * bit-7 is set if this toaster is a wing-man or a split waves, and therefore no delay,
 * otherwise it is clear for trailing formation i.e. delay before launching.
 * if ( 0 == *.p_atkwav_tbl & 0x80 ) ...
-	btst.b	#7,d0                           	| [bit  7,a]
-	jne	insert_bug_in_queue_295e                             	| [jr   nz,insert_bug_in_queue_295e]
+	btst.b	#7,d0                           	| [$2954: bit  7,a]
+	jne	insert_bug_in_queue_295e                | [$2956: jr   nz,insert_bug_in_queue_295e]
 * then ...
-	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
-	and.b	#0x07,d0                         	| [and  #0x07]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [$2958: ld   a,(ds3_frame_cts_92A0 + 0)]
+	and.b	#0x07,d0                         	| [$295B: and  #0x07]
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    	    | [$295D:ret  nz] [...]
 0:
 
 * ready to stick another bug in the flying queue
 insert_bug_in_queue_295e:
 * make byte offset into lut at db_word_address_table_2a3c  (_finalize_object) ... also we're done with bit-7
-	asl.b	#1,d2                            	| [sla  c]
+	asl.b	#1,d2                            	| [$295E: sla  c]
 
 * find a slot in the queue
-	move.b	#0x0C,d1                        	| [ld   b,#0x0C] number of structures in array
-	move.w	#0x0014,d3                      	| [ld   de,#0x0014] size of 1 data structure 20
-	lea	ds_bug_motion_que_9100,a2           	| [ld   ix,#ds_bug_motion_que_9100]
+	move.b	#0x0C,d1                        	| [$2960: ld   b,#0x0C] number of structures in array
+	move.w	#0x0014,d3                      	| [$2962: ld   de,#0x0014] size of 1 data structure 20
+	lea	ds_bug_motion_que_9100,a2           	| [$2965: ld   ix,#ds_bug_motion_que_9100]
 l_2969_while:
-	btst.b	#0,(0x13,a2)                    	| [bit  0,0x13(ix)]
-	jeq	l_2974_got_slot                    	    | [jr   z,l_2974_got_slot]
-	add.w	d3,a2                            	| [add  ix,de] advance pointer
+	btst.b	#0,(0x13,a2)                    	| [$2969: bit  0,0x13(ix)]
+	jeq	l_2974_got_slot                    	    | [$296D: jr   z,l_2974_got_slot]
+	add.w	d3,a2                            	| [$296F: add  ix,de] advance pointer
 	subq.b	#1,d1                           	| [...]
-	jne	l_2969_while                       	    | [djnz l_2969_while]
-	rts                                    	    | [ret] can't find a slot... bummer
+	jne	l_2969_while                       	    | [$2971: djnz l_2969_while]
+	rts                                    	    | [$2973: ret] can't find a slot... bummer
 
 * each time is another bug of a new wave formation getting ready to appear
 l_2974_got_slot:
@@ -8270,26 +8269,26 @@ l_2AD3:
 * if ( -32 == obj_pos_rel[0] ) then nest_dir_lr = 0
 	sub.b	#0xE0,d0                         	| [sub  #0xE0] -$20
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    	    | [ret  nz] [...]
 0:
 
 	move.b	d0,ds_9200_glbls+0x0F           	| [ld   (ds_9200_glbls + 0x0F),a] 0 ... nest direction... left limit reached
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 * the formation is complete... diving attacks shall commence
 l_2ADA_done:
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_9200_glbls+0x0F           	| [ld   (ds_9200_glbls + 0x0F),a] 0 ... nest direction
-	move.b	d0,ds_cpu0_task_actv_9000+0x0A       	| [ld   (ds_cpu0_task_actv_9000 + 0x0A),a] 0 ... disable this task (f_lateral_movement_at_round_start_2a90)
+	move.b	d0,ds_cpu0_task_actv_9000+0x0A      | [ld   (ds_cpu0_task_actv_9000 + 0x0A),a] 0 ... disable this task (f_lateral_movement_at_round_start_2a90)
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,b_9AA0+0x00                  	| [ld   (b_9AA0 + 0x00),a] 1 ... sound-fx count/enable register, pulsing formation sound effect
-	move.b	d0,ds_cpu0_task_actv_9000+0x09       	| [ld   (ds_cpu0_task_actv_9000 + 0x09),a] 1 ... enable f_pulsating_swarm_movement_1de6 ... collective bug movement
-	rts                                    	| [ret]
+	move.b	d0,ds_cpu0_task_actv_9000+0x09      | [ld   (ds_cpu0_task_actv_9000 + 0x09),a] 1 ... enable f_pulsating_swarm_movement_1de6 ... collective bug movement
+	rts                                    	    | [ret]
 
 * last bug of challenge is gone or killed
 l_2AE9_done:
-	move.b	d0,ds_cpu0_task_actv_9000+0x0A       	| [ld   (ds_cpu0_task_actv_9000 + 0x0A),a] 0 ... disable this task (f_lateral_movement_at_round_start_2a90)
-	rts                                    	| [ret]
+	move.b	d0,ds_cpu0_task_actv_9000+0x0A      | [ld   (ds_cpu0_task_actv_9000 + 0x0A),a] 0 ... disable this task (f_lateral_movement_at_round_start_2a90)
+	rts                                    	    | [ret]
 
 
 *=============================================================================
@@ -10860,6 +10859,8 @@ l_01A2_set_challeng_stg:
 	jbsr	string_out_pe_30                    | [$01A4: rst  0x30] string_out_pe "CHALLENGING STAGE"
 	move.b	#1,d0                           	| [$01A5: ld   a,#1]
 	move.b	d0,b_9AA0+0x0D                  	| [$01A7: ld   (b_9AA0 + 0x0D),a] 1 ... sound-fx count/enable registers, start challenge stage
+	move.w	#CHALLENGING_STAGE_SND,D0
+	jbsr	osd_sound_start
 	move.b	#8,d0                           	| [$01AA: ld   a,#8] start value for wave_bonus_ctr (decremented by cpu-b when bug destroyed)
 * }
 
