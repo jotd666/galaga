@@ -1,8 +1,7 @@
-- implement level skip & other trainer
-- blue aliens never attack, only red and bosses do: case_bmbr_yellow_1BD7 nevel called!
-- level 4: wrong traj (after mutating aliens?): EA04
-- ship explosion: double size blit is wrong
 - capture ship doesn't capture. f_boss_diving_down_to_capture_ship_21cb is called indefinitely
+- level 4: wrong traj (after mutating alien): EA04
+- implement level skip & other trainer
+- ship explosion: double size blit is wrong
   check if l_1A4B_test_positioning_timer is reached which calls l_1A6A_ship_in_position
 - shoots all both missiles immediately (main: 1766), demo AND in-game
 - challenge stage: wrong enemy shot count

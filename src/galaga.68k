@@ -4722,17 +4722,17 @@ check_bomber_for_ready_status_1ba8:
 	move.b	#3,d1                           	| [$1BAB: ld   b,#3]
 l_1BAD:
 	subq.b	#1,(a0)                         	| [$1BAD: dec  (hl)] check if this one timed out
-	jeq	demo_boss_attacks_1BB4                  | [$1BAE: jr   z,demo_boss_attacks_1BB4] b used below argument to "switch" to select type of alien launched?
+	jeq	alien_attacks_1BB4                      | [$1BAE: jr   z,alien_attacks_1BB4] b used below argument to "switch" to select type of alien launched?
 	addq.w	#1,a0                           	| [$1BB0: inc  l]
 	subq.b	#1,d1                           	| [...]
 	jne	l_1BAD                             		| [$1BB1: djnz l_1BAD]
 	rts                                    		| [$1BB3: ret] none are ready
 
 * called when boss formations or single boss is attacking in the demo
-demo_boss_attacks_1BB4:
+alien_attacks_1BB4:
 * if (bugs_flying_nbr >= max_flying_bugs_this_rnd) then ...
-	move.b	ds_new_stage_parms_99c0+0x04,d0     | [$1BB4: ld   a,(ds_new_stage_parms_99c0 + 0x04)] max_bombers
-	move.b	d0,d2                           	| [$1BB7: ld   c,a]
+	move.b	ds_new_stage_parms_99c0+0x04,d2     | [$1BB4: ld   a,(ds_new_stage_parms_99c0 + 0x04)] max_bombers
+	                                         	| [$1BB7: ld   c,a]
 	move.b	b_bugs_flying_nbr_9287,d0           | [$1BB8: ld   a,(b_bugs_flying_nbr_9287)]
 	cmp.b	d2,d0                            	| [$1BBB: cp   c]
 	jcs	l_1BC0                             		| [$1BBC: jr   c,l_1BC0]
@@ -7418,7 +7418,7 @@ l_25B4:
 
 * ... then ...
 * HL = &idx_tbl[ rank * 17 ][ 0 ] ... select index table row, by rank
-	move.b	b_mchn_cfg_rank,d0              	| [$25BA: ld   a,(b_mchn_cfg_rank)]
+	move.b	b_mchn_cfg_rank_9984,d0              	| [$25BA: ld   a,(b_mchn_cfg_rank_9984)]
 	move.b	#17,d6                          	| [$25BD: ld   l,#17]
 	jbsr	c_104E_mul_16_8                   	| [$25BF: call c_104E_mul_16_8] L = rank * 17
 	move.b	d6,d0                           	| [$25C2: ld   a,l]
@@ -9504,25 +9504,23 @@ c_svc_updt_dsply:
 *    0x02  = 2 -> D (HARDEST)
 *    0x03  = 3 -> A (EASY)
 
-	                   	| [ld   hl,#_sfr_dsw1] difficulty level
-	jbsr	osd_read_dsw_1                         	| [ld   a,(hl)]
-	ror.b	#1,d0                           	| [rra] get DSWA#1 (sfr_dsw1:1)
-	and.b	#0x01,d0                         	| [and  #0x01]
-	move.b	d0,d2                           	| [ld   c,a]
-
-	                           	| [inc  hl]
-	jbsr	osd_read_dsw_2                         	| [ld   a,(hl)]
-	and.b	#0x02,d0                         	| [and  #0x02] get DSWA#2 (sfr_dsw2:1)
-	or.b	d2,d0                             	| [or   c] lo-bit in C
-	move.b	d0,b_mchn_cfg_rank              	| [ld   (b_mchn_cfg_rank),a]
-
-	lea	str_3A68,a0                    	| [ld   hl,#str_3A68] base_address of rank-characters (B/C/D/A)
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
-	lea	0x8000+0x0220+0x0C,a1      	| [ld   de,#0x8000 + 0x0220 + 0x0C] rank-character ("B", "C", "D", or "A")
-	move.b	(a0),d0                               	| [ldi] (DE)<-(HL) ..."X" of "RANK X" displayed
+	                   	                        | [$3813: ld   hl,#_sfr_dsw1] difficulty level
+	jbsr	osd_read_dsw_1                      | [$3816: ld   a,(hl)]
+	ror.b	#1,d0                           	| [$3817: rra] get DSWA#1 (sfr_dsw1:1)
+	and.b	#0x01,d0                         	| [$3818: and  #0x01]
+	move.b	d0,d2                           	| [$381A: ld   c,a]
+	                           	                | [$381B: inc  hl]
+	jbsr	osd_read_dsw_2                      | [$381C: ld   a,(hl)]
+	and.b	#0x02,d0                         	| [$381D: and  #0x02] get DSWA#2 (sfr_dsw2:1)
+	or.b	d2,d0                             	| [$381F: or   c] lo-bit in C
+	move.b	d0,b_mchn_cfg_rank_9984             | [$3820: ld   (b_mchn_cfg_rank_9984),a]
+	lea	str_3A68,a0                    	        | [$3823: ld   hl,#str_3A68] base_address of rank-characters (B/C/D/A)
+	jbsr	add_d0_to_a0_0010                   | [$3826: rst  0x10] HL += A
+	lea	0x8000+0x0220+0x0C,a1      	            | [$3827: ld   de,#0x8000 + 0x0220 + 0x0C] rank-character ("B", "C", "D", or "A")
+	move.b	(a0),d0                             | [$382A: ldi] (DE)<-(HL) ..."X" of "RANK X" displayed
 	jbsr	write_videoram_to_a1
-	lea	str_3AE4,a0                    	| [ld   hl,#str_3AE4] "RANK"
-	jbsr	c_text_out                        	| [call c_text_out] display "RANK"
+	lea	str_3AE4,a0                    	        | [$382C: ld   hl,#str_3AE4] "RANK"
+	jbsr	c_text_out                        	| [$382F: call c_text_out] display "RANK"
 
 
 * NUMBER OF FIGHTERS (DSWB)
@@ -9532,34 +9530,34 @@ c_svc_updt_dsply:
 *     0xC0 -> 5
 
 * configuration setting is "number of fighters - 1"
-	jbsr	osd_read_dsw_7                 	    | [ld   hl,#_sfr_dsw7] get DSWB#7 (sfr_dsw7:0)
-	                         	                | [ld   a,(hl)] hi-bit
+	jbsr	osd_read_dsw_7                 	    | [$3832: ld   hl,#_sfr_dsw7] get DSWB#7 (sfr_dsw7:0)
+	                         	                | [$3835: ld   a,(hl)] hi-bit
 	move.b		d0,d7
-	jbsr	osd_read_dsw_8   			        | [inc  hl] get DSWB#8 (sfr_dsw8:0)
-	move.b	d0,d2                         	    | [ld   c,(hl)] lo-bit
+	jbsr	osd_read_dsw_8   			        | [$3836: inc  hl] get DSWB#8 (sfr_dsw8:0)
+	move.b	d0,d2                         	    | [$3837: ld   c,(hl)] lo-bit
 	move.b	d7,d0
-	roxr.b	#1,d2                           	| [rr   c] "right-shift" lo-bit into Cy flag.
-	addx.b	d0,d0								| [adc  a,a]   | "left-shift" the hi-bit and add the lo-bit from Cy flag.
-	and.b	#0x03,d0                         	| [and  #0x03]
-	addq.b	#1,d0                           	| [inc  a] this gives "cfg = nbr_of_ships - 1"
-	move.b	d0,b_mchn_cfg_nships            	| [ld   (b_mchn_cfg_nships),a]
+	roxr.b	#1,d2                           	| [$3838: rr   c] "right-shift" lo-bit into Cy flag.
+	addx.b	d0,d0								| [$383A: adc  a,a]   | "left-shift" the hi-bit and add the lo-bit from Cy flag.
+	and.b	#0x03,d0                         	| [$383B: and  #0x03]
+	addq.b	#1,d0                           	| [$383D: inc  a] this gives "cfg = nbr_of_ships - 1"
+	move.b	d0,b_mchn_cfg_nships            	| [$383E: ld   (b_mchn_cfg_nships),a]
 
 *  0x8000[$02EA] = mchn_cfg_nships + 1
-	addq.b	#1,d0                           	| [inc  a]
-	move.w	#0x8000+0x02E0+0x0A,d7       	| [ld   (0x8000 + 0x02E0 + 0x0A),a] "X" of "X SHIPS" displayed
+	addq.b	#1,d0                           	| [$3841: inc  a]
+	move.w	#0x8000+0x02E0+0x0A,d7       	    | [$3842: ld   (0x8000 + 0x02E0 + 0x0A),a] "X" of "X SHIPS" displayed
 	jbsr	osd_w_videoram
 *  text_out($3AEB)
-	lea	str_3AEB,a0                    	| [ld   hl,#str_3AEB] "SHIPS"
-	jbsr	c_text_out                        	| [call c_text_out]
+	lea	str_3AEB,a0                    	        | [$3845: ld   hl,#str_3AEB] "SHIPS"
+	jbsr	c_text_out                        	| [$3848: call c_text_out]
 
 
 * load default IO params (sets up credit-mode and joystick remapping - see _372D)
 * 4 arguments to "set coinage" command (9281-4) will be updated below to capture
 * dip switch changes for credit-mode.
-	lea	d_3AC4,a0                      	| [ld   hl,#d_3AC4]
-	lea	ds8_9280_tmp_IO_parms,a1       	| [ld   de,#ds8_9280_tmp_IO_parms] default IO params for credit-mode (8 bytes)
-	move.w	#0x08,d1                        	| [ld   bc,#0x0008] 8
-	jbsr	ldir                              	| [ldir]
+	lea	d_3AC4,a0                      	        | [$384B: ld   hl,#d_3AC4]
+	lea	ds8_9280_tmp_IO_parms,a1       	        | [$384E: ld   de,#ds8_9280_tmp_IO_parms] default IO params for credit-mode (8 bytes)
+	move.w	#0x08,d1                        	| [$3851: ld   bc,#0x0008] 8
+	jbsr	ldir                              	| [$3854: ldir]
  
 * COINS PER CREDIT (DSWB)
 *  Mask   SW#1 SW#2 SW#3
@@ -9572,7 +9570,7 @@ c_svc_updt_dsply:
 *  0x03   OFF  OFF  ON  - 1-coin/2-credit
 *  0x07   OFF  OFF  OFF - 1-coin/1-credit
 
-*	lea	_sfr_dsw1,a0                   	| [ld   hl,#_sfr_dsw1] coins per credit
+*	lea	_sfr_dsw1,a0                   	        | [ld   hl,#_sfr_dsw1] coins per credit
 *	move.b	#3,d1                           	| [ld   b,#3] 3 bits
 *	clr.b	d0                               	| [xor  a]
 *l_385C:
@@ -10451,60 +10449,60 @@ c_sctrl_sprite_ram_clr_003c:
 *  ...
 *-----------------------------------------------------------------------------
 new_stage_setup_2c00:
-	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] new stage setup
+	move.b	ds_plyr_actv+_b_stgctr,d0       	| [$2C00: ld   a,(ds_plyr_actv +_b_stgctr)] new stage setup 9821
 l_2C03:
 * while (A > 0x1B)  A -= 4
-	cmp.b	#0x1B,d0                         	| [cp   #0x1B]
-	jcs	l_2C0B                             	| [jr   c,l_2C0B] goto 2C0B
-	subq.b	#4,d0                           	| [sub  #4]
-	jra	l_2C03                             	| [jr   l_2C03]
+	cmp.b	#0x1B,d0                         	| [$2C03: cp   #0x1B]
+	jcs	l_2C0B                             	    | [$2C05: jr   c,l_2C0B] goto 2C0B
+	subq.b	#4,d0                           	| [$2C07: sub  #4]
+	jra	l_2C03                             	    | [$2C09: jr   l_2C03]
 
-* E = ( adj_stg_cnt - 1 ) + adj_stg_cnt * 4  ... multiply by 5
+* E = ( adj_stg_cnt - 1 ) + (adj_stg_cnt-1) * 4  ... multiply by 5
 l_2C0B:
-	subq.b	#1,d0                           	| [dec  a]
-	move.b	d0,d6                           	| [ld   l,a]
-	rol.b	#2,d0                            	| [rlca] * 2
-	add.b	d6,d0                            	| [add  a,l]
-	move.b	d0,d4                           	| [ld   e,a]
+	subq.b	#1,d0                           	| [$2C0B: dec  a]
+	move.b	d0,d6                               | [$2C0C: ld   l,a]
+	rol.b	#2,d0                            	| [$2C0D: rlca] * 2
+	add.b	d6,d0                               | [$2C0F: add  a,l]
+	move.b	d0,d4                           	| [$2C10: ld   e,a]
 
 * pTbl = bmbr_stg_cfg_lut[mchn_cfg.rank]
-	move.b	b_mchn_cfg_rank,d0              	| [ld   a,(b_mchn_cfg_rank)]
-	lea	bmbr_stg_cfg_lut,a0            	| [ld   hl,#bmbr_stg_cfg_lut] ld the table of ptrs
-	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
-	move.l	(a0),a0                       	| [ld   a,(hl)]
-	                       	| [inc  hl]
-	                       	| [ld   h,(hl)]
-	                       	| [ld   l,a]
+	move.b	b_mchn_cfg_rank_9984,d0             | [$2C11: ld   a,(b_mchn_cfg_rank_9984)]
+	lea	bmbr_stg_cfg_lut,a0            	        | [$2C14: ld   hl,#bmbr_stg_cfg_lut] ld the table of ptrs
+	jbsr	add_4_times_d0_to_a0_0008           | [$2C17: rst  0x08] HL += 2A get pointer
+	move.l	(a0),a0                       	    | [$2C18: ld   a,(hl)]
+	                       	                    | [$2C19: inc  hl]
+	                       	                    | [$2C1A: ld   h,(hl)]
+	                       	                    | [$2C1B: ld   l,a]
 
 * pTbl[E]|
-	move.b	d4,d0                           	| [ld   a,e] adj_stg_cnt * 5
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A ... offset into lut
+	move.b	d4,d0                           	| [$2C1C: ld   a,e] adj_stg_cnt * 5
+	jbsr	add_d0_to_a0_0010                   | [$2C1D: rst  0x10] HL += A ... offset into lut
 
-	lea	ds_new_stage_parms_99c0,a1          	| [ld   de,#ds_new_stage_parms_99c0]
-	move.b	#5,d1                           	| [ld   b,#5]
+	lea	ds_new_stage_parms_99c0,a1          	| [$2C1E: ld   de,#ds_new_stage_parms_99c0]
+	move.b	#5,d1                           	| [$2C21: ld   b,#5]
 l_2C23:
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	move.b	d0,d2                           	| [ld   c,a] stash data byte
+	move.b	(a0)+,d0                         	| [$2C23: ld   a,(hl)]
+	move.b	d0,d2                           	| [$2C24: ld   c,a] stash data byte
 * new_stage_parms[L * 2 + 0] = upper nibble
-	rol.b	#4,d0                            	| [rlca] * 4
-	and.b	#0x0F,d0                         	| [and  #0x0F]
-	move.b	d0,(a1)+                         	| [ld   (de),a]
+	rol.b	#4,d0                            	| [$2C25: rlca] * 4
+	and.b	#0x0F,d0                         	| [$2C29: and  #0x0F]
+	move.b	d0,(a1)+                         	| [$2C2B: ld   (de),a]
 * new_stage_parms[L * 2 + 1] = lower nibble
-	                           	| [inc  e]
-	move.b	d2,d0                           	| [ld   a,c] retrieve data byte
-	and.b	#0x0F,d0                         	| [and  #0x0F]
-	move.b	d0,(a1)+                         	| [ld   (de),a]
+	                           	                | [$2C2C: inc  e]
+	move.b	d2,d0                           	| [$2C2D: ld   a,c] retrieve data byte
+	and.b	#0x0F,d0                         	| [$2C2E: and  #0x0F]
+	move.b	d0,(a1)+                         	| [$2C30: ld   (de),a]
 * increment pointers
-	                           	| [inc  e]
-	addq.w	#1,a0                           	| [inc  hl]
+	                           	                | [$2C31: inc  e]
+	                                         	| [$2C32: inc  hl]
 	subq.b	#1,d1                           	| [...]
-	jne	l_2C23                             	| [djnz l_2C23]
+	jne	l_2C23                               	| [$2C33: djnz l_2C23]
 
 * set ds_new_stage_parms_99c0[0x0A] ... number of remaining aliens for enable clone-attack
-	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] new stage setup
+	move.b	ds_plyr_actv+_b_stgctr,d0       	| [$2C35: ld   a,(ds_plyr_actv +_b_stgctr)] new stage setup
 * if ( stage_ctr < 3 )  A = 0 ...
 	cmp.b	#3,d0                            	| [cp   #3]
-	jcc	l_2C3F                             	| [jr   nc,l_2C3F]
+	jcc	l_2C3F                             	    | [jr   nc,l_2C3F]
 * ... then
 	clr.b	d0                               	| [xor  a]
 	jra	l_2C46                             	| [jr   l_2C46]
@@ -10512,7 +10510,7 @@ l_2C3F:
 * else if 0xFF == (plyr_state_actv.stage_ctr	| 0x0FC)
 	or.b	#~0x03,d0                          	| [or   #~0x03] challenge stages numbered so that bit_0 + bit_1 == 11b
 	addq.b	#1,d0                           	| [inc  a]
-	jeq	l_2C46                             	| [jr   z,l_2C46]
+	jeq	l_2C46                             	    | [jr   z,l_2C46]
 * ... then
 	move.b	#0x0A,d0                        	| [ld   a,#0x0A] non-challenge stage
 
@@ -10522,15 +10520,16 @@ l_2C46:
 * 16 02 02 i.e. start of round defaults for yellow, red, boss bomber timers
 	move.b	#0x02,d1                        	| [ld   bc,#0x0216] 534
 	move.b	#0x16,d2                        	| [ld   bc,#0x0216] 534
-	move.b	d1,b_92C0+0x01                  	| [ld   (b_92C0 + 0x01),bc] = $0216 (int values for ready timers of each bomber type)
 	move.b	d2,b_92C0+0x00                  	| [ld   (b_92C0 + 0x00),bc] = $0216 (int values for ready timers of each bomber type)
+	move.b	d1,b_92C0+0x01                  	| [ld   (b_92C0 + 0x01),bc] = $0216 (int values for ready timers of each bomber type)
+	move.b	d1,b_92C0+0x02                  	| [ld   (b_92C0 + 0x01),bc] = $0216 (int values for ready timers of each bomber type)
 
 * adjust star speed
 
 *  A = (stage_ctr < $10) : stage_ctr ? $10
 	move.b	ds_plyr_actv+_b_stgctr,d0       	| [ld   a,(ds_plyr_actv +_b_stgctr)] limit is 10
 	cmp.b	#0x10,d0                         	| [cp   #0x10]
-	jcs	l_2C5B                             	| [jr   c,l_2C5B]
+	jcs	l_2C5B                             	    | [jr   c,l_2C5B]
 	move.b	#0x10,d0                        	| [ld   a,#0x10]
 l_2C5B:
 	rol.b	#2,d0                            	| [rlca] * 2

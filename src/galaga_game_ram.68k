@@ -177,7 +177,7 @@
 	.global		w_mchn_cfg_bonus_9980
 	.global		b_mchn_cfg_nships
 	.global		b_mchn_cfg_cab_type
-	.global		b_mchn_cfg_rank
+	.global		b_mchn_cfg_rank_9984
 	.global		b16_99B0_tmp
 	.global		ds3_99B0_X3attackcfg
 	.global		b8_99B0_X3attackcfg_ct
@@ -634,7 +634,7 @@ b_mchn_cfg_nships:
        ds.b     0x01
 b_mchn_cfg_cab_type:
        ds.b     0x01
-b_mchn_cfg_rank:
+b_mchn_cfg_rank_9984:
        ds.b     0x01
 
        ds.b     0x2B       | 9985-8F unused

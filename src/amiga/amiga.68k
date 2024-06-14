@@ -2767,26 +2767,53 @@ osd_update_inputs:
 	
 	
 osd_read_dsw_1:
-	* actual dipswitches
-	move.b	dip_switches(pc),d0
-	
+	move.b	#3,d0
 
 	rts
 
 osd_read_dsw_2:
-	moveq	#0,d0
+*    0x00  = 0 -> A (MEDIUM)
+*    0x01  = 1 -> C (HARD)
+*    0x02  = 2 -> D (HARDEST)
+*    0x03  = 3 -> A (EASY)
+
+	moveq	#3,d0
 	rts
 	
 osd_read_dsw_3:
 	moveq	#0,d0
 	rts
 	
+
+
 osd_read_dsw_4:
 	moveq	#1,d0
 	rts
+
+	* < 5 fighters
+	*PORT_DIPSETTING(    0x20, "20K, 60K, Every 60K" )   PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0) /* Began with 2, 3 or 4 fighters */
+	*PORT_DIPSETTING(    0x18, "20K and 60K Only" )      PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0)
+	*PORT_DIPSETTING(    0x10, "20K, 70K, Every 70K" )   PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0) // factory default = "20K, 70K, Every70K"
+	*PORT_DIPSETTING(    0x30, "20K, 80K, Every 80K" )   PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0)
+	*PORT_DIPSETTING(    0x38, "30K and 80K Only" )      PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0)
+	*PORT_DIPSETTING(    0x08, "30K, 100K, Every 100K" ) PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0)
+	*PORT_DIPSETTING(    0x28, "30K, 120K, Every 120K" ) PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0)
+	*PORT_DIPSETTING(    0x00, DEF_STR( None ) )         PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0)
+
+	* with 5 fighters
+	*PORT_DIPSETTING(    0x20, "30K, 100K, Every 100K" ) PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0) /* Began with 5 fighters */
+	*PORT_DIPSETTING(    0x18, "30K and 150K Only" )     PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
+	*PORT_DIPSETTING(    0x10, "30K, 120K, Every 120K" ) PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
+	*PORT_DIPSETTING(    0x30, "30K, 150K, Every 150K" ) PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
+	*PORT_DIPSETTING(    0x38, "30K Only" )              PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
+	*PORT_DIPSETTING(    0x08, "30K and 100K Only" )     PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
+	*PORT_DIPSETTING(    0x28, "30K and 120K Only" )     PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
+	*PORT_DIPSETTING(    0x00, DEF_STR( None ) )         PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
+	*PORT_DIPNAME( 0xc0, 0x80, DEF_STR( Lives ) )        PORT_DIPLOCATION("SWA:7,8")
 	
 osd_read_dsw_5:
-	moveq	#1,d0
+	* bonus life
+	moveq	#3,d0
 	rts
 	
 osd_read_dsw_6:
@@ -2800,7 +2827,7 @@ osd_read_dsw_6:
 *     0xC0 -> 5
 
 osd_read_dsw_7:
-	moveq	#0,d0
+	move	#0x80,d0
 	rts
 	
 osd_read_dsw_8:
