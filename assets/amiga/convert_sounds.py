@@ -34,6 +34,7 @@ sound_dict = {
 "SHOT_SND"               :{"index":0x9,"channel":2,"sample_rate":hq_sample_rate},
 "CHALLENGING_STAGE_SND"               :{"index":0xD,"channel":0,"sample_rate":hq_sample_rate},
 "ATTACK_SND"               :{"index":0x13,"channel":3,"sample_rate":hq_sample_rate},
+"EXPLOSION_SND"            :{"index":0x19,"channel":0,"sample_rate":hq_sample_rate},
 
 }
 

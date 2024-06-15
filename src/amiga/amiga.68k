@@ -71,7 +71,7 @@ ONE_TICK = 1
 	.endif
 	
 
-OPT_ENABLE_DOUBLE_BUFFERING = 0
+OPT_ENABLE_DOUBLE_BUFFERING = 1
 
 _custom = 0xDFF000
 
@@ -2456,7 +2456,6 @@ update_bg_tile:
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	add.l	d7,a3
 	.endif
-	WAIT_BLIT
 
 	* optimization when a well-known
 	* empty character is passed (standard charset)

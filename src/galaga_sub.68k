@@ -774,8 +774,12 @@ l_064F:
 	move.b	d0,ds_plyr_actv+_b_2ship        	| [$066D: ld   (ds_plyr_actv +_b_2ship),a] 0
 	move.b	b8_game_state_9201,d0           	| [$0670: ld   a,(b8_game_state_9201)]
 	subq.b	#1,d0                           	| [$0673: dec  a]
+	*bne.b	0f
 	move.b	d0,b_9AA0+0x19                  	| [$0674: ld   (b_9AA0 + 0x19),a] sound-fx count/enable registers, "bang" sound (not in Attract Mode)
-
+	move.w	#EXPLOSION_SND,D0
+	jbsr	osd_sound_start
+0:
+	
 * if no_restart_stg  ret ...
 	move.b	ds_9200_glbls+0x17,d0           	| [ld   a,(ds_9200_glbls + 0x17)] no_restart_stg is set if docked fighters
 	                               	            | [and  a]
@@ -1498,24 +1502,6 @@ l_08CA_hit_green_boss:
 *  ...
 *-----------------------------------------------------------------------------
 
-mq_fine_y_00 = 0x00
-mq_y_01 = 0x01		| X on amiga
-mq_fine_x_02 = 0x02
-mq_x_03 = 0x03      | Y on amiga
-mq_angle_lsb_04 = 0x04
-mq_angle_msb_05 = 0x05
-mq_home_position_y_06 = 0x06
-mq_home_position_x_07 = 0x07
-mq_fp_lsb_08 = 0x08
-mq_fp_msb_09 = 0x09
-*A
-*B
-*C
-mq_timeout_0d = 0x0D
-mq_object_id_10 = 0x10
-mq_x_offset_11 = 0x11
-mq_y_offset_12 = 0x12
-mq_state_13 = 0x13
 
 f_bug_motion_runner_08d3:
 	lea	ds_bug_motion_que_9100,a2           	| [$08D3: ld   ix,#ds_bug_motion_que_9100]
@@ -2149,19 +2135,19 @@ l_flite_pth_load_0BDC:
 * A < $EF (current token)
 	move.b	d0,d2                           	| [$0BDC: ld   c,a] data[ n + 0 ]
 	and.b	#0x0F,d0                         	| [$0BDD: and  #0x0F]
-	move.b	d0,(0x0A,a2)                    	| [$0BDF: ld   0x0A(ix),a] lo-nibble
+	move.b	d0,(mq_unknown_0A,a2)                    	| [$0BDF: ld   0x0A(ix),a] lo-nibble
 	move.b	d2,d0                           	| [$0BE2: ld   a,c]
 	rol.b	#4,d0                            	| [$0BE3: rlca] * 4
 	and.b	#0x0F,d0                         	| [$0BE7: and  #0x0F]
 	addq.w	#1,a0                           	| [$0BE9: inc  hl]
-	move.b	d0,(0x0B,a2)                    	| [$0BEA: ld   0x0B(ix),a] hi-nibble (right shifted into bits<0:3>
+	move.b	d0,(mq_unknown_0B,a2)                    	| [$0BEA: ld   0x0B(ix),a] hi-nibble (right shifted into bits<0:3>
 	move.b	(a0)+,d0                         	| [$0BED: ld   a,(hl)] data[ n + 1 ] ... to (ix)0x0C
 												| [$0BEE: inc  hl]
 	btst.b	#7,(mq_state_13,a2)                 | [$0BEF: bit  7,0x13(ix)] if set then negate data to (ix)0x0C
 	jeq	l_0BF7                             		| [$0BF3: jr   z,l_0BF7]
 	neg.b	d0                               	| [$0BF5: neg]
 l_0BF7:
-	move.b	d0,(0x0C,a2)                    	| [$0BF7: ld   0x0C(ix),a]
+	move.b	d0,(mq_angle_increment_0C,a2)               | [$0BF7: ld   0x0C(ix),a]
 	move.b	(a0)+,d0                         	| [$0BFA: ld   a,(hl)] data[ n + 2 ] ... to (ix)0x0D
 												| [$0BFB: inc  hl]
 	move.b	d0,(mq_timeout_0d,a2)               | [$0BFC: ld   0x0D(ix),a] expiration counter from data[ n + 2 ]
@@ -2223,7 +2209,7 @@ l_0C3E:
 
 * load DE with local copy of rotation value and go ahead and update pool slot
 l_0C46:
-	move.b	(0x0C,a2),d1                    	| [$0C46: ld   b,0x0C(ix)] add to (ix)0x04
+	move.b	(mq_angle_increment_0C,a2),d1               | [$0C46: ld   b,0x0C(ix)] add to (ix)0x04
 	move.b	(mq_angle_lsb_04,a2),d0             | [$0C49: ld   a,0x04(ix)]
 	move.b	d0,d4                           	| [$0C4C: ld   e,a] need this later ...
 	add.b	d1,d0                            	| [$0C4D: add  a,b] need this below for rra ...
@@ -2300,10 +2286,10 @@ l_0C81:
 	move.b	ds3_frame_cts_92A0+0,d0         	| [$0C98: ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x01,d0                         	| [$0C9B: and  #0x01]
 	jeq	l_0CA4                             		| [$0C9D: jr   z,l_0CA4]
-	move.b	(0x0A,a2),d0                    	| [$0C9F: ld   a,0x0A(ix)]
+	move.b	(mq_unknown_0A,a2),d0                    	| [$0C9F: ld   a,0x0A(ix)]
 	jra	l_0CA7                             		| [$0CA2: jr   l_0CA7]
 l_0CA4:
-	move.b	(0x0B,a2),d0                    	| [$0CA4: ld   a,0x0B(ix)]
+	move.b	(mq_unknown_0B,a2),d0                    	| [$0CA4: ld   a,0x0B(ix)]
 
 l_0CA7:
 	tst.b	d0                                	| [$0CA7: and  a] if zero, start of tractor beam and we can skip this crap

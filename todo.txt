@@ -1,13 +1,12 @@
-- double buffering!!!
 - capture ship doesn't capture. f_boss_diving_down_to_capture_ship_21cb is called indefinitely
-  check if l_1A4B_test_positioning_timer is reached which calls l_1A6A_ship_in_position
+- sometimes it works but then it's buggy!!
+- captured ship wrong clut 0x32 masked??? to 2?
+- double buffering: don't double buffer last plane
 - crash div 0 on statistics screen: c_puts_hitmiss_ratio_0A72
   when it works, 50.  ... => 0 % is too high on screen
+- needs heavy optimizing with HW sprites, and probably frame drop...
 - illegal after game over & statistics screen
 - level 4 or 5: at some point aliens stop shooting
-- implement level skip & other trainer
-- shoots all both missiles immediately in demo
-- challenge stage: wrong enemy shot count
 - scorpion clone attack: wrong (only 2, not properly oriented) & wrong colors
 - 2 first rows not shown (attribute/color is black!!!)
 - player lives:  wrong colors
@@ -17,12 +16,59 @@
 - ACTIVE_BITPLANE_MASK not implemented
 - demo: ship misses first boss on first shot: desync, hack it: if intro running
   then be nicer with detection around 0788 (sub) (add 3 of tolerance)
+- redraw bottom tiles all the time or maybe only if some sprite Y > some value
+- explosions: last frame shifted
+- missing sounds: exploding aliens, exploding ship...
+- implement level skip & other trainer
 
 traj issues: Traj computed in subcpu D23 / D50 probe there!
 
 l_2ADA_done: all bugs arrived: phase 2 diving attacks!
+ capture:  check if l_1A3F_join_ship_to_group (not called!!), l_1A4B_test_positioning_timer is reached which calls l_1A6A_ship_in_position
 
 maybe fixed already:
 
 - first level second wave: one boss does something different (init issue?)
-- demo: boss explosions: some frames shifted
+- challenge stage: wrong enemy shot count
+
+
+mutants:
+
+f_clone_attack_manager_1A80:
+* check parameter for condition to enable the bonus-bee feature.
+$1A80: ld   a,(ds_new_stage_parms_99c0 + 0x0A)] bonus-bee when bug count reaches thi
+$1A83: ld   c,a]
+$1A84: ld   a,(b_bugs_actv_nbr)]transients:
+$1A87: cp   c]
+...]$260C: ld   b,a] sets the loop count ... after first bonus-round
+$1A88: ret  nc] [...]$260D: srl  a]
+$260F: add  a,#4]
+$2611: ld   e,a]
+
+$1A89: ld   a,(ds_plyr_actv +_b_bbee_tmr)]
+$1A8C: and  a]$2612: call c_1000] randomizer
+$1A8D: jr   nz,l_1AD5_in_one_already]$2615: ld   l,a]
+$2616: ld   h,#0]
+$1A8F: ld   hl,#b_8800 + 0x07] first object of bee group (minus 1)$2618: ld   a,e]
+$1A92: ld   bc,#20 * 256 + 0xFF] 20 of these pests (we don't care about C)$2619: call c_divmod] HL=HL/E
+$1A95: ld   a,#1] 1 == resting$261C: bit  0,b]
+$261E: jr   z,l_2622]
+$1A97: inc  l] increment to next even offset$2620: set  3,a]
+$1A98: cpi] A-(HL), HL <- HL+1, BC <- BC-1
+$1A9A: jr   z,l_1AAB_found_one]$2622: ld   h,#>ds_atk_wav_tmp_buf_9100] tmp_buf[ A ]
+...]$2624: ld   l,a]
+$1A9C: djnz l_1A97]
+
+esting$2625: ld   a,(hl)]
+$1A9E: ld   hl,#b_8800 + 0x40 - 1] offset into moth group$2626: inc  a]
+$1AA1: ld   b,#0x10] 16 of the vermin$2627: jr   nz,j_2612]
+$2629: ld   a,b]
+$1AA3: inc  l] increment to next even offset$262A: rlca]
+$1AA4: cpi]$262B: rlc  c]
+$1AA6: jr   z,l_1AAB_found_one]$262D: jr   nc,l_2631]
+...]$262F: or   #0x40]
+$1AA8: djnz l_1AA3]
+$1AAA: ret]$2631: or   #0x38]
+$2633: ld   (hl),a]
+...]
+$2634: djnz l_2612]

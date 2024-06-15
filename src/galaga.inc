@@ -32,5 +32,6 @@
     .equ  SHOT_SND,           0x9
 	.equ  CHALLENGING_STAGE_SND, 0xD
     .equ  ATTACK_SND,         0x13
+    .equ  EXPLOSION_SND,         0x19
 
     

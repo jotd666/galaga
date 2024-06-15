@@ -3,7 +3,7 @@
 ||
 
 
-| This bit of macro non-sense autumatically takes care of computing the offset
+| This bit of macro non-sense automatically takes care of computing the offset
 | to each element using the size argument specified in bytes.
 | The base of the structure is defined using a label and the '.ds' directive
 | to allocate the storage e.g.
@@ -52,3 +52,22 @@ _STRUCT  | plyr_state
   _DS  _w_shot_ct            2   | 0x26  game shots fired count
   _DS  _b_sndflag            1   | 0x28  enable "pulsing_sound" (_fx[0])
 
+* offset names for ds_bug_motion_que_9100 structures
+mq_fine_y_00 = 0x00
+mq_y_01 = 0x01		| X on amiga
+mq_fine_x_02 = 0x02
+mq_x_03 = 0x03      | Y on amiga
+mq_angle_lsb_04 = 0x04
+mq_angle_msb_05 = 0x05
+mq_home_position_y_06 = 0x06
+mq_home_position_x_07 = 0x07
+mq_fp_lsb_08 = 0x08
+mq_fp_msb_09 = 0x09
+mq_unknown_0A = 0x0A
+mq_unknown_0B = 0x0B
+mq_angle_increment_0C = 0x0C
+mq_timeout_0d = 0x0D
+mq_object_id_10 = 0x10
+mq_x_offset_11 = 0x11
+mq_y_offset_12 = 0x12
+mq_state_13 = 0x13
