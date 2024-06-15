@@ -1,15 +1,14 @@
 - double buffering!!!
 - capture ship doesn't capture. f_boss_diving_down_to_capture_ship_21cb is called indefinitely
   check if l_1A4B_test_positioning_timer is reached which calls l_1A6A_ship_in_position
-- scorpion clone attack: wrong & wrong colors
 - crash div 0 on statistics screen: c_puts_hitmiss_ratio_0A72
   when it works, 50.  ... => 0 % is too high on screen
 - illegal after game over & statistics screen
-- level 4: at some point aliens stop shooting
+- level 4 or 5: at some point aliens stop shooting
 - implement level skip & other trainer
-- ship explosion: double size blit is wrong
-- shoots all both missiles immediately (main: 1766), demo AND in-game
+- shoots all both missiles immediately in demo
 - challenge stage: wrong enemy shot count
+- scorpion clone attack: wrong (only 2, not properly oriented) & wrong colors
 - 2 first rows not shown (attribute/color is black!!!)
 - player lives:  wrong colors
 - stage 1 flag not drawn, and wrong colors

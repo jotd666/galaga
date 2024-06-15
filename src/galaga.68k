@@ -3883,11 +3883,12 @@ l_17A4:
 	rts                                    		| [$17A7: ret]
 
 * when? seems not reached. maybe used at some point to print a message?
+* prints "AND FOR EVERY", seems bogus!
 case_17A8:
-	move.b	(a1),d0                         	| [$17A8: ld   a,(de)]
-	and.b	#0x1F,d0                         	| [$17A9: and  #0x1F]
-	move.b	d0,d2                           	| [$17AB: ld   c,a]
-	jbsr	string_out_pe_30                    | [$17AC: rst  0x30] string_out_pe
+*	move.b	(a1),d0                         	| [$17A8: ld   a,(de)]
+*	and.b	#0x1F,d0                         	| [$17A9: and  #0x1F]
+*	move.b	d0,d2                           	| [$17AB: ld   c,a]
+*	jbsr	string_out_pe_30                    | [$17AC: rst  0x30] string_out_pe
 	rts                                    		| [$17AD: ret]
 
 * $8x: prior to each fighter shot in training mode
@@ -5709,10 +5710,7 @@ f_read_fire_button_1f04:
 	*add.b	ds3_io_input_99b5+0x01,d0       	| [add  a,#<ds3_io_input_99b5 + 0x01] add lsb
 	*move.b	d0,d6                           	| [ld   l,a]
 	lea	ds3_io_input_99b5+1,a0      			| [ld   h,#>ds3_io_input_99b5 + 0x00] msb
-	*and.w	#0xFF,d6
-	*add.w	d6,a0
-
-	btst.b	#4,(a0)                         	| [bit  4,(hl)]
+	btst.b	#4,(a0)                         	| [bit  4,(hl)] test fire bit
 	beq.b	0f                               	| [...]
 	rts                                    	    | [ret  nz] active low input [...]
 0:

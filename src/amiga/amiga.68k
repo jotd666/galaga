@@ -2743,10 +2743,14 @@ osd_update_inputs:
 0:
 	tst.b	(0x63,a1)		| "ctrl" key
 	beq.b	0f
-	bclr	#BIT_FIRE,d0
+	bset	#JPB_BTN_RED,d1		| previous inputs
+	bra.b	1f
 0:
 	btst	#JPB_BTN_RED,d1
 	beq.b	0f
+1:
+	btst	#JPB_BTN_RED,d2
+	bne.b	0f			        | debounce
 	bclr	#BIT_FIRE,d0
 0:
 	btst	#JPB_BTN_LEFT,d1
