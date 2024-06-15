@@ -4509,27 +4509,27 @@ l_1AAB_found_one:
 	addq.b	#4,d0                           	| [add  a,#4]
 	lea	ds_plyr_actv+_b_bbee_obj,a0    	| [ld   hl,#ds_plyr_actv +_b_bbee_obj]
 	move.b	d4,(a0)+                         	| [ld   (hl),e]
-	                           	| [inc  l]
+	                           	                | [inc  l]
 	move.b	d2,(a0)+                         	| [ld   (hl),c]
-	                           	| [inc  l]
+	                           	                | [inc  l]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	move.b	d0,b_9AA0+0x12                  	| [ld   (b_9AA0 + 0x12),a] sound-fx count/enable registers, bonus-bee sound
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 l_1AD5_in_one_already:
 	addq.b	#1,d0                           	| [inc  a] A == delay count until bonus-bee launch
-	jeq	l_1AF4_ready_go                    	| [jr   z,l_1AF4_ready_go]
+	jeq	l_1AF4_ready_go                    	    | [jr   z,l_1AF4_ready_go]
 	move.b	d0,ds_plyr_actv+_b_bbee_tmr     	| [ld   (ds_plyr_actv +_b_bbee_tmr),a] A<0 (delay count until bonus-bee launch)
 	exg		d0,d7                              	| [ex   af,af'] stash the counter
- 	lea	ds_plyr_actv+_b_bbee_obj,a0    	| [ld   hl,#ds_plyr_actv +_b_bbee_obj]
+ 	lea	ds_plyr_actv+_b_bbee_obj,a0    	        | [ld   hl,#ds_plyr_actv +_b_bbee_obj]
 	move.b	(a0),d4                         	| [ld   e,(hl)]
-	lea	b_8800,a1                      	| [ld   d,#>b_8800]
+	lea	b_8800,a1                      	        | [ld   d,#>b_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	move.b	(a1),d0                         	| [ld   a,(de)]
 * if ( object_status != 1 ) exit  ... (killed the little fucker before he could launch)
 	subq.b	#1,d0                           	| [dec  a]
-	jne	l_1B54_getout                      	| [jp   nz,l_1B54_getout]
+	jne	l_1B54_getout                      	    | [jp   nz,l_1B54_getout]
 * else
 	lea	ds_sprite_code_8B00,a1              	| [ld   d,#>ds_sprite_code_8B00]
 	and.w	#0xFF,d4
@@ -4587,9 +4587,9 @@ l_1B00:
 	move.b	d0,d2                           	| [$1B2C: ld   c,a]
 	lea	d_1B5F,a0                      			| [$1B2D: ld   hl,#d_1B5F] setup to load pointers into DE
 	jbsr	add_2_times_d0_to_a0_0008          	| [$1B30: rst  0x08] HL += 2A
-	move.b	(a0)+,d4                        	| [$1B31: ld   e,(hl)]
+	move.b	(a0)+,d3                        	| [$1B31: ld   e,(hl)]  big endian!!
 												| [$1B32: inc  hl]
-	move.b	(a0),d3								| [$1B33: ld   d,(hl)]
+	move.b	(a0),d4								| [$1B33: ld   d,(hl)]
 	LOAD_D3_16_FROM_D3D4
 * setup HL pointer to object in sprite code registers
 	lea	ds_sprite_code_8B00,a0              	| [$1B34: ld   h,#>ds_sprite_code_8B00]
@@ -4623,10 +4623,11 @@ d_1B59:
 	.byte 0x1E,0xBD
 	.byte 0x0A,0xB8
 	.byte 0x14,0xBC
+	* flight paths of clone-attackers, big endian now
 d_1B5F:
-	.long db_04EA
-	.long db_0473
-	.long db_04AB
+	.word db_04EA
+	.word db_0473
+	.word db_04AB
 
 *=============================================================================
 * f_manage_bomber_attacks_1b65()
