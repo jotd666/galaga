@@ -438,8 +438,6 @@ if True:
                         img_new.paste(next(others),(0,0))
                         img_new.paste(next(others),(0,16))
 
-
-
                         if dump_sprites:
                             scaled = ImageOps.scale(img_new,2,0)
                             scaled.save(os.path.join(dump_sprites_dir,f"{name}_{cidx}_DOUBLE.png"))

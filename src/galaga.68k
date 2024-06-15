@@ -2141,7 +2141,7 @@ l_0AE1_while:
 	jne	l_0AE8                             	    | [jr   nz,l_0AE8]
 * ... show dot character left of to 10ths place
 	move.b	#0x2A,d0                        	| [ld   a,#0x2A] '.' (dot) character.
-	jbsr	write_videoram_to_a1                         	| [ld   (de),a]
+	jbsr	write_videoram_to_a1                | [ld   (de),a]
 	sub.w	#20,a1                            	| [rst  0x20] DE-=$20 (next column)
 
 l_0AE8:
@@ -4507,7 +4507,7 @@ l_1AAB_found_one:
 	move.b	#3,d0                           	| [ld   a,#3]
 	jbsr	c_divmod                          	| [call c_divmod] HL=HL/3
 	addq.b	#4,d0                           	| [add  a,#4]
-	lea	ds_plyr_actv+_b_bbee_obj,a0    	| [ld   hl,#ds_plyr_actv +_b_bbee_obj]
+	lea	ds_plyr_actv+_b_bbee_obj,a0    	        | [ld   hl,#ds_plyr_actv +_b_bbee_obj]
 	move.b	d4,(a0)+                         	| [ld   (hl),e]
 	                           	                | [inc  l]
 	move.b	d2,(a0)+                         	| [ld   (hl),c]
