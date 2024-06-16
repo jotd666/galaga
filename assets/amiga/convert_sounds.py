@@ -24,15 +24,19 @@ vhq_sample_rate = 22050
 
 EMPTY_SND = "EMPTY_SND"
 sound_dict = {
-"CREDIT_SND"               :{"index":0,"channel":0,"sample_rate":hq_sample_rate},
 #"HISCORE_MUSIC_SND"             :{"index":9,"pattern":15,"loops":True,"volume":32},
 #"IN_GAME_MUSIC_FAST_SND"             :{"index":10,"pattern":5,"loops":True,"volume":32},
 #"IN_GAME_MUSIC_FASTER_SND"             :{"index":11,"pattern":8,"loops":True,"volume":32},
 
-# third channel
-"EXTRA_LIFE_SND"               :{"index":1,"channel":3,"sample_rate":hq_sample_rate},
-"SHOT_SND"               :{"index":0x9,"channel":2,"sample_rate":hq_sample_rate},
-"CHALLENGING_STAGE_SND"               :{"index":0xD,"channel":0,"sample_rate":hq_sample_rate},
+
+"BOSS_KILLED_SND"               :{"index":0,"channel":2,"sample_rate":hq_sample_rate,"priority":1},
+"BEE_KILLED_SND"               :{"index":1,"channel":3,"sample_rate":hq_sample_rate,"priority":1},
+"MOTH_KILLED_SND"               :{"index":2,"channel":2,"sample_rate":hq_sample_rate,"priority":1},
+"CREDIT_SND"               :{"index":3,"channel":0,"sample_rate":hq_sample_rate},
+"EXTRA_LIFE_SND"               :{"index":4,"channel":3,"sample_rate":hq_sample_rate},
+"SHOT_SND"               :{"index":0x9,"channel":1,"sample_rate":hq_sample_rate,"priority":10},
+"CHALLENGING_STAGE_SND"    :{"index":0xD,"channel":0,"sample_rate":hq_sample_rate},
+"MUTANT_SND"               :{"index":0x12,"channel":2,"sample_rate":hq_sample_rate},
 "ATTACK_SND"               :{"index":0x13,"channel":3,"sample_rate":hq_sample_rate},
 "EXPLOSION_SND"            :{"index":0x19,"channel":0,"sample_rate":hq_sample_rate},
 

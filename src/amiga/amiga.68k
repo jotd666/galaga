@@ -1224,11 +1224,11 @@ update_bobs:
 	.endif
 	.ifne	SPRITE_X_CORRECTION
 	add.w	#SPRITE_X_CORRECTION,d0
-	.endif	
-	cmp.b	#0x20,d2
-	bcs.b	16f
-	cmp.b	#0x30,d2
-	bcc.b	16f
+	.endif
+	lea		double_size_flag_table,a1
+	tst.b	(a1,d2.w)
+	beq.b	16f
+
 	* sprites 0x20,0x24,0x28,0x2C are double width/height (ship explosion)
 	bsr		restore_32x_background	
 	jra		11f
@@ -1294,7 +1294,7 @@ update_bobs:
 
 	* < D2: sprite code & flags
 	* < D3: sprite color (clut index)
-	
+	and.w	#0xF,d3
 	add.w	d3,d3
 	add.w	d3,d3
 	move.l	a0,-(a7)
@@ -1340,11 +1340,10 @@ update_bobs:
 	movem.l	d7/a4/a5,-(a7)
 
 	* normal or double w/h?
-	cmp.b	#0x20,d2
-	bcs.b	16f
-	cmp.b	#0x30,d2
-	bcc.b	16f
-	* sprites 0x20,0x24,0x28,0x2C are double width/height (ship explosion)
+	lea		double_size_flag_table,a5
+	tst.b	(a5,d2.w)
+	beq.b	16f
+	* some explosions are double width/height
 	moveq	#0,d2	| no y-clip
 	move.w	#32,d3	| height = 32
 	lea		blit_planes_cookie_cut_32x(pc),a4

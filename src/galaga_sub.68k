@@ -1289,9 +1289,11 @@ l_07F5:
 	and.b	#0x03,d0                         	| [and  #0x03]
 
 l_07F8_:
-	lea	b_9AA0+0x01,a0                 			| [ld   hl,#b_9AA0 + 0x01] b_9AA0[1 + A] = 1 ... sound-fx count/enable registers
-	jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A
-	move.b	#1,(a0)                         	| [ld   (hl),#1]
+	lea	b_9AA0+0x01,a0                 			| [$07F8: ld   hl,#b_9AA0 + 0x01] b_9AA0[1 + A] = 1 ... sound-fx count/enable registers
+	and.w	#0xFF,d0
+	jbsr	osd_sound_start		| MOTH_KILLED_SND, BEE_KILLED_SND, BOSS_KILLED_SND
+	*jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A
+	*move.b	#1,(a0)                         	| [ld   (hl),#1]
 
 * if sprite color == 7
 	move.b	d2,d0                           	| [ld   a,c] .... sprite.cclr.b1

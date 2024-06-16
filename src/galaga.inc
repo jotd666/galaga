@@ -27,10 +27,14 @@
 
 * sound ordinals
 
-    .equ  CREDIT_SND,         0x00
-    .equ  EXTRA_LIFE_SND,     0x01
+    .equ  BOSS_KILLED_SND,         0x0
+    .equ  BEE_KILLED_SND,     0x01
+    .equ  MOTH_KILLED_SND,         0x02
+    .equ  CREDIT_SND,         0x03
+    .equ  EXTRA_LIFE_SND,     0x04
     .equ  SHOT_SND,           0x9
 	.equ  CHALLENGING_STAGE_SND, 0xD
+    .equ  MUTANT_SND,         0x12
     .equ  ATTACK_SND,         0x13
     .equ  EXPLOSION_SND,         0x19
 

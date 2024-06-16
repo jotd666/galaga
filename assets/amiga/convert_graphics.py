@@ -99,15 +99,16 @@ NB_BOB_PLANES = 4
 def dump_asm_bytes(*args,**kwargs):
     bitplanelib.dump_asm_bytes(*args,**kwargs,mit_format=True)
 
+double_size_table = [False]*256
 
 sprite_config = dict()
 
 def add_sprite_block(start,end,prefix,cluts,sprite_type=ST_BOB,mirror=False,
 flip=False,double_wh=False,):
-
     if isinstance(cluts,int):
         cluts = [cluts]
     for i in range(start,end):
+        double_size_table[i] = double_wh
         if i in sprite_config:
             # merge
             sprite_config[i]["cluts"].extend(cluts)
@@ -126,8 +127,8 @@ add_sprite_block(0x8,0x10,"boss_ship",[0,1,10],mirror=True)   # 10: yellow when 
 # I'd like to hack player ship into a sprite only for clut 2
 # but use a BOB for clut 9 (captured)
 #add_sprite_block(0,0x8,"ship",[2,9])
-add_sprite_block(0,0x8,"ship",9) #,sprite_type=ST_HW_SPRITE)
-add_sprite_block(0,0x8,"ship",2)
+add_sprite_block(0,0x8,"ship",9,mirror=True) #,sprite_type=ST_HW_SPRITE)
+add_sprite_block(0,0x8,"ship",[2,7],mirror=True)
 add_sprite_block(0x10,0x18,"red_bee",[2,0xA],mirror=True)
 add_sprite_block(0x18,0x20,"blue_bee",[3,0xA,0x5],mirror=True)
 add_sprite_block(0x50,0x57,"mutant_galaxian_boss",4,sprite_type=ST_HW_SPRITE,mirror=True)
@@ -137,16 +138,18 @@ add_sprite_block(0x68,0x6F,"challenge_butterfly",2,mirror=True) # or 7?
 add_sprite_block(0x70,0x77,"challenge_ship",7,mirror=True)
 add_sprite_block(0x78,0x7F,"challenge_rocket",7,mirror=True)
 add_sprite_block(0x30,0x34,"bomb",[0x9,0xB])
-add_sprite_block(0x41,0x49,"enemy_explosion",0xA,mirror=True)
+add_sprite_block(0x41,0x44,"enemy_explosion",0xA,mirror=True)
 add_sprite(0x34,"score_150",0xA)
 add_sprite(0x35,"score_400",0xA)
 add_sprite(0x36,"score_500",0)  # wrong clut
 add_sprite(0x37,"score_800",0xD)
-add_sprite(0x38,"score_1000",0)  # wrong clut
+add_sprite(0x38,"score_1000",0xD)
 add_sprite(0x39,"score_1500",0)  # wrong clut
 add_sprite(0x3A,"score_1600",0xE)
 for i in [0x20,0x24,0x28,0x2C]:
     add_sprite(i,"explosion",0xB,double_wh=True)
+for i in [0x44,0x48]:
+    add_sprite(i,"enemy_explosion",0xA,double_wh=True)
 
 
 block_dict = {}
@@ -494,9 +497,12 @@ with open(os.path.join(src_dir,"graphics.68k"),"w") as f:
     f.write("\t.global\tsprite_table\n")
     f.write("\t.global\tbob_table\n")
     f.write("\t.global\thardware_sprite_flag_table\n")
+    f.write("\t.global\tdouble_size_flag_table\n")
 
     f.write("\nhardware_sprite_flag_table:")
     bitplanelib.dump_asm_bytes(hw_sprite_flag,f,mit_format=True)
+    f.write("\ndouble_size_flag_table:")
+    bitplanelib.dump_asm_bytes(double_size_table,f,mit_format=True)
 
     f.write("\ncharacter_table:\n")
     for i,_ in enumerate(character_codes):

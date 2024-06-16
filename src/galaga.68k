@@ -333,7 +333,9 @@ j_0003D8_wrdy:
 
 	*addq.b	#1,d0                           	| [inc  a]
 	*move.b	d0,b_9AA0+0x0B                  	| [ld   (b_9AA0 + 0x0B),a] 1 ... sound-fx count/enable registers, start of game theme
-
+	*move.w	#GAME_START_SND,d0
+	*jbsr	osd_sound_start
+	
 	move.b	d0,ds_cpu0_task_actv_9000+0x12       	| [ld   (ds_cpu0_task_actv_9000 + 0x12),a] 1 ... f_star_control_1d76, star ctrl
 	move.b	d0,ds_cpu0_task_resrv+0x12      	| [ld   (ds_cpu0_task_resrv + 0x12),a] 1 ... f_star_control_1d76, star ctrl
 
@@ -575,7 +577,7 @@ l_04C1_while:
 
 * check for "not (normal) end of stage conditions":
 
-* if ( restart stage flag               	|| bugs_actv_nbr>0 )
+* if ( restart stage flag || bugs_actv_nbr>0 )
 	move.b	d0,d2                           	| [ld   c,a] remaining enemies, could be 0 if fighter hit last one
 	move.b	ds_9200_glbls+0x13,d0           	| [ld   a,(ds_9200_glbls + 0x13)] restart stage flag (could not be here if nbr_bugs > 0 && flag==0 )
 	or.b	d2,d0                             	| [or   c]
@@ -759,26 +761,26 @@ l_059A_prep:
 * wait for formation to exit ... completion of f_move_swarm_when_player_changes_1d32 (status actv_task_tbl[$0E])
 l_05A3_while:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	| [and  a]
-	jne	l_05A3_while                       	| [jr   nz,l_05A3_while]
+	                               	            | [and  a]
+	jne	l_05A3_while                       	    | [jr   nz,l_05A3_while]
 
 * exchange player data
 	move.b	b_9AA0+0x00,d0                  	| [ld   a,(b_9AA0 + 0x00)] plyr_actv.b_sndflag
 	move.b	d0,ds_plyr_actv+_b_sndflag      	| [ld   (ds_plyr_actv +_b_sndflag),a] _fx[0] ... enable for pulsing_sound
-	move.b	ds4_game_tmrs_92ac+2,d0              	| [ld   a,(ds4_game_tmrs_92ac + 2)]
+	move.b	ds4_game_tmrs_92ac+2,d0             | [ld   a,(ds4_game_tmrs_92ac + 2)]
 	move.b	d0,ds_plyr_actv+_b_plyr_swap_tmr	| [ld   (ds_plyr_actv +_b_plyr_swap_tmr),a] game_tmr[2]
 	jbsr	c_player_active_switch            	| [call c_player_active_switch]
-	jbsr	new_stage_setup_2c00                            	| [call new_stage_setup_2c00] new stage setup
+	jbsr	new_stage_setup_2c00                | [call new_stage_setup_2c00] new stage setup
 	move.b	ds_plyr_actv+_b_plyr_swap_tmr,d0	| [ld   a,(ds_plyr_actv +_b_plyr_swap_tmr)] game_tmr[2]
-	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] actv_plyr_state[0x1F]
+	move.b	d0,ds4_game_tmrs_92ac+2             | [ld   (ds4_game_tmrs_92ac + 2),a] actv_plyr_state[0x1F]
 	move.b	ds_plyr_actv+_b_sndflag,d0      	| [ld   a,(ds_plyr_actv +_b_sndflag)] _fx[0] ... enable for pulsing_sound
 	move.b	d0,b_9AA0+0x00                  	| [ld   (b_9AA0 + 0x00),a] enable for pulsing_sound
-	jbsr	draw_resv_ships_136c                   	| [call draw_resv_ships_136c]
+	jbsr	draw_resv_ships_136c                | [call draw_resv_ships_136c]
 
 * if ( _enmy_ct_actv != 0 ) ...
 	move.b	ds_plyr_actv+_b_enmy_ct_actv,d0 	| [ld   a,(ds_plyr_actv +_b_enmy_ct_actv)]
-	                               	| [and  a]
-	jeq	l_05D1                             	| [jr   z,l_05D1]
+	                               	            | [and  a]
+	jeq	l_05D1                             	    | [jr   z,l_05D1]
 * ... then ... player was previously destroyed by collision with last enemy in the round
 	jbsr	gctl_stg_new_atk_wavs_init_25a2                            	| [call gctl_stg_new_atk_wavs_init_25a2] gctl_stg_new_atk_wavs_init()
 
@@ -919,12 +921,15 @@ gctl_chllng_stg_end:
 0:
 	move.b	d0,d4                           	| [ld   e,a]
 
+	*move.w	#END_CHALLENGE_SND,d0
 	lea	b_9AA0+0x0E,a0                 	        | [ld   hl,#b_9AA0 + 0x0E] sound-fx count/enable registers, default melody for challenge stage
 	cmp.b	#40,d0                           	| [cp   #40] nbr of bugs in challenge round
 	jne	l_065E                                  | [jr   nz,l_065E]
+	*move.w	#PERFECT_SND,d0
 	lea	b_9AA0+0x14,a0                 	        | [ld   hl,#b_9AA0 + 0x14] sound effect count/enable registers, "perfect!" melody, challenge stg
 l_065E:
 	move.b	#1,(a0)                         	| [ld   (hl),#1]
+	*jbsr	osd_sound_start
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 	move.b	#0x08,d2                        	| [ld   c,#0x08]
 	jbsr	string_out_pe_30                    | [rst  0x30] string_out_pe ("NUMBER OF HITS")
@@ -1645,7 +1650,7 @@ c_093C:
 	and.b	d2,d0                            	| [and  c] C == 1 if wipe
 	lea	str_1UP,a0                     	| [ld   hl,#str_1UP]
 	lea	0x8000+0x03C0+0x19,a1      	| [ld   de,#0x8000 + 0x03C0 + 0x19] 'P' of 1UP
-	jbsr	c_095F                            	| [call c_095F] wipe if A != 0
+	jbsr	draw_3_characters_095f                            	| [call draw_3_characters_095f] wipe if A != 0
 
 * if ( two_plyr_game ) then ...
 	move.b	b8_99B3_two_plyr_game,d0        	| [ld   a,(b8_99B3_two_plyr_game)]
@@ -1659,10 +1664,10 @@ c_093C:
 	and.b	d2,d0                            	| [and  c] C == 1 if wipe
 	lea	str_2UP,a0                     	| [ld   hl,#str_2UP]
 	lea	0x8000+0x03C0+0x04,a1      	| [ld   de,#0x8000 + 0x03C0 + 0x04] 'P' of 2UP
-*       call c_095F
+*       call draw_3_characters_095f
 
 *=============================================================================
-* c_095F()
+* draw_3_characters_095f()
 *  Description:
 *   draw 3 characters
 * IN:
@@ -1674,20 +1679,26 @@ c_093C:
 * PRESERVES:
 *  BC
 *-----------------------------------------------------------------------------
-c_095F:
-	movem.w	d1/d2,-(sp)                    	| [push bc]
-
-	and.b	#0x01,d0                         	| [and  #0x01]
-	jeq	l_0967                             	| [jr   z,l_0967]
-	lea	str_0974,a0                    	| [ld   hl,#str_0974] wipe
+draw_3_characters_095f:
+	exg		a1,d7
+	move.w	d0,-(sp)                    | [$095F: push bc]
+	and.b	#0x01,d0                    | [$0960: and  #0x01]
+	jeq	l_0967                          | [$0962: jr   z,l_0967]
+	lea	str_0974,a0                    	| [$0964: ld   hl,#str_0974] wipe
 l_0967:
-	                        	| [ld   bc,#0x0003] 3
-	move.w	#0x03,d1                        	| [ld   bc,#0x0003] 3
-	jbsr	ldir                              	| [ldir]
-
-
-	movem.w	(sp)+,d1/d2                    	| [pop  bc]
-	rts                                    	| [ret]
+						                | [$0967: ld   bc,#0x0003] 3
+	move.b	(a0)+,d0					| [$096A: ldir]
+	jbsr	osd_w_videoram
+	addq.w	#1,d7
+	move.b	(a0)+,d0					| [$096A: ldir]
+	jbsr	osd_w_videoram
+	addq.w	#1,d7
+	move.b	(a0)+,d0					| [$096A: ldir]
+	jbsr	osd_w_videoram
+	addq.w	#1,d7
+	move.w	(sp)+,d0                    | [$096C: pop  bc]
+	exg		a1,d7
+	rts                                 | [$096D: ret]
 
 *=============================================================================
 str_1UP:
@@ -2825,30 +2836,31 @@ l_11FA_show_10s_20s_30s_50s:
 *-----------------------------------------------------------------------------
 c_build_token_1:
 
-** check sound_disable_flag
-*	scs	d7                              	| [ex   af,af']
-*         ^^^ review: wrong if carry is needed or D7 used in between!
-*	jcs	l_1215_restore_A_and_continue      	| [jr   c,l_1215_restore_A_and_continue]
-** put it back
-*	scs	d7                              	| [ex   af,af']
-*         ^^^ review: wrong if carry is needed or D7 used in between!
-** set the delay count 8 ... preserve frame count
-*	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
-*	add.b	#8,d0                            	| [add  a,#8]
-*	move.b	d0,d4                           	| [ld   e,a]
-*l_120B:
-*	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
-*	sub.b	d4,d0                            	| [sub  e]
-*	jne	l_120B                             	| [jr   nz,l_120B]
-*
-** actv_plyr_state[0x05]==0 for challenge stage ... 0 count/enable for stage tokens clicks
-*	scs	d7                              	| [ex   af,af']
-*         ^^^ review: wrong if carry is needed or D7 used in between!
-*	move.b	d0,b_9AA0+0x15                  	| [ld   (b_9AA0 + 0x15),a] 2 ... sound-fx count/enable registers, clicks for stage tokens
-*
-*l_1215_restore_A_and_continue:
-*	scs	d7                              	| [ex   af,af']
-*         ^^^ review: wrong if carry is needed or D7 used in between!
+* check sound_disable_flag
+	exg	d0,d7                              	| [ex   af,af']
+	tst.b	d0
+	jeq	l_1215_restore_A_and_continue      	| [jr   c,l_1215_restore_A_and_continue]
+* put it back
+	exg	d0,d7                              	| [ex   af,af']
+* set the delay count 8 ... preserve frame count
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
+	add.b	#8,d0                            	| [add  a,#8]
+	move.b	d0,d4                           	| [ld   e,a]
+l_120B:
+	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
+	sub.b	d4,d0                            	| [sub  e]
+	jne	l_120B                             	| [jr   nz,l_120B]
+
+* actv_plyr_state[0x05]==0 for challenge stage ... 0 count/enable for stage tokens clicks
+	exg	d7,d0                              	| [ex   af,af']
+	
+	*move.w	#TOKEN_CLICK_SND,d0
+	*jbsr	osd_sound_start
+	*move.b	d0,b_9AA0+0x15                  	| [ld   (b_9AA0 + 0x15),a] 2 ... sound-fx count/enable registers, clicks for stage tokens
+
+l_1215_restore_A_and_continue:
+	exg	d7,d0                              	| [ex   af,af']
+ 
 
 *=============================================================================
 * c_build_token_2()
@@ -4428,7 +4440,6 @@ l_1A6A_ship_in_position:
 	move.b	d0,ds_cpu0_task_actv_9000+0x11      | [ld   (ds_cpu0_task_actv_9000 + 0x11),a] 0: this task
 	move.b	d0,b_9AA0+0x09                  	| [ld   (b_9AA0 + 0x09),a] 0: sound-fx count/enable registers
 
-	COMPUTE_LSB_A1_D4	ds_sprite_code_8B00		| extract offset from ds_sprite_code_8B00 to apply to 8800
 	lea	b_8800,a1                      	        | [ld   d,#>b_8800]
 	add.w	d4,a1
 	addq.b	#1,d0                           	| [inc  a]
@@ -4512,6 +4523,8 @@ l_1AAB_found_one:
 	move.b	d2,(a0)+                         	| [ld   (hl),c]
 	                           	                | [inc  l]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
+	move.w	#MUTANT_SND,d0
+	jbsr	osd_sound_start
 	move.b	d0,b_9AA0+0x12                  	| [ld   (b_9AA0 + 0x12),a] sound-fx count/enable registers, bonus-bee sound
 	rts                                    	    | [ret]
 
@@ -4712,6 +4725,8 @@ l_launch_boss_wing_mission_1b8b:
 	add.w	d6,a0
 	jbsr	c_1079                            	| [$1B9F: call c_1079] DE, HL, and bit-7 of HL for negation of rotation angle if set
 
+	move.w	#ATTACK_SND,d0
+	jbsr	osd_sound_start
 	move.b	#1,d0                           	| [$1BA2: ld   a,#1]
 	move.b	d0,b_9AA0+0x13                  	| [$1BA4: ld   (b_9AA0 + 0x13),a] 1 ... sound-fx count/enable registers, bug dive attack sound
 	rts                                    		| [$1BA7: ret]
@@ -6218,7 +6233,7 @@ l_2097:
 
 	move.b	#6,(a0)+                         	| [ld   (hl),#6] sprite code 6
 	move.b	#9,(a0)+                         	| [ld   (hl),#9] color map 9 for white ship
-	COMPUTE_LSB_A0_D6	ds_sprite_ctrl_9B00
+	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
 	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
 	add.w	d6,a0
 	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] put in center
@@ -6556,262 +6571,258 @@ l_221A:
 *-----------------------------------------------------------------------------
 f_boss_starts_tractor_beam_2222:
 *  if ( frame_count % 4 != 0 ) goto 2257
-	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)] frame_ct%4 ... (provides 15Hz timer)
-	move.b	d0,d2                           	| [ld   c,a]
-	and.b	#0x03,d0                         	| [and  #0x03]
-	jne	l_2257                             	    | [jr   nz,l_2257]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [$2222: ld   a,(ds3_frame_cts_92A0 + 0)] frame_ct%4 ... (provides 15Hz timer)
+	move.b	d0,d2                           	| [$2225: ld   c,a]
+	and.b	#0x03,d0                         	| [$2226: and  #0x03]
+	jne	l_2257                             	    | [$2228: jr   nz,l_2257]
 *  else
-	move.b	ds5_928A_captr_status+0x00,d0   	| [ld   a,(ds5_928A_captr_status + 0x00)] beam started
-	neg.b	d0                               	| [neg]
-	sub.b	#0x18,d0                         	| [sub  #0x18]
-	move.b	#0x21,d5                        	| [ld   h,#0x21]
-	rol.b	#1,d0                            	| [rlca]
+	move.b	ds5_928A_captr_status+0x00,d0   	| [$222A: ld   a,(ds5_928A_captr_status + 0x00)] beam started
+	neg.b	d0                               	| [$222D: neg]
+	sub.b	#0x18,d0                         	| [$222F: sub  #0x18]
+	move.b	#0x21,d5                        	| [$2231: ld   h,#0x21]
+	rol.b	#1,d0                            	| [$2233: rlca]
 	SET_X_FROM_C
-	roxl.b	#1,d5                           	| [rl   h]
-	rol.b	#1,d0                            	| [rlca]
+	roxl.b	#1,d5                           	| [$2234: rl   h]
+	rol.b	#1,d0                            	| [$2236: rlca]
 	SET_X_FROM_C
-	roxl.b	#1,d5                           	| [rl   h]
-	and.b	#0xE0,d0                         	| [and  #0xE0]
-	add.b	#0x15,d0                         	| [add  a,#0x15]
-	move.b	d0,d6                           	| [ld   l,a]
-	move.b	d2,d0                           	| [ld   a,c]
-	ror.b	#2,d0                            	| [rrca] * 2
-	and.b	#0x03,d0                         	| [and  #0x03]
-	jne	l_2246                             	| [jr   nz,l_2246]
-	addq.b	#1,d0                           	| [inc  a]
+	roxl.b	#1,d5                           	| [$2237: rl   h]
+	and.b	#0xE0,d0                         	| [$2239: and  #0xE0]
+	add.b	#0x15,d0                         	| [$223B: add  a,#0x15]
+	move.b	d0,d6                           	| [$223D: ld   l,a]
+	move.b	d2,d0                           	| [$223E: ld   a,c]
+	ror.b	#2,d0                            	| [$223F: rrca] * 2
+	and.b	#0x03,d0                         	| [$2241: and  #0x03]
+	jne	l_2246                             	    | [$2243: jr   nz,l_2246]
+	addq.b	#1,d0                           	| [$2245: inc  a]
 l_2246:
-	add.b	#0x17,d0                         	| [add  a,#0x17]
-	move.w	#0x0016,d3                      	| [ld   de,#0x0016] 22
-	move.b	#6,d2                           	| [ld   c,#6]
+	add.b	#0x17,d0                         	| [$2246: add  a,#0x17]
+	move.w	#0x0016,d3                      	| [$2248: ld   de,#0x0016] 22
+	move.b	#6,d2                           	| [$224B: ld   c,#6]
 	LOAD_D5_16_FROM_D5D6
 l_224D:
-	move.b	#0x0A,d1                        	| [ld   b,#0x0A]
+	move.b	#0x0A,d1                        	| [$224D: ld   b,#0x0A]
 	move.w	d5,d7
 l_224F:
-	jbsr	osd_w_colorram                     	| [ld   (hl),a]
-	addq.w	#1,d7              	                | [inc  l]
+	jbsr	osd_w_colorram                     	| [$224F: ld   (hl),a]
+	addq.w	#1,d7              	                | [$2250: inc  l]
 	subq.b	#1,d1                           	| [...]
-	jne	l_224F                             	    | [djnz l_224F]
+	jne	l_224F                             	    | [$2251: djnz l_224F]
 
-	add.w	d3,d7                            	| [add  hl,de]
-	subq.b	#1,d2                           	| [dec  c]
-	jne	l_224D                             	    | [jr   nz,l_224D]
+	add.w	d3,d7                            	| [$2253: add  hl,de]
+	subq.b	#1,d2                           	| [$2254: dec  c]
+	jne	l_224D                             	    | [$2255: jr   nz,l_224D]
 
 l_2257:
-	lea	ds5_928A_captr_status+0x01,a0  	| [ld   hl,#ds5_928A_captr_status + 0x01] check bit 7
-	btst.b	#7,(a0)                         	| [bit  7,(hl)]
-	jne	l_226A                             	| [jr   nz,l_226A]
-	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d0	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)]
-	move.b	d0,d4                           	| [ld   e,a]
-	lea	b_8800,a1                      	| [ld   d,#>b_8800]
+	lea	ds5_928A_captr_status+0x01,a0  	        | [$2257: ld   hl,#ds5_928A_captr_status + 0x01] check bit 7
+	btst.b	#7,(a0)                         	| [$225A: bit  7,(hl)]
+	jne	l_226A                             	    | [$225C: jr   nz,l_226A]
+	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d0	| [$225E: ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)]
+	move.b	d0,d4                           	| [$2261: ld   e,a]
+	lea	b_8800,a1                      	        | [$2262: ld   d,#>b_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	cmp.b	#0x09,d0                         	| [cp   #0x09] 09 ... in a diving attack
-	jne	l_2327_shot_boss_while_capturing   	| [jp   nz,l_2327_shot_boss_while_capturing]
+	move.b	(a1),d0                         	| [$2264: ld   a,(de)]
+	cmp.b	#0x09,d0                         	| [$2265: cp   #0x09] 09 ... in a diving attack
+	jne	l_2327_shot_boss_while_capturing   	    | [$2267: jp   nz,l_2327_shot_boss_while_capturing]
 l_226A:
 * if  ( ( *( ds5_928A_captr_status + 0x02 )-- ) > 0 ) goto 233D
 	lea	ds5_928A_captr_status+0x02,a0  	| [ld   hl,#ds5_928A_captr_status + 0x02] -=1
 	subq.b	#1,(a0)                         	| [dec  (hl)]
-	jne	l_233D                             	| [jp   nz,l_233D]
+	jne	l_233D                             	    | [jp   nz,l_233D]
 * else
-	move.b	ds_plyr_actv+_b_captr_flag,d0   	| [ld   a,(ds_plyr_actv +_b_captr_flag)] *( ds5_928A_captr_status + 0x02 )
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+	move.b	ds_plyr_actv+_b_captr_flag,d0   	| [$226D: ld   a,(ds_plyr_actv +_b_captr_flag)] *( ds5_928A_captr_status + 0x02 )
+	move.b	d0,(a0)                         	| [$226E: ld   (hl),a]
 * if ( *(_captr_status + 0x01) & $80 ) goto 22AB
-	lea	ds5_928A_captr_status+0x01,a0  	| [ld   hl,#ds5_928A_captr_status + 0x01] check bit 7
-	btst.b	#7,(a0)                         	| [bit  7,(hl)]
-	jne	l_22AB                             	| [jr   nz,l_22AB]
+	lea	ds5_928A_captr_status+0x01,a0  	        | [$2271: ld   hl,#ds5_928A_captr_status + 0x01] check bit 7
+	btst.b	#7,(a0)                         	| [$2274: bit  7,(hl)]
+	jne	l_22AB                             	    | [$2275: jr   nz,l_22AB]
 * else
-	move.b	d0,b_9AA0+0x05                  	| [ld   (b_9AA0 + 0x05),a] sound-fx count/enable registers, trigger capture beam sound
-
-	move.b	ds_plyr_actv+_b_cboss_slot,d0   	| [ld   a,(ds_plyr_actv +_b_cboss_slot)] bug_flite_que[ plyr.cboss_slot ].b0D = $FF
-	add.b	#0x0D,d0                         	| [add  a,#0x0D]
-	move.b	d0,d4                           	| [ld   e,a]
-	lea	ds_bug_motion_que_9100,a1           	| [ld   d,#>ds_bug_motion_que_9100] bug_flite_que[ plyr.cboss_slot ].b0D = $FF
+	move.b	d0,b_9AA0+0x05                  	| [$227C: ld   (b_9AA0 + 0x05),a] sound-fx count/enable registers, trigger capture beam sound
+	*move.w	#XXXX_SND,d0
+	*jbsr	osd_sound_start
+	move.b	ds_plyr_actv+_b_cboss_slot,d0   	| [$227F: ld   a,(ds_plyr_actv +_b_cboss_slot)] bug_flite_que[ plyr.cboss_slot ].b0D = $FF
+	add.b	#0x0D,d0                         	| [$2282: add  a,#0x0D]
+	move.b	d0,d4                           	| [$2284: ld   e,a]
+	lea	ds_bug_motion_que_9100,a1           	| [$2285: ld   d,#>ds_bug_motion_que_9100] bug_flite_que[ plyr.cboss_slot ].b0D = $FF
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	st.b	d0                                	| [ld   a,#0xFF]
-	move.b	d0,(a1)                         	| [ld   (de),a]
-
-	addq.b	#1,(a0)                         	| [inc  (hl)]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	and.b	#0x0F,d0                         	| [and  #0x0F]
-	cmp.b	#0x0B,d0                         	| [cp   #0x0B]
-	jeq	l_22D2                             	| [jr   z,l_22D2]
-	btst.b	#6,(a0)                         	| [bit  6,(hl)]
-	jne	l_22C1                             	| [jr   nz,l_22C1]
-	move.w	d0,-(sp)                        	| [push af]
-	move.b	d0,d2                           	| [ld   c,a]
-	rol.b	#1,d0                            	| [rlca]
-	add.b	d2,d0                            	| [add  a,c]
-	lea	d_23A1-6,a0                    	| [ld   hl,#d_23A1 - 6] get data src, getting ready to shoot the tractor beam
-	jbsr	add_2_times_d0_to_a0_0008            	| [rst  0x08] HL += 2A
-	move.w	(sp)+,d0                        	| [pop  af]
-	jbsr	c_238A                            	| [call c_238A]
-
-	move.b	#6,d1                           	| [ld   b,#6]
+	st.b	d0                                	| [$2287: ld   a,#0xFF]
+	move.b	d0,(a1)                         	| [$2289: ld   (de),a]
+	addq.b	#1,(a0)                         	| [$228A: inc  (hl)]
+	move.b	(a0),d0                         	| [$228B: ld   a,(hl)]
+	and.b	#0x0F,d0                         	| [$228C: and  #0x0F]
+	cmp.b	#0x0B,d0                         	| [$228E: cp   #0x0B]
+	jeq	l_22D2                             	    | [$2290: jr   z,l_22D2]
+	btst.b	#6,(a0)                         	| [$2292: bit  6,(hl)]
+	jne	l_22C1                             	    | [$2294: jr   nz,l_22C1]
+	move.w	d0,-(sp)                        	| [$2296: push af]
+	move.b	d0,d2                           	| [$2297: ld   c,a]
+	rol.b	#1,d0                            	| [$2298: rlca]
+	add.b	d2,d0                            	| [$2299: add  a,c]
+	lea	d_23A1-6,a0                    	        | [$229A: ld   hl,#d_23A1 - 6] get data src, getting ready to shoot the tractor beam
+	jbsr	add_2_times_d0_to_a0_0008           | [$229D: rst  0x08] HL += 2A
+	move.w	(sp)+,d0                        	| [$229E: pop  af]
+	jbsr	c_238A                            	| [$229F: call c_238A]
+	move.b	#6,d1                           	| [$22A2: ld   b,#6]
 l_22A4:
-	move.b	(a0)+,d0                         	| [ld   a,(hl)]
-	move.b	d0,(a1)                         	| [ld   (de),a]
-												| [inc  hl]
-	jbsr	rst_20                            	| [rst  0x20] DE-=$20
+	move.b	(a0)+,d0                         	| [$22A4: ld   a,(hl)]
+	move.b	d0,(a1)                         	| [$22A5: ld   (de),a]
+												| [$22A6: inc  hl]
+	jbsr	rst_20                            	| [$22A7: rst  0x20] DE-=$20
 	subq.b	#1,d1                           	| [...]
-	jne	l_22A4                             	| [djnz l_22A4]
-	rts                                    	| [ret]
+	jne	l_22A4                             	    | [$22A8: djnz l_22A4]
+	rts                                    	    | [$22AA: ret]
 
 l_22AB:
-	addq.b	#1,(a0)                         	| [inc  (hl)]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	and.b	#0x0F,d0                         	| [and  #0x0F]
-	cmp.b	#0x0B,d0                         	| [cp   #0x0B]
-	jne	l_22C5                             	| [jr   nz,l_22C5]
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x18       	| [ld   (ds_cpu0_task_actv_9000 + 0x18),a] 0 (f_boss_starts_tractor_beam_2222 ... this one)
-	move.b	d0,b_9AA0+0x05                  	| [ld   (b_9AA0 + 0x05),a] 0 ... sound-fx count/enable registers, capture beam sound active uno
-	move.b	d0,b_9AA0+0x06                  	| [ld   (b_9AA0 + 0x06),a] 0 ... sound-fx count/enable registers, capture beam sound active deux
-	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
-	rts                                    	| [ret]
+	addq.b	#1,(a0)                         	| [$22AB: inc  (hl)]
+	move.b	(a0),d0                         	| [$22AC: ld   a,(hl)]
+	and.b	#0x0F,d0                         	| [$22AD: and  #0x0F]
+	cmp.b	#0x0B,d0                         	| [$22AF: cp   #0x0B]
+	jne	l_22C5                             	    | [$22B1: jr   nz,l_22C5]
+	clr.b	d0                               	| [$22B3: xor  a]
+	move.b	d0,ds_cpu0_task_actv_9000+0x18      | [$22B4: ld   (ds_cpu0_task_actv_9000 + 0x18),a] 0 (f_boss_starts_tractor_beam_2222 ... this one)
+	move.b	d0,b_9AA0+0x05                  	| [$22B7: ld   (b_9AA0 + 0x05),a] 0 ... sound-fx count/enable registers, capture beam sound active uno
+	move.b	d0,b_9AA0+0x06                  	| [$22BA: ld   (b_9AA0 + 0x06),a] 0 ... sound-fx count/enable registers, capture beam sound active deux
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [$22BD: ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
+	rts                                    	    | [$22C0: ret]
 
 l_22C1:
-	neg.b	d0                               	| [neg] from 2294, boss almost ready to attach to the ship
-	add.b	#0x0B,d0                         	| [add  a,#0x0B]
+	neg.b	d0                               	| [$22C1: neg] from 2294, boss almost ready to attach to the ship
+	add.b	#0x0B,d0                         	| [$22C3: add  a,#0x0B]
 l_22C5:
-	jbsr	c_238A                            	| [call c_238A]
-
-	move.b	#6,d1                           	| [ld   b,#6]
-	move.b	#0x24,d2                        	| [ld   c,#0x24]
+	jbsr	c_238A                            	| [$22C8: call c_238A]
+	move.b	#6,d1                           	| [$22CA: ld   b,#6]
+	move.b	#0x24,d2                        	| [$22CC: ld   c,#0x24]
 l_22CC:
-	move.b	d2,d0                           	| [ld   a,c]
-	move.b	d0,(a1)                         	| [ld   (de),a]
-	jbsr	rst_20                            	| [rst  0x20] DE-=$20
+	move.b	d2,d0                           	| [$22CC: ld   a,c]
+	move.b	d0,(a1)                         	| [$22CD: ld   (de),a]
+	jbsr	rst_20                            	| [$22CE: rst  0x20] DE-=$20
 	subq.b	#1,d1                           	| [...]
-	jne	l_22CC                             	| [djnz l_22CC]
-
-	rts                                    	| [ret]
+	jne	l_22CC                             	    | [$22CF: djnz l_22CC]
+	rts                                    	    | [$22D1: ret]
 
 l_22D2:
-	btst.b	#6,(a0)                         	| [bit  6,(hl)] got the ship, ship is red, beam gone
-	jeq	l_231C                             	| [jr   z,l_231C]
-	move.b	ds_9200_glbls+0x0D,d0           	| [ld   a,(ds_9200_glbls + 0x0D)] if 1, boss has connected with ship and firepower disabled
-	                               	| [and  a]
-	jeq	l_22E3                             	| [jr   z,l_22E3]
-	btst.b	#5,(a0)                         	| [bit  5,(hl)]
-	jne	l_22E3                             	| [jr   nz,l_22E3]
-	move.b	#0x68,(a0)                      	| [ld   (hl),#0x68]
-	rts                                    	| [ret]
+	btst.b	#6,(a0)                         	| [$22D2: bit  6,(hl)] got the ship, ship is red, beam gone
+	jeq	l_231C                             	    | [$22D4: jr   z,l_231C]
+	move.b	ds_9200_glbls+0x0D,d0           	| [$22D6: ld   a,(ds_9200_glbls + 0x0D)] if 1, boss has connected with ship and firepower disabled
+	                               	            | [$22D9: and  a]
+	jeq	l_22E3                             	    | [$22DA: jr   z,l_22E3]
+	btst.b	#5,(a0)                         	| [$22DC: bit  5,(hl)]
+	jne	l_22E3                             	    | [$22DE: jr   nz,l_22E3]
+	move.b	#0x68,(a0)                      	| [$22E0: ld   (hl),#0x68]
+	rts                                    	    | [$22E2: ret]
 
 * capture beam has stopped (whether or not ship is captured or got destroyed by a bomb)
 l_22E3:
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x18       	| [ld   (ds_cpu0_task_actv_9000 + 0x18),a] 0 (disable f_boss_starts_tractor_beam_2222 ... this one)
-	move.b	d0,b_9AA0+0x05                  	| [ld   (b_9AA0 + 0x05),a] 0 ... sound-fx count/enable registers, capture beam sound active uno
-	move.b	d0,b_9AA0+0x06                  	| [ld   (b_9AA0 + 0x06),a] 0 ... sound-fx count/enable registers, capture beam sound active deux
-	                               	| [and  a]
-	move.b	ds_plyr_actv+_b_cboss_slot,d0   	| [ld   a,(ds_plyr_actv +_b_cboss_slot)] bug_flite_que[ plyr.cboss_slot + $nn ] ... nn -> b0D or b08
-	tst.b	ds_9200_glbls+0x0D           	| [ld   a,(ds_9200_glbls + 0x0D)] if 1, boss has connected with ship and firepower disabled
-	jne	l_2305                             	| [jr   nz,l_2305]
+	clr.b	d0                               	| [$22E3: xor  a]
+	move.b	d0,ds_cpu0_task_actv_9000+0x18      | [$22E4: ld   (ds_cpu0_task_actv_9000 + 0x18),a] 0 (disable f_boss_starts_tractor_beam_2222 ... this one)
+	move.b	d0,b_9AA0+0x05                  	| [$22E7: ld   (b_9AA0 + 0x05),a] 0 ... sound-fx count/enable registers, capture beam sound active uno
+	move.b	d0,b_9AA0+0x06                  	| [$22EA: ld   (b_9AA0 + 0x06),a] 0 ... sound-fx count/enable registers, capture beam sound active deux
+	                               	            | [$22ED: and  a]
+	move.b	ds_plyr_actv+_b_cboss_slot,d0   	| [$22F0: ld   a,(ds_plyr_actv +_b_cboss_slot)] bug_flite_que[ plyr.cboss_slot + $nn ] ... nn -> b0D or b08
+	tst.b	ds_9200_glbls+0x0D           	    | [$22F1: ld   a,(ds_9200_glbls + 0x0D)] if 1, boss has connected with ship and firepower disabled
+	jne	l_2305                             	    | [$22F4: jr   nz,l_2305]
 * if  0 == b_9200[$0D] ...
-	add.b	#0x0D,d0                         	| [add  a,#0x0D]
-	move.b	d0,d4                           	| [ld   e,a]
-	lea	ds_bug_motion_que_9100,a1           	| [ld   d,#>ds_bug_motion_que_9100] bug_flite_que[plyr.boss_slot].b0D = 1 ... token expiration on next step
+	add.b	#0x0D,d0                         	| [$22F6: add  a,#0x0D]
+	move.b	d0,d4                           	| [$22F8: ld   e,a]
+	lea	ds_bug_motion_que_9100,a1           	| [$22F9: ld   d,#>ds_bug_motion_que_9100] bug_flite_que[plyr.boss_slot].b0D = 1 ... token expiration on next step
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] 1 ... why 1?
-	move.b	d0,(a1)                         	| [ld   (de),a] bug_flite_que[plyr.cboss_slot].b0D = 1 ... token expiration on next step
-	rts                                    	    | [ret]
+	clr.b	d0                               	| [$22FB: xor  a]
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [$22FC: ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
+	addq.b	#1,d0                           	| [$22FF: inc  a]
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [$2300: ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] 1 ... why 1?
+	move.b	d0,(a1)                         	| [$2303: ld   (de),a] bug_flite_que[plyr.cboss_slot].b0D = 1 ... token expiration on next step
+	rts                                    	    | [$2304: ret]
 
 * ... else ... (connected with ship)
 l_2305:
-	add.b	#8,d0                            	| [add  a,#8]
-	move.b	d0,d6                           	| [ld   l,a]
-	lea	ds_bug_motion_que_9100,a0           	| [ld   h,#>ds_bug_motion_que_9100] bug_flite_que[plyr.cboss_slot].p08 = &db_046B[0] ... pointer to flite data
+	add.b	#8,d0                            	| [$2305: add  a,#8]
+	move.b	d0,d6                           	| [$2307: ld   l,a]
+	lea	ds_bug_motion_que_9100,a0           	| [$2308: ld   h,#>ds_bug_motion_que_9100] bug_flite_que[plyr.cboss_slot].p08 = &db_046B[0] ... pointer to flite data
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.w	#db_flv_cboss_046B,d3                	| [ld   de,#db_flv_cboss]
+	move.w	#db_flv_cboss_046B,d3               | [$230A: ld   de,#db_flv_cboss]
 	LOAD_D3D4_FROM_D3_16
-	move.b	d4,(a0)+                         	| [ld   (hl),e]
-	                           	| [inc  l]
-	move.b	d3,(a0)                         	| [ld   (hl),d]
-
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_99B9_star_ctrl+0x01       	| [ld   (ds_99B9_star_ctrl + 0x01),a] 0
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x11       	| [ld   (ds_cpu0_task_actv_9000 + 0x11),a] 1 (enable f_manage_ship_capture_movement_19b2 ... fighter captured)
-	move.b	d0,ds5_928A_captr_status+0x04   	| [ld   (ds5_928A_captr_status + 0x04),a] 1 ... (fighter captured)
-	rts                                    	| [ret]
+	move.b	d4,(a0)+                         	| [$230D: ld   (hl),e]
+	                           	                | [$230E: inc  l]
+	move.b	d3,(a0)                         	| [$230F: ld   (hl),d]
+	clr.b	d0                               	| [$2310: xor  a]
+	move.b	d0,ds_99B9_star_ctrl+0x01       	| [$2311: ld   (ds_99B9_star_ctrl + 0x01),a] 0
+	addq.b	#1,d0                           	| [$2314: inc  a]
+	move.b	d0,ds_cpu0_task_actv_9000+0x11      | [$2315: ld   (ds_cpu0_task_actv_9000 + 0x11),a] 1 (enable f_manage_ship_capture_movement_19b2 ... fighter captured)
+	move.b	d0,ds5_928A_captr_status+0x04   	| [$2318: ld   (ds5_928A_captr_status + 0x04),a] 1 ... (fighter captured)
+	rts                                    	    | [$231B: ret]
 
 l_231C:
-	move.b	#0x40,d0                        	| [ld   a,#0x40] beam nearly got ship
-	move.b	d0,ds5_928A_captr_status+0x02   	| [ld   (ds5_928A_captr_status + 0x02),a] 928C=928b=$40
-	move.b	#0x40,d0                        	| [ld   a,#0x40] well this is inefficient ...!
-	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 928C=928b=$40
-	rts                                    	| [ret]
+	move.b	#0x40,d0                        	| [$231C: ld   a,#0x40] beam nearly got ship
+	move.b	d0,ds5_928A_captr_status+0x02   	| [$231E: ld   (ds5_928A_captr_status + 0x02),a] 928C=928b=$40
+	move.b	#0x40,d0                        	| [$2321: ld   a,#0x40] well this is inefficient ...!
+	move.b	d0,ds5_928A_captr_status+0x01   	| [$2323: ld   (ds5_928A_captr_status + 0x01),a] 928C=928b=$40
+	rts                                    	    | [$2326: ret]
 
 l_2327_shot_boss_while_capturing:
-	move.b	#3,d0                           	| [ld   a,#3]
-	move.b	d0,ds_plyr_actv+_b_captr_flag   	| [ld   (ds_plyr_actv +_b_captr_flag),a] 3 (shot_boss_while_capturing)
-	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] HL == ds5_928A_captr_status + 0x01
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds5_928A_captr_status+0x03   	| [ld   (ds5_928A_captr_status + 0x03),a] 0
-	move.b	d0,ds_99B9_star_ctrl+0x01       	| [ld   (ds_99B9_star_ctrl + 0x01),a] 0
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds5_928A_captr_status+0x02   	| [ld   (ds5_928A_captr_status + 0x02),a] 1 ... shot_boss_while_capturing
-	move.b	d0,ds_cpu0_task_actv_9000+0x14       	| [ld   (ds_cpu0_task_actv_9000 + 0x14),a] 1  (f_controller_io_and_ship_movement_1f85 ... control stick input)
-	rts                                    	| [ret]
+	move.b	#3,d0                           	| [$2327: ld   a,#3]
+	move.b	d0,ds_plyr_actv+_b_captr_flag   	| [$2329: ld   (ds_plyr_actv +_b_captr_flag),a] 3 (shot_boss_while_capturing)
+	move.b	#0x80,(a0)                      	| [$232C: ld   (hl),#0x80] HL == ds5_928A_captr_status + 0x01
+	clr.b	d0                               	| [$232E: xor  a]
+	move.b	d0,ds5_928A_captr_status+0x03   	| [$232F: ld   (ds5_928A_captr_status + 0x03),a] 0
+	move.b	d0,ds_99B9_star_ctrl+0x01       	| [$2332: ld   (ds_99B9_star_ctrl + 0x01),a] 0
+	addq.b	#1,d0                           	| [$2335: inc  a]
+	move.b	d0,ds5_928A_captr_status+0x02   	| [$2336: ld   (ds5_928A_captr_status + 0x02),a] 1 ... shot_boss_while_capturing
+	move.b	d0,ds_cpu0_task_actv_9000+0x14      | [$2339: ld   (ds_cpu0_task_actv_9000 + 0x14),a] 1  (f_controller_io_and_ship_movement_1f85 ... control stick input)
+	rts                                    	    | [$233C: ret]
 
 l_233D:
-	move.b	ds5_928A_captr_status+0x01,d0   	| [ld   a,(ds5_928A_captr_status + 0x01)] if !$40 see 2323  (from 226E... beam just started)
-	cmp.b	#0x40,d0                         	| [cp   #0x40]
+	move.b	ds5_928A_captr_status+0x01,d0   	| [$233D: ld   a,(ds5_928A_captr_status + 0x01)] if !$40 see 2323  (from 226E... beam just started)
+	cmp.b	#0x40,d0                         	| [$2340: cp   #0x40]
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    	    | [$2342: ret  nz] [...]
 0:
 * beam just about to grab ship
-	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
-	move.b	d0,d2                           	| [ld   c,a]
-	move.b	ds_sprite_posn_9300+0x62,d0          	| [ld   a,(ds_sprite_posn_9300 + 0x62)] ship (1) position
-	btst.b	#0,d2                           	| [bit  0,c]
-	jeq	l_2352                             	| [jr   z,l_2352]
-	add.b	#0x0E,d0                         	| [add  a,#0x0E]
-	neg.b	d0                               	| [neg]
+	move.b	b_9215_flip_screen,d0           	| [$2343: ld   a,(b_9215_flip_screen)]
+	move.b	d0,d2                           	| [$2346: ld   c,a]
+	move.b	ds_sprite_posn_9300+0x62,d0         | [$2347: ld   a,(ds_sprite_posn_9300 + 0x62)] ship (1) position
+	btst.b	#0,d2                           	| [$234A: bit  0,c]
+	jeq	l_2352                             	    | [$234C: jr   z,l_2352]
+	add.b	#0x0E,d0                         	| [$234E: add  a,#0x0E]
+	neg.b	d0                               	| [$2350: neg]
 l_2352:
-	move.b	d0,d1                           	| [ld   b,a]
-	move.b	ds5_928A_captr_status+0x00,d0   	| [ld   a,(ds5_928A_captr_status + 0x00)] beam is pulling the ship
-	sub.b	d1,d0                            	| [sub  b]
-	add.b	#0x1B,d0                         	| [add  a,#0x1B]
-	cmp.b	#0x36,d0                         	| [cp   #0x36]
+	move.b	d0,d1                           	| [$2352: ld   b,a]
+	move.b	ds5_928A_captr_status+0x00,d0   	| [$2353: ld   a,(ds5_928A_captr_status + 0x00)] beam is pulling the ship
+	sub.b	d1,d0                            	| [$2356: sub  b]
+	add.b	#0x1B,d0                         	| [$2357: add  a,#0x1B]
+	cmp.b	#0x36,d0                         	| [$2359: cp   #0x36]
 	bcs.b	0f                               	| [...]
-	rts                                    	| [ret  nc] [...]
+	rts                                    	    | [$235B: ret  nc] [...]
 0:
 * if ( game_state == ATTRACT_MODE ) goto 236d
-	move.b	b8_game_state_9201,d0           	| [ld   a,(b8_game_state_9201)]  == ATTRACT_MODE
-	subq.b	#1,d0                           	| [dec  a]
-	jeq	l_236D                             	| [jr   z,l_236D]
+	move.b	b8_game_state_9201,d0           	| [$235C: ld   a,(b8_game_state_9201)]  == ATTRACT_MODE
+	subq.b	#1,d0                           	| [$235F: dec  a]
+	jeq	l_236D                             	    | [$2360: jr   z,l_236D]
 * else if (  !  ( task_enabled  &&  !restart_stage )  return
-	move.b	ds_cpu0_task_actv_9000+0x14,d0      | [ld   a,(ds_cpu0_task_actv_9000 + 0x14)] f_move_swarm_when_player_changes_1d32 (Moves bug nest on and off the screen )
-	move.b	d0,d2                           	| [ld   c,a]
-	move.b	ds_9200_glbls+0x13,d0           	| [ld   a,(ds_9200_glbls + 0x13)]
-	eor.b	#0x01,d0                         	| [xor  #0x01]
-	and.b	d2,d0                            	| [and  c]
+	move.b	ds_cpu0_task_actv_9000+0x14,d0      | [$2362: ld   a,(ds_cpu0_task_actv_9000 + 0x14)] f_move_swarm_when_player_changes_1d32 (Moves bug nest on and off the screen )
+	move.b	d0,d2                           	| [$2365: ld   c,a]
+	move.b	ds_9200_glbls+0x13,d0           	| [$2366: ld   a,(ds_9200_glbls + 0x13)]
+	eor.b	#0x01,d0                         	| [$2369: xor  #0x01]
+	and.b	d2,d0                            	| [$236B: and  c]
 	bne.b	0f                               	| [...]
-	rts                                    	    | [ret  z] [...]
+	rts                                    	    | [$236C: ret  z] [...]
 0:
 
 l_236D:
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x14       	| [ld   (ds_cpu0_task_actv_9000 + 0x14),a] 0: f_controller_io_and_ship_movement_1f85... control stick input
-	move.b	d0,b_9AA0+0x05                  	| [ld   (b_9AA0 + 0x05),a] 0: sound-fx count/enable registers, capture beam sound active uno
-	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 0 ... cpu1:f_05EE
-	move.b	d0,ds_9200_glbls+0x13           	| [ld   (ds_9200_glbls + 0x13),a] 0
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x1C       	| [ld   (ds_cpu0_task_actv_9000 + 0x1C),a] 1: f_tractor_beam_captures_ship_20f2 ... tractor beam captures
-	move.b	d0,b_9AA0+0x06                  	| [ld   (b_9AA0 + 0x06),a] 1 ... sound-fx count/enable registers, tractor beam
-	move.b	d0,ds_99B9_star_ctrl+0x01       	| [ld   (ds_99B9_star_ctrl + 0x01),a] 1
-	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
-	move.b	d0,ds_plyr_actv+_b_captr_flag   	| [ld   (ds_plyr_actv +_b_captr_flag),a] $0A ... tractor beam capturing ship
-	rts                                    	| [ret]
+	clr.b	d0                               	| [$236D: xor  a]
+	move.b	d0,ds_cpu0_task_actv_9000+0x14      | [$236E: ld   (ds_cpu0_task_actv_9000 + 0x14),a] 0: f_controller_io_and_ship_movement_1f85... control stick input
+	move.b	d0,b_9AA0+0x05                  	| [$2371: ld   (b_9AA0 + 0x05),a] 0: sound-fx count/enable registers, capture beam sound active uno
+	move.b	d0,ds_cpu1_task_actv+0x05       	| [$2374: ld   (ds_cpu1_task_actv + 0x05),a] 0 ... cpu1:f_05EE
+	move.b	d0,ds_9200_glbls+0x13           	| [$2377: ld   (ds_9200_glbls + 0x13),a] 0
+	addq.b	#1,d0                           	| [$237A: inc  a]
+	move.b	d0,ds_cpu0_task_actv_9000+0x1C      | [$237B: ld   (ds_cpu0_task_actv_9000 + 0x1C),a] 1: f_tractor_beam_captures_ship_20f2 ... tractor beam captures
+	move.b	d0,b_9AA0+0x06                  	| [$237E: ld   (b_9AA0 + 0x06),a] 1 ... sound-fx count/enable registers, tractor beam
+	move.b	d0,ds_99B9_star_ctrl+0x01       	| [$2381: ld   (ds_99B9_star_ctrl + 0x01),a] 1
+	move.b	#0x0A,d0                        	| [$2384: ld   a,#0x0A]
+	move.b	d0,ds_plyr_actv+_b_captr_flag   	| [$2386: ld   (ds_plyr_actv +_b_captr_flag),a] $0A ... tractor beam capturing ship
+	rts                                    	    | [$2389: ret]
 
 *=============================================================================
 * c_238A()
@@ -6824,23 +6835,22 @@ l_236D:
 *  ...
 *-----------------------------------------------------------------------------
 c_238A:
-	move.b	d0,d2                           	| [ld   c,a]
-	move.b	ds5_928A_captr_status+0x00,d0   	| [ld   a,(ds5_928A_captr_status + 0x00)] boss about to start tractor beam
-	neg.b	d0                               	| [neg]
-	add.b	#0x10,d0                         	| [add  a,#0x10]
-	move.b	#0x20,d3                        	| [ld   d,#0x20]
-	rol.b	#1,d0                            	| [rlca]
+	move.b	d0,d2                           	| [$238A: ld   c,a]
+	move.b	ds5_928A_captr_status+0x00,d0   	| [$238B: ld   a,(ds5_928A_captr_status + 0x00)] boss about to start tractor beam
+	neg.b	d0                               	| [$238E: neg]
+	add.b	#0x10,d0                         	| [$2390: add  a,#0x10]
+	move.b	#0x20,d3                        	| [$2392: ld   d,#0x20]
+	rol.b	#1,d0                            	| [$2394: rlca]
 	SET_X_FROM_C
-	roxl.b	#1,d3                           	| [rl   d]
-	rol.b	#1,d0                            	| [rlca]
+	roxl.b	#1,d3                           	| [$2395: rl   d]
+	rol.b	#1,d0                            	| [$2397: rlca]
 	SET_X_FROM_C
-	roxl.b	#1,d3                           	| [rl   d]
-
-	and.b	#0xE0,d0                         	| [and  #0xE0]
-	add.b	#0x14,d0                         	| [add  a,#0x14]
-	add.b	d2,d0                            	| [add  a,c]
-	move.b	d0,d4                           	| [ld   e,a]
-	rts                                    	| [ret]
+	roxl.b	#1,d3                           	| [$2398: rl   d]
+	and.b	#0xE0,d0                         	| [$239A: and  #0xE0]
+	add.b	#0x14,d0                         	| [$239C: add  a,#0x14]
+	add.b	d2,d0                            	| [$239E: add  a,c]
+	move.b	d0,d4                           	| [$239F: ld   e,a]
+	rts                                    	    | [$23A0: ret]
 * end 238A
 
 *=============================================================================
@@ -6872,7 +6882,7 @@ d_23A1:
 *  ...
 *-----------------------------------------------------------------------------
 f_update_objects_23dd:
-	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [$23DD: ld   a,(ds3_frame_cts_92A0 + 0)]
 
 * f_update_objects_23e0
 
