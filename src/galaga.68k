@@ -2471,10 +2471,7 @@ l_10A0_got_one:
 	exg		d0,d7                              	| [$10B7: ex   af,af'] unstash d0
 	move.b	d0,d3                           	| [$10B8: ld   d,a] function parameter from A' to 0x13(ix)
 	move.b	#9,(a0)+                         	| [$10B9: ld   (hl),#9] obj_status[l].state ... disposition = diving attack
-	* we reuse a macro with A3 as base, with a couple of exg
-	exg		a3,a2
-	COMPUTE_LSB_A3_D0	ds_bug_motion_que_9100  | [$10BB: ld   a,ixl]
-	exg		a3,a2
+	COMPUTE_LSB_A2_D0	ds_bug_motion_que_9100  | [$10BB: ld   a,ixl]
 	*addq.b	#1,d6								| [$10BD: inc  l] [a0 coherence]
 	move.b	d0,(a0)                         	| [$10BE: ld   (hl),a] obj_status[L].idx ... index into flying que
 	move.b	b_9215_flip_screen,d0           	| [$10BF: ld   a,(b_9215_flip_screen)]
@@ -2933,70 +2930,66 @@ l_1228:
 *-----------------------------------------------------------------------------
 c_init_taskman_structs_1230:
 * memcpy(_task_activ, task_enable_tbl_def, 0x20)
-	lea	task_enable_tbl_def,a0         	| [ld   hl,#task_enable_tbl_def]
-	lea	ds_cpu0_task_actv_9000,a1           	| [ld   de,#ds_cpu0_task_actv_9000] $20 bytes copied from task_enable_tbl_def
-	move.w	#0x20,d1                        	| [ld   bc,#0x0020] 32
-	movem.w	d1/d2,-(sp)                    	| [push bc]
-
-	move.l	a0,-(sp)                        	| [push hl]
-	jbsr	ldir                              	| [ldir]
+	lea	task_enable_tbl_def_1249,a0         	| [$1230: ld   hl,#task_enable_tbl_def]
+	lea	ds_cpu0_task_actv_9000,a1           	| [$1233: ld   de,#ds_cpu0_task_actv_9000] $20 bytes copied from task_enable_tbl_def
+	move.w	#0x20,d1                        	| [$1236: ld   bc,#0x0020] 32
+	movem.w	d1/d2,-(sp)                    	    | [$1239: push bc]
+	move.l	a0,-(sp)                        	| [$123A: push hl]
+	jbsr	ldir                              	| [$123B: ldir]
 
 * memcpy(_task_resrv, task_enable_tbl_def, 0x20)|
 *  for ( de = 98e0, hl = 1249| bc++ | bc < 0$20 ) de[bc] = hl[bc]|
-	move.l	(sp)+,a0                        	| [pop  hl]
-
-	movem.w	(sp)+,d1/d2                    	| [pop  bc]
-	lea	ds_cpu0_task_resrv,a1          	| [ld   de,#ds_cpu0_task_resrv] $20 bytes copied from task_enable_tbl_def
-	jbsr	ldir                              	| [ldir]
+	move.l	(sp)+,a0                        	| [$123D: pop  hl]
+	movem.w	(sp)+,d1/d2                      	| [$123E: pop  bc]
+	lea	ds_cpu0_task_resrv,a1          	        | [$123F: ld   de,#ds_cpu0_task_resrv] $20 bytes copied from task_enable_tbl_def
+	jbsr	ldir                              	| [$1242: ldir]
 
 * kill the idle task at [0]
 *  task_tbl_9000[0] = 0
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv_9000            	| [ld   (ds_cpu0_task_actv_9000),a] 0
-
-	rts                                    	| [ret]
+	clr.b	d0                               	| [$1244: xor  a]
+	move.b	d0,ds_cpu0_task_actv_9000           | [$1245: ld   (ds_cpu0_task_actv_9000),a] 0
+	rts                                    	    | [$1248: ret]
 
 
 *=============================================================================
 * kernel task-enable table defaults
 
-task_enable_tbl_def:
+task_enable_tbl_def_1249:
+	.byte  0x1F | 00 f_rts_0827
+	.byte  0x01 | 01 f_update_sprites_0828  | Copies from sprite "buffer" to sprite RAM
+	.byte  0x00 | 02 f_manage_attract_mode_17B2
+	.byte  0x00 | 03 f_ship_demo_controls_1700  | Ship-update in training/demo mode.
+	.byte  0x00 | 04 f_clone_attack_manager_1A80
+	.byte  0x01 | 05 f_misc_gameplay_events_0857  | triggers various parts of gameplay based on parameters
+	.byte  0x00 | 06 f_rts_0827
+	.byte  0x00 | 07 f_rts_0827
 
-	.byte  0x1F | f_rts_0827
-	.byte  0x01 | f_update_sprites_0828  | Copies from sprite "buffer" to sprite RAM
-	.byte  0x00 | f_manage_attract_mode_17B2
-	.byte  0x00 | f_ship_demo_controls_1700  | Ship-update in training/demo mode.
-	.byte  0x00 | f_clone_attack_manager_1A80
-	.byte  0x01 | f_misc_gameplay_events_0857  | triggers various parts of gameplay based on parameters
-	.byte  0x00 | f_rts_0827
-	.byte  0x00 | f_rts_0827
+	.byte  0x00 | 08 f_insert_attackers_2916
+	.byte  0x00 | 09 f_pulsating_swarm_movement_1de6
+	.byte  0x00 | 0A f_lateral_movement_at_round_start_2a90
+	.byte  0x00 | 0B f_update_enemy_status_1db3
+	.byte  0x01 | 0C f_update_objects_23dd  | Updates each object in the table at 8800
+	.byte  0x01 | 0D f_bomb_position_updater_1ea4  | Bomb position updater
+	.byte  0x00 | 0E f_move_swarm_when_player_changes_1d32
+	.byte  0x01 | 0F f_blink_players_text_0935  | handle "blink" of Player1/Player2 texts
 
-	.byte  0x00 | f_insert_attackers_2916
-	.byte  0x00 | f_pulsating_swarm_movement_1de6
-	.byte  0x00 | f_lateral_movement_at_round_start_2a90
-	.byte  0x00 | f_update_enemy_status_1db3
-	.byte  0x01 | f_update_objects_23dd  | Updates each object in the table at 8800
-	.byte  0x01 | f_bomb_position_updater_1ea4  | Bomb position updater
-	.byte  0x00 | f_move_swarm_when_player_changes_1d32
-	.byte  0x01 | f_blink_players_text_0935  | handle "blink" of Player1/Player2 texts
+	.byte  0x00 | 10 f_manage_bomber_attacks_1b65
+	.byte  0x00 | 11 f_manage_ship_capture_movement_19b2
+	.byte  0x00 | 12 f_star_control_1d76  | star control
+	.byte  0x00 | 13 f_rts_0827
+	.byte  0x00 | 14 f_controller_io_and_ship_movement_1f85
+	.byte  0x00 | 15 f_read_fire_button_1f04
+	.byte  0x00 | 16 f_rts_0827
+	.byte  0x01 | 17 f_update_timers_1dd2  | Updates array of 4 timers
 
-	.byte  0x00 | f_manage_bomber_attacks_1b65
-	.byte  0x00 | f_manage_ship_capture_movement_19b2
-	.byte  0x00 | f_star_control_1d76  | star control
-	.byte  0x00 | f_rts_0827
-	.byte  0x00 | f_controller_io_and_ship_movement_1f85
-	.byte  0x00 | f_read_fire_button_1f04
-	.byte  0x00 | f_rts_0827
-	.byte  0x01 | f_update_timers_1dd2  | Updates array of 4 timers
-
-	.byte  0x00 | f_boss_starts_tractor_beam_2222
-	.byte  0x00 | f_boss_diving_down_to_capture_ship_21cb
-	.byte  0x00 | f_rts_0827
-	.byte  0x00 | f_rts_0827
-	.byte  0x00 | f_tractor_beam_captures_ship_20f2
-	.byte  0x00 | f_boss_capturing_ship_killed_2000
-	.byte  0x00 | f_rts_0827
-	.byte  0x0A | f_credit_game_state_management_0977  | Handles coinage and changes in game-state
+	.byte  0x00 | 18 f_boss_starts_tractor_beam_2222
+	.byte  0x00 | 19 f_boss_diving_down_to_capture_ship_21cb
+	.byte  0x00 | 1A f_rts_0827
+	.byte  0x00 | 1B f_rts_0827
+	.byte  0x00 | 1C f_tractor_beam_captures_ship_20f2
+	.byte  0x00 | 1D f_boss_capturing_ship_killed_2000
+	.byte  0x00 | 1E f_rts_0827
+	.byte  0x0A | 1F f_credit_game_state_management_0977  | Handles coinage and changes in game-state
 
 *=============================================================================
 * g_mssl_init()
@@ -6491,7 +6484,7 @@ l_21C7:
 *  ...
 *-----------------------------------------------------------------------------
 f_boss_diving_down_to_capture_ship_21cb:
-* if ( HOMING == b_8800[ plyr_actv.captr_boss_id ] )
+* if ( HOMING == b_8800[ plyr_actv.captr_boss_id ] )0
 	lea	ds_plyr_actv+_b_bmbr_boss_cobj,a0	    | [$21CB: ld   hl,#ds_plyr_actv +_b_bmbr_boss_cobj] = $9828
 	move.b	(a0),d4                             | [$21CE: ld   e,(hl)]
 	lea	b_8800,a1                      	        | [$21CF: ld   d,#>b_8800]
@@ -6509,7 +6502,7 @@ f_boss_diving_down_to_capture_ship_21cb:
 	lea		ds_bug_motion_que_9100,a2           | [$21D8: ld   ixl,a]
     add.w	d0,a2                               | [$21DA: ld   ixh,>ds_bug_motion_que_9100]
 	tst.b	(mq_unknown_0A,a2)                  | [$21DD: ld   a,0x0A(ix)] while !0, capture boss is diving
-	                               	            | [$21E0: and  a]
+                               	                | [$21E0: and  a]
 	beq.b	0f                               	| [...]
 	rts                                    	    | [$21E1: ret  nz] [...]
 0:

@@ -1,5 +1,4 @@
-- capture ship doesn't capture. f_boss_diving_down_to_capture_ship_21cb is called indefinitely
-- sometimes it works but then it's buggy!!
+- capture beam not showing: force capture all the time (cheat)
 - captured ship wrong clut 0x32 masked??? to 2?
 - double buffering: don't double buffer last plane
 - crash div 0 on statistics screen: c_puts_hitmiss_ratio_0A72

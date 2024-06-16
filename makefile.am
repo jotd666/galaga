@@ -51,7 +51,7 @@ $(PROGNAME)_ram.o: $(PROGNAME)_ram.68k $(PROGNAME)_game_ram.68k
 	$(ASM) $(PROGNAME)_ram.68k -o $(PROGNAME)_ram.o
 $(PROGNAME).o: $(PROGNAME).68k $(PROGNAME).inc m68k_macros.inc register_op.inc
 	$(ASM) $(PROGNAME).68k -o $(PROGNAME).o
-$(PROGNAME)_sub.o: $(PROGNAME)_sub.68k $(PROGNAME).inc register_op.inc
+$(PROGNAME)_sub.o: $(PROGNAME)_sub.68k $(PROGNAME).inc m68k_macros.inc register_op.inc
 	$(ASM) $(PROGNAME)_sub.68k -o $(PROGNAME)_sub.o
 $(PROGNAME)_sub_rom.o: $(PROGNAME)_sub_rom.68k
 	$(ASM) $(PROGNAME)_sub_rom.68k -o $(PROGNAME)_sub_rom.o

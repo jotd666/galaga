@@ -1857,36 +1857,35 @@ case_capturing_boss_starts_dive_0A53:  | 0x0B
 	jcc	l_0A66                             	    | [$0A62: jr   nc,l_0A66]
 	move.b	#0x29,d0                        	| [$0A64: ld   a,#0x29]
 l_0A66:
-	cmp.b	#404>>1,d0			                | [cp   #404 >> 1]  0xCA
-	jcs	l_0A6C                             	    | [jr   c,l_0A6C]
-	move.b	#402>>1,d0                      	| [ld   a,#402 >> 1] $C9
+	cmp.b	#404>>1,d0			                | [$0A66: cp   #404 >> 1]  0xCA
+	jcs	l_0A6C                             	    | [$0A68: jr   c,l_0A6C]
+	move.b	#402>>1,d0                      	| [$0A6A: ld   a,#402 >> 1] $C9
 l_0A6C:
-	btst.b	#0,d2                           	| [bit  0,c] check flip screen
-	jeq	l_0A73                             	    | [jr   z,l_0A73]
-	add.b	#13,d0                           	| [add  a,#13] flipped
-	not.b	d0                               	| [cpl]
-l_0A73:
-	move.b	d0,ds5_928A_captr_status+0x00   	| [ld   (ds5_928A_captr_status + 0x00),a]
-	lsr.b	#1,d0                            	| [srl  a]
-	move.b	d0,d4                           	| [ld   e,a]
-	move.b	#0x48,d3                        	| [ld   d,#0x48]
-	move.b	(mq_y_01,a2),d5                    	| [ld   h,0x01(ix)]
-	move.b	(mq_x_03,a2),d6                    	| [ld   l,0x03(ix)]
-	jbsr	compute_rotation_angle_0e5b         | [call compute_rotation_angle_0e5b] HL = compute_rotation_angle_0e5b(DE, H, L) ... determine rotation angle
-	lsr.b	#1,d5                            	| [srl  h]
-	roxr.b	#1,d6                           	| [rr   l]
-	move.b	d6,(mq_angle_lsb_04,a2)                    	| [ld   0x04(ix),l]
-	move.b	d5,(mq_angle_msb_05,a2)                    	| [ld   0x05(ix),h]
-
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 0
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x19      | [ld   (ds_cpu0_task_actv_9000 + 0x19),a] 1: f_21CB ... boss diving to capture position
-	jbsr	read_ixl_into_d0                    | [ld   a,ixl]
-	move.b	d0,ds_plyr_actv+_b_cboss_slot   	| [ld   (ds_plyr_actv +_b_cboss_slot),a] ixl ... offset of slot used by capture boss, referenced by cpu0:f_21CB
-	move.l	(sp)+,a0                        	| [pop  hl] ptr to data table
-	addq.w	#1,a0                           	| [inc  hl]
-	jra	j_090E_flite_path_init             	    | [jp   j_090E_flite_path_init]
+*	btst.b	#0,d2                           	| [$0A6C: bit  0,c] check flip screen
+*	jeq	l_0A73                             	    | [$0A6E: jr   z,l_0A73]
+*	add.b	#13,d0                           	| [$0A70: add  a,#13] flipped
+*	not.b	d0                               	| [$0A72: cpl]
+*l_0A73:
+	move.b	d0,ds5_928A_captr_status+0x00   	| [$0A73: ld   (ds5_928A_captr_status + 0x00),a]
+	lsr.b	#1,d0                            	| [$0A76: srl  a]
+	move.b	d0,d4                           	| [$0A78: ld   e,a]
+	move.b	#0x48,d3                        	| [$0A79: ld   d,#0x48]
+	move.b	(mq_y_01,a2),d5                    	| [$0A7B: ld   h,0x01(ix)]
+	move.b	(mq_x_03,a2),d6                    	| [$0A7E: ld   l,0x03(ix)]
+	jbsr	compute_rotation_angle_0e5b         | [$0A81: call compute_rotation_angle_0e5b] HL = compute_rotation_angle_0e5b(DE, H, L) ... determine rotation angle
+	lsr.b	#1,d5                            	| [$0A84: srl  h]
+	roxr.b	#1,d6                           	| [$0A86: rr   l]
+	move.b	d6,(mq_angle_lsb_04,a2)             | [$0A88: ld   0x04(ix),l]
+	move.b	d5,(mq_angle_msb_05,a2)             | [$0A8B: ld   0x05(ix),h]
+	clr.b	d0                               	| [$0A8E: xor  a]
+	move.b	d0,ds5_928A_captr_status+0x01   	| [$0A8F: ld   (ds5_928A_captr_status + 0x01),a] 0
+	addq.b	#1,d0                           	| [$0A92: inc  a]
+	move.b	d0,ds_cpu0_task_actv_9000+0x19      | [$0A93: ld   (ds_cpu0_task_actv_9000 + 0x19),a] 1: f_21CB ... boss diving to capture position
+	COMPUTE_LSB_A2_D0	ds_bug_motion_que_9100  | [$0A96: ld   a,ixl]
+	move.b	d0,ds_plyr_actv+_b_cboss_slot   	| [$0A98: ld   (ds_plyr_actv +_b_cboss_slot),a] ixl ... offset of slot used by capture boss, referenced by cpu0:f_21CB
+	move.l	(sp)+,a0                        	| [$0A9B: pop  hl] ptr to data table
+	addq.w	#1,a0                           	| [$0A9C: inc  hl]
+	jra	j_090E_flite_path_init             	    | [$0A9D: jp   j_090E_flite_path_init]
 
 * attack wave element hits turning point and heads to home
 case_heads_to_home_0aa0:  | 0x04

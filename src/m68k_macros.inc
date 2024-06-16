@@ -42,6 +42,12 @@
 	.endif
 	.endm
 
+	.macro	COMPUTE_LSB_A2_D0	base
+	exg		a3,a2
+	COMPUTE_LSB_A3_D0		\base
+	exg		a3,a2	
+	.endm
+	
 	.macro	COMPUTE_LSB_A3_D0	base
 	move.l	a3,d0
 	sub.l	#\base,d0
