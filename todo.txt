@@ -1,9 +1,17 @@
+- double ship add cheat
+- double shot: check status, double height: if 0x30 and double height
+  blit double shot
 - capture beam not showing: force capture all the time (cheat)
 - captured ship not showing / at the same time it makes attacking bugs 
 erratic.
 - double buffering: don't double buffer last plane for tiles
 - crash div 0 on statistics screen: c_puts_hitmiss_ratio_0A72
   when it works, 50.  ... => 0 % is too high on screen
+  watch A0/A1, HL/DE after call: 0535
+     DE  80B8
+     HL  99B2
+
+- generate proper HW sprite cluts
 - needs heavy optimizing with HW sprites, and probably frame drop...
 - level 4 or 5: at some point aliens stop shooting
 - scorpion clone attack: wrong (only 2, not properly oriented) & wrong colors because HW sprites!!

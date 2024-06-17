@@ -1160,16 +1160,15 @@ l_076A_while_object:
 	exg		d0,d7                              	| [$0792: ex   af,af'] object status to hitd_dspchr_07c1
 	                                    		| [$0793: ld   a,(ds_plyr_actv +_b_2ship)]	
 	move.b	(a0),d0                         	| [$0797: ld   a,(hl)] sprite.sX
+	sub.b	ixl,d0                           	| [$079A: sub  ixl] sprite.sX -= rocket.sX
 	tst.b	ds_plyr_actv+_b_2ship				| [$0796: and  a] flags from this value, but d0 loaded with sX
 	jne	l_07A4                             		| [$0798: jr   nz,l_07A4] and  a
-	sub.b	ixl,d0                           	| [$079A: sub  ixl] sprite.sX -= rocket.sX
 	subq.b	#6,d0                           	| [$079C: sub  #6]
 	add.b	#11,d0                           	| [$079E: add  a,#11]
 	jcs	hitd_dspchr_07c1_rckt_07b9              | [$07A0: jr   c,hitd_dspchr_07c1_rckt_07b9]
 	jra	l_07B4_next_object                 		| [$07A2: jr   l_07B4_next_object]
-
 l_07A4:
-	sub.b	ixl,d0                           	| [$07A4: sub  ixl] sprite.sX -= rocket.sX
+	                                         	| [$07A4: sub  ixl] sprite.sX -= rocket.sX (done above)
 	sub.b	#20,d0                           	| [$07A6: sub  #20]
 	add.b	#11,d0                           	| [$07A8: add  a,#11]
 	jcs	hitd_dspchr_07c1_rckt_07b9              | [$07AA: jr   c,hitd_dspchr_07c1_rckt_07b9]

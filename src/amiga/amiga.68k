@@ -5,6 +5,7 @@
 *
 
 .include "../src/galaga.inc"
+.include "../src/structs.inc"
 .include "custom.i"
 .include "exec_lvos.i"
 .include "dos_lvos.i"
@@ -774,8 +775,9 @@ _vblank:
 	beq.b		1f
 
 	bsr		scroll_stars
-	lea		_custom,a5
 
+	*eor.b	#1,flip_flop
+	*beq.b	0f
 	* emergency system to skip a frame if needed!
 	tst.b	skip_screen_update
 	bne.b	0f
@@ -806,6 +808,7 @@ _vblank:
 	bsr		osd_sound_stop
 
 13:
+	lea		_custom,a5
 	
 	* ack vbl twice (040/pistorm bug)
 	move.w	#0x20,(intreq,a5)
@@ -864,11 +867,6 @@ _vblank:
 	move.w	#0x10,_custom+intreq
 3:
     movem.l (a7)+,d0-d7/a0-a6
-	tst.l	return_address
-	beq.b	4f
-	move.l	return_address,(2,a7)		| change return address
-	clr.l	return_address				| just for this time
-4:
     rte
 	
 
@@ -904,34 +902,14 @@ osd_break:
 
 
 	
-update_delta_mockup:
-	* mockup!
-	eor.b	#1,delta_flip_flop
-	bne.b	2f
-	
-	move.w	delta_sign,d2
-	add.w	d2,delta_x
-	add.w	d2,delta_y
-	cmp.w	#10,delta_y
-	bcc		0f
-	cmp.w	#-10,delta_y
-	bcc		0f
-
-2:
-	rts
-0:
-	neg.w	delta_sign
-	rts
 	
 really_update_sprites:
 
-	movem.l	a0-a6/d0-d7,-(a7)
 	* first, make sure we have the proper palette (TODO challenging stages)
 	
 	bsr		update_hardware_sprites
 	bsr		update_bobs
 	
-	movem.l	(a7)+,a0-a6/d0-d7
 	rts
 	
 sprite_toggle:
@@ -1171,14 +1149,6 @@ compute_sprite_xy:
 	
 	rts
 	
-delta_x:
-	dc.w	0
-delta_y:
-	dc.w	0
-delta_sign:
-	dc.w	1
-delta_flip_flop:
-	dc.w	0
 update_bobs:
 
 	lea			hardware_sprite_flag_table,a2
@@ -2948,10 +2918,10 @@ handle_keyboard:
 	cmp.b	#0x51,d0	| F2 key
 	bne.b	0f
 	st.b	cheat_used
-	* give hammer
+	* give double shot
 	move.w	#0x0FF,_custom+color
-	*move.b	#1,hammer_active_6217
-	*move.b	#1,second_hammer_sprite_6690+1
+	move.b	#1,ds_plyr_actv+_b_2ship
+
 	
 0:
 	cmp.b	#0x52,d0	| F3 key
@@ -3120,7 +3090,7 @@ cheat_flags:
 		.long	WHDLTAG_CUSTOM2_GET
 		.word	0
 slow_machine:
-		.word	0
+		.word	-1
 
 		.long	WHDLTAG_CUSTOM3_GET
 misc_options:
