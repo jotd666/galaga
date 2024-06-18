@@ -776,13 +776,6 @@ _vblank:
 
 	bsr		scroll_stars
 
-	*eor.b	#1,flip_flop
-	*beq.b	0f
-	* emergency system to skip a frame if needed!
-	tst.b	skip_screen_update
-	bne.b	0f
-	jbsr	really_update_sprites
-0:
 	clr.b	skip_screen_update
 	move.l	_joypad_state(pc),d1
 	moveq	#1,d0
@@ -815,6 +808,7 @@ _vblank:
 	move.w	#0x20,(intreq,a5)	
 	jra	3f
 1:
+	***************************************
 	* has to be copper
 	* we're going to ack copper interrupt now
 	* do it twice (040/pistorm bug)
@@ -838,9 +832,7 @@ _vblank:
 
 	sub.w	d1,delay_timer
 	
-	.ifne  OPT_ENABLE_DOUBLE_BUFFERING
-	bsr		switch_screen_buffers
-	.endif
+
 	
 	* declare that we're in interrupt mode so osd_disable_interrupts/osd_enable_interrupts
 	* also set SR accordingly
@@ -851,6 +843,15 @@ _vblank:
 	jbsr		galaga_irq	
 0:
 	clr.b	interrupt_mode
+	eor.b	#1,flip_flop
+	beq.b	0f
+
+	jbsr	really_update_sprites
+
+	.ifne  OPT_ENABLE_DOUBLE_BUFFERING
+	bsr		switch_screen_buffers
+	.endif
+0:
 	
 23:
 	* now we check copper interrupt again

@@ -13,6 +13,7 @@ erratic.
 
 - generate proper HW sprite cluts
 - needs heavy optimizing with HW sprites, and probably frame drop...
+- make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
 - level 4 or 5: at some point aliens stop shooting
 - scorpion clone attack: wrong (only 2, not properly oriented) & wrong colors because HW sprites!!
 - 2 first rows not shown (attribute/color is black!!!)
@@ -20,17 +21,15 @@ erratic.
 - stage 1 flag not drawn, and wrong colors
 - sprite priorities wrong: stars should be behind
 - stars & colors trashed near the PAL wait region: copperlist conflict between sprite/color
-- ACTIVE_BITPLANE_MASK not implemented
 - demo: ship misses first boss on first shot: desync, hack it: if intro running
   then be nicer with detection around 0788 (sub) (add 3 of tolerance)
+  or just follow ships with an offset
 - redraw bottom tiles all the time or maybe only if some sprite Y > some value
 - implement level skip & other trainer
 
 traj issues: Traj computed in subcpu D23 / D50 probe there!
 
 l_2ADA_done: all bugs arrived: phase 2 diving attacks!
- capture:  check if l_1A3F_join_ship_to_group (not called!!), l_1A4B_test_positioning_timer is reached which calls l_1A6A_ship_in_position
-
 
 
 mutants:
