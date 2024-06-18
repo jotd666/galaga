@@ -3800,6 +3800,7 @@ l_1741:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	ds_sprite_posn_9300+0x62,d0         | [$1747: ld   a,(ds_sprite_posn_9300 + 0x62)] ship (1) position
+	addq.b	#1,d0                               | jotd hack: adding 1 fixes the bug in the intro where the ship misses the first boss
 	sub.b	(a0),d0                          	| [$174A: sub  (hl)]
 	* jotd: had to handle Z and C flags separately as there are some "ld" instructions in between
 	jne		0f
