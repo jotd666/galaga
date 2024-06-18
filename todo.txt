@@ -1,4 +1,4 @@
-- double ship add cheat
+- double ship attaches left then displayed right????
 - double shot: check status, double height: if 0x30 and double height
   blit double shot
 - capture beam not showing: force capture all the time (cheat)

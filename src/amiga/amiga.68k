@@ -1665,9 +1665,9 @@ blit_planes_any_internal_cookie_cut:
     rts
 	
 process_1_plane:
-	move.l a3,bltapt(a5)	|source graphic top left corner (mask)
+	move.l a3,bltapt(a5)	|  source graphic top left corner (mask)
 	move.l (a0)+,d0
-	beq.b	60f
+	jeq	63f    | do nothing ATM see if it works
 	move.l	d0,a4
 	add.w	d5,a4
 	bra.b	61f
@@ -1687,7 +1687,7 @@ process_1_plane:
  	move.l	a1,bltcpt(a5)	|pristine background top (bottom) left corner
 	move.l	a1,bltdpt(a5)	|destination top (bottom) left corner
 	move.w  d4,bltsize(a5)	|rectangle size, starts blit
-	
+63:	
 	rts
 
 	

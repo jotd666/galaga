@@ -45,3 +45,23 @@ STARFIELD:
 
 reuses the Galaxian port code, which multiplexes sprite 7 and changes positions so
 it scrolls. Makes a pretty complex copperlist.
+
+BOBS:
+
+There's a lot happening on the screen, so better avoid blitting too much. Bees & moths are the BOBs that
+occur the most on screen. All sprites use 3 colors + black. So it's better to rearrange the palette so 
+those particular BOBs use only 2 bitplanes. This is done by chosing color order carefully. As a bonus,
+we can also display bosses with 2 bitplanes, as color 4 is already blue. 4,8,12: 2 bitplanes!
+
+Bees use indexes 0 (black) 1 (red) 2 (yellow) 3 (blue)
+Moths uses indexes 0 (black) 1 (red) 4 (blue, duplicated) and 5 (light gray)
+Boss with no armour 0 (black)        4 (blue)  8 (purple)  12 (pink)
+
+By duplicating just one color, we display bees on planes 0 and 1, moths on planes 0 and 2 and bosses
+(when hit once) on planes 2 and 3
+
+Another trick is not to blit (zero cookie cut) the planes that are zeroed. It's obvious for bob erase, but
+less so when it comes to draw it. But it saves some bandwidth and the result is barely noticeable as BOBs 
+rarely superimpose.
+
+

@@ -3,6 +3,8 @@ from PIL import Image,ImageOps
 
 gamename = "galaga"
 
+verbose = False
+
 import collections
 
 # ripped from MAME, Mark version is not correct or I just don't get the logic
@@ -129,8 +131,8 @@ add_sprite_block(0x8,0x10,"boss_ship",[0,1,10],mirror=True)   # 10: yellow when 
 #add_sprite_block(0,0x8,"ship",[2,9])
 add_sprite_block(0,0x8,"ship",9,mirror=True) #,sprite_type=ST_HW_SPRITE)
 add_sprite_block(0,0x8,"ship",[2,7],mirror=True)
-add_sprite_block(0x10,0x18,"red_bee",[2,0xA],mirror=True)
-add_sprite_block(0x18,0x20,"blue_bee",[3,0xA,0x5],mirror=True)
+add_sprite_block(0x10,0x18,"moth",[2,0xA],mirror=True)
+add_sprite_block(0x18,0x20,"bee",[3,0xA,0x5],mirror=True)
 add_sprite_block(0x50,0x57,"mutant_galaxian_boss",4,sprite_type=ST_HW_SPRITE,mirror=True)
 add_sprite_block(0x58,0x5F,"mutant_scorpion",5,sprite_type=ST_HW_SPRITE,mirror=True)
 add_sprite_block(0x60,0x67,"mutant_green",6,sprite_type=ST_HW_SPRITE,mirror=True)
@@ -247,9 +249,6 @@ def generate_16x16_image(cidx,sprdat,sprconf):
             img.putpixel((i,j),color)
     return img
 
-def switch_values(t,a,b):
-    t[a],t[b] = t[b],t[a]
-
 
 
 # if palette is taken as-is, we need 32 colors to display the full game, even less than that
@@ -281,11 +280,35 @@ for k,sprdat in enumerate(block_dict["sprite"]["data"]):
 # rebuild the reduced palette from used sprites (& tiles!). Should not exceed 16
 # ATM we have 6 spare colors and we could probably gain more with dynamic copper shit for tiles
 # if required
-palette = sorted(colors)
 
-palette = palette + [(0x10,0x20,0x30)]*(16-len(palette))
+# put bee colors (the most frequent alien) in specific palette indexes
+# bees now need 2 plane blits to be drawn
+# if we have spare entries
+fixed_colors = {1: (255, 0, 0), 2:(255, 255, 0), 3: (0, 104, 222), 4: (0, 104, 222),  5:(222,222,222), 8:(151,0,222), 12 :(255,0,222)}
+
+nb_colors = 16
+palette = iter(sorted(colors - set(fixed_colors.values())))
+new_palette = []
+
+for current_index in range(nb_colors):
+    c = fixed_colors.get(current_index)
+    if c:
+        new_palette.append(c)
+    else:
+        c = next(palette,None)
+        if not c:
+            break
+        new_palette.append(c)
 
 
+print("Spare colors: {}".format(nb_colors-len(new_palette)))
+dummy_color = (0x10,0x20,0x30)
+palette = new_palette + [dummy_color]*(nb_colors-len(new_palette))
+
+# only one red color, at different indexes
+moth_palette = palette.copy()
+moth_palette[3] = dummy_color
+boss_ship_palette = moth_palette
 
 # dump cluts as RGB4 for sprites
 with open(os.path.join(src_dir,"palette_cluts.68k"),"w") as f:
@@ -301,6 +324,11 @@ with open(os.path.join(src_dir,"palette_cluts.68k"),"w") as f:
 with open(os.path.join(src_dir,"palette.68k"),"w") as f:
     f.write("palette:\n")
     bitplanelib.palette_dump(palette,f,pformat=bitplanelib.PALETTE_FORMAT_ASMGNU)
+
+# cancel color 4 (not sure it's useful)
+palette[4] = dummy_color
+
+
 with open(os.path.join(src_dir,"tile_cluts.68k"),"w") as f:
 
     for c in fg_tile_clut:
@@ -421,7 +449,9 @@ if True:
                     if "bitmap" not in cs:
                         cs["bitmap"] = dict()
 
-                    bobs_palette = palette  # take first palette even if several screens
+                    is_moth_or_boss = name.startswith("moth_") or name.startswith("boss_")
+
+                    bobs_palette = moth_palette if is_moth_or_boss else palette  # take first palette even if several screens
                     csb = cs["bitmap"]
 
                     # prior to dump the image to amiga bitplanes, don't forget to replace brown by blue
@@ -430,7 +460,8 @@ if True:
                     img_to_raw = img
 
                     plane_list = []
-                    print(f"converting {name}, code {k}, clut {cidx}, {[[hex(c) for c in x]for x in sprite_clut[cidx] ]}")
+                    if verbose:
+                        print(f"converting {name}, code {k}, clut {cidx}, {[[hex(c) for c in x]for x in sprite_clut[cidx] ]}")
 
                     if sprconf["double_wh"]:
                         img_new = Image.new("RGB",(32,32))
