@@ -32,7 +32,7 @@ pcs = set()
 len_block = 14
 
 sorted_cmp = False
-avoid_regs = ["d","ixl","ixh"]
+avoid_regs = ["h","ixh","ixl"]
 regslist = list("abcdehl")+["ixh","ixl"]
 
 lst = []
@@ -63,7 +63,7 @@ with open("amiga.tr","w") as f:
 # note: sub cpu log has a bug: trace won't consider tracelog instruction if "sub" is specified. So instead, break into subcpu
 # then use trace on current cpu
 lst = []
-with open(r"K:\Emulation\MAME\galaga_1_bug.tr") as f:
+with open(r"K:\Emulation\MAME\galaga.tr") as f:
     l = len("A=01, B=00, C=3F, D=93, E=81, H=93, L=01, IX=XXXX ")
     for line in f:
         m = re.match("A=(..), B=(..), C=(..), D=(..), E=(..), H=(..), L=(..), IX=(..)(..)",line)
