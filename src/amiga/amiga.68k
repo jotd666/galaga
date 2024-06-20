@@ -48,7 +48,7 @@ PREVIOUS_SPRITE_X = 0
 PREVIOUS_SPRITE_Y = 2
 PREVIOUS_Y_START = 4
 PREVIOUS_HEIGHT = 6
-ACTIVE_BITPLANE_MASK = 8   | for optimized bitplane erase
+PREVIOUS_ACTIVE_BITPLANE_MASK = 8   | for optimized bitplane erase
 PREVIOUS_SPRITE_CODE = 9
 
 TARGET_SPRITE_X_1 = 1+SPRITE_BLOCK_OFFSET
@@ -403,7 +403,8 @@ _user:
 	sne		break_at_startup_flag
 	.endif
 	btst	#0,d1
-	*sne		skip_introduction_flag
+	*st		slow_machine
+	*st	half_fps
 
 
 	move.l	start_level_option,d0
@@ -628,7 +629,7 @@ show_stars:
 	lsr.w	#2,d0
 	move.w	d0,stars_copper_pointers_count
 	move.l	(a7)+,a5
-	tst.w	slow_machine
+	tst.b	slow_machine
 	bne.b	3f
 	st.b	enable_star_scroll
 3:
@@ -845,15 +846,17 @@ _vblank:
 	jbsr		galaga_irq	
 0:
 	clr.b	interrupt_mode
+	tst.b	half_fps
+	beq.b	0f			| 50Hz update!
 	eor.b	#1,flip_flop
-	beq.b	0f
-
+	beq.b	1f
+0:
 	jbsr	really_update_sprites
 
 	.ifne  OPT_ENABLE_DOUBLE_BUFFERING
 	bsr		switch_screen_buffers
 	.endif
-0:
+1:
 	
 23:
 	* now we check copper interrupt again
@@ -1188,7 +1191,7 @@ update_bobs:
 	* (we'll see if we need attribute and flip shit, unlikely...)
 12:
 	move.w	(PREVIOUS_SPRITE_X,a4),d0	
-	move.w	(PREVIOUS_SPRITE_Y,a4),d1	
+	move.w	(PREVIOUS_SPRITE_Y,a4),d1
 	move.b	(PREVIOUS_SPRITE_CODE,a4),d2
 	
 	* clear 16x16 area where the sprite was
@@ -1206,6 +1209,7 @@ update_bobs:
 	bsr		restore_32x_background	
 	jra		11f
 16:
+	move.b	(PREVIOUS_ACTIVE_BITPLANE_MASK,a4),d3	| erase only needed bitplanes
 	bsr		restore_16x_background
 11:
 	lea		(PREVIOUS_SPRITE_SIZE,a4),a4
@@ -1355,7 +1359,7 @@ update_bobs:
 	bne.b	505f
 	bclr	#3,d7
 505:
-	move.b	d7,(ACTIVE_BITPLANE_MASK,a6)		| store bitplane redraw mask
+	move.b	d7,(PREVIOUS_ACTIVE_BITPLANE_MASK,a6)		| store bitplane redraw mask
 	tst.b	d5
 	bne.b	14f
 20:
@@ -1383,28 +1387,40 @@ update_bobs:
 	
 * what: erases the 4 planes used for BOBs
 * args:
+* < A1: plane pointer
 * < D0: X (rounded to smaller 8-multiple)
 * < D1: Y
+* < D3: bit mask to be able to erase planes or not
 
 
 restore_16x_background:
+	movem.l	d2/a1/a5,-(a7)
 	.ifndef	RELEASE
-	movem.l	d0/d1,-(a7)
+	movem.w	d0/d1,-(a7)
 	.endif
 	tst.w	d1
-	bmi.b	0f
-	movem.l	d2-d7/a0-a5,-(a7)
-	moveq	#4,d2			| 32 bits blit
-	move.w	#NB_BOBS_PLANES,d3
+	bmi.b	2f
+	moveq	#0,d2
 	move.l	bg_drawed_screen_ptr(pc),a1
-	move.w	#16,d4
 	lea		_custom,a5
-	bsr.b	clear_planes_any_blitter_internal
-	movem.l	(a7)+,d2-d7/a0-a5
 0:
+	btst	d2,d3
+	beq.b	1f
+	movem.l	d0-d6/a0-a5,-(a7)
+	moveq	#4,d2			| 32 bits blit
+	move.w	#16,d4
+	bsr.b	clear_plane_any_blitter_internal
+	movem.l	(a7)+,d0-d6/a0-a5
+1:
+	addq.w	#1,d2
+	lea		(BG_SCREEN_PLANE_SIZE,a1),a1
+	cmp.w	#NB_BOBS_PLANES,d2
+	bne.b	0b
+2:
 	.ifndef	RELEASE
-	movem.l	(a7)+,d0/d1
+	movem.w	(a7)+,d0/d1
 	.endif
+	movem.l	(a7)+,d2/a1/a5
 	rts
 	
 * what: erases the 4 planes used for BOBs
@@ -1496,10 +1512,6 @@ clear_planes_any_blitter_internal:
     * now just wait for blitter ready to write all registers
 	WAIT_BLIT
     
-    * blitter registers set
-	.ifdef	VARIABLE_BLITTER_MASKS_AND_MODS
-    move.l  d7,bltafwm(a5)
-	.endif
 	
 	move.l d5,bltcon0(a5)	
     move.w  d0,bltdmod(a5)	|D modulo
@@ -1991,13 +2003,14 @@ store_system:
 	move.l	d0,system_vbr
 1:
 	
-*	move.w	AttnFlags(a6),d0
-*	btst	#AFB_68020,d0
-*	bne.b	1f
-*	* no whdload, no 68020: assume slow
-*	* if running on PiStorm, well, too bad use whdload
-*	st.b	slow_machine
-*1:
+	move.w	AttnFlags(a6),d0
+	btst	#AFB_68020,d0
+	bne.b	1f
+	* no whdload, no 68020: assume slow
+	* if running on PiStorm, well, too bad use whdload
+	st.b	slow_machine
+	st.b	half_fps
+1:
 	lea	_custom,a6
 	move.w	intenar(a6),old_intena
 	move.w	dmaconr(a6),old_dmacon
@@ -3090,8 +3103,10 @@ old_actiview:
 	.long	0
 old_stack:
 	.long	0
-return_address:
-	.long	0
+slow_machine:
+	.word	0
+half_fps:
+	.word	0
 palette_number:
 	.word	0
 four_barrels_drawn:
@@ -3110,8 +3125,7 @@ cheat_flags:
 		.long	0
 		.long	WHDLTAG_CUSTOM2_GET
 		.word	0
-slow_machine:
-		.word	-1
+
 
 		.long	WHDLTAG_CUSTOM3_GET
 misc_options:
