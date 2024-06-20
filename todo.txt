@@ -1,5 +1,5 @@
 - double ship attaches left then displayed right???? around 2075
-- clip BOBs!!!
+- erase bobs optimized Y/size/nb planes
 - double shot: check status, double height: if 0x30 and double height
   blit double shot (analyse sprite memory around +0x64)
 - capture beam not showing: force capture all the time (cheat)

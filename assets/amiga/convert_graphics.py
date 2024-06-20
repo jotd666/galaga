@@ -476,6 +476,15 @@ if True:
                             scaled.save(os.path.join(dump_sprites_dir,f"{name}_{cidx}_DOUBLE.png"))
 
                         img_to_raw = img_new
+                        # no crop (not worth the trouble)
+                        y_start = 0
+                    else:
+                        y_start,img_to_raw = bitplanelib.autocrop_y(img_to_raw)
+
+                    y_rstart = 16 - img_to_raw.size[1] - y_start
+                    cs["y_start"] = y_start
+                    cs["y_rstart"] = y_rstart  # start when drawn flipped
+                    cs["height"] = img_to_raw.size[1]
 
                     for mirrored in range(2):
                         bitplanes = bitplanelib.palette_image2raw(img_to_raw,None,bobs_palette,forced_nb_planes=NB_BOB_PLANES,
@@ -627,6 +636,8 @@ with open(os.path.join(src_dir,"graphics.68k"),"w") as f:
                 f.write("\n")
 
     # blitter objects (bitplanes refs, can be in fastmem)
+    f.write("* for each object, header: real size, y start, y reverse start, then\n")
+    f.write("* list of 4 planes (or 0 if nothing to draw) then mask, then -1 if no mirror\n")
     for i in range(NB_POSSIBLE_SPRITES):
         name = bob_names[i]
         if name:
@@ -637,7 +648,11 @@ with open(os.path.join(src_dir,"graphics.68k"),"w") as f:
                 if bm:
                     sprite_label = f"{name}_{j}"
                     f.write(f"{sprite_label}:\n")
-                    for plane_id in bm:
+                    header = "\t.word\t{height},{y_start},{y_rstart}\n".format(**sprite)
+
+                    for i,plane_id in enumerate(bm):
+                        if i==0 or i==(NB_BOB_PLANES+1):
+                            f.write(header)  # easier to code if header is repeated
                         f.write("\t.long\t")
                         if plane_id is None:
                             f.write("0")

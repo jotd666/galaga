@@ -15,7 +15,7 @@ AttnFlags = 0x128
 AFB_68010 = 0
 AFB_68020 = 1
 NO68020 = 1
-PREVIOUS_SPRITE_SIZE = 8
+PREVIOUS_SPRITE_SIZE = 10
 CURRENT_SPRITE_SIZE = 2
 
 SPRITE_Y_CORRECTION = -8
@@ -46,8 +46,10 @@ SPRITE_BLOCK_OFFSET = 256			| len of each sprite info table times 2
 
 PREVIOUS_SPRITE_X = 0
 PREVIOUS_SPRITE_Y = 2
-ACTIVE_BITPLANE_MASK = 4   | for optimized bitplane erase
-PREVIOUS_SPRITE_CODE = 5
+PREVIOUS_Y_START = 4
+PREVIOUS_HEIGHT = 6
+ACTIVE_BITPLANE_MASK = 8   | for optimized bitplane erase
+PREVIOUS_SPRITE_CODE = 9
 
 TARGET_SPRITE_X_1 = 1+SPRITE_BLOCK_OFFSET
 TARGET_SPRITE_X_2 = 1+SPRITE_BLOCK_OFFSET*2
@@ -1206,7 +1208,7 @@ update_bobs:
 16:
 	bsr		restore_16x_background
 11:
-	addq	#PREVIOUS_SPRITE_SIZE,a4
+	lea		(PREVIOUS_SPRITE_SIZE,a4),a4
 	addq	#CURRENT_SPRITE_SIZE,a0
 	dbf		d7,1b
 	
@@ -1222,9 +1224,8 @@ update_bobs:
 																				| speedup kludge
 						
 	bsr		compute_sprite_xy
-	move.w	d0,(PREVIOUS_SPRITE_X,a6)			| store current sprite attributes to previous ones
 	move.w	d1,(PREVIOUS_SPRITE_Y,a6)			| store current sprite attributes to previous ones
-	tst.w	d0
+	move.w	d0,(PREVIOUS_SPRITE_X,a6)			| store current sprite attributes to previous ones
 	jeq		211f
 
 	
@@ -1276,7 +1277,7 @@ update_bobs:
 	lsr		#2,d3
 	move.l	(a7),a0
 	move.w	#0xFF0,0xDFF180
-	bra.b	22f
+	jra		22f
 12:
 	move.l		bg_drawed_screen_ptr(pc),a1
 	* D0 and D1 are already set
@@ -1287,17 +1288,17 @@ update_bobs:
 	* note that there is no safety: if it's mirrored
 	* and mirror isn't declared when creating sprite, the engine
 	* will fetch the next bob (pretty visible when testing!!)
-	add.w	#(NB_BOBS_PLANES+1)*4,a0
+	add.w	#(NB_BOBS_PLANES+1)*4+6,a0
 	.ifndef RELEASE
 	tst.l	(a0)
 	bpl.b	13f
 	* missing mirror
 	move.w	#0x00F,_custom+color
 	lsr		#2,d3
-	sub.w	#(NB_BOBS_PLANES+1)*4,a0
+	sub.w	#(NB_BOBS_PLANES+1)*4+6,a0
 	.endif
 13:
-	move.l	(NB_BOBS_PLANES*4,a0),d3	| mask plane is after bob data
+	move.l	(NB_BOBS_PLANES*4+6,a0),d3	| mask plane is after bob data
 	beq.b	22f		| mask is zero: blank tile => skip
 	move.l	d3,a3
 
@@ -1317,11 +1318,17 @@ update_bobs:
 	* some explosions are double width/height
 	moveq	#0,d2	| no y-clip
 	move.w	#32,d3	| height = 32
+	clr.w	(PREVIOUS_Y_START,a6)
+	move.w	d3,(PREVIOUS_HEIGHT,a6)
 	lea		blit_planes_cookie_cut_32x(pc),a4
 	bra.b	17f
 16:
+	move.w	(a0),d3	| height
+	add.w	(2,a0),d1	| add Y offset
+	move.w	(2,a0),(PREVIOUS_Y_START,a6)
+	move.w	d3,(PREVIOUS_HEIGHT,a6)
+	
 	moveq	#0,d2	| no y-clip
-	move.w	#16,d3	| height = 16 for all bobs
 	lea		blit_planes_cookie_cut_16x(pc),a4
 17:
 
@@ -1332,34 +1339,47 @@ update_bobs:
 	.error	"must adapt for nb bitplanes != 4"
 	.endif
 	st		d7		| default: all bitplanes are to be erased/restored
-					| 2 first bitplanes needs restoring no matter what (tiles)
-	tst		(8,a0)
+	tst.l		(6,a0)
 	bne.b	503f
 	bclr	#0,d7
 502:
-	tst		(12,a0)
+	tst.l		(4+6,a0)
 	bne.b	503f
 	bclr	#1,d7
 503:
+	tst.l		(8+6,a0)
+	bne.b	504f
+	bclr	#2,d7
+504:
+	tst.l		(12+6,a0)
+	bne.b	505f
+	bclr	#3,d7
+505:
 	move.b	d7,(ACTIVE_BITPLANE_MASK,a6)		| store bitplane redraw mask
 	tst.b	d5
 	bne.b	14f
-
-	jsr		(a4)
+20:
+	addq.w	#6,a0		| skip header
+	jsr		(a4)		| start the blit
 21:
 	movem.l	(a7)+,d7/a4/a5
 22:
 	move.l	(a7)+,a0
 211:
 	addq	#CURRENT_SPRITE_SIZE,a0
-	addq	#PREVIOUS_SPRITE_SIZE,a6		| next previous sprite pos
+	lea		(PREVIOUS_SPRITE_SIZE,a6),a6		| next previous sprite pos
 	dbf		d7,1b
 	
 	rts
 	* rarer case: blit upside down
 14:
-	bsr		blit_planes_cookie_cut_16x_flipped	
-	bra.b	21b
+	sub.w	(2,a0),d1	| sub Y offset that had been added
+	add.w	(4,a0),d1   | add Y rev offset
+
+	move.w	(4,a0),(PREVIOUS_Y_START,a6)
+
+	lea		blit_planes_cookie_cut_16x_flipped(pc),a4
+	bra.b	20b
 	
 * what: erases the 4 planes used for BOBs
 * args:
