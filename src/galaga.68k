@@ -6650,15 +6650,14 @@ l_226A:
 	lea	d_23A1-6,a0                    	        | [$229A: ld   hl,#d_23A1 - 6] get data src, getting ready to shoot the tractor beam
 	jbsr	add_2_times_d0_to_a0_0008           | [$229D: rst  0x08] HL += 2A
 	move.w	(sp)+,d0                        	| [$229E: pop  af]
-	jbsr	c_238A                            	| [$229F: call c_238A]
-	move.b	#6,d1                           	| [$22A2: ld   b,#6]
+	jbsr	compute_beam_tile_address_238A    	| [$229F: call compute_beam_tile_address_238A]
+	move.w	#6-1,d1                           	| [$22A2: ld   b,#6]
 l_22A4:
 	move.b	(a0)+,d0                         	| [$22A4: ld   a,(hl)]
-	move.b	d0,(a1)                         	| [$22A5: ld   (de),a]
+	jbsr	osd_w_videoram                      | [$22A5: ld   (de),a] draw the capturing beam
 												| [$22A6: inc  hl]
-	jbsr	rst_20                            	| [$22A7: rst  0x20] DE-=$20
-	subq.b	#1,d1                           	| [...]
-	jne	l_22A4                             	    | [$22A8: djnz l_22A4]
+	sub.w	#0x20,d7                          	| [$22A7: rst  0x20] DE-=$20
+	dbf		d1,l_22A4                           | [$22A8: djnz l_22A4]
 	rts                                    	    | [$22AA: ret]
 
 l_22AB:
@@ -6678,13 +6677,13 @@ l_22C1:
 	neg.b	d0                               	| [$22C1: neg] from 2294, boss almost ready to attach to the ship
 	add.b	#0x0B,d0                         	| [$22C3: add  a,#0x0B]
 l_22C5:
-	jbsr	c_238A                            	| [$22C8: call c_238A]
+	jbsr	compute_beam_tile_address_238A      | [$22C8: call compute_beam_tile_address_238A]
 	move.b	#6,d1                           	| [$22CA: ld   b,#6]
 	move.b	#0x24,d2                        	| [$22CC: ld   c,#0x24]
 l_22CC:
 	move.b	d2,d0                           	| [$22CC: ld   a,c]
-	move.b	d0,(a1)                         	| [$22CD: ld   (de),a]
-	jbsr	rst_20                            	| [$22CE: rst  0x20] DE-=$20
+	jbsr	osd_w_videoram                    	| [$22CD: ld   (de),a]
+	sub.w	#0x20,d7                          	| [$22CE: rst  0x20] DE-=$20
 	subq.b	#1,d1                           	| [...]
 	jne	l_22CC                             	    | [$22CF: djnz l_22CC]
 	rts                                    	    | [$22D1: ret]
@@ -6813,16 +6812,16 @@ l_236D:
 	rts                                    	    | [$2389: ret]
 
 *=============================================================================
-* c_238A()
+* compute_beam_tile_address_238A()
 *  Description:
 *   for f_boss_starts_tractor_beam_2222
 *   boss about to start tractor beam
 * IN:
 *   A==
-* OUT:
+* OUT: D7.W address of beam character
 *  ...
 *-----------------------------------------------------------------------------
-c_238A:
+compute_beam_tile_address_238A:
 	move.b	d0,d2                           	| [$238A: ld   c,a]
 	move.b	ds5_928A_captr_status+0x00,d0   	| [$238B: ld   a,(ds5_928A_captr_status + 0x00)] boss about to start tractor beam
 	neg.b	d0                               	| [$238E: neg]
@@ -6837,7 +6836,10 @@ c_238A:
 	and.b	#0xE0,d0                         	| [$239A: and  #0xE0]
 	add.b	#0x14,d0                         	| [$239C: add  a,#0x14]
 	add.b	d2,d0                            	| [$239E: add  a,c]
-	move.b	d0,d4                           	| [$239F: ld   e,a]
+	                           	                | [$239F: ld   e,a]
+	move.b	d3,d7
+	rol.w	#8,d7
+	move.b	d0,d7
 	rts                                    	    | [$23A0: ret]
 * end 238A
 

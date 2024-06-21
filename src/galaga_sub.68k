@@ -1611,12 +1611,12 @@ d_0920_jp_tbl:
 	.long case_0B46   | 2: returning to base: moths or bosses from top of screen, bees from bottom of loop-around.
 	.long case_0B4E   | 3: bee dive and starting loopback, or boss left position and starting dive down
 	.long case_heads_to_home_0aa0   | 4: attack wave element hits turning point and heads to home
-	.long case_0BD1   | 5: bee has flown under bottom of screen and now turns for home
-	.long case_0B5F   | 6: bee has flown under bottom of screen and now turns for home
-	.long case_0B87   | 7: tractor beam reaches ship
-	.long case_0B98   | 8: attack wave
-	.long case_0BA8   | 9: one red moth left in "free flight mode"
-	.long case_0942   | A: ?
+	.long case_0BD1                              | 5: bee has flown under bottom of screen and now turns for home
+	.long case_0B5F                              | 6: bee has flown under bottom of screen and now turns for home
+	.long case_0B87                              | 7: tractor beam reaches ship
+	.long case_0B98                              | 8: attack wave
+	.long case_0BA8                              | 9: one red moth left in "free flight mode"
+	.long case_0942                              | A: ?
 	.long case_capturing_boss_starts_dive_0A53   | B: capture boss diving
 	.long case_0A01   | C: diving elements have left formation and fired
 	.long case_097B   | D: bonus bee
