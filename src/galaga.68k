@@ -4247,6 +4247,9 @@ l_attmode_state_step_19a7:
 *   Noticed that once the ship is positioned in the collective, it may
 *   experience an additional small horizontal offset once its position begins
 *   to be managed by the collective positioning manager.
+*
+*   this is first called when the ship connects with the boss and the tractor beam
+*   has disappeared
 * IN:
 *  ...
 * OUT:
@@ -4254,33 +4257,33 @@ l_attmode_state_step_19a7:
 *-----------------------------------------------------------------------------
 f_manage_ship_capture_movement_19b2:
 *  if ( flag  != 0 )  goto show_text
-	move.b	ds5_928A_captr_status+0x04,d0   	| [ld   a,(ds5_928A_captr_status + 0x04)] == 1 when boss connects with ship (2318)
-	                               	            | [and  a]
-	jne	l_19D2_fighter_captured            	    | [jr   nz,l_19D2_fighter_captured]
+	move.b	ds5_928A_captr_status+0x04,d0   	| [$19B2: ld   a,(ds5_928A_captr_status + 0x04)] == 1 when boss connects with ship (2318)
+	                               	            | [$19B5: and  a]
+	jne	l_19D2_fighter_captured            	    | [$19B6: jr   nz,l_19D2_fighter_captured]
 
 *  else if ( game_tmrs[1] | 0 == 0 )  goto erase_text
 *   ... with A already 0, we use OR to check Z flag for zero count... which efficently loads our count to A at the same time!
-	lea	ds4_game_tmrs_92ac+1,a0             	| [ld   hl,#ds4_game_tmrs_92ac + 1]
-	or.b	(a0),d0                           	| [or   (hl)]
-	jeq	l_1A01_erase_text                  	    | [jr   z,l_1A01_erase_text]
+	lea	ds4_game_tmrs_92ac+1,a0             	| [$19B8: ld   hl,#ds4_game_tmrs_92ac + 1]
+	or.b	(a0),d0                           	| [$19BB: or   (hl)]
+	jeq	l_1A01_erase_text                  	    | [$19BC: jr   z,l_1A01_erase_text]
 
 *  else if ( game_tmrs[1] != 4 ) goto 19c7
-	cmp.b	#4,d0                            	| [cp   #4]
-	jne	l_19C7                             	    | [jr   nz,l_19C7]
+	cmp.b	#4,d0                            	| [$19BE: cp   #4]
+	jne	l_19C7                             	    | [$19C0: jr   nz,l_19C7]
 
 *  timer--   .....decrement timer at 4. ... why? the count is set to 6 (19D7)
-	subq.b	#1,d0                           	| [dec  a]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	move.b	d0,b_9AA0+0x09                  	| [ld   (b_9AA0 + 0x09),a] game_tmrs[1] ... sound-fx count/enable registers
+	subq.b	#1,d0                           	| [$19C2: dec  a]
+	move.b	d0,(a0)                         	| [$19C3: ld   (hl),a]
+	move.b	d0,b_9AA0+0x09                  	| [$19C4: ld   (b_9AA0 + 0x09),a] game_tmrs[1] ... sound-fx count/enable registers
 l_19C7:
-	move.b	ds_plyr_actv+_b_cboss_slot,d0   	| [ld   a,(ds_plyr_actv +_b_cboss_slot)] bug_flite_que[ plyr.cboss_slot ].b0D = 4
-	add.b	#0x0D,d0                         	| [add  a,#0x0D]
-	move.b	d0,d6                           	| [ld   l,a]
-	lea	ds_bug_motion_que_9100,a0           	| [ld   h,#>ds_bug_motion_que_9100] bug_flite_que[ plyr.cboss_slot ].b0D = 4
+	move.b	ds_plyr_actv+_b_cboss_slot,d0   	| [$19C7: ld   a,(ds_plyr_actv +_b_cboss_slot)] bug_flite_que[ plyr.cboss_slot ].b0D = 4
+	add.b	#0x0D,d0                         	| [$19CA: add  a,#0x0D]
+	move.b	d0,d6                           	| [$19CC: ld   l,a]
+	lea	ds_bug_motion_que_9100,a0           	| [$19CD: ld   h,#>ds_bug_motion_que_9100] bug_flite_que[ plyr.cboss_slot ].b0D = 4
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#4,(a0)                         	| [ld   (hl),#4]
-	rts                                    	    | [ret]
+	move.b	#4,(a0)                         	| [$19CF: ld   (hl),#4]
+	rts                                    	    | [$19D1: ret]
 
 l_19D2_fighter_captured:
 * sets up a captured-fighter as an enemy object
@@ -6305,7 +6308,7 @@ f_tractor_beam_captures_ship_20f2:
 	jra	l_211A_move_ship_row               	    | [$2117: jr   l_211A_move_ship_row]
 
 l_2119_handle_ship_left:
-	addq.b	#1,(a0)                         	| [$2119: inc  (hl)] move ship right one step
+	addq.b	#1,(a0)                         	| [$2119: inc  (hl)] move ship right one step as it's captured
 l_211A_move_ship_row:
 	addq.w	#1,a0                           	| [$211A: inc  l]
 	move.b	b_9215_flip_screen,d0           	| [$211B: ld   a,(b_9215_flip_screen)]
@@ -6320,19 +6323,18 @@ l_211A_move_ship_row:
 *	jeq	l_2141_connected                   	    | [$2129: jr   z,l_2141_connected]
 *	rts                                    	    | [$212B: ret]
 
-l_212C_not_flipped_screen:
-	subq.b	#1,(a0)                         	| [$212C: dec  (hl)]
+*l_212C_not_flipped_screen:
+	subq.b	#1,(a0)                         	| [$212C: dec  (hl)] move ship up as it's captured
 	move.b	(a0),d0                         	| [$212D: ld   a,(hl)]
 	addq.b	#1,d0                           	| [$212E: inc  a]
 	jne	l_2139                             	    | [$212F: jr   nz,l_2139]
 * handle overflow by toggling bit-0 (off)
-	* jotd: adding +0x62 seems the proper thing to do since they only load msb
-	lea	ds_sprite_ctrl_9B00+0x62,a0             | [$2131: ld   h,#>ds_sprite_ctrl_9B00]
+	* jotd: adding +0x63 as previous value was ship vertical pos where L=0x63
+	lea	ds_sprite_ctrl_9B00+0x63,a0             | [$2131: ld   h,#>ds_sprite_ctrl_9B00]
 	move.b	(a0),d0                         	| [$2133: ld   a,(hl)]
 	eor.b	#0x01,d0                         	| [$2134: xor  #0x01]
 	move.b	d0,(a0)                         	| [$2136: ld   (hl),a]
-	* jotd: adding +0x62 seems the proper thing to do since they only load msb
-	lea	ds_sprite_posn_9300+0x62,a0             | [$2137: ld   h,#>ds_sprite_posn_9300]
+	lea	ds_sprite_posn_9300+0x63,a0             | [$2137: ld   h,#>ds_sprite_posn_9300]
 l_2139:
 	move.b	(a0),d0                         	| [$2139: ld   a,(hl)]
 	cmp.b	#0xE6,d0                         	| [$213A: cp   #0xE6]
@@ -6346,6 +6348,7 @@ l_2141_connected:
 	move.b	d0,ds5_928A_captr_status+0x03   	| [$2142: ld   (ds5_928A_captr_status + 0x03),a] 0
 												| [$2145: inc  a] huh?
 	move.b	#7,d0                           	| [$2146: ld   a,#7] color map of redship
+	* change color of player ship to red when boss connects with it during capture
 	move.b	d0,ds_sprite_code_8B00+0x63         | [$2148: ld   (ds_sprite_code_8B00 + 0x63),a]
 	rts                                    	    | [$214B: ret]
 

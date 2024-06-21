@@ -1,12 +1,8 @@
 - double ship attaches left then displayed right???? around 2075
+- enemies definitely stop shooting after a few levels
 - erase bobs optimized Y/size/nb planes
 - double shot: check status, double height: if 0x30 and double height
   blit double shot (analyse sprite memory around +0x64)
-- capture beam not showing: force capture all the time (cheat)
-  capture chars around 8160 ranging around 4F->6A
-- captured ship not showing / at the same time it makes attacking bugs 
-erratic.
-- when boss captures ship (after beam retracted) ship isn't shown f_manage_ship_capture_movement_19b2
 
 - double buffering: don't double buffer last plane for tiles
 - crash div 0 on statistics screen: c_puts_hitmiss_ratio_0A72
@@ -17,8 +13,7 @@ erratic.
 
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
-- level 4 or 5: at some point aliens stop shooting
-- scorpion clone attack: wrong (only 2, not properly oriented) & wrong colors because HW sprites!!
+- scorpion clone attack: missing cluts (when hit)
 - 2 first rows not shown (attribute/color is black!!!)
 - player lives:  wrong colors
 - stage 1 flag not drawn, and wrong colors
@@ -27,7 +22,14 @@ erratic.
 - redraw bottom tiles all the time or maybe only if some sprite Y > some value
 - implement level skip & other trainer
 - let the demo run, game ends up accessing uninitialized memory
-
+- missing sounds:
+  * boss hit (but not killed)
+  * swarm sound (when)
+  * all tunes
+  * capture beam (with and without the ship)
+  * flags at start of level
+  * extra life
+  
 traj issues: Traj computed in subcpu D23 / D50 probe there!
 
 l_2ADA_done: all bugs arrived: phase 2 diving attacks!
