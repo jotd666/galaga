@@ -2493,15 +2493,14 @@ l_0D50:
 	roxl.b	#1,d7                         		| [$0D57: rl   (hl)] sprite[n].posn.sy<8>
     move.b	d7,(a0)
 
-
 * Once the timer in $0E is reached, then check conditions to enable bomb drop.
 * If bomb is disabled for any reason, the timer is restarted.
-	subq.b	#1,(0x0E,a2)                    	| [$0D59: dec  0x0E(ix)] countdown to enable a bomb
+	subq.b	#1,(mq_drop_bomb_counter_0e,a2)   	| [$0D59: dec  0x0E(ix)] countdown to enable a bomb
 	jne	next__pool_idx_0dfb                     | [$0D5C: jp   nz,next__pool_idx_0dfb]
-	move.b	(0x0F,a2),d0
+	move.b	(mq_drop_bomb_enable_0f,a2),d0
 	lsr.b	#1,d0                     			| [$0D5F: srl  0x0F(ix)] these bits enable bombing
 	scs		d7
-	move.b	d0,(0x0F,a2)
+	move.b	d0,(mq_drop_bomb_enable_0f,a2)
 	tst.b	d7
 	jeq		l_0DF5_next_superloop_and_reload_0E	| [$0D63: jp   nc,l_0DF5_next_superloop_and_reload_0E]
 	move.b	(mq_y_01,a2),d0                    	| [$0D66:ld   a,0x01(ix)] if .cy.pair.b1 > $4C
@@ -2515,7 +2514,7 @@ l_0D50:
 	jne	l_0DF5_next_superloop_and_reload_0E		| [$0D79:jp   nz,l_0DF5_next_superloop_and_reload_0E]
 
 * check for available bomb ... bombs are rendered inactive at l_0815
-	exg	a1,a0                              		| [ex   de,hl] &sprite.ctrl[bmbr].b1 to DE ...
+	move.l	a0,a1                          		| [ex   de,hl] &sprite.ctrl[bmbr].b1 to DE ...
 	lea	b_8800+0x68,a0                 			| [ld   hl,#b_8800 + 0x68] bomb0 object/index
 	move.b	#8,d1                           	| [ld   b,#8] check 8 positions
 l_0D82:
@@ -2554,7 +2553,6 @@ l_0D8D_got_a_bullet:
 * sprite.ctrl[BOMB0 + n].b1 = sprite.ctrl[e].b1
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	lea	ds_sprite_ctrl_9B00,a1                  | [ld   d,h]
 	add.w	d4,a1								| d4 is still valid lsb
@@ -2566,6 +2564,7 @@ l_0D8D_got_a_bullet:
 	roxl.b	#1,d7                         		| [rl   (hl)] sY<8> from Cy to bomb.ctrl.b1<0>
     move.b	d7,(a0)
 	rol.b	#1,d0                            	| [rlca] restore A with sY<8> left in Cy
+	SET_X_FROM_C
 	roxr.b	#1,d1                           	| [rr   b] bomber.y<8:1>
 * if (mrw_sprite.posn[bomber_idx].b0 > sprite.posn[FGHTR].b0)
 	move.b	ds_sprite_posn_9300+0x62,d0          	| [ld   a,(ds_sprite_posn_9300 + 0x62)] fighter.x
@@ -2684,9 +2683,9 @@ l_0E08_imhome:
 
 l_0E3A:
 * these could be off by one if not already equal
-	move.b	(mq_home_position_y_06,a2),d0                    	| [$0E3A: ld   a,0x06(ix)] ->(ix)0x01 ... origin home position y (bits 15:8)
+	move.b	(mq_home_position_y_06,a2),d0       | [$0E3A: ld   a,0x06(ix)] ->(ix)0x01 ... origin home position y (bits 15:8)
 	move.b	d0,(mq_y_01,a2)                    	| [$0E3D: ld   0x01(ix),a] (ix)0x06
-	move.b	(mq_home_position_x_07,a2),d0                    	| [$0E40: ld   a,0x07(ix)] ->(ix)0x03
+	move.b	(mq_home_position_x_07,a2),d0       | [$0E40: ld   a,0x07(ix)] ->(ix)0x03
 	move.b	d0,(mq_x_03,a2)                    	| [$0E43: ld   0x03(ix),a] (ix)0x07
 
 	COMPUTE_LSB_A0_D6 ds_sprite_code_8B00

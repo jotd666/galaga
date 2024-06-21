@@ -1422,8 +1422,8 @@ f_update_sprites_0828:
 l_0850:
 	move.b	b_CPU2_in_progress,d0           	| [ld   a,(b_CPU2_in_progress)] check status of other CPU... while (b_CPU2_in_progress) == $01 ...
 	subq.b	#1,d0                           	| [dec  a]
-	jeq	l_0850                             	| [jr   z,l_0850] wait
-	rts                                    	| [ret]
+	jeq	l_0850                             	    | [jr   z,l_0850] wait
+	rts                                    	    | [ret]
 * end task $0828
 
 *=============================================================================
@@ -1436,58 +1436,54 @@ l_0850:
 *  ...
 *-----------------------------------------------------------------------------
 f_misc_gameplay_events_0857:
-	move.b	ds4_game_tmrs_92ac+2,d0              	| [ld   a,(ds4_game_tmrs_92ac + 2)]
-	move.b	d0,d1                           	| [ld   b,a] parameter to c_08AD
-	cmp.b	#0x3C,d0                         	| [cp   #0x3C]
-	jcc	l_0865                             	| [jr   nc,l_0865]
+	move.b	ds4_game_tmrs_92ac+2,d0             | [$0857: ld   a,(ds4_game_tmrs_92ac + 2)]
+	move.b	d0,d1                           	| [$085A: ld   b,a] parameter to c_08AD
+	cmp.b	#0x3C,d0                         	| [$085B: cp   #0x3C]
+	jcc	l_0865                             	    | [$085D: jr   nc,l_0865]
 * increases allowable max_bombers after a time
-	move.b	ds_new_stage_parms_99c0+0x05,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x05)]
-	move.b	d0,ds_new_stage_parms_99c0+0x04      	| [ld   (ds_new_stage_parms_99c0 + 0x04),a] new_stage_parms[4] = new_stage_parms[5] ... max bombers
+	move.b	ds_new_stage_parms_99c0+0x05,d0     | [$085F: ld   a,(ds_new_stage_parms_99c0 + 0x05)]
+	move.b	d0,ds_new_stage_parms_99c0+0x04     | [$0862: ld   (ds_new_stage_parms_99c0 + 0x04),a] new_stage_parms[4] = new_stage_parms[5] ... max bombers
 
 * set bomb drop enable flags
 l_0865:
-	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
-	move.b	d0,d2                           	| [ld   c,a] parameter to c_08BE
-	move.b	ds_new_stage_parms_99c0+0x00,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x00)] set bomb drop enable flags
-	lea	d_0909+0*4,a0                  	| [ld   hl,#d_0909 + 0 * 4]
-	jbsr	c_08BE                            	| [call c_08BE] A==new_stage_parms[0], HL==d_0909, C==num_bugs_on_scrn
-	move.b	d0,b_92C0+0x08                  	| [ld   (b_92C0 + 0x08),a] = c_08BE() ... bomb drop enable flags
+	move.b	b_bugs_actv_nbr,d0              	| [$0865: ld   a,(b_bugs_actv_nbr)]
+	move.b	d0,d2                           	| [$0868: ld   c,a] parameter to c_08BE
+	move.b	ds_new_stage_parms_99c0+0x00,d0     | [$0869: ld   a,(ds_new_stage_parms_99c0 + 0x00)] set bomb drop enable flags
+	lea	d_0909+0*4,a0                  	        | [$086C: ld   hl,#d_0909 + 0 * 4]
+	jbsr	c_08BE                            	| [$086F: call c_08BE] A==new_stage_parms[0], HL==d_0909, C==num_bugs_on_scrn
+	move.b	d0,b_92C0+0x08                  	| [$0872: ld   (b_92C0 + 0x08),a] = c_08BE() ... bomb drop enable flags
 
 * flag indicates number of flying aliens is less than new_stage_parm[7]
 * if flag is set by sub-CPU tasking kernel ...
-	move.b	b_92A0+0x0A,d0                  	| [ld   a,(b_92A0 + 0x0A)] continuous bombing when flag set
-	                               	| [and  a]
-	jeq	l_0888                             	| [jr   z,l_0888]
+	move.b	b_92A0+0x0A,d0                  	| [$0875: ld   a,(b_92A0 + 0x0A)] continuous bombing when flag set
+	                               	            | [$0878: and  a]
+	jeq	l_0888                             	    | [$0879: jr   z,l_0888]
 
 * then ... set default start values for bomber launch timers in continuous bombing state
 * this will also happen momentarily at start of round until bugs_actv_nbr exceeds ds_new_stage_parms_99c0[0x07]
-	lea	b_92C0+0x04,a0                 	| [ld   hl,#b_92C0 + 0x04] memset( b_92C0_4, 2, 3 )
-	move.b	#2,d0                           	| [ld   a,#2]
-	move.b	#3,d1                           	| [ld   b,#3]
-	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
-
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,b_9AA0+0x00                  	| [ld   (b_9AA0 + 0x00),a] 0 ... sound-fx count/enable registers, kill pulsing sound effect (free-fly)
-	rts                                    	| [ret]
+	lea	b_92C0+0x04,a0                 	        | [$087B: ld   hl,#b_92C0 + 0x04] memset( b_92C0_4, 2, 3 )
+	move.b	#2,d0                           	| [$087E: ld   a,#2]
+	move.b	#3,d1                           	| [$0880: ld   b,#3]
+	jbsr	rst_18                            	| [$0882: rst  0x18] memset((HL), A=fill, B=ct)
+	clr.b	d0                               	| [$0883: xor  a]
+	move.b	d0,b_9AA0+0x00                  	| [$0884: ld   (b_9AA0 + 0x00),a] 0 ... sound-fx count/enable registers, kill pulsing sound effect (free-fly)
+	rts                                    	    | [$0887: ret]
 
 l_0888:
 * ... else after bugs_actv_nbr exceeds parameter_7 until continous bombing begins
-	move.b	ds_new_stage_parms_99c0+0x01,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x01)]
-	lea	d_0909+8*4,a0                  	| [ld   hl,#d_0909 + 8 * 4] offset the data pointer
-	jbsr	c_08BE                            	| [call c_08BE] A==new_stage_parms[1], HL==d_0929, C==num_bugs_on_scrn
-	move.b	d0,b_92C0+0x04                  	| [ld   (b_92C0 + 0x04),a] c_08BE() ... boss alien default bomber timer
-
-	move.b	ds_new_stage_parms_99c0+0x02,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x02)]
-	lea	d_08CD,a0                      	| [ld   hl,#d_08CD]
-	jbsr	c_08AD                            	| [call c_08AD] A==new_stage_parms[2], HL==d_08CD
-	move.b	d0,b_92C0+0x05                  	| [ld   (b_92C0 + 0x05),a] c_08AD() ... red alien default bomber timer
-
-	move.b	ds_new_stage_parms_99c0+0x03,d0      	| [ld   a,(ds_new_stage_parms_99c0 + 0x03)]
-	lea	d_08EB,a0                      	| [ld   hl,#d_08EB]
-	jbsr	c_08AD                            	| [call c_08AD] A==new_stage_parms[3], HL==d_08EB
-	move.b	d0,b_92C0+0x06                  	| [ld   (b_92C0 + 0x06),a] c_08AD() ... yellow alien default bomber timer
-
-	rts                                    	| [ret]
+	move.b	ds_new_stage_parms_99c0+0x01,d0     | [$0888: ld   a,(ds_new_stage_parms_99c0 + 0x01)]
+	lea	d_0909+8*4,a0                  	        | [$088B: ld   hl,#d_0909 + 8 * 4] offset the data pointer
+	jbsr	c_08BE                            	| [$088E: call c_08BE] A==new_stage_parms[1], HL==d_0929, C==num_bugs_on_scrn
+	move.b	d0,b_92C0+0x04                  	| [$0891: ld   (b_92C0 + 0x04),a] c_08BE() ... boss alien default bomber timer
+	move.b	ds_new_stage_parms_99c0+0x02,d0     | [$0894: ld   a,(ds_new_stage_parms_99c0 + 0x02)]
+	lea	d_08CD,a0                      	        | [$0897: ld   hl,#d_08CD]
+	jbsr	c_08AD                            	| [$089A: call c_08AD] A==new_stage_parms[2], HL==d_08CD
+	move.b	d0,b_92C0+0x05                  	| [$089D: ld   (b_92C0 + 0x05),a] c_08AD() ... red alien default bomber timer
+	move.b	ds_new_stage_parms_99c0+0x03,d0     | [$08A0: ld   a,(ds_new_stage_parms_99c0 + 0x03)]
+	lea	d_08EB,a0                      	        | [$08A3: ld   hl,#d_08EB]
+	jbsr	c_08AD                            	| [$08A6: call c_08AD] A==new_stage_parms[3], HL==d_08EB
+	move.b	d0,b_92C0+0x06                  	| [$08A9: ld   (b_92C0 + 0x06),a] c_08AD() ... yellow alien default bomber timer
+	rts                                    	    | [$08AC: ret]
 
 *=============================================================================
 * c_08AD()
@@ -2451,7 +2447,7 @@ setup_motion_for_attackers_108a:
 	move.b	#0x0C,d1                        	| [ld   b,#0x0C] number of structures in array
 	lea	ds_bug_motion_que_9100,a2           	| [ld   ix,#ds_bug_motion_que_9100]
 l_1094:
-	btst.b	#0,(0x13,a2)                    	| [bit  0,0x13(ix)] check for activated state
+	btst.b	#0,(mq_state_13,a2)                 | [bit  0,0x13(ix)] check for activated state
 	jeq	l_10A0_got_one                     	    | [jr   z,l_10A0_got_one]
 	add.w	d3,a2                            	| [add  ix,de]
 	subq.b	#1,d1                           	| [...]
@@ -2462,13 +2458,13 @@ l_1094:
 l_10A0_got_one:
 	movem.w	(sp)+,d3/d4                    	    | [$10A0: pop  de] pointer to table
 	LOAD_D3D4_FROM_D3_16
-	move.b	d4,(0x08,a2)                    	| [$10A1: ld   0x08(ix),e] data pointer lsb
-	move.b	d3,(0x09,a2)                    	| [$10A4: ld   0x09(ix),d] data pointer msb
-	move.b	#1,(0x0D,a2)                    	| [$10A7: ld   0x0D(ix),#1] expiration counter
-	move.b	#0x00,(mq_angle_lsb_04,a2)               	    | [$10AB: ld   0x04(ix),#<0x0100] msb, 0x0100 (90 degrees)
-	move.b	#0x01,(mq_angle_msb_05,a2)               	    | [$10AF: ld   0x05(ix),#>0x0100] lsb
+	move.b	d4,(mq_fp_lsb_08,a2)                | [$10A1: ld   0x08(ix),e] data pointer lsb
+	move.b	d3,(mq_fp_msb_09,a2)                | [$10A4: ld   0x09(ix),d] data pointer msb
+	move.b	#1,(mq_timeout_0d,a2)               | [$10A7: ld   0x0D(ix),#1] expiration counter
+	move.b	#0x00,(mq_angle_lsb_04,a2)          | [$10AB: ld   0x04(ix),#<0x0100] msb, 0x0100 (90 degrees)
+	move.b	#0x01,(mq_angle_msb_05,a2)          | [$10AF: ld   0x05(ix),#>0x0100] lsb
 	move.b	d6,d2                           	| [$10B3: ld   c,l] stash index to obj_status[], sprite etc.
-	move.b	d2,(0x10,a2)                    	| [$10B4: ld   0x10(ix),c] index of object, sprite etc.
+	move.b	d2,(mq_object_id_10,a2)            	| [$10B4: ld   0x10(ix),c] index of object, sprite etc.
 	exg		d0,d7                              	| [$10B7: ex   af,af'] unstash d0
 	move.b	d0,d3                           	| [$10B8: ld   d,a] function parameter from A' to 0x13(ix)
 	move.b	#9,(a0)+                         	| [$10B9: ld   (hl),#9] obj_status[l].state ... disposition = diving attack
@@ -2516,7 +2512,7 @@ l_10DC:
 * sY<:0> from Cy into A<7> ... fixed point 9.7 (LSB)
 	roxr.b	#1,d0                           	| [$10DF: rra]
 	and.b	#0x80,d0                         	| [$10E0: and  #0x80]
-	move.b	d0,(a2)                    			| [$10E2: ld   0x00(ix),a] sY<0> ... fixed point 9.7
+	move.b	d0,(mq_fine_y_00,a2)                    			| [$10E2: ld   0x00(ix),a] sY<0> ... fixed point 9.7
 	move.b	d2,d0                           	| [$10E5: ld   a,c] sprite_x
 	btst.b	#0,d4                           	| [$10E6: bit  0,e] test flipped screen
 	jeq	l_10ED                             		| [$10E8: jr   z,l_10ED]
@@ -2526,12 +2522,12 @@ l_10DC:
 
 l_10ED:
 	lsr.b	#1,d0                            	| [$10ED: srl  a]
-	move.b	d0,(0x03,a2)                    	| [$10EF: ld   0x03(ix),a] sX<8:1>
+	move.b	d0,(mq_x_03,a2)                    	| [$10EF: ld   0x03(ix),a] sX<8:1>
 	roxr.b	#1,d0                           	| [$10F2: rra] Cy into A<8:>
 	and.b	#0x80,d0                         	| [$10F3: and  #0x80]
-	move.b	d0,(0x02,a2)                    	| [$10F5: ld   0x02(ix),a] sX<:0> ... now scaled fixed point 9.7
-	move.b	d3,(0x13,a2)                    	| [$10F8: ld   0x13(ix),d] function argument (A') sets bit-0 and bit-7
-	move.b	#0x1E,(0x0E,a2)                 	| [$10FB: ld   0x0E(ix),#0x1E] bomb drop counter
+	move.b	d0,(mq_fine_x_02,a2)                | [$10F5: ld   0x02(ix),a] sX<:0> ... now scaled fixed point 9.7
+	move.b	d3,(mq_state_13,a2)                 | [$10F8: ld   0x13(ix),d] function argument (A') sets bit-0 and bit-7
+	move.b	#0x1E,(mq_drop_bomb_counter_0e,a2) 	| [$10FB: ld   0x0E(ix),#0x1E] bomb drop counter
 
 * if (flying_bug_attck_condtn)  bug_motion_que[n].b0F = bomb_drop_enbl_flags
 	move.b	ds_9200_glbls+0x0B,d0           	| [$10FF: ld   a,(ds_9200_glbls + 0x0B)] if ( !0 ), load  b_92C0[0x08] ... bomb drop enable flags
@@ -2540,7 +2536,7 @@ l_10ED:
 	move.b	b_92C0+0x08,d0                  	| [$1105: ld   a,(b_92C0 + 0x08)] bomb drop enable flags
 * else bug_motion_que[n].b0F = 0                    
 l_1108:
-	move.b	d0,(0x0F,a2)                    	| [$1108: ld   0x0F(ix),a] 0 or b_92C0[$08] ... bomb drop enable flags
+	move.b	d0,(mq_drop_bomb_enable_0f,a2)      | [$1108: ld   0x0F(ix),a] 0 or b_92C0[$08] ... bomb drop enable flags for this attacker
 	rts                                    		| [$110B: ret]
 
 *=============================================================================
