@@ -133,7 +133,7 @@ add_sprite_block(0,0x8,"ship",[2,7,9],mirror=True)
 add_sprite_block(0x10,0x18,"moth",[2,0xA],mirror=True)
 add_sprite_block(0x18,0x20,"bee",[3,0xA,0x5],mirror=True)
 add_sprite_block(0x50,0x57,"mutant_galaxian_boss",4,sprite_type=ST_HW_SPRITE,mirror=True)
-add_sprite_block(0x58,0x5F,"mutant_scorpion",5,mirror=True)  #,sprite_type=ST_HW_SPRITE
+add_sprite_block(0x58,0x5F,"mutant_scorpion",[5,0xA],mirror=True)  #,sprite_type=ST_HW_SPRITE
 add_sprite_block(0x60,0x67,"mutant_green",6,sprite_type=ST_HW_SPRITE,mirror=True)
 add_sprite_block(0x68,0x6F,"challenge_butterfly",2,mirror=True) # or 7?
 add_sprite_block(0x70,0x77,"challenge_ship",7,mirror=True)

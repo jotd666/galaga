@@ -1,8 +1,13 @@
+- whdload cheat/options don't work anymore ex level select (but cheat keys are enabled)
+- implement level skip & invincibility & other trainer
+- shadow of boss not erased sometimes (erase optimization not working??)
 - double ship attaches left then displayed right???? around 2075
 - enemies definitely stop shooting after a few levels: check
-  sub at 0D59
+  sub at 0D66 is it called?
 - double shot: check status, double height: if 0x30 and double height
   blit double shot (analyse sprite memory around +0x64)
+  erase done (not optimized)
+  draw TODO
 
 - double buffering: don't double buffer last plane for tiles
 - crash div 0 on statistics screen: c_puts_hitmiss_ratio_0A72
@@ -13,14 +18,12 @@
 
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
-- scorpion clone attack: missing cluts (when hit)
 - 2 first rows not shown (attribute/color is black!!!)
 - player lives:  wrong colors
 - stage 1 flag not drawn, and wrong colors
 - sprite priorities wrong: stars should be behind
 - stars & colors trashed near the PAL wait region: copperlist conflict between sprite/color
 - redraw bottom tiles all the time or maybe only if some sprite Y > some value
-- implement level skip & other trainer
 - let the demo run, game ends up accessing uninitialized memory
 - missing sounds:
   * boss hit (but not killed)
