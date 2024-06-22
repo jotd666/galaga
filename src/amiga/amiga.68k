@@ -1210,6 +1210,8 @@ update_bobs:
 	jra		11f
 16:
 	move.b	(PREVIOUS_ACTIVE_BITPLANE_MASK,a4),d3	| erase only needed bitplanes
+	add.w	(PREVIOUS_Y_START,a4),d1				| add Y start offset
+	move.w	(PREVIOUS_HEIGHT,a4),d4
 	bsr		restore_16x_background
 11:
 	lea		(PREVIOUS_SPRITE_SIZE,a4),a4
@@ -1391,7 +1393,7 @@ update_bobs:
 * < D0: X (rounded to smaller 8-multiple)
 * < D1: Y
 * < D3: bit mask to be able to erase planes or not
-
+* < D4: height
 
 restore_16x_background:
 	movem.l	d2/a1/a5,-(a7)
@@ -1408,7 +1410,7 @@ restore_16x_background:
 	beq.b	1f
 	movem.l	d0-d6/a0-a5,-(a7)
 	moveq	#4,d2			| 32 bits blit
-	move.w	#16,d4
+
 	bsr.b	clear_plane_any_blitter_internal
 	movem.l	(a7)+,d0-d6/a0-a5
 1:

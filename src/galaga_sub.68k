@@ -2110,9 +2110,9 @@ l_0BB4:
 	roxl.b	#1,d2                           	| [$0BBC: rl   c]
 	move.b	d0,(mq_angle_lsb_04,a2)            	| [$0BBE: ld   0x04(ix),a]
 	move.b	d2,(mq_angle_msb_05,a2)            	| [$0BC1: ld   0x05(ix),c]
-	move.b	#0x1E,(0x0E,a2)                 	| [$0BC4: ld   0x0E(ix),#0x1E] bomb drop counter
+	move.b	#0x1E,(mq_drop_bomb_counter_0e,a2) 	| [$0BC4: ld   0x0E(ix),#0x1E] bomb drop counter
 	move.b	b_92C0+0x08,d0                  	| [$0BC8: ld   a,(b_92C0 + 0x08)] bomb drop enable flags
-	move.b	d0,(0x0F,a2)                    	| [$0BCB: ld   0x0F(ix),a] b_92C0[$08] ... bomb drop enable flags
+	move.b	d0,(mq_drop_bomb_enable_0f,a2)   	| [$0BCB: ld   0x0F(ix),a] b_92C0[$08] ... bomb drop enable flags
 	jra	l_0B8B                             		| [$0BCE: jp   l_0B8B] inc hl and finalize
 
 * homing, red transit to top, yellow from off-screen at bottom or skip if in continuous mode

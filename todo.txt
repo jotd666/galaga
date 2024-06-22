@@ -1,7 +1,6 @@
 - double ship attaches left then displayed right???? around 2075
 - enemies definitely stop shooting after a few levels: check
   sub at 0D59
-- erase bobs optimized Y/size/nb planes
 - double shot: check status, double height: if 0x30 and double height
   blit double shot (analyse sprite memory around +0x64)
 
