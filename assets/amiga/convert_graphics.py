@@ -122,6 +122,41 @@ flip=False,double_wh=False,):
                                 "flip":flip  # only relevant for HW sprites, else it's handled by blitter
                                 }
 
+def process_image(cs):
+    global plane_next_index
+
+    for mirrored in range(2):
+        plane_list = []
+        bitplanes = bitplanelib.palette_image2raw(img_to_raw,None,bobs_palette,forced_nb_planes=NB_BOB_PLANES,
+            palette_precision_mask=0xFF,generate_mask=True,blit_pad=True)
+        bitplane_size = len(bitplanes)//(NB_BOB_PLANES+1)  # don't forget bob mask!
+
+
+        for ci in range(0,len(bitplanes),bitplane_size):
+            plane = bitplanes[ci:ci+bitplane_size]
+            if not any(plane):
+                # only zeroes: null pointer so engine is able to optimize
+                # by not reading the zeroed data
+                plane_list.append(None)
+            else:
+                plane_index = bitplane_cache.get(plane)
+                if plane_index is None:
+                    bitplane_cache[plane] = plane_next_index
+                    plane_index = plane_next_index
+                    plane_next_index += 1
+                plane_list.append(plane_index)
+        if cs["mirror"] and mirrored==0:
+            # we need do re-iterate with opposite Y-flip image
+            img_to_raw = ImageOps.mirror(img_to_raw)
+        else:
+            # no mirror: don't do it once more
+            break
+
+    # plane list size varies depending on mirror or not
+    # we add padding with -1 to detect forgotten mirror attribute
+
+    plane_list += [-1]*(((NB_BOB_PLANES+1)*2)-len(plane_list))
+    return plane_list
 def add_sprite(code,prefix,cluts,sprite_type=ST_BOB,mirror=False,flip=False,double_wh=False):
     add_sprite_block(code,code+1,prefix,cluts,sprite_type,mirror,flip=flip,double_wh=double_wh)
 
@@ -403,7 +438,7 @@ if True:
             # only consider sprites/cluts which are pre-registered
             if sprconf:
                 if k not in sprites:
-                    sprites[k] = {"sprite_type":sprite_type,"name":name,"hsize":hsize,
+                    sprites[k] = {"sprite_type":sprite_type,"name":name,"height":hsize,
                     "mirror":sprconf["mirror"],"flip":sprconf["flip"]}
 
                 cs = sprites[k]
@@ -458,7 +493,6 @@ if True:
                     # copper will put the proper color back again
                     img_to_raw = img
 
-                    plane_list = []
                     if verbose:
                         print(f"converting {name}, code {k}, clut {cidx}, {[[hex(c) for c in x]for x in sprite_clut[cidx] ]}")
 
@@ -486,36 +520,17 @@ if True:
                     cs["y_rstart"] = y_rstart  # start when drawn flipped
                     cs["height"] = img_to_raw.size[1]
 
-                    for mirrored in range(2):
-                        bitplanes = bitplanelib.palette_image2raw(img_to_raw,None,bobs_palette,forced_nb_planes=NB_BOB_PLANES,
-                            palette_precision_mask=0xFF,generate_mask=True,blit_pad=True)
-                        bitplane_size = len(bitplanes)//(NB_BOB_PLANES+1)  # don't forget bob mask!
 
 
-                        for ci in range(0,len(bitplanes),bitplane_size):
-                            plane = bitplanes[ci:ci+bitplane_size]
-                            if not any(plane):
+                    plane_list = process_image(cs)
                                 # only zeroes: null pointer so engine is able to optimize
                                 # by not reading the zeroed data
-                                plane_list.append(None)
-                            else:
-                                plane_index = bitplane_cache.get(plane)
-                                if plane_index is None:
-                                    bitplane_cache[plane] = plane_next_index
-                                    plane_index = plane_next_index
-                                    plane_next_index += 1
-                                plane_list.append(plane_index)
-                        if cs["mirror"] and mirrored==0:
                             # we need do re-iterate with opposite Y-flip image
-                            img_to_raw = ImageOps.mirror(img_to_raw)
-                        else:
                             # no mirror: don't do it once more
-                            break
 
                     # plane list size varies depending on mirror or not
                     # we add padding with -1 to detect forgotten mirror attribute
 
-                    plane_list += [-1]*(((NB_BOB_PLANES+1)*2)-len(plane_list))
                     csb[cidx] = plane_list
 
 
