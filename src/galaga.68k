@@ -439,7 +439,7 @@ gctl_game_runner:
 l_045E_while:
 	jbsr	gctl_supv_score                   	| [call gctl_supv_score]
 	jbsr	gctl_supv_stage                   	| [call gctl_supv_stage]
-	jra	l_045E_while                       	| [jr   l_045E_while]
+	jra	l_045E_while                       	    | [jr   l_045E_while]
 
 
 *=============================================================================
@@ -529,7 +529,6 @@ d_0495:
 gctl_stg_restart_hdlr:
 * return is by jp ... pop the push'd return address of call c_080B_monitor_stage_start_
 	move.l	(sp)+,a0                        	| [pop  hl]
-
 	lea	ds4_game_tmrs_92ac+3,a0             	| [ld   hl,#ds4_game_tmrs_92ac + 3] = 4 (set a time to wait while ship exploding)
 	move.b	#4,(a0)                         	| [ld   (hl),#4]
 
@@ -537,9 +536,9 @@ gctl_stg_restart_hdlr:
 l_04A4_wait:
 
 *  if ( captured_ship_landing_task_en ) ...
-	move.b	ds_cpu0_task_actv_9000+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x1D)] f_boss_capturing_ship_killed_2000 (destroyed boss that captured ship)
-	                               	| [and  a]
-	jeq	l_04C1_while                       	| [jr   z,l_04C1_while]
+	move.b	ds_cpu0_task_actv_9000+0x1D,d0      | [ld   a,(ds_cpu0_task_actv_9000 + 0x1D)] f_boss_capturing_ship_killed_2000 (destroyed boss that captured ship)
+	                               	            | [and  a]
+	jeq	l_04C1_while                       	    | [jr   z,l_04C1_while]
 *  ... then ...
 *      ship in play is destroyed, but the "landing" ship remains in play.
 	clr.b	d0                               	| [xor  a]
@@ -549,53 +548,52 @@ l_04A4_wait:
 
 *    if ( num_bugs > 0 ) return
 	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
-	                               	| [and  a]
-	jne	gctl_game_runner                   	| [jp   nz,gctl_game_runner] continue round w/ second (docked) ship... return to Game Runner Loop
+	                               	            | [and  a]
+	jne	gctl_game_runner                   	    | [jp   nz,gctl_game_runner] continue round w/ second (docked) ship... return to Game Runner Loop
 
 *      bug_ct == 0... last bug destroyed by collision w active ship
 *      ... wait for captured ship to land before starting new stage
 
 l_04B9_while:
 * while ( task active )
-	move.b	ds_cpu0_task_actv_9000+0x1D,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x1D)] f_boss_capturing_ship_killed_2000 (destroyed boss that captured ship)
-	                               	| [and  a]
-	jne	l_04B9_while                       	| [jr   nz,l_04B9_while]
-
-	jra	l_04DC_break                       	| [jr   l_04DC_break]
+	move.b	ds_cpu0_task_actv_9000+0x1D,d0     | [ld   a,(ds_cpu0_task_actv_9000 + 0x1D)] f_boss_capturing_ship_killed_2000 (destroyed boss that captured ship)
+	                               	           | [and  a]
+	jne	l_04B9_while                       	   | [jr   nz,l_04B9_while]
+	jra	l_04DC_break                       	   | [jr   l_04DC_break]
 
 l_04C1_while:
 *  if ( timer_3 > 0 )
-	move.b	(a0),d0                         	| [ld   a,(hl)] hl==_game_tmr_3? waiting on 4 count delay time for explosion
-	                               	| [and  a]
-	jne	l_04A4_wait                        	| [jr   nz,l_04A4_wait]
+	move.b	(a0),d0                            | [ld   a,(hl)] hl==_game_tmr_3? waiting on 4 count delay time for explosion
+	                               	           | [and  a]
+	jne	l_04A4_wait                        	   | [jr   nz,l_04A4_wait]
 
-	jbsr	gctl_supv_score                   	| [call gctl_supv_score]
+	jbsr	gctl_supv_score                    | [call gctl_supv_score]
 
 * plyr_state_actv.b_nbugs = b_bugs_actv_nbr
-	move.b	b_bugs_actv_nbr,d0              	| [ld   a,(b_bugs_actv_nbr)]
-	move.b	d0,ds_plyr_actv+_b_enmy_ct_actv 	| [ld   (ds_plyr_actv +_b_enmy_ct_actv),a]
+	move.b	b_bugs_actv_nbr,d0                 | [ld   a,(b_bugs_actv_nbr)]
+	move.b	d0,ds_plyr_actv+_b_enmy_ct_actv    | [ld   (ds_plyr_actv +_b_enmy_ct_actv),a]
 
 * check for "not (normal) end of stage conditions":
 
 * if ( restart stage flag || bugs_actv_nbr>0 )
-	move.b	d0,d2                           	| [ld   c,a] remaining enemies, could be 0 if fighter hit last one
-	move.b	ds_9200_glbls+0x13,d0           	| [ld   a,(ds_9200_glbls + 0x13)] restart stage flag (could not be here if nbr_bugs > 0 && flag==0 )
-	or.b	d2,d0                             	| [or   c]
-	jne	gctl_plyr_terminate                	| [jr   nz,gctl_plyr_terminate]
+	move.b	d0,d2                              | [ld   c,a] remaining enemies, could be 0 if fighter hit last one
+	move.b	ds_9200_glbls+0x13,d0              | [ld   a,(ds_9200_glbls + 0x13)] restart stage flag (could not be here if nbr_bugs > 0 && flag==0 )
+	or.b	d2,d0                              | [or   c]
+	jne	gctl_plyr_terminate_04E2               | [jr   nz,gctl_plyr_terminate_04E2]
 
-	move.b	ds_plyr_actv+_b_not_chllg_stg,d0	| [ld   a,(ds_plyr_actv +_b_not_chllg_stg)] 0 if challenge stage
-	                               	| [and  a]
-	jeq	gctl_chllng_stg_end                	| [jp   z,gctl_chllng_stg_end] jp's back to 04DC_
+	move.b	ds_plyr_actv+_b_not_chllg_stg,d0   | [ld   a,(ds_plyr_actv +_b_not_chllg_stg)] 0 if challenge stage
+	                               	           | [and  a]
+	jeq	gctl_chllng_stg_end                    | [jp   z,gctl_chllng_stg_end] jp's back to 04DC_
 
 l_04DC_break:
 
 * end of stage ... "normal"
-	jbsr	stg_init_splash_0185                   	| [call stg_init_splash_0185]
-	jra	plyr_respawn_rdy                   	| [jp   plyr_respawn_rdy]
+	jbsr	stg_init_splash_0185               | [call stg_init_splash_0185]
+	jra	plyr_respawn_rdy                   	   | [jp   plyr_respawn_rdy]
 
 
 *=============================================================================
-* gctl_plyr_terminate()
+* gctl_plyr_terminate_04E2()
 *  Description:
 *   Handle terminated player
 *   Bramch off to GameOver or TerminateActivePlayer and change player.
@@ -604,23 +602,26 @@ l_04DC_break:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-gctl_plyr_terminate:
+gctl_plyr_terminate_04E2:
 * if ( active_plyr_state.num_resv_ships-- == 0 )
-	lea	ds_plyr_actv+_b_nships,a0      	| [ld   hl,#ds_plyr_actv +_b_nships]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	subq.b	#1,(a0)                         	| [dec  (hl)]
-	tst.b	d0                               	| [and  a]
-	jne	j_0579_terminate                   	    | [jp   nz,j_0579_terminate] active ship terminated but not game over
+	lea	ds_plyr_actv+_b_nships,a0      	        | [$04E2: ld   hl,#ds_plyr_actv +_b_nships]
+	move.b	(a0),d0                         	| [$04E5: ld   a,(hl)]
+	tst.b	infinite_lives_flag
+	bne.b	0f
+	subq.b	#1,(a0)                         	| [$04E6: dec  (hl)]
+0:
+	tst.b	d0                               	| [$04E7: and  a]
+	jne	j_0579_terminate                   	    | [$04E8: jp   nz,j_0579_terminate] active ship terminated but not game over
 *  if  ( two_plyr_game ) ...
-	move.b	b8_99B3_two_plyr_game,d0        	| [ld   a,(b8_99B3_two_plyr_game)]
-	                               	            | [and  a]
-	jeq	l_04FD_end_of_game                 	    | [jr   z,l_04FD_end_of_game]
+	move.b	b8_99B3_two_plyr_game,d0        	| [$04EB: ld   a,(b8_99B3_two_plyr_game)]
+	                               	            | [$04EE: and  a]
+	jeq	l_04FD_end_of_game                 	    | [$04EF: jr   z,l_04FD_end_of_game]
 *  then ... adjust message text for two player game-over
-	lea	0x8000+0x0240+0x0E,a0      	            | [ld   hl,#0x8000 + 0x0240 + 0x0E]
-	move.b	ds_plyr_actv+_b_plyr_nbr,d0     	| [ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
-	addq.b	#4,d0                           	| [add  a,#4]
-	move.b	d0,d2                           	| [ld   c,a] string index
-	jbsr	c_string_out_1398                   | [call c_string_out_1398] "PLAYER X" (for "PLAYER X GAME OVER")
+	lea	0x8000+0x0240+0x0E,a0      	            | [$04F1: ld   hl,#0x8000 + 0x0240 + 0x0E]
+	move.b	ds_plyr_actv+_b_plyr_nbr,d0     	| [$04F4: ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
+	addq.b	#4,d0                           	| [$04F7: add  a,#4]
+	move.b	d0,d2                           	| [$04F9: ld   c,a] string index
+	jbsr	c_string_out_1398                   | [$04FA: call c_string_out_1398] "PLAYER X" (for "PLAYER X GAME OVER")
 
 l_04FD_end_of_game:
 	move.b	#0x02,d2                        	| [$04FD: ld   c,#0x02] string index

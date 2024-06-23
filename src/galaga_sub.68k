@@ -617,31 +617,31 @@ f_05BF:
 	* not needed ATM, cpu0 does that already
 	rts
 	
-	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,b_CPU2_in_progress           	| [ld   (b_CPU2_in_progress),a] 1
-
-	lea	mrw_sprite_code_8B00,a0             	| [ld   hl,#mrw_sprite_code_8B00]
-	lea	sfr_sprite_code_8B80,a1             	| [ld   de,#sfr_sprite_code_8B80]
-	move.w	#0x40,d1                        	| [ld   bc,#0x0040] 64
-	jbsr	ldir                              	| [ldir]
-	lea	mrw_sprite_posn_9300,a0             	| [ld   hl,#mrw_sprite_posn_9300]
-	lea	sfr_sprite_posn_9380,a1             	| [ld   de,#sfr_sprite_posn_9380]
-	move.w	#0x40,d1                        	| [ld   c,#0x40]
-	jbsr	ldir                              	| [ldir]
-	lea	mrw_sprite_ctrl_9B00,a0             	| [ld   hl,#mrw_sprite_ctrl_9B00]
-	lea	sfr_sprite_ctrl_9B80,a1             	| [ld   de,#sfr_sprite_ctrl_9B80]
-	move.w	#0x40,d1                        	| [ld   c,#0x40]
-	jbsr	ldir                              	| [ldir]
-
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,b_CPU2_in_progress           	| [ld   (b_CPU2_in_progress),a] 0
-
-l_05E7_while_wait_for_main_CPU:
-	move.b	b_CPU1_in_progress,d0           	| [ld   a,(b_CPU1_in_progress)]
-	subq.b	#1,d0                           	| [dec  a]
-	jeq	l_05E7_while_wait_for_main_CPU     	| [jr   z,l_05E7_while_wait_for_main_CPU]
-
-	rts                                    	| [ret]
+*	move.b	#1,d0                           	| [ld   a,#1]
+*	move.b	d0,b_CPU2_in_progress           	| [ld   (b_CPU2_in_progress),a] 1
+*
+*	lea	mrw_sprite_code_8B00,a0             	| [ld   hl,#mrw_sprite_code_8B00]
+*	lea	sfr_sprite_code_8B80,a1             	| [ld   de,#sfr_sprite_code_8B80]
+*	move.w	#0x40,d1                        	| [ld   bc,#0x0040] 64
+*	jbsr	ldir                              	| [ldir]
+*	lea	mrw_sprite_posn_9300,a0             	| [ld   hl,#mrw_sprite_posn_9300]
+*	lea	sfr_sprite_posn_9380,a1             	| [ld   de,#sfr_sprite_posn_9380]
+*	move.w	#0x40,d1                        	| [ld   c,#0x40]
+*	jbsr	ldir                              	| [ldir]
+*	lea	mrw_sprite_ctrl_9B00,a0             	| [ld   hl,#mrw_sprite_ctrl_9B00]
+*	lea	sfr_sprite_ctrl_9B80,a1             	| [ld   de,#sfr_sprite_ctrl_9B80]
+*	move.w	#0x40,d1                        	| [ld   c,#0x40]
+*	jbsr	ldir                              	| [ldir]
+*
+*	clr.b	d0                               	| [xor  a]
+*	move.b	d0,b_CPU2_in_progress           	| [ld   (b_CPU2_in_progress),a] 0
+*
+*l_05E7_while_wait_for_main_CPU:
+*	move.b	b_CPU1_in_progress,d0           	| [ld   a,(b_CPU1_in_progress)]
+*	subq.b	#1,d0                           	| [dec  a]
+*	jeq	l_05E7_while_wait_for_main_CPU     	| [jr   z,l_05E7_while_wait_for_main_CPU]
+*
+*	rts                                    	| [ret]
 
 *=============================================================================
 * f_05EE()
@@ -654,71 +654,69 @@ l_05E7_while_wait_for_main_CPU:
 *-----------------------------------------------------------------------------
 f_05EE:
 * if ( task_state == inactive ) return
-	move.b	ds_cpu0_task_actv_9000+0x14,d0       	| [ld   a,(ds_cpu0_task_actv_9000 + 0x14)] f_1F85 (input and ship movement)
-	                               	| [and  a]
+	move.b	ds_cpu0_task_actv_9000+0x14,d0      | [$05EE: ld   a,(ds_cpu0_task_actv_9000 + 0x14)] f_1F85 (input and ship movement)
+	                               	            | [$05F1: and  a]
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] [...]
+	rts                                    	    | [$05F2: ret  z] [...]
 0:
 
-	move.b	d0,ds_9200_glbls+0x17           	| [ld   (ds_9200_glbls + 0x17),a] 1 ... no_restart_stg
+	move.b	d0,ds_9200_glbls+0x17           	| [$05F3: ld   (ds_9200_glbls + 0x17),a] 1 ... no_restart_stg
 
 * if ( plyr_is_two_ship ) ...
-	move.b	ds_plyr_actv+_b_2ship,d0        	| [ld   a,(ds_plyr_actv +_b_2ship)]
-	                               	            | [and  a]
-	jeq	l_0613                             	    | [jr   z,l_0613]
+	move.b	ds_plyr_actv+_b_2ship,d0        	| [$05F6: ld   a,(ds_plyr_actv +_b_2ship)]
+	                               	            | [$05F9: and  a]
+	jeq	l_0613                             	    | [$05FA: jr   z,l_0613]
 
 * ... handle 2-ship configuration
-	lea	ds_sprite_posn_9300+0x60,a0         	| [ld   hl,#ds_sprite_posn_9300 + 0x60] fighter2 position
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	            | [and  a]
-	jeq	l_0613                             	    | [jr   z,l_0613]
-
-	jbsr	hitd_fghtr_notif_0681               | [call hitd_fghtr_notif_0681] HL == &sprite_posn_base[0x60]  ...ship2 position
-	move.b	b8_ship_collsn_detectd_status,d0	| [ld   a,(b8_ship_collsn_detectd_status)] fighter hit notif (2)
-	                               	            | [and  a]
-	jeq	l_0613                             	    | [jr   z,l_0613]
-
-	jbsr	hitd_fghtr_hit_0649                 | [call hitd_fghtr_hit_0649] fighter2 collision
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
+	lea	ds_sprite_posn_9300+0x60,a0         	| [$05FC: ld   hl,#ds_sprite_posn_9300 + 0x60] fighter2 position
+	move.b	(a0),d0                         	| [$05FF: ld   a,(hl)]
+	                               	            | [$0600: and  a]
+	jeq	l_0613                             	    | [$0601: jr   z,l_0613]
+	jbsr	hitd_fghtr_notif_0681               | [$0603: call hitd_fghtr_notif_0681] HL == &sprite_posn_base[0x60]  ...ship2 position
+	move.b	b8_ship_collsn_detectd_status,d0	| [$0606: ld   a,(b8_ship_collsn_detectd_status)] fighter hit notif (2)
+	                               	            | [$0609: and  a]
+	jeq	l_0613                             	    | [$060A: jr   z,l_0613]
+	jbsr	hitd_fghtr_hit_0649                 | [$060C: call hitd_fghtr_hit_0649] fighter2 collision
+	clr.b	d0                               	| [$060F: xor  a]
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [$0610: ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
 
 l_0613:
 * if ( ship position == 0 ) return
-	lea	ds_sprite_posn_9300+0x62,a0         	| [ld   hl,#ds_sprite_posn_9300 + 0x62] fighter1 position
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	            | [and  a]
+	lea	ds_sprite_posn_9300+0x62,a0         	| [$0613: ld   hl,#ds_sprite_posn_9300 + 0x62] fighter1 position
+	move.b	(a0),d0                         	| [$0616: ld   a,(hl)]
+	                               	            | [$0617: and  a]
 	bne.b	0f                               	| [...]
-	rts                                    	    | [ret  z] [...]
+	rts                                    	    | [$0618: ret  z] [...]
 0:
 
-	jbsr	hitd_fghtr_notif_0681                  	| [call hitd_fghtr_notif_0681] HL == sprite_posn_base + 0x62 ... fighter (1) position (only L significant)
+	jbsr	hitd_fghtr_notif_0681               | [$0619: call hitd_fghtr_notif_0681] HL == sprite_posn_base + 0x62 ... fighter (1) position (only L significant)
        * L passed to c_0681_ship_collisn_detect preserved in E
-	move.b	b8_ship_collsn_detectd_status,d0	| [ld   a,(b8_ship_collsn_detectd_status)] fighter hit notif (1)
-	                               	            | [and  a]
+	move.b	b8_ship_collsn_detectd_status,d0	| [$061C: ld   a,(b8_ship_collsn_detectd_status)] fighter hit notif (1)
+	                               	            | [$061F: and  a]
 	bne.b	0f                               	| [...]
-	rts                                    	    | [ret  z] [...]
+	rts                                    	    | [$0620: ret  z] [...]
 0:
 
 * 621 bug or bomb collided with ship
-	move.b	ds_plyr_actv+_b_2ship,d0        	| [ld   a,(ds_plyr_actv +_b_2ship)]
-	                               	            | [and  a]
-	jeq	l_0639_not_two_ship                	    | [jr   z,l_0639_not_two_ship]
+	move.b	ds_plyr_actv+_b_2ship,d0        	| [$0621: ld   a,(ds_plyr_actv +_b_2ship)]
+	                               	            | [$0624: and  a]
+	jeq	l_0639_not_two_ship                	    | [$0625: jr   z,l_0639_not_two_ship]
 
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
-	move.b	ds_sprite_posn_9300+0x60,d0         | [ld   a,(ds_sprite_posn_9300 + 0x60)] get ship 2 position
-	move.b	d0,ds_sprite_posn_9300+0x62         | [ld   (ds_sprite_posn_9300 + 0x62),a] ship_1_position = ship_2_position
-	move.b	sfr_sprite_posn_9380+0x62,d0        | [ld   a,(sfr_sprite_posn_9380 + 0x62)]
-	lea	sfr_sprite_posn_9380+0x60,a0        	| [ld   hl,#sfr_sprite_posn_9380 + 0x60]
-	jra	l_064F                             	    | [jr   l_064F] handle ship collision
+	clr.b	d0                               	| [$0627: xor  a]
+	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cflag	| [$0628: ld   (ds_plyr_actv +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
+	move.b	ds_sprite_posn_9300+0x60,d0         | [$062B: ld   a,(ds_sprite_posn_9300 + 0x60)] get ship 2 position
+	move.b	d0,ds_sprite_posn_9300+0x62         | [$062E: ld   (ds_sprite_posn_9300 + 0x62),a] ship_1_position = ship_2_position
+	move.b	sfr_sprite_posn_9380+0x62,d0        | [$0631: ld   a,(sfr_sprite_posn_9380 + 0x62)]
+	lea	sfr_sprite_posn_9380+0x60,a0        	| [$0634: ld   hl,#sfr_sprite_posn_9380 + 0x60]
+	jra	l_064F                             	    | [$0637: jr   l_064F] handle ship collision
 
 l_0639_not_two_ship:
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x14      | [ld   (ds_cpu0_task_actv_9000 + 0x14),a] 0 ... f_1F85 (input and fighter movement)
-	move.b	d0,ds_cpu0_task_actv_9000+0x15      | [ld   (ds_cpu0_task_actv_9000 + 0x15),a] 0 ... f_1F04 (fire button input)
-	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 0 ... f_05EE (this task, fighter hit-detection)
-	move.b	d0,ds_99B9_star_ctrl+0x00       	| [ld   (ds_99B9_star_ctrl + 0x00),a] 0 ... 1 when fighter on screen
-	move.b	d0,ds_9200_glbls+0x17           	| [ld   (ds_9200_glbls + 0x17),a] 0 ... no_restart_stg (not docked fighters)
+	clr.b	d0                               	| [$0639: xor  a]
+	move.b	d0,ds_cpu0_task_actv_9000+0x14      | [$063A: ld   (ds_cpu0_task_actv_9000 + 0x14),a] 0 ... f_1F85 (input and fighter movement)
+	move.b	d0,ds_cpu0_task_actv_9000+0x15      | [$063D: ld   (ds_cpu0_task_actv_9000 + 0x15),a] 0 ... f_1F04 (fire button input)
+	move.b	d0,ds_cpu1_task_actv+0x05       	| [$0640: ld   (ds_cpu1_task_actv + 0x05),a] 0 ... f_05EE (this task, fighter hit-detection)
+	move.b	d0,ds_99B9_star_ctrl+0x00       	| [$0643: ld   (ds_99B9_star_ctrl + 0x00),a] 0 ... 1 when fighter on screen
+	move.b	d0,ds_9200_glbls+0x17           	| [$0646: ld   (ds_9200_glbls + 0x17),a] 0 ... no_restart_stg (not docked fighters)
 
 * hitd_fghtr_hit_0649(tmpSx, SPR_IDX_SHIP + 0, 0)
 
@@ -781,15 +779,15 @@ l_064F:
 0:
 	
 * if no_restart_stg  ret ...
-	move.b	ds_9200_glbls+0x17,d0           	| [ld   a,(ds_9200_glbls + 0x17)] no_restart_stg is set if docked fighters
-	                               	            | [and  a]
+	move.b	ds_9200_glbls+0x17,d0           	| [$0677: ld   a,(ds_9200_glbls + 0x17)] no_restart_stg is set if docked fighters
+	                               	            | [$067A: and  a]
 	beq.b	0f                               	| [...]
-	rts                                    	    | [ret  nz] [...]
+	rts                                    	    | [$067B: ret  nz] [...]
 0:
 * ... else  set restart_stg_flag
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_9200_glbls+0x13           	| [ld   (ds_9200_glbls + 0x13),a] 1  ... restart stage flag (ship-input-movement flag not active )
-	rts                                    	    | [ret]
+	addq.b	#1,d0                           	| [$067C: inc  a]
+	move.b	d0,ds_9200_glbls+0x13           	| [$067D: ld   (ds_9200_glbls + 0x13),a] 1  ... restart stage flag (ship-input-movement flag not active )
+	rts                                    	    | [$0680: ret]
 
 *=============================================================================
 * hitd_fghtr_notif_0681()
@@ -871,57 +869,57 @@ l_06AC_:
 *-----------------------------------------------------------------------------
 hitd_det_fghtr:
 while_06B7:
-	lea	b_obj_collsn_notif_9200,a0     	        | [ld   h,#>b_obj_collsn_notif_9200] sprt_hit_notif
+	lea	b_obj_collsn_notif_9200,a0     	        | [$06B7: ld   h,#>b_obj_collsn_notif_9200] sprt_hit_notif
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	lea	b_8800,a0                      	        | [ld   h,#>b_8800]
+	move.b	(a0),d0                         	| [$06B9: ld   a,(hl)]
+	lea	b_8800,a0                      	        | [$06BA: ld   h,#>b_8800]
 	add.w	d6,a0
-	or.b	(a0),d0                           	| [or   (hl)]
-	rol.b	#1,d0                            	| [rlca]
-	jcs	l_06F0                             	    | [jr   c,l_06F0]
-
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	and.b	#0xFE,d0                         	| [and  #0xFE]
-	cmp.b	#4,d0                            	| [cp   #4]
-	jeq	l_06F0                             	    | [jr   z,l_06F0]
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	or.b	(a0),d0                           	| [$06BC: or   (hl)]
+	rol.b	#1,d0                            	| [$06BD: rlca]
+	jcs	l_06F0                             	    | [$06BE: jr   c,l_06F0]
+	move.b	(a0),d0                         	| [$06C0: ld   a,(hl)]
+	and.b	#0xFE,d0                         	| [$06C1: and  #0xFE]
+	cmp.b	#4,d0                            	| [$06C3: cp   #4]
+	jeq	l_06F0                             	    | [$06C5: jr   z,l_06F0]
+	lea	ds_sprite_posn_9300,a0              	| [$06C7: ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	            | [and  a]
-	jeq	l_06F0                             	    | [jr   z,l_06F0]
-	sub.b	ixl,d0                           	| [sub  ixl] x<7:0>
-	subq.b	#7,d0                           	| [sub  #7]
-	add.b	#13,d0                           	| [add  a,#13]
-	jcc	l_06F0                             	    | [jr   nc,l_06F0]
-	addq.w	#1,a0                           	| [inc  l]
+	move.b	(a0),d0                         	| [$06C9: ld   a,(hl)]
+	                               	            | [$06CA: and  a]
+	jeq	l_06F0                             	    | [$06CB: jr   z,l_06F0]
+	sub.b	ixl,d0                           	| [$06CD: sub  ixl] x<7:0>
+	subq.b	#7,d0                           	| [$06CF: sub  #7]
+	add.b	#13,d0                           	| [$06D1: add  a,#13]
+	jcc	l_06F0                             	    | [$06D3: jr   nc,l_06F0]
+	addq.w	#1,a0                           	| [$06D5: inc  l]
 	addq.w	#1,d6                           	| [inc  l]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
-	and.w	#0xFF,d6
+	move.b	(a0),d0                         	| [$06D6: ld   a,(hl)]
+	lea	ds_sprite_ctrl_9B00,a0              	| [$06D7: ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
-	move.b	(a0),d2                         	| [ld   c,(hl)]
-	subq.w	#1,a0                           	| [dec  l]
+	move.b	(a0),d2                         	| [$06D9: ld   c,(hl)]
+	subq.w	#1,a0                           	| [$06DA: dec  l]
 	subq.b	#1,d6                           	| [dec  l] [a0 coherence]
-	ror.b	#1,d2                            	| [rrc  c]
+	ror.b	#1,d2                            	| [$06DB: rrc  c]
 	SET_X_FROM_C
-	roxr.b	#1,d0                           	| [rra]
-	sub.b	ixh,d0                           	| [sub  ixh]
-	subq.b	#4,d0                           	| [sub  #4]
-	addq.b	#7,d0                           	| [add  a,#7]
-	jcc	l_06F0                             	    | [jr   nc,l_06F0]
-	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,b8_ship_collsn_detectd_status	| [ld   (b8_ship_collsn_detectd_status),a] 1 ... fighter hit notif
-	tst.b	d0                               	| [or   a] nz if fighter hit
-	sne	d7                              	    | [ex   af,af']
-	jra	hitd_dspchr_07c1                        | [jp   hitd_dspchr_07c1] return to 'call hitd_det_fghtr'
+	roxr.b	#1,d0                           	| [$06DD: rra]
+	tst.b	invincible_flag
+	bne.b	l_06F0
+	sub.b	ixh,d0                           	| [$06DE: sub  ixh]
+	subq.b	#4,d0                           	| [$06E0: sub  #4]
+	addq.b	#7,d0                           	| [$06E2: add  a,#7]
+	jcc	l_06F0                             	    | [$06E4: jr   nc,l_06F0]
+	move.b	#1,d0                           	| [$06E6: ld   a,#1]
+	move.b	d0,b8_ship_collsn_detectd_status	| [$06E8: ld   (b8_ship_collsn_detectd_status),a] 1 ... fighter hit notif
+	tst.b	d0                               	| [$06EB: or   a] nz if fighter hit
+	sne	d7                              	    | [$06EC: ex   af,af']
+	jra	hitd_dspchr_07c1                        | [$06ED: jp   hitd_dspchr_07c1] return to 'call hitd_det_fghtr'
 l_06F0:
 	addq.w	#2,a0
-	addq.b	#2,d6                           	| [inc  l] * 2  [a0 coherence]
+	addq.b	#2,d6                           	| [$06F0: inc  l] * 2  [a0 coherence]
 	subq.b	#1,d1                           	| [...]
-	jne	while_06B7                         	    | [djnz while_06B7]
-	rts                                    	    | [ret]
+	jne	while_06B7                         	    | [$06F2: djnz while_06B7]
+	rts                                    	    | [$06F4: ret]
 
 *=============================================================================
 * f_rocket_hit_detection_06f5()
@@ -1290,7 +1288,7 @@ l_07F5:
 l_07F8_:
 	lea	b_9AA0+0x01,a0                 			| [$07F8: ld   hl,#b_9AA0 + 0x01] b_9AA0[1 + A] = 1 ... sound-fx count/enable registers
 	and.w	#0xFF,d0
-	jbsr	osd_sound_start		| MOTH_KILLED_SND, BEE_KILLED_SND, BOSS_KILLED_SND
+	jbsr	osd_sound_start		| MOTH_KILLED_SND, BEE_KILLED_SND, BOSS_KILLED_SND, ....
 	*jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A
 	*move.b	#1,(a0)                         	| [ld   (hl),#1]
 
@@ -1483,12 +1481,13 @@ l_08B6:
 	jra	l_08AA                             		| [jp   l_08AA]
 
 l_08CA_hit_green_boss:
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	move.b	d0,b_9AA0+0x04                  	| [ld   (b_9AA0 + 0x04),a] sound-fx count/enable registers, hit_green_boss
-	subq.w	#1,a0                           	| [dec  l]
-
-	jra	l_07B4_next_object                 		| [jp   l_07B4_next_object]
+	addq.b	#1,d0                           	| [$08CA: inc  a]
+	move.b	d0,(a0)                         	| [$08CB: ld   (hl),a]
+	move.b	d0,b_9AA0+0x04                  	| [$08CC: ld   (b_9AA0 + 0x04),a] sound-fx count/enable registers, hit_green_boss
+	*move.w	#GREEN_BOSS_HIT,d0
+	*jbsr	osd_sound_start
+	subq.w	#1,a0                           	| [$08CF: dec  l]
+	jra	l_07B4_next_object                 		| [$08D0: jp   l_07B4_next_object]
 
 
 *=============================================================================
