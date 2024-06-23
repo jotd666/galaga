@@ -403,8 +403,8 @@ _user:
 	sne		break_at_startup_flag
 	.endif
 	btst	#0,d1
-	*st		slow_machine
-	*st	half_fps
+	sne		slow_machine
+	sne		half_fps
 
 
 	move.l	start_level_option,d0
@@ -3141,9 +3141,7 @@ _tag:
 cheat_flags:
 		.long	0
 		.long	WHDLTAG_CUSTOM2_GET
-		.word	0
-
-
+		.long	0
 		.long	WHDLTAG_CUSTOM3_GET
 misc_options:
 		.long	0

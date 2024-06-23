@@ -1,5 +1,4 @@
 - default DSW are wrong
-- whdload cheat/options don't work anymore ex level select (but cheat keys are enabled)
 - implement level skip & invincibility & other trainer
 - shadow of boss not erased sometimes (erase optimization not working??)
 - double ship attaches left then displayed right???? around 2075
@@ -11,6 +10,7 @@
   watch A0/A1, HL/DE after call: 0535
      DE  80B8
      HL  99B2
+  even if not crashing, percentage is wrong and wrongly placed!!
 
 - optimize: player ship should be HW sprite, even if captured
   sprite layout: 2 slots for player ship
@@ -20,7 +20,6 @@
 				 
 - optimize: blitter out of bounds on real speed at 25fps: why?? (turn off to test
   game)
-- galaxian boss doesn't seem to appear (level 10)
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
 - 2 first rows not shown (attribute/color is black!!!)

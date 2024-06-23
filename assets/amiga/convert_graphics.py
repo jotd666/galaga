@@ -178,7 +178,7 @@ add_sprite_block(0x18,0x20,"bee",[3,4,6,0xA,0x5],mirror=True)
 add_sprite_block(0x50,0x57,"mutant_galaxian_boss",4,mirror=True) # sprite_type=ST_HW_SPRITE,
 add_sprite_block(0x58,0x5F,"mutant_scorpion",[5,0xA],mirror=True)  #,sprite_type=ST_HW_SPRITE
 add_sprite_block(0x60,0x67,"mutant_green",[6,0xA],mirror=True)  # sprite_type=ST_HW_SPRITE,
-add_sprite_block(0x68,0x6F,"challenge_butterfly",2,mirror=True) # or 7?
+add_sprite_block(0x68,0x6F,"challenge_butterfly",[2,0xA],mirror=True) # or 7?
 add_sprite_block(0x70,0x77,"challenge_ship",7,mirror=True)
 add_sprite_block(0x78,0x7F,"challenge_rocket",7,mirror=True)
 add_sprite_block(0x30,0x34,"bomb",[0x9,0xB])
@@ -188,7 +188,7 @@ add_sprite(0x35,"score_400",0xA)
 add_sprite(0x36,"score_500",0)  # wrong clut
 add_sprite(0x37,"score_800",0xD)
 add_sprite(0x38,"score_1000",0xD)
-add_sprite(0x39,"score_1500",0)  # wrong clut
+add_sprite(0x39,"score_1500",0xD)
 add_sprite(0x3A,"score_1600",0xE)
 for i in [0x20,0x24,0x28,0x2C]:
     add_sprite(i,"explosion",0xB,double_wh=True)
