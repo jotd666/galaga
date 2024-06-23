@@ -97,11 +97,13 @@ if dump_sprites:
 NB_POSSIBLE_SPRITES = 128
 NB_BOB_PLANES = 4
 
+DOUBLE_SHOT_CODE = 127
 
 def dump_asm_bytes(*args,**kwargs):
     bitplanelib.dump_asm_bytes(*args,**kwargs,mit_format=True)
 
-double_size_table = [False]*256
+double_size_table = [False]*128
+double_size_table[DOUBLE_SHOT_CODE] = True
 
 sprite_config = dict()
 
@@ -110,7 +112,8 @@ flip=False,double_wh=False,):
     if isinstance(cluts,int):
         cluts = [cluts]
     for i in range(start,end):
-        double_size_table[i] = double_wh
+        if double_wh:
+            double_size_table[i] = True
         if i in sprite_config:
             # merge
             sprite_config[i]["cluts"].extend(cluts)
@@ -122,11 +125,16 @@ flip=False,double_wh=False,):
                                 "flip":flip  # only relevant for HW sprites, else it's handled by blitter
                                 }
 
-def process_image(cs):
+def process_image(cs,img_to_raw):
     global plane_next_index
 
+    cs["height"] = img_to_raw.size[1]
+    y_rstart = 16 - img_to_raw.size[1] - y_start
+    cs["y_start"] = y_start
+    cs["y_rstart"] = y_rstart  # start when drawn flipped
+    plane_list = []
+
     for mirrored in range(2):
-        plane_list = []
         bitplanes = bitplanelib.palette_image2raw(img_to_raw,None,bobs_palette,forced_nb_planes=NB_BOB_PLANES,
             palette_precision_mask=0xFF,generate_mask=True,blit_pad=True)
         bitplane_size = len(bitplanes)//(NB_BOB_PLANES+1)  # don't forget bob mask!
@@ -166,10 +174,10 @@ add_sprite_block(0x8,0x10,"boss_ship",[0,1,10],mirror=True)   # 10: yellow when 
 #add_sprite_block(0,0x8,"ship",[2,9])
 add_sprite_block(0,0x8,"ship",[2,7,9],mirror=True)
 add_sprite_block(0x10,0x18,"moth",[2,0xA],mirror=True)
-add_sprite_block(0x18,0x20,"bee",[3,0xA,0x5],mirror=True)
-add_sprite_block(0x50,0x57,"mutant_galaxian_boss",4,sprite_type=ST_HW_SPRITE,mirror=True)
+add_sprite_block(0x18,0x20,"bee",[3,4,6,0xA,0x5],mirror=True)
+add_sprite_block(0x50,0x57,"mutant_galaxian_boss",4,mirror=True) # sprite_type=ST_HW_SPRITE,
 add_sprite_block(0x58,0x5F,"mutant_scorpion",[5,0xA],mirror=True)  #,sprite_type=ST_HW_SPRITE
-add_sprite_block(0x60,0x67,"mutant_green",6,sprite_type=ST_HW_SPRITE,mirror=True)
+add_sprite_block(0x60,0x67,"mutant_green",[6,0xA],mirror=True)  # sprite_type=ST_HW_SPRITE,
 add_sprite_block(0x68,0x6F,"challenge_butterfly",2,mirror=True) # or 7?
 add_sprite_block(0x70,0x77,"challenge_ship",7,mirror=True)
 add_sprite_block(0x78,0x7F,"challenge_rocket",7,mirror=True)
@@ -515,14 +523,34 @@ if True:
                     else:
                         y_start,img_to_raw = bitplanelib.autocrop_y(img_to_raw)
 
-                    y_rstart = 16 - img_to_raw.size[1] - y_start
-                    cs["y_start"] = y_start
-                    cs["y_rstart"] = y_rstart  # start when drawn flipped
-                    cs["height"] = img_to_raw.size[1]
+                    if k==0x30 and cidx == 9:
+                        # shot: generate an extra double image, but with a different code
+                        # this is the only occurrence of double width but simple height
+                        # and it's better to use only 1 blit for performance reasons
+                        img_new = Image.new("RGB",(32,16))
+                        pic = generate_16x16_image(cidx,block_dict["sprite"]["data"][k],sprconf)
+
+                        img_new.paste(pic,(0,0))
+                        img_new.paste(pic,(16,0))
+
+                        img_to_raw_dblshot = img_new
+                        y_start = 0
+
+                        sprites[DOUBLE_SHOT_CODE] = {"sprite_type":sprite_type,"name":f"bomb_{DOUBLE_SHOT_CODE:02x}",
+                        "mirror":sprconf["mirror"],"flip":sprconf["flip"]}
+                        csd = sprites[DOUBLE_SHOT_CODE]
+
+                        csd["bitmap"] = {cidx:process_image(csd,img_to_raw_dblshot)}
+
+                        if dump_sprites:
+                            scaled = ImageOps.scale(img_to_raw_dblshot,2,0)
+                            scaled.save(os.path.join(dump_sprites_dir,f"bomb_{DOUBLE_SHOT_CODE}.png"))
 
 
 
-                    plane_list = process_image(cs)
+
+
+                    plane_list = process_image(cs,img_to_raw)
                                 # only zeroes: null pointer so engine is able to optimize
                                 # by not reading the zeroed data
                             # we need do re-iterate with opposite Y-flip image

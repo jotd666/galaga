@@ -47,7 +47,7 @@ SPRITE_BLOCK_OFFSET = 256			| len of each sprite info table times 2
 PREVIOUS_SPRITE_X = 0
 PREVIOUS_SPRITE_Y = 2
 PREVIOUS_Y_START = 4
-PREVIOUS_HEIGHT = 6
+PREVIOUS_SPRITE_HEIGHT = 6
 PREVIOUS_ACTIVE_BITPLANE_MASK = 8   | for optimized bitplane erase
 PREVIOUS_SPRITE_CODE = 9
 
@@ -58,7 +58,7 @@ TARGET_SPRITE_CODE = 0
 TARGET_SPRITE_ATTRIBUTES = SPRITE_BLOCK_OFFSET*2
 TARGET_SPRITE_Y = SPRITE_BLOCK_OFFSET
 
-
+DOUBLE_SHOT_CODE = 0x7F
 
 	.ifdef	RELEASE
 OPT_ENABLE_PROFILING = 0         | DO NOT CHANGE THIS
@@ -1192,6 +1192,7 @@ update_bobs:
 12:
 	move.w	(PREVIOUS_SPRITE_X,a4),d0	
 	move.w	(PREVIOUS_SPRITE_Y,a4),d1
+	moveq	#0,d2
 	move.b	(PREVIOUS_SPRITE_CODE,a4),d2
 	
 	* clear 16x16 area where the sprite was
@@ -1201,17 +1202,21 @@ update_bobs:
 	.ifne	SPRITE_X_CORRECTION
 	add.w	#SPRITE_X_CORRECTION,d0
 	.endif
+
 	lea		double_size_flag_table,a1
 	tst.b	(a1,d2.w)
 	beq.b	16f
-
 	* sprites 0x20,0x24,0x28,0x2C are double width/height (ship explosion)
+	* double shots (fake code 0x7f) are double width
+	* height is set in PREVIOUS_SPRITE_HEIGHT so both cases can be processed here
+	move.w	(PREVIOUS_SPRITE_HEIGHT,a4),d4
 	bsr		restore_32x_background	
 	jra		11f
+
 16:
 	move.b	(PREVIOUS_ACTIVE_BITPLANE_MASK,a4),d3	| erase only needed bitplanes
 	add.w	(PREVIOUS_Y_START,a4),d1				| add Y start offset
-	move.w	(PREVIOUS_HEIGHT,a4),d4
+	move.w	(PREVIOUS_SPRITE_HEIGHT,a4),d4
 	bsr		restore_16x_background
 11:
 	lea		(PREVIOUS_SPRITE_SIZE,a4),a4
@@ -1239,7 +1244,6 @@ update_bobs:
 	move.b	(TARGET_SPRITE_CODE,a0),d2
 
 	bclr	#7,d2		| discard last bit
-	move.b	d2,(PREVIOUS_SPRITE_CODE,a6)
 	
 	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d4
 
@@ -1256,6 +1260,13 @@ update_bobs:
 	tst	(a2,d2.w)
 	jne	211f			| hardware sprite: skip
 	
+	cmp.b	#0x30,d2
+	jne		0f
+	btst	#3,d4
+	jeq		0f
+	move.b	#DOUBLE_SHOT_CODE,d2	| change sprite code (special case)
+0:
+	move.b	d2,(PREVIOUS_SPRITE_CODE,a6)
 	move.w	d2,d4
 	add.w	d4,d4
 	add.w	d4,d4
@@ -1305,7 +1316,7 @@ update_bobs:
 	.endif
 13:
 	move.l	(NB_BOBS_PLANES*4+6,a0),d3	| mask plane is after bob data
-	beq.b	22f		| mask is zero: blank tile => skip
+	jeq		22f		| mask is zero: blank tile => skip
 	move.l	d3,a3
 
 	.ifne	SPRITE_Y_CORRECTION
@@ -1323,16 +1334,20 @@ update_bobs:
 	beq.b	16f
 	* some explosions are double width/height
 	moveq	#0,d2	| no y-clip
+	move.w	#16,d3	| height = 16 if double shot
+	cmp.b	#DOUBLE_SHOT_CODE,(PREVIOUS_SPRITE_CODE,a6)
+	beq.b	0f
 	move.w	#32,d3	| height = 32
+0:
 	clr.w	(PREVIOUS_Y_START,a6)
-	move.w	d3,(PREVIOUS_HEIGHT,a6)
+	move.w	d3,(PREVIOUS_SPRITE_HEIGHT,a6)
 	lea		blit_planes_cookie_cut_32x(pc),a4
 	bra.b	17f
 16:
 	move.w	(a0),d3	| height
 	add.w	(2,a0),d1	| add Y offset
 	move.w	(2,a0),(PREVIOUS_Y_START,a6)
-	move.w	d3,(PREVIOUS_HEIGHT,a6)
+	move.w	d3,(PREVIOUS_SPRITE_HEIGHT,a6)
 	
 	moveq	#0,d2	| no y-clip
 	lea		blit_planes_cookie_cut_16x(pc),a4
@@ -1424,26 +1439,26 @@ restore_16x_background:
 	.endif
 	movem.l	(a7)+,d2/a1/a5
 	rts
+
 	
 * what: erases the 4 planes used for BOBs
 * args:
 * < D0: X (rounded to smaller 8-multiple)
 * < D1: Y
-
+* < D4: real height
 restore_32x_background:
 	.ifndef	RELEASE
 	movem.l	d0/d1,-(a7)
 	.endif
 	tst.w	d1
 	bmi.b	0f
-	movem.l	d2-d7/a0-a5,-(a7)
+	movem.l	d2/d3/d5-d7/a0-a5,-(a7)
 	moveq	#6,d2			| 48 bits blit
 	move.w	#NB_BOBS_PLANES,d3
 	move.l	bg_drawed_screen_ptr(pc),a1
-	move.w	#32,d4
 	lea		_custom,a5
 	bsr.b	clear_planes_any_blitter_internal
-	movem.l	(a7)+,d2-d7/a0-a5
+	movem.l	(a7)+,d2/d3/d5-d7/a0-a5
 0:
 	.ifndef	RELEASE
 	movem.l	(a7)+,d0/d1
