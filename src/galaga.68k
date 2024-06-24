@@ -249,7 +249,7 @@ l_0380:
 l_038D_while:
 	move.b	b8_game_state_9201,d0           	| [$038D: ld   a,(b8_game_state_9201)] while (ATTRACT_MODE)
 	subq.b	#1,d0                           	| [dec  a]
-	jeq	l_038D_while                       	| [jr   z,l_038D_while]
+	jeq	l_038D_while                       	    | [jr   z,l_038D_while]
 
 * JOTD: game start!!
 
@@ -11100,7 +11100,7 @@ l_0280_nonzero_tbl_entry:
 
 l_02A8_pop_regs_and_exit:
 	move.b	#1,d0                           	| [ld   a,#1]
-	jbsr	osd_interrupt_control                    	| [ld   (_sfr_6820),a] 1 ... enable IRQ1
+	jbsr	osd_interrupt_control               | [ld   (_sfr_6820),a] 1 ... enable IRQ1
 
 	move.w	(sp)+,ix
 	move.l	(sp)+,a3                        	| [pop  iy]

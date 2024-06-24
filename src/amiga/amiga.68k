@@ -845,7 +845,14 @@ _vblank:
 	bne.b	0f
 	jbsr		galaga_irq	
 0:
+	* forbid interrupts as galaga_irq could have enabled them within the IRQ
+	* (this is strange but if we disable this interrupt enabling, then the game
+	* freezes...). Now disable again, else on slow machines , the sprite update
+	* could be interrupted by the next tick and mess everything up
+	move.w	#0x2300,SR
 	clr.b	interrupt_mode
+	tst.b	skip_screen_update
+	bne.b	1f
 	tst.b	half_fps
 	beq.b	0f			| 50Hz update!
 	eor.b	#1,flip_flop
@@ -857,7 +864,7 @@ _vblank:
 	bsr		switch_screen_buffers
 	.endif
 1:
-	
+	clr.b	skip_screen_update
 23:
 	* now we check copper interrupt again
 	move.w	_custom+intreqr,d0
@@ -1156,7 +1163,13 @@ compute_sprite_xy:
 	rts
 	
 update_bobs:
-
+	.ifndef	RELEASE
+	clr.w	lines_blitted
+	clr.w	lines_erased
+	clr.w	objects_blitted
+	clr.w	objects_erased
+	.endif
+	
 	lea			hardware_sprite_flag_table,a2
 	
 	move.l		bob_previous_drawed_sprites(pc),a4
@@ -1391,6 +1404,12 @@ update_bobs:
 	lea		(PREVIOUS_SPRITE_SIZE,a6),a6		| next previous sprite pos
 	dbf		d7,1b
 	
+	.ifndef	RELEASE
+	* write per-frames statistics in zero page
+	move.l	lines_blitted,0xF0
+	move.l	objects_blitted,0xF4
+	.endif
+
 	rts
 	* rarer case: blit upside down
 14:
@@ -1401,7 +1420,17 @@ update_bobs:
 
 	lea		blit_planes_cookie_cut_16x_flipped(pc),a4
 	bra.b	20b
-	
+
+
+lines_blitted:
+	.word	0
+lines_erased:
+	.word	0
+objects_blitted:
+	.word	0
+objects_erased:
+	.word	0
+
 * what: erases the 4 planes used for BOBs
 * args:
 * < A1: plane pointer
@@ -1413,6 +1442,8 @@ update_bobs:
 restore_16x_background:
 	movem.l	d2/a1/a5,-(a7)
 	.ifndef	RELEASE
+	add.w	d4,lines_erased
+	addq.w	#1,objects_erased
 	movem.w	d0/d1,-(a7)
 	.endif
 	tst.w	d1
@@ -1449,6 +1480,9 @@ restore_16x_background:
 restore_32x_background:
 	.ifndef	RELEASE
 	movem.l	d0/d1,-(a7)
+	add.w	d4,lines_erased
+	add.w	d4,lines_erased
+	addq.w	#1,objects_erased
 	.endif
 	tst.w	d1
 	bmi.b	0f
@@ -1576,6 +1610,10 @@ blit_planes_cookie_cut_32x:
 	move.w	d0,last_x_blit
 	move.w	d1,last_y_blit
 	move.w	d3,last_blit_height
+	add.w	d3,lines_blitted
+	add.w	d3,lines_blitted
+	addq.w	#1,objects_blitted
+
 	.endif
 	tst.w	d1
 	bpl.b	0f
@@ -1604,6 +1642,8 @@ blit_planes_cookie_cut_16x:
 	move.w	d0,last_x_blit
 	move.w	d1,last_y_blit
 	move.w	d3,last_blit_height
+	add.w	d3,lines_blitted
+	addq.w	#1,objects_blitted
 	.endif
 	tst.w	d1
 	bpl.b	0f
@@ -1686,6 +1726,12 @@ blit_planes_any_internal_cookie_cut:
     add.w   d2,d4       | blit height
     * always the same settings (ATM)
 
+	* prepare d1
+	moveq	#0,d1
+	move.w	#0x0BCA,d1
+	swap	d1
+	or.l	d6,d1
+
     * now just wait for blitter ready to write all registers
 	WAIT_BLIT
     
@@ -1723,8 +1769,6 @@ process_1_plane:
 	bra.b	61f
 60:
 	* source is 0: just apply mask (less bandwidth lost) and change bltcon
-	move.l	#0x0BCA0000,d1
-	or.l	d6,d1
 	move.l	d1,bltcon0(a5)	| sets con0 and con1: C-A->D cookie cut, B fixed
  	clr.w	bltbdat(a5)	|B word is zero
 	bra.b	62f
@@ -2258,8 +2302,8 @@ osd_disable_interrupts:
 	beq.b	0f
 	* if interrupts are disabled again from interrupt, re-set SR
 	move.w	#0x2700,SR
-0:
 	move.w	#0x0030,_custom+intena
+0:
 	rts
 
 

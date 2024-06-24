@@ -579,13 +579,13 @@ galaga1_reset:
 	* code should loop forever, which means that cpu1 is actually just used
 	* to perform IRQs, so let's just chain both irqs from cpu0 and cpu1
 	* no need to parallelize anything (I hope so!)
-	move.b	#1,d0                           	| [ld   a,#1]
-	*move.b	d0,_sfr_6821                    	| [ld   (_sfr_6821),a] 1 ... IRQ acknowledge/enable
-	jbsr	osd_interrupt_control               | [ei]
+											| [ld   a,#1]
+											| [ld   (_sfr_6821),a] 1 ... IRQ acknowledge/enable
+											| [ei]
 
 l_05B1:
-	*lea		ds_stk_cpu1_init,a7    | ld   sp,#ds_stk_cpu1_init
-	jra	l_05B1                             	| [jp   l_05B1] loop forever
+											| ld   sp,#ds_stk_cpu1_init
+													| [jp   l_05B1] loop forever
 
 *=============================================================================
 * init data for (ds_cpu1_task_actvbl + 0x01)
