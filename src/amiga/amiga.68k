@@ -1241,7 +1241,6 @@ update_bobs:
 	* each table is 128 bytes long (64*2)
 		
 	move.l	a3,a0
-	lea		bob_table,a4
 	move.l	bob_previous_drawed_sprites(pc),a6
 	moveq	#NB_TARGET_SPRITES-1,d7
 1:
@@ -1283,6 +1282,7 @@ update_bobs:
 	move.w	d2,d4
 	add.w	d4,d4
 	add.w	d4,d4
+	lea		bob_table,a4
 	move.l	(a4,d4.w),d4	| test pointer
 	jmi		211f			| hardware sprite: skip
 	bne.b	11f
@@ -1339,7 +1339,7 @@ update_bobs:
 	add.w	#SPRITE_X_CORRECTION,d0
 	.endif
 
-	movem.l	d7/a4/a5,-(a7)
+	move.w	d7,-(a7)
 
 	* normal or double w/h?
 	lea		double_size_flag_table,a5
@@ -1396,7 +1396,7 @@ update_bobs:
 	addq.w	#6,a0		| skip header
 	jsr		(a4)		| start the blit
 21:
-	movem.l	(a7)+,d7/a4/a5
+	move.w	(a7)+,d7
 22:
 	move.l	(a7)+,a0
 211:
@@ -2284,26 +2284,18 @@ osd_is_vblank_interrupt_enabled:
 	
 * < d0: 0 disable interrupts, 1 enable interrupts
 osd_interrupt_control:
+	tst.b	interrupt_mode
+	bne.b	0f				| no interrupt change from within an IRQ
 	tst.b	d0
-	beq.b	osd_disable_interrupts
+	beq.b	1f
 * 60Hz VBLANK interrupt (also keyboard)
 osd_enable_interrupts:
-	tst.b	interrupt_mode
-	beq.b	0f
-	* clear SR from interrupt mode, so enable interrupts really
-	* works from the game (which calls enable interrupts from interrupt)
-	move.w	#0x2000,SR
-0:
 	move.w	#0xC038,_custom+intena
+0:
 	rts
 	
-osd_disable_interrupts:
-	tst.b	interrupt_mode
-	beq.b	0f
-	* if interrupts are disabled again from interrupt, re-set SR
-	move.w	#0x2700,SR
+1:
 	move.w	#0x0030,_custom+intena
-0:
 	rts
 
 

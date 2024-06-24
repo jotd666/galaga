@@ -1146,45 +1146,44 @@ l_0740:
 	jra	l_0740                             	| [jr   l_0740]
 
 l_0762:
-	addq.w	#1,a0                           	| [inc  l] index of bug_collsn[]
+	addq.w	#1,a0                           	| [$0762: inc  l] index of bug_collsn[]
 	subq.b	#1,d1                           	| [...]
-	jne	l_0739_while_B                     	| [djnz l_0739_while_B]
-	
-	jbsr	read_ixl_into_d0                    | [ld   a,ixl]
-	addq.b	#4,d0                           	| [add  a,#4]
+	jne	l_0739_while_B                     	    | [$0763: djnz l_0739_while_B]
+	jbsr	read_ixl_into_d0                    | [$0765: ld   a,ixl]
+	addq.b	#4,d0                           	| [$0767: add  a,#4]
 												
-	lea	0x8000+0x03E0+0x12,a0      	| [ld   hl,#0x8000 + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2)
-	lea	0x8000+0x0300,a1        	| [ld   d,#>(0x8000 + 0x0300)]
-	add.w	d0,a1					| [ld   e,a]
+	lea	0x8000+0x03E0+0x12,a0      	            | [ld   hl,#0x8000 + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2)
+	lea	0x8000+0x0300,a1        	            | [ld   d,#>(0x8000 + 0x0300)]
+	add.w	d0,a1					            | [ld   e,a]
 	move.b	#6,d1                           	| [ld   b,#6]
 l_0771:
-	jbsr	read_videoram_from_a1                         	| [ld   a,(de)]
+	jbsr	read_videoram_from_a1               | [ld   a,(de)]
 	exg		d0,d7
 	jbsr	read_videoram_from_a0
 	exg		d0,d7
-	sub.b	d7,d0                          	| [sub  (hl)]
+	sub.b	d7,d0                          	    | [sub  (hl)]
 	add.b	#9,d0                            	| [add  a,#9]
 	cmp.b	#0xE5,d0                         	| [cp   #0xE5]
-	jcc	l_0788                             	| [jr   nc,l_0788]
+	jcc	l_0788                             	    | [jr   nc,l_0788]
 	sub.b	#0x0A,d0                         	| [sub  #0x0A]
 	cmp.b	#9,d0                            	| [cp   #9]
-	jcs	l_0788                             	| [jr   c,l_0788]
+	jcs	l_0788                             	    | [jr   c,l_0788]
 	addq.b	#1,d0                           	| [inc  a]
-	jne	l_078E                             	| [jr   nz,l_078E]
+	jne	l_078E                             	    | [jr   nz,l_078E]
 	subq.w	#1,a0                           	| [dec  l]
 	subq.w	#1,a1                           	| [dec  e]
 	subq.b	#1,d1                           	| [...]
-	jne	l_0771                             	| [djnz l_0771]
+	jne	l_0771                             	    | [djnz l_0771]
 * else ... break
-	jra	l_078E                             	| [jr   l_078E]
+	jra	l_078E                             	    | [jr   l_078E]
 
 l_0788:
-	jbsr	read_videoram_from_a1                         	| [ld   a,(de)] hi score
-	jbsr	write_videoram_to_a0                         	| [ld   (hl),a]
+	jbsr	read_videoram_from_a1               | [ld   a,(de)] hi score
+	jbsr	write_videoram_to_a0                | [ld   (hl),a]
 	subq.w	#1,a0                           	| [dec  l]
 	subq.w	#1,a1                           	| [dec  e]
 	subq.b	#1,d1                           	| [...]
-	jne	l_0788                             	| [djnz l_0788]
+	jne	l_0788                             	    | [djnz l_0788]
 
 l_078E:
 	jbsr	read_ixl_into_d0                    | [ld   a,ixl]
@@ -1194,9 +1193,9 @@ l_078E:
 	move.b	d0,d6                           	| [ld   l,a] 
 	move.w	d6,a0
 	
-	jbsr	read_videoram_from_a0                         	| [ld   a,(hl)]
+	jbsr	read_videoram_from_a0              | [ld   a,(hl)]
 	cmp.b	#0x24,d0                         	| [cp   #0x24]
-	jne	l_0799                             	| [jr   nz,l_0799]
+	jne	l_0799                             	    | [jr   nz,l_0799]
 	clr.b	d0                               	| [xor  a]
 l_0799:
 	and.b	#0x3F,d0                         	| [and  #0x3F]
@@ -1206,16 +1205,16 @@ l_0799:
 	add.b	d2,d0                            	| [add  a,c]
 	move.b	d0,d2                           	| [ld   c,a]
 	subq.w	#1,a0                           	| [dec  l]
-	jbsr	read_videoram_from_a0                         	| [ld   a,(hl)]
+	jbsr	read_videoram_from_a0               | [ld   a,(hl)]
 	cmp.b	#0x24,d0                         	| [cp   #0x24]
-	jne	l_07A8                             	| [jr   nz,l_07A8]
+	jne	l_07A8                             	    | [jr   nz,l_07A8]
 	clr.b	d0                               	| [xor  a]
 l_07A8:
 	add.b	d2,d0                            	| [add  a,c]
 	lea	ds_plyr_actv+_b_mcfg_bonus,a0  	| [ld   hl,#ds_plyr_actv +_b_mcfg_bonus] &actv_plyr_state[0x1E] ... load at game start from $9980
 	cmp.b	(a0),d0                          	| [cp   (hl)]
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    	    | [ret  nz] [...]
 0:
 	move.b	w_mchn_cfg_bonus_9980+0x01,d0        	| [ld   a,(w_mchn_cfg_bonus_9980 + 0x01)] looks like a bonus may be awarded.
 	move.b	d0,d1                           	| [ld   b,a]
@@ -1223,33 +1222,33 @@ l_07A8:
 	move.b	d0,d2                           	| [ld   c,a]
 	move.b	(a0),d0                         	| [ld   a,(hl)] &actv_plyr_state[0x1E]
 	cmp.b	d2,d0                            	| [cp   c]
-	jcc	l_07BC                             	| [jr   nc,l_07BC]
+	jcc	l_07BC                             	    | [jr   nc,l_07BC]
 	move.b	d2,d0                           	| [ld   a,c]
-	jra	l_07BD                             	| [jr   l_07BD]
+	jra	l_07BD                             	    | [jr   l_07BD]
 
 l_07BC:
 	add.b	d1,d0                            	| [add  a,b] actv_plyr_state[0x1E] += mchn_cfg_bonus[1]
 l_07BD:
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	*move.b	d0,b_9AA0+0x0A                  	| [ld   (b_9AA0 + 0x0A),a] sound-fx count/enable registers, bonus ship awarded sound (set non-zero)
-	lea	ds_plyr_actv+_b_nships,a0      	| [ld   hl,#ds_plyr_actv +_b_nships]
+	lea	ds_plyr_actv+_b_nships,a0      	        | [ld   hl,#ds_plyr_actv +_b_nships]
 	addq.b	#1,(a0)                         	| [inc  (hl)]
-	jbsr	draw_resv_ships_136c                   	| [call draw_resv_ships_136c] new spare ship added
-	lea	b16_99EA_bonus_ct_bcd+1,a0     	| [ld   hl,#b16_99EA_bonus_ct_bcd + 1]
+	jbsr	draw_resv_ships_136c                | [call draw_resv_ships_136c] new spare ship added
+	lea	b16_99EA_bonus_ct_bcd+1,a0     	        | [ld   hl,#b16_99EA_bonus_ct_bcd + 1]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	moveq	#1,d7
 	abcd	d7,d0                           	| [add  a,#1]+daa
 	bcs.b	0f                               	| [...]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-	rts                                    	| [ret  nc] [...]
+	rts                                    	    | [ret  nc] [...]
 0:
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-			                           	| [dec  l]
+			                           	        | [dec  l]
 	move.b	-(a0),d0                         	| [ld   a,(hl)]
 	moveq	#1,d7
 	abcd	d7,d0                           	| [add  a,#1]+daa
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 * end call $0728
 
 *=============================================================================

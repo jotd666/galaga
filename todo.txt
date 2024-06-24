@@ -1,11 +1,11 @@
+- ref flashes: don't display ship, see what happens!!
 - default DSW are wrong
 - implement level skip trainer
 - compose double sprites 2000 and 3000 points
 - shadow of boss not erased sometimes (erase optimization not working??)
 - double ship attaches left then displayed right???? around 2075
-- enemies definitely stop shooting after a few levels: check
-  sub at 0D66 is it called?
 - double buffering: don't double buffer last plane for tiles
+- double shot should optimize height
 - crash div 0 on statistics screen: c_puts_hitmiss_ratio_0A72
   when it works, 50.  ... => 0 % is too high on screen
   watch A0/A1, HL/DE after call: 0535
@@ -22,8 +22,7 @@
 - tiles on last row can have different CLUTs and cannot be handled by dynamic colors
   generate subset of tiles (only used in last row anyway) and try to match colors with
   sprites colors else not a problem we have a few 16-31 colors left from unused sprites (5 max)
-- optimize: blitter out of bounds on real speed at 25fps: why?? (turn off to test
-  game)
+
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
 - 2 first rows not shown (attribute/color is black!!!)
@@ -33,15 +32,18 @@
 - redraw bottom tiles all the time or maybe only if some sprite Y > some value
 - let the demo run, game ends up accessing uninitialized memory
 - missing/wrong sounds:
-  * boss hit (but not killed): 08CC sub
   * swarm sound (when)
   * all tunes
   * capture beam (with and without the ship): 227C
-  * flags at start of level: 1215 (record wav???)
-  * credit sound played when galaxian alien boss is hit: CREDIT_SND,         0x03 what is sound 3? record it?
   * extra life
   * last moths attack again when on bottom of screen, but no sound is played
   
+maybe already fixed:
+
+- enemies definitely stop shooting after a few levels: check
+  sub at 0D66 is it called?
+
+
 traj issues: Traj computed in subcpu D23 / D50 probe there!
 
 l_2ADA_done: all bugs arrived: phase 2 diving attacks!
