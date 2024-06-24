@@ -1484,8 +1484,8 @@ l_08CA_hit_green_boss:
 	addq.b	#1,d0                           	| [$08CA: inc  a]
 	move.b	d0,(a0)                         	| [$08CB: ld   (hl),a]
 	move.b	d0,b_9AA0+0x04                  	| [$08CC: ld   (b_9AA0 + 0x04),a] sound-fx count/enable registers, hit_green_boss
-	*move.w	#GREEN_BOSS_HIT,d0
-	*jbsr	osd_sound_start
+	move.w	#GREEN_BOSS_HIT_SND,d0
+	jbsr	osd_sound_start
 	subq.w	#1,a0                           	| [$08CF: dec  l]
 	jra	l_07B4_next_object                 		| [$08D0: jp   l_07B4_next_object]
 

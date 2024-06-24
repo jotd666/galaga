@@ -30,12 +30,15 @@
     .equ  BOSS_KILLED_SND,         0x0
     .equ  BEE_KILLED_SND,     0x01
     .equ  MOTH_KILLED_SND,         0x02
-    .equ  CREDIT_SND,         0x03
-    .equ  EXTRA_LIFE_SND,     0x04
+    .equ  GALAXIAN_KILLED_SND,    0x03
+    .equ  GREEN_BOSS_HIT_SND,     0x03
+    .equ  CREDIT_SND,         0x05
+    .equ  EXTRA_LIFE_SND,         0x06
     .equ  SHOT_SND,           0x9
 	.equ  CHALLENGING_STAGE_SND, 0xD
     .equ  MUTANT_SND,         0x12
     .equ  ATTACK_SND,         0x13
+    .equ  TICK_SND,           0x15
     .equ  EXPLOSION_SND,         0x19
 
     
