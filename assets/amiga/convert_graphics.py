@@ -99,11 +99,16 @@ NB_BOB_PLANES = 4
 
 DOUBLE_SHOT_CODE = 127
 
+SCORE_2000_CODE = 0x3C
+SCORE_3000_CODE = 0x3D
+
 def dump_asm_bytes(*args,**kwargs):
     bitplanelib.dump_asm_bytes(*args,**kwargs,mit_format=True)
 
 double_size_table = [False]*128
 double_size_table[DOUBLE_SHOT_CODE] = True
+double_size_table[SCORE_2000_CODE] = True
+double_size_table[SCORE_3000_CODE] = True
 
 sprite_config = dict()
 
@@ -191,8 +196,10 @@ add_sprite(0x37,"score_800",0xD)
 add_sprite(0x38,"score_1000",0xD)
 add_sprite(0x39,"score_1500",0xD)
 add_sprite(0x3A,"score_1600",0xE)
-add_sprite(0x3C,"score_2000",0xE) # double width
-add_sprite(0x3D,"score_3000",0xE) # double width
+
+
+add_sprite(SCORE_2000_CODE,"score_2000",0xE) # double width
+add_sprite(SCORE_3000_CODE,"score_3000",0xE) # double width
 for i in [0x20,0x24,0x28,0x2C]:
     add_sprite(i,"explosion",0xB,double_wh=True)
 for i in [0x44,0x48]:
@@ -530,6 +537,7 @@ if True:
                         # shot: generate an extra double image, but with a different code
                         # this is the only occurrence of double width but simple height
                         # and it's better to use only 1 blit for performance reasons
+
                         img_new = Image.new("RGB",(32,16))
                         pic = generate_16x16_image(cidx,block_dict["sprite"]["data"][k],sprconf)
 
@@ -549,7 +557,23 @@ if True:
                             scaled = ImageOps.scale(img_to_raw_dblshot,2,0)
                             scaled.save(os.path.join(dump_sprites_dir,f"bomb_{DOUBLE_SHOT_CODE}.png"))
 
+                    if k in [SCORE_2000_CODE,SCORE_3000_CODE]:
+                        # double score: generate an extra double image
 
+                        img_new = Image.new("RGB",(32,16))
+                        pic = generate_16x16_image(cidx,block_dict["sprite"]["data"][k],sprconf)
+                        pic2 = generate_16x16_image(cidx,block_dict["sprite"]["data"][k+2],sprconf)
+
+                        img_new.paste(pic2,(0,0))
+                        img_new.paste(pic,(16,0))
+
+                        img_to_raw = img_new
+                        y_start = 0
+
+
+                        if dump_sprites:
+                            scaled = ImageOps.scale(img_to_raw,2,0)
+                            scaled.save(os.path.join(dump_sprites_dir,f"score_{k:02x}.png"))
 
 
 

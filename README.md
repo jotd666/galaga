@@ -21,7 +21,8 @@ This is a transcode from the original arcade game Z80 to 68K assembly.
 #### CREDITS:
 
 - Jean-Francois Fabre (aka jotd): Z80 to 68k transcode, Amiga code and assets
-- Mark McDougall (aka tcdev): Neo Geo code and assets (conversion)
+- Glenn Neidermeier: Z80 reverse-engineering (https://github.com/neiderm/arcade)
+- Mark McDougall (aka tcdev): graphical assets (ROM extract)
 - no9: remade amiga tunes
 - phx: ptplayer sound/music replay Amiga code
 - blastar: NGFX SoundBuilder (Neo Geo sound tool)

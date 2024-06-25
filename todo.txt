@@ -1,8 +1,10 @@
 - red flashes (frame drop) even with very few sprites with cycle exact!!
   (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - default DSW are wrong
+- player score not displayed
 - implement level skip trainer
-- compose double sprites 2000 and 3000 points
+- compose double sprites 2000 and 3000 points: ok but height should be respecte so 32 wide blits could be generic
+  (explosions+2000/3000 scores)
 - shadow of boss not erased sometimes (erase optimization not working??): when changes only CLUT, not sprite code or X/Y!!
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
@@ -26,15 +28,16 @@
 
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
-- 2 first rows not shown (attribute/color is black!!!)
-- sprite priorities wrong: stars should be behind
+- top of screen bobs are not erased
+- 2 first rows colors: ??? white on real hardware
 - stars & colors trashed near the PAL wait region: copperlist conflict between sprite/color
+- stars glitching (when scrolling)
 - redraw bottom tiles all the time or maybe only if some sprite Y > some value
 - let the demo run, game ends up accessing uninitialized memory
 - missing/wrong sounds:
   * swarm sound (when)
   * all tunes
-  * capture beam (with and without the ship): 227C
+  * capture beam (with and without the ship): 227C: record game when only last bosses present
   * extra life
   * last moths attack again when on bottom of screen, but no sound is played
   
