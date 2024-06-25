@@ -21,7 +21,7 @@ CURRENT_SPRITE_SIZE = 2
 SPRITE_Y_CORRECTION = -8
 SPRITE_X_CORRECTION = 8
 
-BASE_BPLCON2_VALUE = 0x0024
+BASE_BPLCON2_VALUE = 0x0000   | sprites behind
 SCREEN_ADDRESS = 0x8000
 
 * dynamic color change + stars lifted from my previous Galaxian port
@@ -32,6 +32,7 @@ copper_stars_offset = 12
 copper_row_size = 32
 copper_8x8_row_size = copper_stars_offset+copper_row_size*8
 
+MAX_ROW_X = 31
 
 BORDERBLANK = 0
 SCORE_FILE_SIZE = 0xAA
@@ -930,7 +931,6 @@ sprite_toggle:
 	
 update_hardware_sprites:
 	lea		sfr_sprite_code_8B80,a0
-	*lea		sprconf_codes,a0		| mockup!!
 
 	* clear host sprites
 	moveq	#NB_HOST_SPRITES-1,d0
@@ -957,14 +957,14 @@ update_hardware_sprites:
 	bmi.b	2f
 
 	* code to check if sprite exists/is "assembled" (feature introduced moon patrol)
-	moveq	#0,d3
-	move.w	d2,d4
-	bclr	#7,d4
-	add.w	d4,d4
-	add.w	d4,d4
-	tst.l	(a4,d4.w)	| test pointer
-	bmi.b	2f			| assembled: skip
-	beq.b	2f			| not a sprite: skip
+*	moveq	#0,d3
+*	move.w	d2,d4
+*	bclr	#7,d4
+*	add.w	d4,d4
+*	add.w	d4,d4
+*	tst.l	(a4,d4.w)	| test pointer
+*	bmi.b	2f			| assembled: skip
+*	beq.b	2f			| not a sprite: skip
 	
 	bsr		compute_sprite_xy
 	tst		d0
@@ -972,6 +972,9 @@ update_hardware_sprites:
 	
 	.ifne	SPRITE_Y_CORRECTION
 	add.w	#SPRITE_Y_CORRECTION,d1
+	.endif
+	.ifne	SPRITE_X_CORRECTION
+	add.w	#SPRITE_X_CORRECTION,d0
 	.endif
 	
 	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d3
@@ -985,7 +988,7 @@ update_hardware_sprites:
 	* it HAS to succeed (in Pengo it did, here I'm less sure)
 	bsr		alloc_sprite
 2:
-	addq.w	#4,a0
+	addq.w	#CURRENT_SPRITE_SIZE,a0
 	dbf		d7,1b
 	
 	* all sprites are allocated: now display them
@@ -2441,7 +2444,7 @@ compute_tile_xy:
 update_bg_color:
 	and.w	#0x3F,d0	| mask up to 63
 	bsr		compute_tile_xy
-	cmp.w	#29,d7
+	cmp.w	#MAX_ROW_X,d7
 	bcc.b	0f				| above 28: ignore
 	cmp.w	#2,d7
 	bcs.b	0f				| below 2: ignore
@@ -2470,7 +2473,7 @@ update_bg_tile:
 	and.w	#0xFF,d0	| mask up to 255
 
 	bsr		compute_tile_xy
-	cmp.w	#30,d7
+	cmp.w	#MAX_ROW_X,d7
 	jcc	0f				| above 30: ignore
 	cmp.w	#2,d7
 	jcs	0f				| below 2: ignore

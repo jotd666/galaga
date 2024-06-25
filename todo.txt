@@ -1,4 +1,5 @@
-- ref flashes: don't display ship, see what happens!!
+- red flashes (frame drop) even with very few sprites with cycle exact!!
+  (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - default DSW are wrong
 - implement level skip trainer
 - compose double sprites 2000 and 3000 points
@@ -18,6 +19,7 @@
                  2 slots for captured ship (1 wasted)
 				 2 slots for background stars (1 wasted, maybe 2 spare colors will be useful)
 				 2 spare slots (maybe their 3 spare colors will be useful)
+- HW sprites seem not to work but is the code aligned with .py (orientations/flip/mirror) ?
 
 - tiles on last row can have different CLUTs and cannot be handled by dynamic colors
   generate subset of tiles (only used in last row anyway) and try to match colors with
@@ -26,7 +28,6 @@
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
 - 2 first rows not shown (attribute/color is black!!!)
-- stage 1 flag not drawn
 - sprite priorities wrong: stars should be behind
 - stars & colors trashed near the PAL wait region: copperlist conflict between sprite/color
 - redraw bottom tiles all the time or maybe only if some sprite Y > some value
