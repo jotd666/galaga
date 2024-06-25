@@ -3,8 +3,7 @@
 - default DSW are wrong
 - implement level skip trainer
 - compose double sprites 2000 and 3000 points
-- shadow of boss not erased sometimes (erase optimization not working??)
-- double ship attaches left then displayed right???? around 2075
+- shadow of boss not erased sometimes (erase optimization not working??): when changes only CLUT, not sprite code or X/Y!!
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
 - crash div 0 on statistics screen: c_puts_hitmiss_ratio_0A72

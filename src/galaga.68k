@@ -6195,76 +6195,77 @@ l_208F:
 
 * capture ship rejoined with active ship
 l_2097:
-	move.b	(a0),d0                         	| [ld   a,(hl)] e.g. HL==9301 sprite_posn
-	move.b	d0,(a1)                         	| [ld   (de),a] e.g. DE==9363 sprite_posn
+	move.b	(a0),d0                         	| [$2097: ld   a,(hl)] e.g. HL==9301 sprite_posn
+	move.b	d0,(a1)                         	| [$2098: ld   (de),a] e.g. DE==9363 sprite_posn
 	* recompute lsb offset (maybe not useful)
 	COMPUTE_LSB_A0_D6	ds_sprite_posn_9300
 	COMPUTE_LSB_A1_D4	ds_sprite_posn_9300
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
+	lea	ds_sprite_ctrl_9B00,a0              	| [$2099: ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
-	lea	ds_sprite_ctrl_9B00,a1                  | [ld   h,#>ds_sprite_ctrl_9B00]
-	add.w	d4,a1              	                | [ld   d,h]
-	move.b	(a0),d0                         	| [ld   a,(hl)] e.g. HL==9B01.. ctrl_2:bit0==enable and ctrl2_bit7==sx_bit8
-	move.b	d0,(a1)                         	| [ld   (de),a]
-	subq.w	#1,a0                           	| [dec  l]
+	lea	ds_sprite_ctrl_9B00,a1                  | [$2099: ld   h,#>ds_sprite_ctrl_9B00]
+	add.w	d4,a1              	                | [$209B: ld   d,h]
+	move.b	(a0),d0                         	| [$209C: ld   a,(hl)] e.g. HL==9B01.. ctrl_2:bit0==enable and ctrl2_bit7==sx_bit8
+	move.b	d0,(a1)                         	| [$209D: ld   (de),a]
+	subq.w	#1,a0                           	| [$209E: dec  l]
 
 	COMPUTE_LSB_A0_D6	ds_sprite_ctrl_9B00
-	lea	b_8800,a0                      	        | [ld   h,#>b_8800]
+	lea	b_8800,a0                      	        | [$209F: ld   h,#>b_8800]
 	add.w	d6,a0
-	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] set captured ship object state inactive
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
+	move.b	#0x80,(a0)                      	| [$20A1: ld   (hl),#0x80] set captured ship object state inactive
+	lea	ds_sprite_code_8B00,a0              	| [$20A3: ld   h,#>ds_sprite_code_8B00]
 	COMPUTE_LSB_A1_D4	ds_sprite_ctrl_9B00
-	move.b	d4,d6                           	| [ld   l,e]
-	subq.w	#1,d6                           	| [dec  l] [a0 coherence]
+	move.b	d4,d6                           	| [$20A5: ld   l,e]
+	subq.w	#1,d6                           	| [$20A6: dec  l] [a0 coherence]
 	add.w	d6,a0
 
-	move.b	#6,(a0)+                         	| [ld   (hl),#6] sprite code 6
-	move.b	#9,(a0)+                         	| [ld   (hl),#9] color map 9 for white ship
-	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	move.b	#6,(a0)                         	| [$20A7: ld   (hl),#6] sprite code 6
+	                                            | [$20A9: inc	l]
+	move.b	#9,(1,a0)                         	| [$20AA: ld   (hl),#9] color map 9 for white ship
+	                                            | [$20AC: dec	l]
+	lea	ds_sprite_posn_9300,a0              	| [$20AD: ld   h,#>ds_sprite_posn_9300]
 	add.w	d6,a0
-	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] put in center
-	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,ds_cpu0_task_actv_9000+0x14      | [ld   (ds_cpu0_task_actv_9000 + 0x14),a] 1 (f_rts_0827 ... empty task)
-	move.b	d0,ds_cpu0_task_actv_9000+0x15      | [ld   (ds_cpu0_task_actv_9000 + 0x15),a] 1 (f_read_fire_button_1f04 ...fire button input))
-	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 1 (cpu1:f_05EE .. Manage ship collision detection)
-	move.b	d0,ds_99B9_star_ctrl+0x00       	| [ld   (ds_99B9_star_ctrl + 0x00),a] 1 (when ship on screen
+	move.b	#0x80,(a0)                      	| [$20AF: ld   (hl),#0x80] put in center
+	move.b	#1,d0                           	| [$20B1: ld   a,#1]
+	move.b	d0,ds_cpu0_task_actv_9000+0x14      | [$20B3: ld   (ds_cpu0_task_actv_9000 + 0x14),a] 1 (f_rts_0827 ... empty task)
+	move.b	d0,ds_cpu0_task_actv_9000+0x15      | [$20B6: ld   (ds_cpu0_task_actv_9000 + 0x15),a] 1 (f_read_fire_button_1f04 ...fire button input))
+	move.b	d0,ds_cpu1_task_actv+0x05       	| [$20B9: ld   (ds_cpu1_task_actv + 0x05),a] 1 (cpu1:f_05EE .. Manage ship collision detection)
+	move.b	d0,ds_99B9_star_ctrl+0x00       	| [$20BC: ld   (ds_99B9_star_ctrl + 0x00),a] 1 (when ship on screen
 * capture ship rejoined with active ship
 l_20BF:
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x1D      | [ld   (ds_cpu0_task_actv_9000 + 0x1D),a] 0 ... this task
-	move.b	d0,b_9AA0+0x11                  	| [ld   (b_9AA0 + 0x11),a] 0 ... sound-fx count/enable registers, stop "rescued ship" music
+	clr.b	d0                               	| [$20BF: xor  a]
+	move.b	d0,ds_cpu0_task_actv_9000+0x1D      | [$20C0: ld   (ds_cpu0_task_actv_9000 + 0x1D),a] 0 ... this task
+	move.b	d0,b_9AA0+0x11                  	| [$20C3: ld   (b_9AA0 + 0x11),a] 0 ... sound-fx count/enable registers, stop "rescued ship" music
 	jbsr	osd_sound_stop
-	rts                                    	    | [ret]
+	rts                                    	    | [$20C6: ret]
 
-l_20C7:                                           | *( ds5_928A_captr_status + 0x01 ) == 0
-	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 1
-	move.b	#2,d0                           	| [ld   a,#2]
-	move.b	d0,ds4_game_tmrs_92ac+1             | [ld   (ds4_game_tmrs_92ac + 1),a] 2
-	rts                                    	    | [ret]
+l_20C7:                                         | *( ds5_928A_captr_status + 0x01 ) == 0
+	addq.b	#1,d0                           	| [$20C7: inc  a]
+	move.b	d0,ds5_928A_captr_status+0x01   	| [$20C8: ld   (ds5_928A_captr_status + 0x01),a] 1
+	move.b	#2,d0                           	| [$20CB: ld   a,#2]
+	move.b	d0,ds4_game_tmrs_92ac+1             | [$20CD: ld   (ds4_game_tmrs_92ac + 1),a] 2
+	rts                                    	    | [$20D0: ret]
 
 l_20D1_update_ship_spin:
 	COMPUTE_LSB_A0_D6	b_8800
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] base address for c_2188
+	lea	ds_sprite_ctrl_9B00,a0              	| [$20D1: ld   h,#>ds_sprite_ctrl_9B00] base address for c_2188
 	add.w	d6,a0
-	move.b	ds4_game_tmrs_92ac+1,d0             | [ld   a,(ds4_game_tmrs_92ac + 1)]
-	move.b	d0,d4                           	| [ld   e,a]
-	move.b	b_bugs_flying_nbr_9287,d0           | [ld   a,(b_bugs_flying_nbr_9287)]
-	or.b	d4,d0                             	| [or   e]
-	move.b	d0,ds5_928A_captr_status+0x03   	| [ld   (ds5_928A_captr_status + 0x03),a]
-	jbsr	c_2188_ship_spin                  	| [call c_2188_ship_spin] Base address in HL, retval in B
-	subq.b	#1,d1                           	| [dec  b] what's in B?
+	move.b	ds4_game_tmrs_92ac+1,d0             | [$20D3: ld   a,(ds4_game_tmrs_92ac + 1)]
+	move.b	d0,d4                           	| [$20D6: ld   e,a]
+	move.b	b_bugs_flying_nbr_9287,d0           | [$20D7: ld   a,(b_bugs_flying_nbr_9287)]
+	or.b	d4,d0                             	| [$20DA: or   e]
+	move.b	d0,ds5_928A_captr_status+0x03   	| [$20DB: ld   (ds5_928A_captr_status + 0x03),a]
+	jbsr	c_2188_ship_spin                  	| [$20DE: call c_2188_ship_spin] Base address in HL, retval in B
+	subq.b	#1,d1                           	| [$20E1: dec  b] what's in B?
 	beq.b	0f                               	| [...]
-	rts                                    	    | [ret  nz] [...]
+	rts                                    	    | [$20E2: ret  nz] [...]
 0:
 * rescued ship stopped spinning ... begin "landing"
-	move.b	d0,ds_cpu0_task_actv_9000+0x14      | [ld   (ds_cpu0_task_actv_9000 + 0x14),a] 0 (f_rts_0827)
-	move.b	d0,ds_cpu0_task_actv_9000+0x15      | [ld   (ds_cpu0_task_actv_9000 + 0x15),a] 0 (f_read_fire_button_1f04 ...fire button input))
-	move.b	d0,ds_cpu1_task_actv+0x05       	| [ld   (ds_cpu1_task_actv + 0x05),a] 0 (cpu1:f_05EE)
-	move.b	#2,d0                           	| [ld   a,#2]
-	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 2
-	rts                                    	    | [ret]
+	move.b	d0,ds_cpu0_task_actv_9000+0x14      | [$20E3: ld   (ds_cpu0_task_actv_9000 + 0x14),a] 0 (f_rts_0827)
+	move.b	d0,ds_cpu0_task_actv_9000+0x15      | [$20E6: ld   (ds_cpu0_task_actv_9000 + 0x15),a] 0 (f_read_fire_button_1f04 ...fire button input))
+	move.b	d0,ds_cpu1_task_actv+0x05       	| [$20E9: ld   (ds_cpu1_task_actv + 0x05),a] 0 (cpu1:f_05EE)
+	move.b	#2,d0                           	| [$20EC: ld   a,#2]
+	move.b	d0,ds5_928A_captr_status+0x01   	| [$20EE: ld   (ds5_928A_captr_status + 0x01),a] 2
+	rts                                    	    | [$20F1: ret]
 * end 2000?
 
 *=============================================================================
