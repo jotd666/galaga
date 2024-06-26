@@ -1535,18 +1535,18 @@ c_08BE:
 * of creatures is 40, the selected byte would be at $0929, so d_0909 and
 * d_0929 should be one contiguous table.
 	asl.b	#1,d0                            	| [sla  a]
-	jbsr	add_2_times_d0_to_a0_0008                	| [rst  0x08] HL += 2A
-	movem.w	d5/d6,-(a7)                              	| [ex   de,hl]
+	jbsr	add_2_times_d0_to_a0_0008           | [rst  0x08] HL += 2A
+	movem.w	d5/d6,-(a7)                         | [ex   de,hl]
 	move.b	d2,d5                           	| [ld   h,c]
 	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
 	jbsr	c_divmod                          	| [call c_divmod] HL=HL/10
 	move.b	d5,d3
-	movem.w	(a7)+,d5/d6                              	| [ex   de,hl] 8-bit quotient into d ...
+	movem.w	(a7)+,d5/d6                         | [ex   de,hl] 8-bit quotient into d ...
 	move.b	d3,d0                           	| [ld   a,d] ... quotient into a
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
+	jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A
 
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 *=============================================================================
 * sets of 3 bytes indexed by stage parameters 2 and 3 (max value 9)
@@ -2013,6 +2013,16 @@ c_0A6E:
 	                      	| [jp   rst_DEminus20] it will 'ret' from the jp.
 * end 0a53
 
+* aux function to exchange registers with stack contents
+exg_sp_d5d6:
+	movem.w	d3/d4,-(a7)
+	movem.w	(8,a7),d3/d4	| return address + D3/D4: 8 bytes to skip
+	movem.w	d5/d6,(8,a7)
+	move.w	d3,d5
+	move.w	d4,d6
+	movem.w	(A7)+,d3/d4
+	rts
+
 *=============================================================================
 * hit_ratio()
 *  Description:
@@ -2024,10 +2034,10 @@ c_0A6E:
 *-----------------------------------------------------------------------------
 c_puts_hitmiss_ratio_0A72:
 
-	MOVE_TO_REG	ds_plyr_actv+_w_hit_ct,d6   	| [ld   hl,(ds_plyr_actv +_w_hit_ct)]
+	MOVE_TO_REG	ds_plyr_actv+_w_hit_ct,d5   | [ld   hl,(ds_plyr_actv +_w_hit_ct)]
 
 * if ( shots fired  == 0 )
-	MOVE_TO_REG	ds_plyr_actv+_w_shot_ct,d3  	| [ld   de,(ds_plyr_actv +_w_shot_ct)]
+	MOVE_TO_REG	ds_plyr_actv+_w_shot_ct,d3  | [ld   de,(ds_plyr_actv +_w_shot_ct)]
 											| [ld   a,d]
 											| [or   e]
 	jne	l_0A82                             	| [jr   nz,l_0A82]
@@ -2041,27 +2051,19 @@ l_0A82_while:
 * while !(0x80 & d) && !(0x80 & h) de <<= 1, hl <<= 1
 	btst.b	#15,d3                          | [bit  7,d]
 	jne	l_0A90                             	| [jr   nz,l_0A90]
-	btst.b	#15,d6                          | [bit  7,h]
+	btst.b	#15,d5                          | [bit  7,h]
 	jne	l_0A90                             	| [jr   nz,l_0A90]
-	add.w	d6,d6                           | [add  hl,hl]
-	exg	d3,d6                              	| [ex   de,hl]
-	add.w	d6,d6                           | [add  hl,hl]
-	exg	d3,d6                              	| [ex   de,hl]
+	add.w	d5,d5                           | [add  hl,hl]
+	exg	d3,d5                              	| [ex   de,hl]
+	add.w	d5,d5                           | [add  hl,hl]
+	exg	d3,d5                              	| [ex   de,hl]
 	jra	l_0A82_while                       	| [jr   l_0A82_while]
 
-* aux function to exchange registers with stack contents
-exg_sp_d5d6:
-	movem.w	d3/d4,-(a7)
-	movem.w	(8,a7),d3/d4	| return address + D3/D4: 8 bytes to skip
-	movem.w	d5/d6,(8,a7)
-	move.w	d3,d5
-	move.w	d4,d6
-	movem.w	(A7)+,d3/d4
-	rts
 	
 * do the actual division with resultant quotient scaled up by factor of 0x0100 to keep precision
 l_0A90:
 * HL = hl_adjusted_hits / (de_adjusted_shots / 0x0100)
+	LOAD_D5D6_FROM_D5_16
 	move.b	d3,d0                           	| [ld   a,d] divisor in A
 	jbsr	c_divmod                          	| [call c_divmod] HL=HL/A (preserves DE)
 	movem.w D5/D6,-(sp)                        	| [push hl]

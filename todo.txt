@@ -5,6 +5,7 @@
 - implement level skip trainer
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
+- when shooting captured ship, clut missing
 - crash div 0 on statistics screen: c_puts_hitmiss_ratio_0A72
   when it works, 50.  ... => 0 % is too high on screen
   watch A0/A1, HL/DE after call: 0535
