@@ -15,8 +15,6 @@ AttnFlags = 0x128
 AFB_68010 = 0
 AFB_68020 = 1
 NO68020 = 1
-PREVIOUS_SPRITE_SIZE = 10
-CURRENT_SPRITE_SIZE = 2
 
 SPRITE_Y_CORRECTION = -8
 SPRITE_X_CORRECTION = 8
@@ -45,12 +43,16 @@ SCORE_FILE_SIZE = 0xAA
 
 SPRITE_BLOCK_OFFSET = 256			| len of each sprite info table times 2
 
+PREVIOUS_SPRITE_SIZE = 12
+CURRENT_SPRITE_SIZE = 2
+
 PREVIOUS_SPRITE_X = 0
 PREVIOUS_SPRITE_Y = 2
 PREVIOUS_Y_START = 4
 PREVIOUS_SPRITE_HEIGHT = 6
 PREVIOUS_ACTIVE_BITPLANE_MASK = 8   | for optimized bitplane erase
 PREVIOUS_SPRITE_CODE = 9
+PREVIOUS_SPRITE_COLOR = 10
 
 TARGET_SPRITE_X_1 = 1+SPRITE_BLOCK_OFFSET
 TARGET_SPRITE_X_2 = 1+SPRITE_BLOCK_OFFSET*2
@@ -1185,7 +1187,6 @@ update_bobs:
 	
 	move.l		bob_previous_drawed_sprites(pc),a4
 	lea		sfr_sprite_code_8B80,a3
-	*lea		sprconf_codes,a3		| mockup!!
 	move.l	a3,a0
 	* clear previous positions
 	moveq	#NB_TARGET_SPRITES-1,d7
@@ -1211,8 +1212,14 @@ update_bobs:
 	move.b	(TARGET_SPRITE_CODE,a0),d0
 	and.b	#0x7F,d0
 	cmp.b	d0,d2
-	beq.b	11f			| same X,Y and code: skip erase 
-	* (we'll see if we need attribute and flip shit, unlikely...)
+	bne.b	12f			| different code: do erase
+	* last check: previous vs current color. This happens when a boss is hit
+	* if we skip erase at this point, the old boss shadow remains
+	move.b	(PREVIOUS_SPRITE_COLOR,a4),d2
+	move.b	(TARGET_SPRITE_COLOR,a0),d0
+	and.b	#0x3F,d0
+	cmp.b	d0,d2
+	beq.b	11f			| same X,Y,code and color: skip erase
 12:
 	move.w	(PREVIOUS_SPRITE_X,a4),d0	
 	move.w	(PREVIOUS_SPRITE_Y,a4),d1
@@ -1279,10 +1286,12 @@ update_bobs:
 	moveq	#0,d3
 	move.b	(TARGET_SPRITE_COLOR,a0),d3
 	and.b	#0x3F,d3	| discard high bits
-
 	tst	(a2,d2.w)
 	jne	211f			| hardware sprite: skip
-	
+
+	* save previous sprite color too
+	move.b	d3,(PREVIOUS_SPRITE_COLOR,a6)
+
 	cmp.b	#0x30,d2
 	jne		0f
 	btst	#3,d4

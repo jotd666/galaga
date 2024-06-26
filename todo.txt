@@ -3,7 +3,6 @@
 - default DSW are wrong
 - player score not displayed
 - implement level skip trainer
-- shadow of boss not erased sometimes (erase optimization not working??): when changes only CLUT, not sprite code or X/Y!!
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
 - crash div 0 on statistics screen: c_puts_hitmiss_ratio_0A72
@@ -35,7 +34,7 @@
 - missing/wrong sounds:
   * swarm sound (when)
   * all tunes
-  * capture beam (with and without the ship): 227C: record game when only last bosses present
+  * capture beam (with and without the ship): 227C: wrong, fix it
   * extra life
   * last moths attack again when on bottom of screen, but no sound is played
   
