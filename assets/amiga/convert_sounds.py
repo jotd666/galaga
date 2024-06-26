@@ -33,14 +33,16 @@ sound_dict = {
 "BEE_KILLED_SND"               :{"index":1,"channel":3,"sample_rate":hq_sample_rate,"priority":1},
 "MOTH_KILLED_SND"               :{"index":2,"channel":2,"sample_rate":hq_sample_rate,"priority":1},
 "GALAXIAN_KILLED_SND"        :{"index":3,"channel":2,"sample_rate":hq_sample_rate,"priority":1},
-"CREDIT_SND"               :{"index":5,"channel":0,"sample_rate":hq_sample_rate},
-"EXTRA_LIFE_SND"       :{"index":6,"channel":3,"sample_rate":hq_sample_rate},
+"CAPTURE_DOWN_SND"               :{"index":5,"channel":3,"sample_rate":hq_sample_rate,"priority":10},
+"CAPTURE_UP_SND"               :{"index":6,"channel":3,"sample_rate":hq_sample_rate,"priority":10},
 "SHOT_SND"               :{"index":0x9,"channel":1,"sample_rate":hq_sample_rate,"priority":10},
 "CHALLENGING_STAGE_SND"    :{"index":0xD,"channel":0,"sample_rate":hq_sample_rate},
 "MUTANT_SND"               :{"index":0x12,"channel":2,"sample_rate":hq_sample_rate},
 "ATTACK_SND"               :{"index":0x13,"channel":3,"sample_rate":hq_sample_rate},
 "TICK_SND"               :{"index":0x15,"channel":2,"sample_rate":hq_sample_rate,"priority":1},
 "EXPLOSION_SND"            :{"index":0x19,"channel":0,"sample_rate":hq_sample_rate},
+"CREDIT_SND"               :{"index":0X1A,"channel":0,"sample_rate":hq_sample_rate},
+"EXTRA_LIFE_SND"       :{"index":0x1B,"channel":3,"sample_rate":hq_sample_rate},
 
 }
 

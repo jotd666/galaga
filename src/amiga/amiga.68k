@@ -857,7 +857,7 @@ _vblank:
 	tst.b	half_fps
 	beq.b	0f			| 50Hz update!
 	eor.b	#1,flip_flop
-	beq.b	1f
+	bne.b	1f
 0:
 	jbsr	really_update_sprites
 
@@ -871,13 +871,21 @@ _vblank:
 	move.w	_custom+intreqr,d0
 	btst	#4,d0
 	beq.b	3f		| clear: ok
+	tst.b	half_fps
+	beq.b	24f		| cannot cope with 50 fps
+	tst.b	flip_flop
+	beq.b	25f
+24:
 	* copper interrupt has been called, which means that
 	* rendering was so slow that we couldn't cope within a frame
 	* skip a tick and ack again, we lose one update frame
+	* and it happened when no rendering was requested
+	* (else it's expected that it happens as 50 fps is too much)
 	st.b	skip_screen_update
 	.ifndef	RELEASE
-	move.w	#0xF00,0xDFF180
+	move.w	#0xF00,_custom+color
 	.endif
+25:
 	move.w	#0x10,_custom+intreq
 3:
     movem.l (a7)+,d0-d7/a0-a6
@@ -1345,25 +1353,19 @@ update_bobs:
 	move.w	d7,-(a7)
 
 	* normal or double w/h?
+	move.w	(a0),d3	| height
+	move.w	d3,(PREVIOUS_SPRITE_HEIGHT,a6)
 	lea		double_size_flag_table,a5
 	tst.b	(a5,d2.w)
 	beq.b	16f
 	* some explosions are double width/height
 	moveq	#0,d2	| no y-clip
-	move.w	#16,d3	| height = 16 if double shot
-	cmp.b	#DOUBLE_SHOT_CODE,(PREVIOUS_SPRITE_CODE,a6)
-	beq.b	0f
-	move.w	#32,d3	| height = 32
-0:
 	clr.w	(PREVIOUS_Y_START,a6)
-	move.w	d3,(PREVIOUS_SPRITE_HEIGHT,a6)
 	lea		blit_planes_cookie_cut_32x(pc),a4
 	bra.b	17f
 16:
-	move.w	(a0),d3	| height
 	add.w	(2,a0),d1	| add Y offset
 	move.w	(2,a0),(PREVIOUS_Y_START,a6)
-	move.w	d3,(PREVIOUS_SPRITE_HEIGHT,a6)
 	
 	moveq	#0,d2	| no y-clip
 	lea		blit_planes_cookie_cut_16x(pc),a4

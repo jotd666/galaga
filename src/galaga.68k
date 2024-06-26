@@ -5014,7 +5014,7 @@ j_1CAE:
 	move.b	(a0)+,(a1)+                         | [ld   a,(hl)]
 	                         	                | [ld   (de),a] plyr_actv._bonus_codescore[E] = d_1CFD[2*A]
 	                           	                | [inc  hl]
-	add.q	#1,d4              	                | [inc  e]  [a1 coherence] (not sure if required)
+	addq.b	#1,d4              	                | [inc  e]  [a1 coherence] (not sure if required)
 	move.b	(a0),(a1)                         	| [ld   a,(hl)]
 	                         	                | [ld   (de),a]
 
@@ -5190,9 +5190,9 @@ f_move_swarm_when_player_changes_1d32:
 	eor.b	d2,d0                            	| [xor  c]
 	ror.b	#1,d0                            	| [rrca]
 
-	jcs	l_1D4B                             	| [jr   c,l_1D4B]
-	move.b	#1,d0                           	| [ld   a,#1] offset is +1
-	neg.b	d0                               	| [neg] offset is -1
+	jcs	l_1D4B                             	    | [jr   c,l_1D4B]
+	move.b	#-1,d0                           	| [ld   a,#1] offset is +1
+	                               	            | [neg] offset is -1
 	jra		0f
 l_1D4B:
 	move.b	#1,d0                           	| [ld   a,#1] offset is +1
@@ -5207,9 +5207,9 @@ l_1D51:
 	move.b	d0,(a0)+                         	| [ld   (hl),a] _sprite_coords[ n ] ... LSB
 	roxr.b	#1,d0                           	| [rra]
 	eor.b	d2,d0                            	| [xor  c]
-	                           	| [inc  l]
+	                           	                | [inc  l]
 	rol.b	#1,d0                            	| [rlca]
-	jcc	l_1D5E                             	| [jr   nc,l_1D5E]
+	jcc	l_1D5E                             	    | [jr   nc,l_1D5E]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	eor.b	#0x01,d0                         	| [xor  #0x01]
 	move.b	d0,(a0)                         	| [ld   (hl),a] add carry (if any) into MSB
@@ -6626,8 +6626,8 @@ l_226A:
 	jne	l_22AB                             	    | [$2275: jr   nz,l_22AB]
 * else
 	move.b	d0,b_9AA0+0x05                  	| [$227C: ld   (b_9AA0 + 0x05),a] sound-fx count/enable registers, trigger capture beam sound
-	*move.w	#XXXX_SND,d0
-	*jbsr	osd_sound_start
+	move.w	#CAPTURE_DOWN_SND,d0
+	jbsr	osd_sound_start
 	move.b	ds_plyr_actv+_b_cboss_slot,d0   	| [$227F: ld   a,(ds_plyr_actv +_b_cboss_slot)] bug_flite_que[ plyr.cboss_slot ].b0D = $FF
 	add.b	#0x0D,d0                         	| [$2282: add  a,#0x0D]
 	move.b	d0,d4                           	| [$2284: ld   e,a]
@@ -6703,8 +6703,8 @@ l_22D2:
 l_22E3:
 	clr.b	d0                               	| [$22E3: xor  a]
 	move.b	d0,ds_cpu0_task_actv_9000+0x18      | [$22E4: ld   (ds_cpu0_task_actv_9000 + 0x18),a] 0 (disable f_boss_starts_tractor_beam_2222 ... this one)
-	move.b	d0,b_9AA0+0x05                  	| [$22E7: ld   (b_9AA0 + 0x05),a] 0 ... sound-fx count/enable registers, capture beam sound active uno
-	move.b	d0,b_9AA0+0x06                  	| [$22EA: ld   (b_9AA0 + 0x06),a] 0 ... sound-fx count/enable registers, capture beam sound active deux
+	                                         	| [$22E7: ld   (b_9AA0 + 0x05),a] 0 ... sound-fx count/enable registers, capture beam sound active uno
+	                                         	| [$22EA: ld   (b_9AA0 + 0x06),a] 0 ... sound-fx count/enable registers, capture beam sound active deux
 	                               	            | [$22ED: and  a]
 	move.b	ds_plyr_actv+_b_cboss_slot,d0   	| [$22F0: ld   a,(ds_plyr_actv +_b_cboss_slot)] bug_flite_que[ plyr.cboss_slot + $nn ] ... nn -> b0D or b08
 	tst.b	ds_9200_glbls+0x0D           	    | [$22F1: ld   a,(ds_9200_glbls + 0x0D)] if 1, boss has connected with ship and firepower disabled
@@ -6801,10 +6801,13 @@ l_236D:
 	clr.b	d0                               	| [$236D: xor  a]
 	move.b	d0,ds_cpu0_task_actv_9000+0x14      | [$236E: ld   (ds_cpu0_task_actv_9000 + 0x14),a] 0: f_controller_io_and_ship_movement_1f85... control stick input
 	move.b	d0,b_9AA0+0x05                  	| [$2371: ld   (b_9AA0 + 0x05),a] 0: sound-fx count/enable registers, capture beam sound active uno
+	* stop capture beam sound
 	move.b	d0,ds_cpu1_task_actv+0x05       	| [$2374: ld   (ds_cpu1_task_actv + 0x05),a] 0 ... cpu1:f_05EE
 	move.b	d0,ds_9200_glbls+0x13           	| [$2377: ld   (ds_9200_glbls + 0x13),a] 0
 	addq.b	#1,d0                           	| [$237A: inc  a]
 	move.b	d0,ds_cpu0_task_actv_9000+0x1C      | [$237B: ld   (ds_cpu0_task_actv_9000 + 0x1C),a] 1: f_tractor_beam_captures_ship_20f2 ... tractor beam captures
+	move.w	#CAPTURE_UP_SND,d0
+	jbsr	osd_sound_start
 	move.b	d0,b_9AA0+0x06                  	| [$237E: ld   (b_9AA0 + 0x06),a] 1 ... sound-fx count/enable registers, tractor beam
 	move.b	d0,ds_99B9_star_ctrl+0x01       	| [$2381: ld   (ds_99B9_star_ctrl + 0x01),a] 1
 	move.b	#0x0A,d0                        	| [$2384: ld   a,#0x0A]
@@ -8421,7 +8424,7 @@ l_3073:
 
 	lea	s_327F_enter_your_initials,a0  	| [ld   hl,#s_327F_enter_your_initials]
 	jbsr	c_text_out_ce_3328                     	| [call c_text_out_ce_3328] "ENTER YOUR INITIALS !"
-	jbsr	c_text_out                        	| [call c_text_out] "SCORE  NAME"          HL==3298
+	jbsr	c_text_out_331b                        	| [call c_text_out_331b] "SCORE  NAME"          HL==3298
 	jbsr	c_text_out_ce_3328                     	| [call c_text_out_ce_3328] "TOP 5"                HL==32AB
 
 	lea	0x8000+0x0300+0x09,a1      	| [ld   de,#0x8000 + 0x0300 + 0x09]
@@ -8887,7 +8890,7 @@ c_mach_hiscore_show_3214:
 *-----------------------------------------------------------------------------
 c_puts_top5scores_321d:
 	lea	s_32B4_score_name,a0           			| [ld   hl,#s_32B4_score_name]
-	jbsr	c_text_out                        	| [call c_text_out] puts 'SCORE     NAME' below 'TOP 5'
+	jbsr	c_text_out_331b                        	| [call c_text_out_331b] puts 'SCORE     NAME' below 'TOP 5'
 	move.b	#1,d1                           	| [ld   b,#1] starting index for c_3231
 	jbsr	c_3231                            	| [call c_3231] '1ST............'
 	jbsr	c_3231                            	| [call c_3231] '2ND............'
@@ -9140,7 +9143,7 @@ l_3315:
 	rts                                    	| [ret]
 
 *=============================================================================
-* c_text_out()
+* c_text_out_331b()
 *  Description:
 *  Text out, color attribute not encoded. Text blocks are length-encoded.
 * IN:
@@ -9148,26 +9151,28 @@ l_3315:
 * OUT:
 *  HL=start address at next string
 *-----------------------------------------------------------------------------
-c_text_out:
+c_text_out_331b:
 * destination address
-	move.l	(a0)+,d7                         	| [ld   e,(hl)] LSB
-	                           	| [inc  hl]
-	                         	| [ld   d,(hl)] MSB
-	                           	| [inc  hl]
+	moveq	#0,d7
+	move.b	(2,a0),d7
+	rol.w	#8,d7
+	move.b	(3,a0),d7                         	| [$331B: ld   e,(hl)] LSB
+	addq.w	#4,a0                               | [$331C: inc  hl]
+	                         	                | [$331D: ld   d,(hl)] MSB
+	                                            | [$331E: inc  hl]
 								
 * byte count of string
-	move.b	(a0)+,d1                         	| [ld   b,(hl)]
-	                           	| [inc  hl]
+	move.b	(a0)+,d1                         	| [$331F: ld   b,(hl)]
+	                           	                | [$3320: inc  hl]
 
 l_3321:
-	move.b	(a0)+,d0                         	| [ld   a,(hl)] character code
-	jbsr	osd_w_videoram                         	| [ld   (de),a] putc
-	                           	| [inc  hl] src++
-	sub.w	#0x20,d7                            	| [rst  0x20] DE-=$20
+	move.b	(a0)+,d0                         	| [$3321: ld   a,(hl)] character code
+	jbsr	osd_w_videoram                      | [$3322: ld   (de),a] putc
+	                           	                | [$3323: inc  hl] src++
+	sub.w	#0x20,d7                            | [$3324: rst  0x20] DE-=$20
 	subq.b	#1,d1                           	| [...]
-	jne	l_3321                             	| [djnz l_3321]
-
-	rts                                    	| [ret]
+	jne	l_3321                             	    | [$3325: djnz l_3321]
+	rts                                    	    | [$3327: ret]
 
 *=============================================================================
 * c_text_out_ce_3328()
@@ -9180,34 +9185,35 @@ l_3321:
 *  ...
 *-----------------------------------------------------------------------------
 c_text_out_ce_3328:
-	move.b	(a0),d4                         	| [ld   e,(hl)] LSB
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	(a0),d3                         	| [ld   d,(hl)] MSB
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	(a0),d1                         	| [ld   b,(hl)] strlen
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	(a0),d2                         	| [ld   c,(hl)] color
-	addq.w	#1,a0                           	| [inc  hl]
-	exg	a1,a0                              	| [ex   de,hl]
+	move.b	(a0)+,d4                         	| [$3328: ld   e,(hl)] LSB
+	                           	                | [$3329: inc  hl]
+	move.b	(a0)+,d3                         	| [$332A: ld   d,(hl)] MSB
+	                           	                | [$332B: inc  hl]
+	move.b	(a0)+,d1                         	| [$332C: ld   b,(hl)] strlen
+	                           	                | [$332D: inc  hl]
+	move.b	(a0)+,d2                         	| [$332E: ld   c,(hl)] color
+	                           	                | [$332F: inc  hl]
+	LOAD_D3_16_FROM_D3D4
+	exg	d3,d7                              	    | [$3330: ex   de,hl]
 l_3331:
-	move.b	(a1),d0                         	| [ld   a,(de)] data address
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	bset.b	#2,d5                           	| [set  2,h] dest+=$0400 (tile color regs)
-	move.b	d2,(a0)                         	| [ld   (hl),c]
-	bclr.b	#2,d5                           	| [res  2,h]
-	addq.w	#1,a1                           	| [inc  de]
-	move.b	#-0x20,d0                       	| [ld   a,#-0x20]
-	subq.b	#1,d5                           	| [dec  h]
-	add.b	d6,d0                            	| [add  a,l]
-	jcc	l_3340                             	| [jr   nc,l_3340]
-	addq.b	#1,d5                           	| [inc  h]
+	move.b	(a0)+,d0                         	| [$3331: ld   a,(de)] data address
+	jbsr	osd_w_videoram                     	| [$3332: ld   (hl),a]
+	bset.b	#2,d7                           	| [$3333: set  2,h] dest+=$0400 (tile color regs)
+	move.b	d2,d0                         	    | [$3335: ld   (hl),c]
+	jbsr	osd_w_colorram
+	bclr.b	#2,d7                           	| [$3336: res  2,h]
+	                                        	| [$3338: inc  de]
+	move.b	#-0x20,d0                       	| [$3339: ld   a,#-0x20]
+	subq.b	#1,d7                           	| [$333B: dec  h]
+	add.b	d7,d0                            	| [$333C: add  a,l]
+	jcc	l_3340                             	    | [$333D: jr   nc,l_3340]
+	addq.b	#1,d7                           	| [$333F: inc  h]
 l_3340:
-	move.b	d0,d6                           	| [ld   l,a]
+	move.b	d0,d7                           	| [$3340: ld   l,a]
 	subq.b	#1,d1                           	| [...]
-	jne	l_3331                             	| [djnz l_3331]
-
-	exg	a1,a0                              	| [ex   de,hl]
-	rts                                    	| [ret]
+	jne	l_3331                             	    | [$3341: djnz l_3331]
+	exg	d3,d7                              	    | [$3343: ex   de,hl]
+	rts                                    	    | [$3344: ret]
 
 *=============================================================================
 * strings for mach_hiscore_show
@@ -9237,7 +9243,7 @@ str_3345:
 *-----------------------------------------------------------------------------
 jp_RAM_test:
 	lea	str_3B7E(pc),a0                    	| [ld   hl,#str_3B7E] load start address of src string "RAM  OK"
-	jbsr	c_text_out                        	| [call c_text_out] display "RAM  OK"
+	jbsr	c_text_out_331b                        	| [call c_text_out_331b] display "RAM  OK"
 
 											| [ld   (_sfr_watchdog),a]
 											| [call c_svc_clr_snd_regs] $9AA0, $40 bytes
@@ -9517,7 +9523,7 @@ c_svc_updt_dsply:
 	move.b	(a0),d0                             | [$382A: ldi] (DE)<-(HL) ..."X" of "RANK X" displayed
 	jbsr	write_videoram_to_a1
 	lea	str_3AE4,a0                    	        | [$382C: ld   hl,#str_3AE4] "RANK"
-	jbsr	c_text_out                        	| [$382F: call c_text_out] display "RANK"
+	jbsr	c_text_out_331b                        	| [$382F: call c_text_out_331b] display "RANK"
 
 
 * NUMBER OF FIGHTERS (DSWB)
@@ -9545,7 +9551,7 @@ c_svc_updt_dsply:
 	jbsr	osd_w_videoram
 *  text_out($3AEB)
 	lea	str_3AEB,a0                    	        | [$3845: ld   hl,#str_3AEB] "SHIPS"
-	jbsr	c_text_out                        	| [$3848: call c_text_out]
+	jbsr	c_text_out_331b                        	| [$3848: call c_text_out_331b]
 
 
 * load default IO params (sets up credit-mode and joystick remapping - see _372D)
@@ -9613,8 +9619,8 @@ c_svc_updt_dsply:
 	move.w	#0x8000+0x0200+0x08,d7       	| [ld   (0x8000 + 0x0200 + 0x08),a] shows a space after "COIN(S)"
 	jbsr	osd_w_videoram
 	lea	str_3AF3,a0                    	| [ld   hl,#str_3AF3] " COIN"
-	jbsr	c_text_out                        	| [call c_text_out]
-	jbsr	c_text_out                        	| [call c_text_out] "CREDIT" of "X CREDIT"
+	jbsr	c_text_out_331b                        	| [call c_text_out_331b]
+	jbsr	c_text_out_331b                        	| [call c_text_out_331b] "CREDIT" of "X CREDIT"
 	jra	l_38AB                             	| [jr   l_38AB]
 
 * Update 4 arguments to "set coinage" command from the table for free-play mode
@@ -9628,7 +9634,7 @@ l_38A0:
 	jne	l_38A0                             	| [djnz l_38A0]
 
 	lea	str_3B04,a0                    	| [ld   hl,#str_3B04]
-	jbsr	c_text_out                        	| [call c_text_out] "FREE PLAY"
+	jbsr	c_text_out_331b                        	| [call c_text_out_331b] "FREE PLAY"
 
 * Bonus Ships Awarded (DSWB)
 * Mask  Selection    S#4 S#5 S#6    Index into table 3AA4
@@ -9712,8 +9718,8 @@ c_38DA:
                                                	| [ld   h,(hl)] get MSB of src address
                                                	| [ld   l,a] ld LSB to L
 	movem.w	d1/d2,-(sp)                    	    | [push bc] C holds the so-called 'first-bonus/second-bonus' flag, save it!
-	jbsr	c_text_out                        	| [call c_text_out] display "2ND BONUS" or "1ST BONUS"
-	jbsr	c_text_out                        	| [call c_text_out] display "0000 PTS" of "??? BONUS XX0000 PTS"...
+	jbsr	c_text_out_331b                        	| [call c_text_out_331b] display "2ND BONUS" or "1ST BONUS"
+	jbsr	c_text_out_331b                        	| [call c_text_out_331b] display "0000 PTS" of "??? BONUS XX0000 PTS"...
                                                   * HL==$3B2B or HL==$3B42, as there are two copies of "0000 PTS"
                                                   * DE==$80B2, that value will be used later......?
 
@@ -9743,8 +9749,8 @@ l_38FF:
 	movem.w	d3/d4,-(sp)                    	| [push de]
 	move.l	a1,-(sp)                        	| [push de]
 	lea	str_3B4D,a0                    	| [ld   hl,#str_3B4D] "AND EVERY"
-	jbsr	c_text_out                        	| [call c_text_out]
-	jbsr	c_text_out                        	| [call c_text_out] display "0000 PTS" of "AND EVERY XX0000 PTS"  ( HL expected to be $3B59)
+	jbsr	c_text_out_331b                        	| [call c_text_out_331b]
+	jbsr	c_text_out_331b                        	| [call c_text_out_331b] display "0000 PTS" of "AND EVERY XX0000 PTS"  ( HL expected to be $3B59)
 	move.l	(sp)+,a0                        	| [pop  hl]
 	rts                                    	| [ret]
 * end 'call 38DA', ret to _38D7
@@ -9777,7 +9783,7 @@ l_3928:
 * jp here from 38BA
 l_392D:
 	lea	str_3B64,a0                    	        | [ld   hl,#str_3B64] "BONUS NOTHING"
-	jbsr	c_text_out                        	| [call c_text_out]
+	jbsr	c_text_out_331b                        	| [call c_text_out_331b]
 	lea	w_mchn_cfg_bonus_9980,a0            	| [ld   hl,#w_mchn_cfg_bonus_9980]
 	move.b	#0xFF,(a0)+                      	| [ld   (hl),#0xFF]
 	                           	| [inc  hl]
@@ -10071,7 +10077,7 @@ str_3A47:
 *=============================================================================
 * c_svc_cab_type()
 *  Description:
-*   wrapper for c_text_out (dereferences the pointer passed in HL)
+*   wrapper for c_text_out_331b (dereferences the pointer passed in HL)
 *   (caller is displaying the cab-type)
 * IN:
 *  ...
@@ -10084,7 +10090,7 @@ c_svc_cab_type:
 	                       	| [inc  hl]
 	                       	| [ld   h,(hl)] MSB
 	                       	| [ld   l,a] LSB
-	jra	c_text_out                         	| [jp   c_text_out] jp instead of calling so we only have to ret once
+	jra	c_text_out_331b                         	| [jp   c_text_out_331b] jp instead of calling so we only have to ret once
 * (returns from subroutine at $331B)
 
 
@@ -10126,6 +10132,7 @@ str_3AB4:
 * default params for IO test
 d_3AC4:
 	.byte 0x01,0x01,0x01,0x01,0x01,0x02,0x03,0x00
+	.align	2
 
 * pointers to cabinet-types strings.
 str_3ACC:
@@ -10202,6 +10209,7 @@ str_3B88:
 	.long 0x8000 + 0x02E0 + 0x04
 	.byte 0x07
 	.byte 0x1B,0x18,0x16,0x24,0x24,0x18,0x14 || "ROM  OK"
+	.align	2
 
 
 _l_3B92:
@@ -11221,7 +11229,7 @@ l_02CC:
 *  ...
 *-----------------------------------------------------------------------------
 	lea	str_3B88(pc),a0                    	    | [ld   hl,#str_3B88] ld src address of string "ROM  OK"
-	jbsr	c_text_out                        	| [call c_text_out] display "ROM OK"
+	jbsr	c_text_out_331b                        	| [call c_text_out_331b] display "ROM OK"
 	jbsr	c_svc_updt_dsply                  	| [call c_svc_updt_dsply] prints remaining dsw configured options (upside down)
 * Initialize scheduler table before interrupts are enabled (otherwise task scheduler could infinite loop!)
 	move.b	#0x20,d0                        	| [ld   a,#0x20]

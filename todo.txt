@@ -3,8 +3,6 @@
 - default DSW are wrong
 - player score not displayed
 - implement level skip trainer
-- compose double sprites 2000 and 3000 points: ok but height should be respecte so 32 wide blits could be generic
-  (explosions+2000/3000 scores)
 - shadow of boss not erased sometimes (erase optimization not working??): when changes only CLUT, not sprite code or X/Y!!
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
