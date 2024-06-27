@@ -1,3 +1,6 @@
+- report rrd code in z80268k
+- In demo mode, one bug is visible. 400 (red) points are not displayed 
+
 - red flashes (frame drop) even with very few sprites with cycle exact!!
   (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - default DSW are wrong
@@ -5,13 +8,6 @@
 - implement level skip trainer
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
-- when shooting captured ship, clut missing
-- crash div 0 on statistics screen: c_puts_hitmiss_ratio_0A72
-  when it works, 50.  ... => 0 % is too high on screen
-  watch A0/A1, HL/DE after call: 0535
-     DE  80B8
-     HL  99B2
-  even if not crashing, percentage is wrong and wrongly placed!!
 
 - optimize: player ship should be HW sprite, even if captured
   sprite layout: 2 slots for player ship
@@ -35,7 +31,6 @@
 - missing/wrong sounds:
   * swarm sound (when)
   * all tunes
-  * capture beam (with and without the ship): 227C: wrong, fix it
   * extra life
   * last moths attack again when on bottom of screen, but no sound is played
   

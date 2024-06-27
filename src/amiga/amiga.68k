@@ -1930,11 +1930,11 @@ test_sprites:
 	.endif
 
 osd_sound_start:
-	movem.l	d0/d1/a0/a6,-(a7)
+	movem.l	d0-d2/a0-a1/a6,-(a7)
 	and.w	#0xFF,d0
 	lea		_custom,a6
 	
-	
+	move.w	d0,d2
 	lsl.w	#3,d0
 	lea		sound_table,a0
 
@@ -1950,12 +1950,16 @@ osd_sound_start:
 	tst.w	d1
 	beq.b	3f
 	* looped sound
+	lea		playing_sounds(pc),a1
+	tst.b	(a1,d2.w)
+	bne.b	1f				| loop already playing: skipped
+	st		(a1,d2.w)
 	jsr		_mt_loopfx
 	bra.b	1f
 3:
 	jsr		_mt_playfx
 1:
-	movem.l	(a7)+,d0/d1/a0/a6
+	movem.l	(a7)+,d0-d2/a0-a1/a6
 	rts
 0:
 
@@ -2026,7 +2030,12 @@ osd_sound_stop:
     clr.w   music_tick   | not playing anymore
 	clr.b	music_playing
     jsr		_mt_end
+	lea		playing_sounds(pc),a0
+	move.w	#SND_COUNT/4-1,d0
 0:
+	clr.l	(a0)+
+	dbf		d0,0b
+	
 	movem.l	(a7)+,d0/a0/a6
 	rts
 	
@@ -2275,7 +2284,8 @@ load_palette_in_copperlist:
 
 	
 
-
+playing_sounds:
+	.skip	SND_COUNT
 
 * < A0: palette
 * < A1: copperlist

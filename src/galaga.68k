@@ -2030,16 +2030,15 @@ exg_sp_d5d6:
 * IN:
 *  ...
 * OUT:
-*  DE == resultant pointer to screen ram to be used by caller
+*  A1 == resultant pointer to screen ram to be used by caller
 *-----------------------------------------------------------------------------
 c_puts_hitmiss_ratio_0A72:
-
 	MOVE_TO_REG	ds_plyr_actv+_w_hit_ct,d5   | [ld   hl,(ds_plyr_actv +_w_hit_ct)]
 
 * if ( shots fired  == 0 )
 	MOVE_TO_REG	ds_plyr_actv+_w_shot_ct,d3  | [ld   de,(ds_plyr_actv +_w_shot_ct)]
 											| [ld   a,d]
-											| [or   e]
+	tst.w	d3								| [or   e]
 	jne	l_0A82                             	| [jr   nz,l_0A82]
 * then
 								            | [ld   de,#0x0000] uhh...isn't DE already 0? 0
@@ -2064,14 +2063,16 @@ l_0A82_while:
 l_0A90:
 * HL = hl_adjusted_hits / (de_adjusted_shots / 0x0100)
 	LOAD_D5D6_FROM_D5_16
-	move.b	d3,d0                           	| [ld   a,d] divisor in A
+	move.w	d3,d0                           	| [ld   a,d] divisor in A
+	ror.w	#8,d0
 	jbsr	c_divmod                          	| [call c_divmod] HL=HL/A (preserves DE)
 	movem.w D5/D6,-(sp)                        	| [push hl]
 
 * HL = modulus / (de_adjusted_shots / 0x0100)
 	move.b	d0,d5                           	| [ld   h,a] result of HL%A
 	clr.b	d6                               	| [ld   l,#0]
-	move.b	d3,d0                           	| [ld   a,d] divisor in A
+	move.w	d3,d0                           	| [ld   a,d] divisor in A
+	ror.w	#8,d0
 	jbsr	c_divmod                          	| [call c_divmod] HL=HL/A (preserves DE)
 
 * SP points to lsb of 1st quotient (msb)
@@ -2125,47 +2126,47 @@ l_0AAD:
 
 l_0AD3:
 	LOAD_D3_16_FROM_D3D4
-	MOVE_TO_VAR	d3,b16_99B0_tmp                 | [ld   (b16_99B0_tmp),de] tmp computed hit-miss ratio (BCD)
+	MOVE_TO_VAR	d3,b16_99B0_tmp                 | [$0AD3: ld   (b16_99B0_tmp),de] tmp computed hit-miss ratio (BCD)
 * setup for display of computed ratio
 l_0AD7:
-	move.b	#4,d1                           	| [ld   b,#4]
-	clr.b	d2                               	| [ld   c,#0] use <:1> as flag
-	lea	b16_99B0_tmp,a0                	        | [ld   hl,#b16_99B0_tmp] &hitratio.b0 (BCD)
-	lea	0x8000+0x0120+0x18,a1      	            | [ld   de,#0x8000 + 0x0120 + 0x18]
+	move.b	#4,d1                           	| [$0AD7: ld   b,#4]
+	clr.b	d2                               	| [$0AD9: ld   c,#0] use <:1> as flag
+	lea	b16_99B0_tmp,a0                	        | [$0ADB: ld   hl,#b16_99B0_tmp] &hitratio.b0 (BCD)
+	lea	0x8000+0x0120+0x18,a1      	            | [$0ADE: ld   de,#0x8000 + 0x0120 + 0x18]
 
 * loop to putc 4 characters (XXX.X)
 l_0AE1_while:
 * if ( b==1 ) then ...
-	subq.b	#1,d1                           	| [dec  b]
-	jne	l_0AE8                             	    | [jr   nz,l_0AE8]
+	subq.b	#1,d1                           	| [$0AE1: dec  b]
+	jne	l_0AE8                             	    | [$0AE2: jr   nz,l_0AE8]
 * ... show dot character left of to 10ths place
-	move.b	#0x2A,d0                        	| [ld   a,#0x2A] '.' (dot) character.
-	jbsr	write_videoram_to_a1                | [ld   (de),a]
-	sub.w	#20,a1                            	| [rst  0x20] DE-=$20 (next column)
+	move.b	#0x2A,d0                        	| [$0AE4: ld   a,#0x2A] '.' (dot) character.
+	jbsr	write_videoram_to_a1                | [$0AE6: ld   (de),a]
+	sub.w	#0x20,a1                            | [$0AE7: rst  0x20] DE-=$20 (next column)
 
 l_0AE8:
-	addq.b	#1,d1                           	| [inc  b] restore B from test at l_0AE1
-	clr.b	d0                               	| [xor  a] clear A before rotating H<7:4> into it
-	jbsr	rld                               	| [rld] rld (hl) ... (HL<7:4>) to A<3:0> ... HL used as pointer, is in RAM
+	addq.b	#1,d1                           	| [$0AE8: inc  b] restore B from test at l_0AE1
+	clr.b	d0                               	| [$0AE9: xor  a] clear A before rotating H<7:4> into it
+	jbsr	rld                               	| [$0AEA: rld] rld (hl) ... (HL<7:4>) to A<3:0> ... HL used as pointer, is in RAM
 * if (b == 3 || b==1) advance pointer to .b1  ... b==1 irrelevant
-	btst.b	#0,d1                           	| [bit  0,b] even count of b
-	jeq	l_0AF1                             	    | [jr   z,l_0AF1]
-	addq.w	#1,a0                           	| [inc  l] HL++
+	btst.b	#0,d1                           	| [$0AEC: bit  0,b] even count of b
+	jeq	l_0AF1                             	    | [$0AEE: jr   z,l_0AF1]
+	addq.w	#1,a0                           	| [$0AF0: inc  l] HL++
  
 l_0AF1:
 * line up the shots/hits/ratio on the left - once we have A!=0, latch the
 * state and keep going
 * if ( A != 0 )
-	tst.b	d0                               	| [and  a]
-	jne	l_0AF8                             	    | [jr   nz,l_0AF8]
+	tst.b	d0                               	| [$0AF1: and  a]
+	jne	l_0AF8                             	    | [$0AF2: jr   nz,l_0AF8]
 * || (0 != C & 0x01) ...
-	btst.b	#0,d2                           	| [bit  0,c] check flag
-	jeq	l_0AFC                             	    | [jr   z,l_0AFC]
+	btst.b	#0,d2                           	| [$0AF4: bit  0,c] check flag
+	jeq	l_0AFC                             	    | [$0AF6: jr   z,l_0AFC]
 * ... then
 l_0AF8:
-	bset.b	#0,d2                           	| [set  0,c] set flag
-	jbsr	write_videoram_to_a1               	| [ld   (de),a]
-	sub.w	#0x20,a1                          	| [rst  0x20] DE-=$20 (next column)
+	bset.b	#0,d2                           	| [$0AF8: set  0,c] set flag
+	jbsr	write_videoram_to_a1               	| [$0AFA: ld   (de),a]
+	sub.w	#0x20,a1                          	| [$0AFB: rst  0x20] DE-=$20 (next column)
 
 l_0AFC:
 * b==3 is first digit left of decimal (10's place) so it has to start here regardless
@@ -4284,6 +4285,7 @@ l_19C7:
 	rts                                    	    | [$19D1: ret]
 
 l_19D2_fighter_captured:
+	jbsr	osd_sound_stop
 * sets up a captured-fighter as an enemy object
 	move.b	#0x0A,d2                        	| [$19D2: ld   c,#0x0A] index of string
 	jbsr	string_out_pe_30                    | [$19D4: rst  0x30] string_out_pe "FIGHTER CAPTURED"
@@ -11171,6 +11173,7 @@ galaga_reset:
 	tst.b	break_at_startup_flag
 	beq.b	0f
 	
+
 	jbsr	osd_break
 0:
 

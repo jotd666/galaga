@@ -22,8 +22,8 @@ else:
 for file in ["readme.md",gamename,f"{gamename}.slave"]:
     shutil.copy(os.path.join(progdir,file),outdir)
 
-#    zf.write(os.path.join(progdir,"assets","amiga","Pengo.info"),"Pengo.info")
-#    zf.write(os.path.join(progdir,"assets","amiga","boxart.png"),"boxart.png")
+    shutil.copy(os.path.join(progdir,"assets","amiga","GalagaGlowIcon.info"),os.path.join(outdir,"Galaga500.info"))
+    shutil.copy(os.path.join(progdir,"assets","GalaGa Namco.png"),os.path.join(outdir,"boxart.png"))
 
 # pack the file for floppy
 subprocess.check_output(["cranker_windows.exe","-f",os.path.join(progdir,gamename),"-o",os.path.join(progdir,f"{gamename}.rnc")])

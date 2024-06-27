@@ -42,5 +42,5 @@
     .equ  EXPLOSION_SND,         0x19
     .equ  CREDIT_SND,         0x1A
     .equ  EXTRA_LIFE_SND,         0x1B
-
+	.equ  SND_COUNT,  0x20
     
