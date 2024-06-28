@@ -438,7 +438,7 @@ d_attrmode_sptiles_ships:
 *-----------------------------------------------------------------------------
 gctl_game_runner:
 l_045E_while:
-	jbsr	gctl_supv_score                   	| [call gctl_supv_score]
+	jbsr	gctl_supv_score_072B                   	| [call gctl_supv_score_072B]
 	jbsr	gctl_supv_stage                   	| [call gctl_supv_stage]
 	jra	l_045E_while                       	    | [jr   l_045E_while]
 
@@ -568,7 +568,7 @@ l_04C1_while:
 	                               	           | [and  a]
 	jne	l_04A4_wait                        	   | [jr   nz,l_04A4_wait]
 
-	jbsr	gctl_supv_score                    | [call gctl_supv_score]
+	jbsr	gctl_supv_score_072B                    | [call gctl_supv_score_072B]
 
 * plyr_state_actv.b_nbugs = b_bugs_actv_nbr
 	move.b	b_bugs_actv_nbr,d0                 | [ld   a,(b_bugs_actv_nbr)]
@@ -999,7 +999,7 @@ l_06BA:
 	lea	ds_bug_collsn_hit_mult+0x0F,a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x0F] challenge bonus score += 10000
 	add.b	(a0),d0                          	| [add  a,(hl)]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-	jbsr	gctl_supv_score                   	| [call gctl_supv_score] add bonus to player score
+	jbsr	gctl_supv_score_072B                   	| [call gctl_supv_score_072B] add bonus to player score
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 
@@ -1090,7 +1090,7 @@ d_0725:
 	.byte 0x02,0x02,0x02
 	.align	2
 *=============================================================================
-* gctl_supv_score()
+* gctl_supv_score_072B()
 *  Description:
 *
 * IN:
@@ -1098,158 +1098,153 @@ d_0725:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-gctl_supv_score:
+gctl_supv_score_072B:
 *  if ( activ_plyr_state.plyr_1or2 == plyr1 )
-	                               	| [and  a]
+	                               	            | [$072B: and  a]
 *    tmp = $f9
-	move.b	#0xF9,d0                        	| [ld   a,#0xF9] offset to 10's place from _tile_ram + 0x0300 (plyr 1)
-	tst.b	ds_plyr_actv+_b_plyr_nbr     	| [ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
-	jeq	l_0732                             	| [jr   z,l_0732]
+	move.b	#0xF9,d0                        	| [$072C: ld   a,#0xF9] offset to 10's place from _tile_ram + 0x0300 (plyr 1)
+	tst.b	ds_plyr_actv+_b_plyr_nbr     	    | [$072E: ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
+	jeq	l_0732                             	    | [$0730: jr   z,l_0732]
 *  else tmp = $E4
-	move.b	#0xE4,d0                        	| [ld   a,#0xE4] offset to 10's place from _tile_ram + 0x0300 (plyr 2)
-
+	move.b	#0xE4,d0                        	| [$0730: ld   a,#0xE4] offset to 10's place from _tile_ram + 0x0300 (plyr 2)
 l_0732:
-	move.b	d0,ixl							| [ld   ixl,a]   parameter to c_scoreman_incr_add (tile ram offset)
-
-	move.b	#0x10,d1                        	| [ld   b,#0x10] sizeof scoreman_inc_lut[]
-	lea	ds_bug_collsn_hit_mult,a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x00]
+	move.b	d0,ixl							    | [$0732: ld   ixl,a]   parameter to c_scoreman_incr_add (tile ram offset)
+	move.b	#0x10,d1                        	| [$0734: ld   b,#0x10] sizeof scoreman_inc_lut[]
+	lea	ds_bug_collsn_hit_mult,a0 	            | [$0736: ld   hl,#ds_bug_collsn_hit_mult + 0x00]
 l_0739_while_B:
-	exg	a1,a0                              	| [ex   de,hl] DE := &bug_collsn[hl]
-	lea	d_scoreman_inc_lut-1,a0        	| [ld   hl,#d_scoreman_inc_lut - 1] effective start index is $10 - 1
-	move.b	d1,d0                           	| [ld   a,b]
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
-	move.b	(a0),d2                         	| [ld   c,(hl)] scoreman_inc_lut[B-1]
+	exg	a1,a0                              	    | [$0739: ex   de,hl] DE := &bug_collsn[hl]
+	lea	d_scoreman_inc_lut-1,a0        	        | [$073A: ld   hl,#d_scoreman_inc_lut - 1] effective start index is $10 - 1
+	move.b	d1,d0                           	| [$073D: ld   a,b]
+	jbsr	add_d0_to_a0_0010                   | [$073E: rst  0x10] HL += A
+	move.b	(a0),d2                         	| [$073F: ld   c,(hl)] scoreman_inc_lut[B-1]
 * bug_collsn[hl] * scoreman_inc_lut[B-1]
 l_0740:
-	exg	a1,a0                              	| [ex   de,hl]
-	move.b	(a0),d0                         	| [ld   a,(hl)] bug_collsn[hl]
-	                               	| [and  a]
-	jeq	l_0762                             	| [jr   z,l_0762] while ( 0 != bug_collsn[HL] )
+	exg	a1,a0                              	    | [$0740: ex   de,hl]
+	move.b	(a0),d0                         	| [$0741: ld   a,(hl)] bug_collsn[hl]
+	                               	            | [$0742: and  a]
+	jeq	l_0762                             	    | [$0743: jr   z,l_0762] while ( 0 != bug_collsn[HL] )
+	subq.b	#1,(a0)                         	| [$0745: dec  (hl)] bug_collsn[HL] decrement accumulated hit count
+	exg	a1,a0                              	    | [$0746: ex   de,hl] DE := &bug_collsn[0x00]
 
-	subq.b	#1,(a0)                         	| [dec  (hl)] bug_collsn[HL] decrement accumulated hit count
-	exg	a1,a0                              	| [ex   de,hl] DE := &bug_collsn[0x00]
-
-	lea		0x8300,a0        	| [ld   h,#>(0x8000 + 0x0300)] tile rows 32-35:  $83C0 - 83FF	
-	jbsr	read_ixl_into_d0                   | [ld   a,ixl] offset to 10's place in tile ram
-	add.w	d0,a0                           	| [ld   l,a]
-	move.b	d2,d0                           	| [ld   a,c] scoreman_inc_lut[B-1]
-	and.b	#0x0F,d0                         	| [and  #0x0F]
-	jbsr	c_scoreman_incr_add               	| [call c_scoreman_incr_add] add to 10's
-
+	lea		0x8300,a0        	                | [$0747: ld   h,#>(0x8000 + 0x0300)] tile rows 32-35:  $83C0 - 83FF	
+	jbsr	read_ixl_into_d0                    | [$0749: ld   a,ixl] offset to 10's place in tile ram
+	add.w	d0,a0                           	| [$074B: ld   l,a]
+	move.b	d2,d0                           	| [$074C: ld   a,c] scoreman_inc_lut[B-1]
+	and.b	#0x0F,d0                         	| [$074D: and  #0x0F]
+	jbsr	c_scoreman_incr_add               	| [$074F: call c_scoreman_incr_add] add to 10's
 	lea		0x8300,a0
-	jbsr	read_ixl_into_d0                    | [ld   a,ixl] increment offset to 10's place in tile ram
-	addq.b	#1,d0                           	| [inc  a]
-	add.w	d0,a0                           	| [ld   l,a]
-	move.b	d2,d0                           	| [ld   a,c] scoreman_inc_lut[B-1]
-	rol.b	#4,d0                            	| [rlca] upper nibble of "score increment" * 4
-	and.b	#0x0F,d0                         	| [and  #0x0F]
-	jbsr	c_scoreman_incr_add               	| [call c_scoreman_incr_add] add to 100's
-	jra	l_0740                             	| [jr   l_0740]
+	jbsr	read_ixl_into_d0                    | [$0752: ld   a,ixl] increment offset to 10's place in tile ram
+	addq.b	#1,d0                           	| [$0754: inc  a]
+	add.w	d0,a0                           	| [$0755: ld   l,a]
+	move.b	d2,d0                           	| [$0756: ld   a,c] scoreman_inc_lut[B-1]
+	rol.b	#4,d0                            	| [$0757: rlca] upper nibble of "score increment" * 4
+	and.b	#0x0F,d0                         	| [$075B: and  #0x0F]
+	jbsr	c_scoreman_incr_add               	| [$075D: call c_scoreman_incr_add] add to 100's
+	jra	l_0740                             	    | [$0760: jr   l_0740]
 
 l_0762:
 	addq.w	#1,a0                           	| [$0762: inc  l] index of bug_collsn[]
 	subq.b	#1,d1                           	| [...]
 	jne	l_0739_while_B                     	    | [$0763: djnz l_0739_while_B]
 	jbsr	read_ixl_into_d0                    | [$0765: ld   a,ixl]
-	addq.b	#4,d0                           	| [$0767: add  a,#4]
-												
-	lea	0x8000+0x03E0+0x12,a0      	            | [ld   hl,#0x8000 + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2)
-	lea	0x8000+0x0300,a1        	            | [ld   d,#>(0x8000 + 0x0300)]
-	add.w	d0,a1					            | [ld   e,a]
-	move.b	#6,d1                           	| [ld   b,#6]
+	addq.b	#4,d0                           	| [$0767: add  a,#4]						
+	lea	0x8000+0x03E0+0x12,a0      	            | [$0769: ld   hl,#0x8000 + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2)
+	lea	0x8000+0x0300,a1        	            | [$076A: ld   d,#>(0x8000 + 0x0300)]
+	add.w	d0,a1					            | [$076D: ld   e,a]
+	move.b	#6,d1                           	| [$076F: ld   b,#6]
 l_0771:
-	jbsr	read_videoram_from_a1               | [ld   a,(de)]
+	jbsr	read_videoram_from_a1               | [$0771: ld   a,(de)]
 	exg		d0,d7
 	jbsr	read_videoram_from_a0
 	exg		d0,d7
-	sub.b	d7,d0                          	    | [sub  (hl)]
-	add.b	#9,d0                            	| [add  a,#9]
-	cmp.b	#0xE5,d0                         	| [cp   #0xE5]
-	jcc	l_0788                             	    | [jr   nc,l_0788]
-	sub.b	#0x0A,d0                         	| [sub  #0x0A]
-	cmp.b	#9,d0                            	| [cp   #9]
-	jcs	l_0788                             	    | [jr   c,l_0788]
-	addq.b	#1,d0                           	| [inc  a]
-	jne	l_078E                             	    | [jr   nz,l_078E]
-	subq.w	#1,a0                           	| [dec  l]
-	subq.w	#1,a1                           	| [dec  e]
+	sub.b	d7,d0                          	    | [$0772: sub  (hl)]
+	add.b	#9,d0                            	| [$0773: add  a,#9]
+	cmp.b	#0xE5,d0                         	| [$0775: cp   #0xE5]
+	jcc	l_0788                             	    | [$0777: jr   nc,l_0788]
+	sub.b	#0x0A,d0                         	| [$0779: sub  #0x0A]
+	cmp.b	#9,d0                            	| [$077B: cp   #9]
+	jcs	l_0788                             	    | [$077D: jr   c,l_0788]
+	addq.b	#1,d0                           	| [$077F: inc  a]
+	jne	l_078E                             	    | [$0780: jr   nz,l_078E]
+	subq.w	#1,a0                           	| [$0782: dec  l]
+	subq.w	#1,a1                           	| [$0783: dec  e]
 	subq.b	#1,d1                           	| [...]
-	jne	l_0771                             	    | [djnz l_0771]
+	jne	l_0771                             	    | [$0784: djnz l_0771]
 * else ... break
-	jra	l_078E                             	    | [jr   l_078E]
+	jra	l_078E                             	    | [$0786: jr   l_078E]
 
 l_0788:
-	jbsr	read_videoram_from_a1               | [ld   a,(de)] hi score
-	jbsr	write_videoram_to_a0                | [ld   (hl),a]
-	subq.w	#1,a0                           	| [dec  l]
-	subq.w	#1,a1                           	| [dec  e]
+	jbsr	read_videoram_from_a1               | [$0788: ld   a,(de)] hi score
+	jbsr	write_videoram_to_a0                | [$0789: ld   (hl),a]
+	subq.w	#1,a0                           	| [$078A: dec  l]
+	subq.w	#1,a1                           	| [$078B: dec  e]
 	subq.b	#1,d1                           	| [...]
-	jne	l_0788                             	    | [djnz l_0788]
+	jne	l_0788                             	    | [$078C: djnz l_0788]
 
 l_078E:
-	jbsr	read_ixl_into_d0                    | [ld   a,ixl]
-	addq.b	#4,d0                           	| [add  a,#4]
+	jbsr	read_ixl_into_d0                    | [$078E: ld   a,ixl]
+	addq.b	#4,d0                           	| [$0790: add  a,#4]
 	* replace a0 lower nibble
 	move.w	a0,d6
-	move.b	d0,d6                           	| [ld   l,a] 
+	move.b	d0,d6                           	| [$0792: ld   l,a] 
 	move.w	d6,a0
 	
-	jbsr	read_videoram_from_a0              | [ld   a,(hl)]
-	cmp.b	#0x24,d0                         	| [cp   #0x24]
-	jne	l_0799                             	    | [jr   nz,l_0799]
-	clr.b	d0                               	| [xor  a]
+	jbsr	read_videoram_from_a0               | [$0793: ld   a,(hl)]
+	cmp.b	#0x24,d0                         	| [$0794: cp   #0x24]
+	jne	l_0799                             	    | [$0796: jr   nz,l_0799]
+	clr.b	d0                               	| [$0798: xor  a]
 l_0799:
-	and.b	#0x3F,d0                         	| [and  #0x3F]
-	rol.b	#1,d0                            	| [rlca]
-	move.b	d0,d2                           	| [ld   c,a]
-	rol.b	#2,d0                            	| [rlca] * 2
-	add.b	d2,d0                            	| [add  a,c]
-	move.b	d0,d2                           	| [ld   c,a]
-	subq.w	#1,a0                           	| [dec  l]
-	jbsr	read_videoram_from_a0               | [ld   a,(hl)]
-	cmp.b	#0x24,d0                         	| [cp   #0x24]
-	jne	l_07A8                             	    | [jr   nz,l_07A8]
-	clr.b	d0                               	| [xor  a]
+	and.b	#0x3F,d0                         	| [$0799: and  #0x3F]
+	rol.b	#1,d0                            	| [$079B: rlca]
+	move.b	d0,d2                           	| [$079C: ld   c,a]
+	rol.b	#2,d0                            	| [$079D: rlca] * 2
+	add.b	d2,d0                            	| [$079F: add  a,c]
+	move.b	d0,d2                           	| [$07A0: ld   c,a]
+	subq.w	#1,a0                           	| [$07A1: dec  l]
+	jbsr	read_videoram_from_a0               | [$07A2: ld   a,(hl)]
+	cmp.b	#0x24,d0                         	| [$07A3: cp   #0x24]
+	jne	l_07A8                             	    | [$07A5: jr   nz,l_07A8]
+	clr.b	d0                               	| [$07A7: xor  a]
 l_07A8:
-	add.b	d2,d0                            	| [add  a,c]
-	lea	ds_plyr_actv+_b_mcfg_bonus,a0  	| [ld   hl,#ds_plyr_actv +_b_mcfg_bonus] &actv_plyr_state[0x1E] ... load at game start from $9980
-	cmp.b	(a0),d0                          	| [cp   (hl)]
+	add.b	d2,d0                            	| [$07A8: add  a,c]
+	lea	ds_plyr_actv+_b_mcfg_bonus,a0  	        | [$07A9: ld   hl,#ds_plyr_actv +_b_mcfg_bonus] &actv_plyr_state[0x1E] ... load at game start from $9980
+	cmp.b	(a0),d0                          	| [$07AC: cp   (hl)]
 	beq.b	0f                               	| [...]
-	rts                                    	    | [ret  nz] [...]
+	rts                                    	    | [$07AD: ret  nz] [...]
 0:
-	move.b	w_mchn_cfg_bonus_9980+0x01,d0        	| [ld   a,(w_mchn_cfg_bonus_9980 + 0x01)] looks like a bonus may be awarded.
-	move.b	d0,d1                           	| [ld   b,a]
-	and.b	#0x7F,d0                         	| [and  #0x7F]
-	move.b	d0,d2                           	| [ld   c,a]
-	move.b	(a0),d0                         	| [ld   a,(hl)] &actv_plyr_state[0x1E]
-	cmp.b	d2,d0                            	| [cp   c]
-	jcc	l_07BC                             	    | [jr   nc,l_07BC]
-	move.b	d2,d0                           	| [ld   a,c]
-	jra	l_07BD                             	    | [jr   l_07BD]
+	move.b	w_mchn_cfg_bonus_9980+0x01,d0       | [$07AE: ld   a,(w_mchn_cfg_bonus_9980 + 0x01)] looks like a bonus may be awarded.
+	move.b	d0,d1                           	| [$07B1: ld   b,a]
+	and.b	#0x7F,d0                         	| [$07B2: and  #0x7F]
+	move.b	d0,d2                           	| [$07B4: ld   c,a]
+	move.b	(a0),d0                         	| [$07B5: ld   a,(hl)] &actv_plyr_state[0x1E]
+	cmp.b	d2,d0                            	| [$07B6: cp   c]
+	jcc	l_07BC                             	    | [$07B7: jr   nc,l_07BC]
+	move.b	d2,d0                           	| [$07B9: ld   a,c]
+	jra	l_07BD                             	    | [$07BA: jr   l_07BD]
 
 l_07BC:
-	add.b	d1,d0                            	| [add  a,b] actv_plyr_state[0x1E] += mchn_cfg_bonus[1]
+	add.b	d1,d0                            	| [$07BC: add  a,b] actv_plyr_state[0x1E] += mchn_cfg_bonus[1]
 l_07BD:
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	*move.b	d0,b_9AA0+0x0A                  	| [ld   (b_9AA0 + 0x0A),a] sound-fx count/enable registers, bonus ship awarded sound (set non-zero)
-	lea	ds_plyr_actv+_b_nships,a0      	        | [ld   hl,#ds_plyr_actv +_b_nships]
-	addq.b	#1,(a0)                         	| [inc  (hl)]
-	jbsr	draw_resv_ships_136c                | [call draw_resv_ships_136c] new spare ship added
-	lea	b16_99EA_bonus_ct_bcd+1,a0     	        | [ld   hl,#b16_99EA_bonus_ct_bcd + 1]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
+	move.b	d0,(a0)                         	| [$07BD: ld   (hl),a]
+	*move.b	d0,b_9AA0+0x0A                  	| [$07BE: ld   (b_9AA0 + 0x0A),a] sound-fx count/enable registers, bonus ship awarded sound (set non-zero)
+	lea	ds_plyr_actv+_b_nships,a0      	        | [$07C1: ld   hl,#ds_plyr_actv +_b_nships]
+	addq.b	#1,(a0)                         	| [$07C4: inc  (hl)]
+	jbsr	draw_resv_ships_136c                | [$07C5: call draw_resv_ships_136c] new spare ship added
+	lea	b16_99EA_bonus_ct_bcd+1,a0     	        | [$07C8: ld   hl,#b16_99EA_bonus_ct_bcd + 1]
+	move.b	(a0),d0                         	| [$07CB: ld   a,(hl)]
 	moveq	#1,d7
-	abcd	d7,d0                           	| [add  a,#1]+daa
+	abcd	d7,d0                           	| [$07CC: add  a,#1]+daa
 	bcs.b	0f                               	| [...]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	rts                                    	    | [ret  nc] [...]
+	move.b	d0,(a0)                         	| [$07CF: ld   (hl),a]
+	rts                                    	    | [$07D0: ret  nc] [...]
 0:
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-			                           	        | [dec  l]
-	move.b	-(a0),d0                         	| [ld   a,(hl)]
+	move.b	d0,(a0)                         	| [$07CF: ld   (hl),a]
+			                           	        | [$07D1: dec  l]
+	move.b	-(a0),d0                         	| [$07D2: ld   a,(hl)]
 	moveq	#1,d7
-	abcd	d7,d0                           	| [add  a,#1]+daa
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	rts                                    	    | [ret]
+	abcd	d7,d0                           	| [$07D3: add  a,#1]+daa
+	move.b	d0,(a0)                         	| [$07D6: ld   (hl),a]
+	rts                                    	    | [$07D7: ret]
 * end call $0728
 
 *=============================================================================
@@ -1269,46 +1264,43 @@ l_07BD:
 c_scoreman_incr_add:
 	tst.b	d0                               	| [and  a]
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] [...]
+	rts                                    	    | [ret  z] [...]
 0:
 
 	add.b	(a0),d0                          	| [add  a,(hl)] a += _tile_ram[hl]
 	cmp.b	#0x24,d0                         	| [cp   #0x24] $23=='Z', $24==' '
-	jcs	l_07E1                             	| [jr   c,l_07E1]
+	jcs	l_07E1                             	    | [jr   c,l_07E1]
 	sub.b	#0x24,d0                         	| [sub  #0x24] when is jr not taken?
 
 l_07E1:
 	cmp.b	#0x0A,d0                         	| [cp   #0x0A] $0A='A'
-	jcc	l_07E7                             	| [jr   nc,l_07E7]
+	jcc	l_07E7                             	    | [jr   nc,l_07E7]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 l_07E7:
 	sub.b	#0x0A,d0                         	| [sub  #0x0A]
 
 l_07E9_while_1:
 	move.b	d0,(a0)+                         	| [ld   (hl),a] 0x8000[hl] = a
-
-	                           	| [inc  l]
+	                           	                | [inc  l]
 	move.b	(a0),d0                         	| [ld   a,(hl)] a = 0x8000[hl + 1]
 	cmp.b	#0x24,d0                         	| [cp   #0x24] $24==' '
-	jne	l_07F1                             	| [jr   nz,l_07F1]
+	jne	l_07F1                             	    | [jr   nz,l_07F1]
 	clr.b	d0                               	| [xor  a]
-
 l_07F1:
 	cmp.b	#0x09,d0                         	| [cp   #0x09]
-	jeq	l_07F8_while                       	| [jr   z,l_07F8_while]
-
+	jeq	l_07F8_while                       	    | [jr   z,l_07F8_while]
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,(a0)                         	| [ld   (hl),a] 0x8000[hl] = a
-	rts                                    	| [ret] end call 07d8
+	rts                                    	    | [ret] end call 07d8
 
 l_07F8_while:
 	clr.b	d0                               	| [xor  a]
-	jra	l_07E9_while_1                     	| [jr   l_07E9_while_1]
+	jra	l_07E9_while_1                     	    | [jr   l_07E9_while_1]
 
 *=============================================================================
-* Base-factors of points awareded for enemy hits, applied to multiples
+* Base-factors of points awarded for enemy hits, applied to multiples
 * reported via _bug_collsn[]. Values are BCD-encoded, and ordered by object
 * color group, i.e. as per _bug_collsn.
 * Indexing is reversed, probably to take advantage of djnz.

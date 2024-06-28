@@ -1,6 +1,7 @@
-- report rrd code in z80268k
-- In demo mode, one bug is visible. 400 (red) points are not displayed 
-
+- In demo mode, 400 (red) points are not displayed (code 35)
+- demo: fighter kills captured ship, then is invincible (bombs go through it)
+- when boss-capturing ship is shot, it's still possible to shoot captured ship
+  but it should be invincible at that point
 - red flashes (frame drop) even with very few sprites with cycle exact!!
   (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - default DSW are wrong
@@ -8,6 +9,7 @@
 - implement level skip trainer
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
+- music not working properly, plays unexpectedly during level!!
 
 - optimize: player ship should be HW sprite, even if captured
   sprite layout: 2 slots for player ship
@@ -27,11 +29,10 @@
 - stars & colors trashed near the PAL wait region: copperlist conflict between sprite/color
 - stars glitching (when scrolling)
 - redraw bottom tiles all the time or maybe only if some sprite Y > some value
-- let the demo run, game ends up accessing uninitialized memory
 - missing/wrong sounds:
   * swarm sound (when)
   * all tunes
-  * extra life
+  * extra life (but again, score doesn't work)
   * last moths attack again when on bottom of screen, but no sound is played
   
 maybe already fixed:

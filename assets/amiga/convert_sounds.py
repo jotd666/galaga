@@ -44,11 +44,11 @@ sound_dict = {
 "CREDIT_SND"               :{"index":0X1A,"channel":0,"sample_rate":hq_sample_rate},
 "EXTRA_LIFE_SND"       :{"index":0x1B,"channel":3,"sample_rate":hq_sample_rate},
 
-#"GAME_START_SND"       :{"index":0x9,"pattern":0,"volume":32,"ticks":400,'loops':False},
-#"HIGH_SCORE_SND"       :{"index":0x9,"pattern":0,"volume":32,'loops':True},
-#"HIGHEST_SCORE_SND"       :{"index":0x3,"pattern":0,"volume":32,'loops':True},
-#"END_CHALLENGE_SND"       :{"index":0xE,"pattern":4,"volume":32,'loops':False},
-#"PERFECT_SND"         :{"index":0x14,"pattern":6,"volume":48,'loops':False,"ticks":400},
+"GAME_START_SND"       :{"index":0x9,"pattern":0,"volume":32,"ticks":340,'loops':False},
+#"HIGH_SCORE_SND"       :{"index":0x9,"pattern":2,"volume":32,'loops':True},
+"HIGHEST_SCORE_SND"       :{"index":0x3,"pattern":0,"volume":32,'loops':True},
+"END_CHALLENGE_SND"       :{"index":0xE,"pattern":4,"volume":32,'loops':False},
+"PERFECT_SND"         :{"index":0x14,"pattern":6,"volume":48,'loops':False,"ticks":400},
 
 }
 
