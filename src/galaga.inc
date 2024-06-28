@@ -34,7 +34,7 @@
     .equ  GREEN_BOSS_HIT_SND,     0x03
     .equ  CAPTURE_DOWN_SND,     0x05
     .equ  CAPTURE_UP_SND,     0x06
-    .equ  SHOT_SND,           0x9
+    .equ  SHOT_SND,           0xF
 	.equ  CHALLENGING_STAGE_SND, 0xD
     .equ  MUTANT_SND,         0x12
     .equ  ATTACK_SND,         0x13
@@ -42,5 +42,10 @@
     .equ  EXPLOSION_SND,         0x19
     .equ  CREDIT_SND,         0x1A
     .equ  EXTRA_LIFE_SND,         0x1B
+	
+    .equ  GAME_START_SND,         0x9
+    
+    .equ  END_CHALLENGE_SND,         0xE
+    .equ  PERFECT_SND,         0x14
 	.equ  SND_COUNT,  0x20
     

@@ -333,9 +333,10 @@ j_0003D8_wrdy:
 
 	*addq.b	#1,d0                           	| [inc  a]
 	*move.b	d0,b_9AA0+0x0B                  	| [ld   (b_9AA0 + 0x0B),a] 1 ... sound-fx count/enable registers, start of game theme
-	*move.w	#GAME_START_SND,d0
-	*jbsr	osd_sound_start
+	move.w	#GAME_START_SND,d0
+	jbsr	osd_sound_start
 	
+	moveq	#1,d0
 	move.b	d0,ds_cpu0_task_actv_9000+0x12       	| [ld   (ds_cpu0_task_actv_9000 + 0x12),a] 1 ... f_star_control_1d76, star ctrl
 	move.b	d0,ds_cpu0_task_resrv+0x12      	| [ld   (ds_cpu0_task_resrv + 0x12),a] 1 ... f_star_control_1d76, star ctrl
 
@@ -912,15 +913,15 @@ gctl_chllng_stg_end:
 0:
 	move.b	d0,d4                           	| [ld   e,a]
 
-	*move.w	#END_CHALLENGE_SND,d0
+	move.w	#END_CHALLENGE_SND,d0
 	lea	b_9AA0+0x0E,a0                 	        | [ld   hl,#b_9AA0 + 0x0E] sound-fx count/enable registers, default melody for challenge stage
 	cmp.b	#40,d0                           	| [cp   #40] nbr of bugs in challenge round
 	jne	l_065E                                  | [jr   nz,l_065E]
-	*move.w	#PERFECT_SND,d0
+	move.w	#PERFECT_SND,d0
 	lea	b_9AA0+0x14,a0                 	        | [ld   hl,#b_9AA0 + 0x14] sound effect count/enable registers, "perfect!" melody, challenge stg
 l_065E:
 	move.b	#1,(a0)                         	| [ld   (hl),#1]
-	*jbsr	osd_sound_start
+	jbsr	osd_sound_start
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 	move.b	#0x08,d2                        	| [ld   c,#0x08]
 	jbsr	string_out_pe_30                    | [rst  0x30] string_out_pe ("NUMBER OF HITS")
@@ -5886,6 +5887,7 @@ l_1F71:
 	move.b	d0,b_9AA0+0x0F                  	| [$1F7A: ld   (b_9AA0 + 0x0F),a] 1 ... sound-fx count/enable registers, shot-sound
 	move.w	#SHOT_SND,d0
 	jbsr	osd_sound_start
+	* count how many shots fired overall
 	MOVE_TO_REG	ds_plyr_actv+_w_shot_ct,d5  	| [$1F7D: ld   hl,(ds_plyr_actv +_w_shot_ct)]
 	addq.w	#1,d5                           	| [$1F80: inc  hl]	just to count shots fired probably
 	MOVE_TO_VAR	d5,ds_plyr_actv+_w_shot_ct      | [$1F81: ld   (ds_plyr_actv +_w_shot_ct),hl] game shots fired count ++

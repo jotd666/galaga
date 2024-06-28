@@ -35,7 +35,7 @@ sound_dict = {
 "GALAXIAN_KILLED_SND"        :{"index":3,"channel":2,"sample_rate":hq_sample_rate,"priority":1},
 "CAPTURE_DOWN_SND"               :{"index":5,"channel":3,"sample_rate":hq_sample_rate,"priority":10,"loops":True},
 "CAPTURE_UP_SND"               :{"index":6,"channel":3,"sample_rate":hq_sample_rate,"priority":10,"loops":True},
-"SHOT_SND"               :{"index":0x9,"channel":1,"sample_rate":hq_sample_rate,"priority":10},
+"SHOT_SND"               :{"index":0xF,"channel":1,"sample_rate":hq_sample_rate,"priority":10},
 "CHALLENGING_STAGE_SND"    :{"index":0xD,"channel":0,"sample_rate":hq_sample_rate},
 "MUTANT_SND"               :{"index":0x12,"channel":2,"sample_rate":hq_sample_rate},
 "ATTACK_SND"               :{"index":0x13,"channel":3,"sample_rate":hq_sample_rate},
@@ -43,6 +43,12 @@ sound_dict = {
 "EXPLOSION_SND"            :{"index":0x19,"channel":0,"sample_rate":hq_sample_rate},
 "CREDIT_SND"               :{"index":0X1A,"channel":0,"sample_rate":hq_sample_rate},
 "EXTRA_LIFE_SND"       :{"index":0x1B,"channel":3,"sample_rate":hq_sample_rate},
+
+#"GAME_START_SND"       :{"index":0x9,"pattern":0,"volume":32,"ticks":400,'loops':False},
+#"HIGH_SCORE_SND"       :{"index":0x9,"pattern":0,"volume":32,'loops':True},
+#"HIGHEST_SCORE_SND"       :{"index":0x3,"pattern":0,"volume":32,'loops':True},
+#"END_CHALLENGE_SND"       :{"index":0xE,"pattern":4,"volume":32,'loops':False},
+#"PERFECT_SND"         :{"index":0x14,"pattern":6,"volume":48,'loops':False,"ticks":400},
 
 }
 
@@ -85,7 +91,7 @@ def write_asm(contents,fw):
         n += 1
     fw.write("\n")
 
-music_module_label = "pengo_tunes"
+music_module_label = f"{gamename}_tunes"
 
 raw_file = os.path.join(tempfile.gettempdir(),"out.raw")
 with open(sndfile,"w") as fst,open(outfile,"w") as fw:
@@ -165,10 +171,10 @@ with open(sndfile,"w") as fst,open(outfile,"w") as fw:
             write_asm(contents,fw)
 
     # make sure next section will be aligned
-##    with open(os.path.join(sound_dir,f"{gamename}_conv.mod"),"rb") as f:
-##        contents = f.read()
+    with open(os.path.join(sound_dir,f"{gamename}_conv.mod"),"rb") as f:
+        contents = f.read()
     fw.write("{}:".format(music_module_label))
-#    write_asm(contents,fw)
+    write_asm(contents,fw)
     fw.write("\t.align\t8\n")
 
 

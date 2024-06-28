@@ -3255,7 +3255,7 @@ pause_flag:
 music_duration:
 	.word	0
 music_track_start_number:
-	.word	0
+	.word	-1
 music_pattern:
 	.word	0
 music_tick:
