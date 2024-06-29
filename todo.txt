@@ -1,11 +1,10 @@
-- In demo mode, 400 (red) points are not displayed (code 35)
 - demo: fighter kills captured ship, then is invincible (bombs go through it)
 - when boss-capturing ship is shot, it's still possible to shoot captured ship
   but it should be invincible at that point
 - red flashes (frame drop) even with very few sprites with cycle exact!!
   (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - default DSW are wrong
-- player score not displayed
+- player score not displayed, debug gctl_supv_score_072B check in MAME for screen addresses
 - implement level skip trainer
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height

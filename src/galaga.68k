@@ -7151,7 +7151,6 @@ l_24C2:
 	* no need to use register & we need C flag  | [$24D1: ld   (hl),a]
 	jcc	l_24DA                             		| [$24D2: jr   nc,l_24DA]
 	lea	ds_sprite_ctrl_9B00,a0              	| [$24D4: ld   h,#>ds_sprite_ctrl_9B00] killed boss that had the ship in the demo (not in game?)
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$24D6: ld   a,(hl)]
 	eor.b	#0x01,d0                         	| [$24D7: xor  #0x01]
@@ -7159,7 +7158,6 @@ l_24C2:
 l_24DA:
 	subq.b	#1,d6                           	| [$24DA: dec  l] .b0 [a0 coherence]
 	lea	ds_sprite_ctrl_9B00,a0              	| [$24DB: ld   h,#>ds_sprite_ctrl_9B00]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#0x0C,(a0)                      	| [$24DD: ld   (hl),#0x0C]
 	exg		d7,d0                               | [$24DF: ex   af,af'] unstash A which is the count
@@ -7182,15 +7180,12 @@ l_24E6_i_am_at_45:
 	jne	l_24FD                             	    | [$24EC: jr   nz,l_24FD]
 * ... then ...
 	lea	ds_sprite_posn_9300,a0              	| [$24EE: ld   h,#>ds_sprite_posn_9300]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [$24F0: ld   (hl),#0]
 	lea	ds_sprite_ctrl_9B00,a0              	| [$24F2: ld   h,#>ds_sprite_ctrl_9B00]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [$24F4: $24F4: ld   (hl),#0]
 	lea	b_8800,a0                      	        | [$24F6: $24F6: ld   h,#>b_8800]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#0x80,(a0)                      	| [$24F8: ld   (hl),#0x80] $80 is code for inactive sprite
 	jra	l_2416                             	    | [$24FA: jp   l_2416]
@@ -7202,59 +7197,61 @@ l_24E6_i_am_at_45:
 *  flying rogue ship (9202)..($38 .. 1000 pts)
 l_24FD:
 * code set at l_08B0 determines bonus text sprite code
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
+	lea	ds_sprite_code_8B00,a0              	| [$24FD: : ld   h,#>ds_sprite_code_8B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	d0,(a0)                         	| [ld   (hl),a] sprite_cclr[L].code = obj_collsn_notif[L]
-	cmp.b	#0x37,d0                         	| [cp   #0x37] if code < 37, goto 250E
-	jcs	l_250E                             	| [jr   c,l_250E]
-	move.b	#0x0D,d2                        	| [ld   c,#0x0D] color
-	addq.w	#1,a0                           	| [inc  l]
+	move.b	d0,(a0)                         	| [$24FF: ld   (hl),a] sprite_cclr[L].code = obj_collsn_notif[L]
+	cmp.b	#0x37,d0                         	| [$2500: cp   #0x37] if code < 37, goto 250E
+	jcs	l_250E                             	    | [$2502: jr   c,l_250E]
+	move.b	#0x0D,d2                        	| [$2504: ld   c,#0x0D] color
+	addq.w	#1,a0                           	| [$2506: inc  l]
 	addq.b	#1,d6                           	| [inc  l] coherence
-	cmp.b	#0x3A,d0                         	| [cp   #0x3A]
-	jcs	l_250C                             	| [jr   c,l_250C] if code < 3A, goto 250C
-	addq.b	#1,d2                           	| [inc  c] color++
+	cmp.b	#0x3A,d0                         	| [$2507: cp   #0x3A]
+	jcs	l_250C                             	    | [$2509: jr   c,l_250C] if code < 3A, goto 250C
+	addq.b	#1,d2                           	| [$250B: inc  c] color++
 
 l_250C:
-	move.b	d2,(a0)                         	| [ld   (hl),c] sprite_cclr[L].clr=c
-	subq.w	#1,a0                           	| [dec  l]
+	move.b	d2,(a0)                         	| [$250C: ld   (hl),c] sprite_cclr[L].clr=c
+	subq.w	#1,a0                           	| [$250D: dec  l]
 	subq.b	#1,d6                           	| [dec  l] [a0 coherence]
 l_250E:
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	lea	ds_sprite_posn_9300,a0              	| [$250E: ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#8,d2                           	| [ld   c,#8]
-	cmp.b	#0x3B,d0                         	| [cp   #0x3B]
-	jcc	l_251C                             	| [jr   nc,l_251C] if code >= 3B, goto 251C
-	clr.b	d2                               	| [ld   c,#0]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	add.b	#8,d0                            	| [add  a,#8]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+	move.b	#8,d2                           	| [$2510: ld   c,#8]
+	cmp.b	#0x3B,d0                         	| [$2512: cp   #0x3B]
+	jcc	l_251C                             	    | [$2514: jr   nc,l_251C] if code >= 3B, goto 251C
+	clr.b	d2                               	| [$2516: ld   c,#0]
+	move.b	(a0),d0                         	| [$2518: ld   a,(hl)]
+	add.b	#8,d0                            	| [$2519: add  a,#8]
+	move.b	d0,(a0)                         	| [$251B: ld   (hl),a]
 l_251C:
-	addq.w	#1,a0                           	| [inc  l]
+	addq.w	#1,a0                           	| [$251C: inc  l]
 	addq.b	#1,d6                           	| [inc  l]  [a0 coherence]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	add.b	#0x08,d0                         	| [add  a,#0x08]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
+	move.b	(a0),d0                         	| [$251D: ld   a,(hl)]
+	add.b	#0x08,d0                         	| [$251E: add  a,#0x08]
+	scs		d7
+	move.b	d0,(a0)                         	| [$2520: ld   (hl),a]
+	lea	ds_sprite_ctrl_9B00,a0              	| [$2521: ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 * mrw_sprite.cclr[ L ].b1 ^= (0 != AF.pair.b1)|
-	jcc	l_2529                             	    | [jr   nc,l_2529]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	eor.b	#0x01,d0                         	| [xor  #0x01]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+	tst.b	d7
+	jeq	l_2529                             	    | [$2523: jr   nc,l_2529]
+	move.b	(a0),d0                         	| [$2525: ld   a,(hl)]
+	eor.b	#0x01,d0                         	| [$2526: xor  #0x01]
+	move.b	d0,(a0)                         	| [$2528: ld   (hl),a]
 l_2529:
-	subq.b	#1,d6                           	| [dec  l] [a0 coherence]
-	move.b	d2,-(a0)                         	| [ld   (hl),c]
+	subq.b	#1,d6                           	| [$2529: dec  l] [a0 coherence]
+	move.b	d2,-(a0)                         	| [$252A: ld   (hl),c]
 	
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
+	lea	b_8800,a0                      	        | [$252B: ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#5,(a0)+                         	| [ld   (hl),#5] state 05 (showing score bitmap)
-	addq.b	#1,d6                           	| [inc  l]  [a0 coherence]
-	move.b	#0x13,(a0)                      	| [ld   (hl),#0x13] down counter for score bitmap
-	jra	l_2416                             	| [jp   l_2416]
+	move.b	#5,(a0)+                         	| [$252D: ld   (hl),#5] state 05 (showing score bitmap)
+	addq.b	#1,d6                           	| [$252F: inc  l]  [a0 coherence]
+	move.b	#0x13,(a0)                      	| [$2530: ld   (hl),#0x13] down counter for score bitmap
+	jra	l_2416                             	    | [$2532: jp   l_2416]
 
 * 05: shot boss, showing the score bitmap
 case_show_score_2535:
@@ -9851,7 +9848,7 @@ c_tileram_regs_clr:
 
 *=============================================================================
 * c_spriteposn_regs_init()
-*  Description:
+*  Description: could be optimized
 * IN:
 *  ...
 * OUT:
@@ -10327,7 +10324,7 @@ c_task_switcher:
 
 *=============================================================================
 * c_sctrl_sprite_ram_clr_003c()
-*  Description:
+*  Description: could be optimized
 *   Initialize screen control registers.
 * IN:
 *  ...

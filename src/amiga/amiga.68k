@@ -1191,7 +1191,11 @@ update_bobs:
 	move.l		bob_previous_drawed_sprites(pc),a4
 	lea		sfr_sprite_code_8B80,a3
 	move.l	a3,a0
-	* clear previous positions
+	
+	**********************
+	* ERASE THE OLD BOBS *
+	**********************
+	
 	moveq	#NB_TARGET_SPRITES-1,d7
 1:
 
@@ -1257,6 +1261,10 @@ update_bobs:
 	addq	#CURRENT_SPRITE_SIZE,a0
 	dbf		d7,1b
 	
+	*********************
+	* DRAW THE NEW BOBS *
+	*********************
+	
 	* game takes its source from 3 different tables, indexed the same way!
 	* we gathered the tables so they can be accessed with only one address register
 	* each table is 128 bytes long (64*2)
@@ -1264,8 +1272,7 @@ update_bobs:
 	move.l	a3,a0
 	move.l	bob_previous_drawed_sprites(pc),a6
 	moveq	#NB_TARGET_SPRITES-1,d7
-1:
-																				| speedup kludge
+1:																	| speedup kludge
 						
 	bsr		compute_sprite_xy
 	move.w	d1,(PREVIOUS_SPRITE_Y,a6)			| store current sprite attributes to previous ones
@@ -1275,7 +1282,6 @@ update_bobs:
 	
 	moveq	#0,d2
 	move.b	(TARGET_SPRITE_CODE,a0),d2
-
 	bclr	#7,d2		| discard last bit
 	
 	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d4
