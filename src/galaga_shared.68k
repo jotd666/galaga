@@ -20,6 +20,7 @@
 	.global		ldd
 	.global		ldir
 	.global		lddr
+	.global		ldir_video
 	.global		lddr_video
 	.global		rrd
 	.global		rld
@@ -109,6 +110,21 @@ ldir:
 0:
     move.b    (a0)+,(a1)+
     dbf        d1,0b
+    clr.w    d1
+    rts
+	
+* < A0: source (HL)
+* < A1: destination (DE) screen
+* < D1: length (16 bit)
+ldir_video:
+    subq.w    #1,d1
+	exg	d7,a1
+0:
+    move.b    (a0)+,d0
+	jbsr	osd_w_videoram
+	addq.w	#1,d7
+    dbf        d1,0b
+	exg	d7,a1
     clr.w    d1
     rts
 	

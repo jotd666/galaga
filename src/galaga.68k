@@ -497,13 +497,13 @@ gctl_init_puts:
 
 * erase score
 	move.w	#7,d1                           	| [ld   c,#7] doesn't initialize B but maybe it should!
-	jbsr	ldir                              	| [ldir]
+	jbsr	ldir_video                         	| [ldir]
 
 * erase "2UP" ...start at '_' of '2UP_'  (gets re-drawn momentarily)
 	lea	d_0495+2,a0                    	| [ld   hl,#d_0495 + 2]
 	lea	0x8000+0x03C0+3,a1         	| [ld   de,#0x8000 + 0x03C0 + 3] rightmost column is .3C2
 	move.w	#4,d1                           	| [ld   c,#4]
-	jbsr	ldir                              	| [ldir]
+	jbsr	ldir_video                          | [ldir]
 
 	rts                                    	| [ret]
 
