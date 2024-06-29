@@ -11139,27 +11139,7 @@ d_strScore:
 *-----------------------------------------------------------------------------
 	.include	"flv_defs.inc"
 
-	.include	"galaga_tiles.s"
-	
-galaga_mock:
-	* temp
-	lea		galaga_tiles,a0
-	move.w	#0x3FF,d1
-	move.w	#0x8000,d7
-0:
-	move.b	(a0)+,d0
-	jbsr	osd_w_videoram
-	addq.w	#1,d7
-	dbf		d1,0b
-	move.w	#0x3FF,d1
-	
-0:
-	move.b	(a0)+,d0
-	jbsr	osd_w_colorram
-	addq.w	#1,d7
-	dbf		d1,0b
-	
-	rts
+
 	
 *VIDEO_TEST = 0
 

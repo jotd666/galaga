@@ -3279,10 +3279,7 @@ bg_displayed_screen_ptr:
 
 	.include	"sound_entries.68k"
 
-	.ifndef	RELEASE
-	* for mockup display
-	.include	"sprites_conf.68k"
-	.endif
+
 	
 
 previous_random:
@@ -3371,7 +3368,7 @@ palette:
 
 	* hardware sprites "individual" 4-color palettes
 sprite_cluts:
-	.include "sprite_cluts.68k"
+	**.include "sprite_cluts.68k"
 	* tiles "individual" 4-color palettes
 tile_cluts:
 	.include "tile_cluts.68k"
