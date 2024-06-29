@@ -3926,8 +3926,10 @@ f_manage_attract_mode_17B2:
 * state 0x04 is the main state where aliens attack in the demo and fighter shoots them to show various scoring
 d_demo_jump_table_17C3:
 	.long case_clear_video_ram_1940                   | 0x00 . clear tile and sprite ram
-	.ifne	OPT_START_WITH_HIGH_SCORE_TABLE
+	.ifeq	OPT_START_WITH_HIGH_SCORE_TABLE
 	.long case_setup_info_screen_1948                 | 0x01   setup info-screen: sprite tbl index, text index, preload tmr[2]==2
+	.else
+	.long	case_end_of_demo_17E1  | show hiscore table directly
 	.endif
 	.long case_info_screen_sequencer_1984             | 0x02   tmr[2]=2,  sequence info-text and sprite tiles indices 1 sec intervals
 	.long case_init_7_aliens_for_training_mode_18D9   | 0x03   task[F_demo_fghter_ctrl]==1  init 7 aliens for training mode
@@ -3935,10 +3937,10 @@ d_demo_jump_table_17C3:
 	.long case_copyright_text_sync_18AC               | 0x05   synchronize copyright text with completion of explosion of last boss
 	.long case_clear_video_ram_1940                   | 0x06 . clear tile and sprite ram
 	.long case_delay_before_game_over_17F5            | 0x07   delay ~1 sec before puts("GAME OVER")
-	.ifne	OPT_SKIP_GAME_DEMO
-	.long case_end_of_demo_17E1   | show hiscore table directly
-	.else
+	.ifeq	OPT_SKIP_GAME_DEMO
 	.long case_init_demo_1852                         | 0x08   init demo   task[F_demo_fghter_ctrl]==1
+	.else
+	.long case_end_of_demo_17E1   | show hiscore table directly
 	.endif
 	.long case_wait_for_fighter_task_18D1             | 0x09 ~ wait for task[F_demo_fghter_ctrl]==0 demo-mode runs before advance state
 	.long case_enable_fighter_control_demo_1808       | 0x0A   task[F_demo_fghter_ctrl]==1
