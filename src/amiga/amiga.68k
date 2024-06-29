@@ -1295,7 +1295,7 @@ update_bobs:
 	moveq	#0,d3
 	move.b	(TARGET_SPRITE_COLOR,a0),d3
 	and.b	#0x3F,d3	| discard high bits
-	tst	(a2,d2.w)
+	tst.b	(a2,d2.w)
 	jne	211f			| hardware sprite: skip
 
 	* save previous sprite color too

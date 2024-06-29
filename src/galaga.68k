@@ -8723,7 +8723,7 @@ c_plyr_initials_entry_hilite_line:
 	lea	d_3197_hiscore_line_ptrs,a0    	| [ld   hl,#d_3197_hiscore_line_ptrs]
 	subq.b	#1,d0                           	| [dec  a]
 	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A (determine index into table of word ptrs)
-	move.l	a0,d7                       	| [ld   a,(hl)]
+	move.l	a0,d7           | [ld   a,(hl)]
 	                       	| [inc  hl]
 	                       	| [ld   h,(hl)]
 	                       	| [ld   l,a]
@@ -11139,6 +11139,7 @@ d_strScore:
 *-----------------------------------------------------------------------------
 	.include	"flv_defs.inc"
 
+	.ifne	0
 	.include	"galaga_tiles.s"
 	
 galaga_mock:
@@ -11160,6 +11161,7 @@ galaga_mock:
 	dbf		d1,0b
 	
 	rts
+	.endif
 	
 *VIDEO_TEST = 0
 

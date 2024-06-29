@@ -442,7 +442,7 @@ ds3_9288_tmp_IO_data:
 
 *-----------------------------------------------------------------------------
 
-
+	.align	2
 *-----------------------------------------------------------------------------
 p_attrmode_sptiles_9280:
 	ds.l    1       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
