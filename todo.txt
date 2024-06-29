@@ -1,8 +1,8 @@
-- player score not displayed, debug gctl_supv_score_072B check in MAME for screen addresses
-- red flashes (frame drop) even with very few sprites with cycle exact!!
-  (why are we flashing red when only ship and double shot (single shot?) are displayed!
+- top of screen bobs are not erased. only happens when enemies pass from bottom to top
+- when "perfect" music ends, play "attack" sound
 - default DSW are wrong
-- music not working properly, plays unexpectedly during level!! try with some other mod
+- hit miss ratio can be wrong: 386/585 => 0.4%!!
+- high score entry seems buggy!
 - understand when l_2681_end_of_table reached, ILLEGAL remaining
 - optimize: player ship should be HW sprite, even if captured
   sprite layout: 2 slots for player ship
@@ -17,7 +17,8 @@
 
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
-- top of screen bobs are not erased
+- red flashes (frame drop) even with very few sprites with cycle exact!!
+  (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - redraw bottom tiles all the time or maybe only if some sprite Y > some value
 - missing/wrong sounds:
   * swarm sound (when)

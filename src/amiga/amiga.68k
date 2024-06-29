@@ -306,7 +306,7 @@ _user:
 	or.l	#2,cheat_flags
 	st.b	cheat_used
 2:
-	move.l	(A0)+,D0	| INFTIME/S
+	move.l	(A0)+,D0	| PERFECT/S
 	beq.b	2f
 	or.l	#4,cheat_flags
 	st.b	cheat_used
@@ -418,7 +418,12 @@ _user:
 	sne		invincible_flag
 	btst	#1,d0
 	sne		infinite_lives_flag
-	
+	btst	#2,d0
+	sne		perfect_challenge_stage_flag
+
+	and.w	#7,d0
+	sne		cheat_used
+
 	jsr	 _detect_controller_types 
 	clr.b	controller_joypad_0
 	clr.b	controller_joypad_1
@@ -1198,13 +1203,12 @@ update_bobs:
 	
 	moveq	#NB_TARGET_SPRITES-1,d7
 1:
+	moveq	#0,d2
+	move.w	(PREVIOUS_SPRITE_X,a4),d2
+	beq.b	11f		| x=0: was inactive
 
 	* we have to compute current sprite x & y
 	bsr		compute_sprite_xy
-
-	moveq	#0,d2
-	move.w	(PREVIOUS_SPRITE_X,a4),d2
-	beq.b	11f		| x=0: inactive
 
 	cmp.w	d2,d0
 	bne.b	12f		| prev x != x: perform erase
@@ -3109,7 +3113,7 @@ program_args_end:
 	.align	4
 read_args_string:
 	.byte	read_args_string_end-read_args_string
-	.ascii	"INVINCIBLE/S,INFLIVES/S,INFTIME/S,"
+	.ascii	"INVINCIBLE/S,INFLIVES/S,PERFECT/S,"
 	.ascii	"CHEATKEYS/S,STARTLIVES/K/N,STARTLEVEL/K/N"
 read_args_string_end:
 	.align	2

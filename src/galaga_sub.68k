@@ -774,6 +774,8 @@ l_064F:
 	subq.b	#1,d0                           	| [$0673: dec  a]
 	*bne.b	0f
 	move.b	d0,b_9AA0+0x19                  	| [$0674: ld   (b_9AA0 + 0x19),a] sound-fx count/enable registers, "bang" sound (not in Attract Mode)
+	* stop any loop or shit going on, ship is hit
+	jbsr	osd_sound_stop
 	move.w	#EXPLOSION_SND,D0
 	jbsr	osd_sound_start
 0:

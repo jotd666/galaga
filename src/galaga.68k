@@ -500,8 +500,8 @@ gctl_init_puts:
 	jbsr	ldir_video                         	| [ldir]
 
 * erase "2UP" ...start at '_' of '2UP_'  (gets re-drawn momentarily)
-	lea	d_0495+2,a0                    	| [ld   hl,#d_0495 + 2]
-	lea	0x8000+0x03C0+3,a1         	| [ld   de,#0x8000 + 0x03C0 + 3] rightmost column is .3C2
+	lea	d_0495+2,a0                    	        | [ld   hl,#d_0495 + 2]
+	lea	0x8000+0x03C0+3,a1         	            | [ld   de,#0x8000 + 0x03C0 + 3] rightmost column is .3C2
 	move.w	#4,d1                           	| [ld   c,#4]
 	jbsr	ldir_video                          | [ldir]
 
@@ -911,12 +911,13 @@ gctl_chllng_stg_end:
 	tst.b	perfect_challenge_stage_flag
 	jeq		0f
 	move.b	#40,d0
+	move.b	d0,b_bug_flyng_hits_p_round_9288
 0:
 	move.b	d0,d4                           	| [ld   e,a]
 
 	move.w	#END_CHALLENGE_SND,d0
 	lea	b_9AA0+0x0E,a0                 	        | [ld   hl,#b_9AA0 + 0x0E] sound-fx count/enable registers, default melody for challenge stage
-	cmp.b	#40,d0                           	| [cp   #40] nbr of bugs in challenge round
+	cmp.b	#40,d4                           	| [cp   #40] nbr of bugs in challenge round
 	jne	l_065E                                  | [jr   nz,l_065E]
 	move.w	#PERFECT_SND,d0
 	lea	b_9AA0+0x14,a0                 	        | [ld   hl,#b_9AA0 + 0x14] sound effect count/enable registers, "perfect!" melody, challenge stg
@@ -1267,8 +1268,10 @@ c_scoreman_incr_add:
 	bne.b	0f                               	| [...]
 	rts                                    	    | [ret  z] [...]
 0:
-
-	add.b	(a0),d0                          	| [add  a,(hl)] a += _tile_ram[hl]
+	exg		a0,d7
+	move.b	d0,d1
+	jbsr	osd_r_videoram
+	add.b	d1,d0                           	| [add  a,(hl)] a += _tile_ram[hl]
 	cmp.b	#0x24,d0                         	| [cp   #0x24] $23=='Z', $24==' '
 	jcs	l_07E1                             	    | [jr   c,l_07E1]
 	sub.b	#0x24,d0                         	| [sub  #0x24] when is jr not taken?
@@ -1276,16 +1279,17 @@ c_scoreman_incr_add:
 l_07E1:
 	cmp.b	#0x0A,d0                         	| [cp   #0x0A] $0A='A'
 	jcc	l_07E7                             	    | [jr   nc,l_07E7]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+	jbsr	osd_w_videoram                      | [ld   (hl),a]
+	exg		a0,d7
 	rts                                    	    | [ret]
 
 l_07E7:
 	sub.b	#0x0A,d0                         	| [sub  #0x0A]
 
 l_07E9_while_1:
-	move.b	d0,(a0)+                         	| [ld   (hl),a] 0x8000[hl] = a
-	                           	                | [inc  l]
-	move.b	(a0),d0                         	| [ld   a,(hl)] a = 0x8000[hl + 1]
+	jbsr	osd_w_videoram                     	| [ld   (hl),a] 0x8000[hl] = a
+	addq.w	#1,d7              	                | [inc  l]
+	jbsr	osd_r_videoram                    	| [ld   a,(hl)] a = 0x8000[hl + 1]
 	cmp.b	#0x24,d0                         	| [cp   #0x24] $24==' '
 	jne	l_07F1                             	    | [jr   nz,l_07F1]
 	clr.b	d0                               	| [xor  a]
@@ -1293,7 +1297,8 @@ l_07F1:
 	cmp.b	#0x09,d0                         	| [cp   #0x09]
 	jeq	l_07F8_while                       	    | [jr   z,l_07F8_while]
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,(a0)                         	| [ld   (hl),a] 0x8000[hl] = a
+	jbsr	osd_w_videoram                      | [ld   (hl),a] 0x8000[hl] = a
+	exg		a0,d7
 	rts                                    	    | [ret] end call 07d8
 
 l_07F8_while:
@@ -8431,9 +8436,9 @@ l_3073:
 	jbsr	c_text_out_331b                        	| [call c_text_out_331b] "SCORE  NAME"          HL==3298
 	jbsr	c_text_out_ce_3328                     	| [call c_text_out_ce_3328] "TOP 5"                HL==32AB
 
-	lea	0x8000+0x0300+0x09,a1      	| [ld   de,#0x8000 + 0x0300 + 0x09]
-	move.l	b_8A00,a0              	| [ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
- 	jbsr	string_copy_3275                            	| [call string_copy_3275] puts players score below "SCORE"
+	move.w	#0x8000+0x0300+0x09,d7      	        | [ld   de,#0x8000 + 0x0300 + 0x09]
+	move.l	b_8A00,a0              	                | [ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
+ 	jbsr	string_copy_3275                        | [call string_copy_3275] puts players score below "SCORE"
 
 * puts_AAA (default initials of new score entry) below NAME
 	move.w	#0x8000+0x0140+0x09,d7      	| [ld   hl,#0x8000 + 0x0140 + 0x09] row below 'A' in "NAME"
