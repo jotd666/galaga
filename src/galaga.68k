@@ -1,4 +1,5 @@
 	.include	"m68k_macros.inc"
+	.include	"galaga.inc"
 	
 * input file game_ctrl.s
 *
@@ -996,10 +997,10 @@ l_06AC_while_fcnt:
 
 	move.b	#100,d0                         	| [ld   a,#100] 100 * 10 ... special bonus (d_scoreman_inc_lut[0] == $10)
 l_06BA:
-	lea	ds_bug_collsn_hit_mult+0x0F,a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x0F] challenge bonus score += 10000
+	lea	ds_bug_collsn_hit_mult+0x0F,a0 	        | [ld   hl,#ds_bug_collsn_hit_mult + 0x0F] challenge bonus score += 10000
 	add.b	(a0),d0                          	| [add  a,(hl)]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-	jbsr	gctl_supv_score_072B                   	| [call gctl_supv_score_072B] add bonus to player score
+	jbsr	gctl_supv_score_072B                | [call gctl_supv_score_072B] add bonus to player score
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 
@@ -3925,14 +3926,20 @@ f_manage_attract_mode_17B2:
 * state 0x04 is the main state where aliens attack in the demo and fighter shoots them to show various scoring
 d_demo_jump_table_17C3:
 	.long case_clear_video_ram_1940                   | 0x00 . clear tile and sprite ram
+	.ifne	OPT_START_WITH_HIGH_SCORE_TABLE
 	.long case_setup_info_screen_1948                 | 0x01   setup info-screen: sprite tbl index, text index, preload tmr[2]==2
+	.endif
 	.long case_info_screen_sequencer_1984             | 0x02   tmr[2]=2,  sequence info-text and sprite tiles indices 1 sec intervals
 	.long case_init_7_aliens_for_training_mode_18D9   | 0x03   task[F_demo_fghter_ctrl]==1  init 7 aliens for training mode
 	.long case_wait_for_fighter_task_18D1             | 0x04 ~ wait for task[F_demo_fghter_ctrl]==0 training-mode runs before advance state
 	.long case_copyright_text_sync_18AC               | 0x05   synchronize copyright text with completion of explosion of last boss
 	.long case_clear_video_ram_1940                   | 0x06 . clear tile and sprite ram
 	.long case_delay_before_game_over_17F5            | 0x07   delay ~1 sec before puts("GAME OVER")
+	.ifne	OPT_SKIP_GAME_DEMO
+	.long case_end_of_demo_17E1   | show hiscore table directly
+	.else
 	.long case_init_demo_1852                         | 0x08   init demo   task[F_demo_fghter_ctrl]==1
+	.endif
 	.long case_wait_for_fighter_task_18D1             | 0x09 ~ wait for task[F_demo_fghter_ctrl]==0 demo-mode runs before advance state
 	.long case_enable_fighter_control_demo_1808       | 0x0A   task[F_demo_fghter_ctrl]==1
 	.long case_wait_for_fighter_task_18D1             | 0x0B ~ wait for task[F_demo_fghter_ctrl]==0 boss-capture before advance state
@@ -6066,32 +6073,32 @@ l_1FD4_update_two_ship:
 *-----------------------------------------------------------------------------
 f_boss_capturing_ship_killed_2000:
 	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d6	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)] object locator for captured ship
-	                           	| [ld   l,a]
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
+	                           	                | [ld   l,a]
+	lea	b_8800,a0                      	        | [ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	| [and  a]
-	jne	l_20BF                             	| [jp   nz,l_20BF] no idea how it could be nz...
+	                               	            | [and  a]
+	jne	l_20BF                             	    | [jp   nz,l_20BF] no idea how it could be nz...
 * if ( captr_status_1 == 0 )
 	move.b	ds5_928A_captr_status+0x01,d0   	| [ld   a,(ds5_928A_captr_status + 0x01)]
-	                               	| [and  a]
-	jeq	l_20C7                             	| [jp   z,l_20C7]
+	                               	            | [and  a]
+	jeq	l_20C7                             	    | [jp   z,l_20C7]
 * else if ( captr_status_1 == 1 )
 	subq.b	#1,d0                           	| [dec  a]
-	jeq	l_20D1_update_ship_spin            	| [jp   z,l_20D1_update_ship_spin]
+	jeq	l_20D1_update_ship_spin            	    | [jp   z,l_20D1_update_ship_spin]
 * else ... status is 2 when stopped spinning and preparing for landing
 	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	cmp.b	#0x80,d0                         	| [cp   #0x80]
-	jeq	l_2026                             	| [jr   z,l_2026]
-	jpl	l_2023                             	| [jp   p,l_2023]
+	jeq	l_2026                             	    | [jr   z,l_2026]
+	jpl	l_2023                             	    | [jp   p,l_2023]
 	addq.b	#1,(a0)                         	| [inc  (hl)]
-	jra	l_205E                             	| [jr   l_205E]
+	jra	l_205E                             	    | [jr   l_205E]
 l_2023:
 	subq.b	#1,(a0)                         	| [dec  (hl)]
-	jra	l_205E                             	| [jr   l_205E]
+	jra	l_205E                             	    | [jr   l_205E]
 
 l_2026:
 	addq.w	#1,a0                           	| [inc l]
@@ -7613,7 +7620,7 @@ l_2681_end_of_table:
 	move.b	ds_plyr_actv+_b_2ship,d0        	| [ld   a,(ds_plyr_actv +_b_2ship)]
 	subq.b	#1,d0                           	| [dec  a]
 	and.b	d1,d0                            	| [and  b]
-	jeq	l_26A4_done                        	| [jr   z,l_26A4_done]
+	jeq	l_26A4_done                        	    | [jr   z,l_26A4_done]
 * !capture-mode and !two-ship-status... we have a rogue fighter in the mob.
 	move.b	ds_plyr_actv+_b_not_chllg_stg,d0	| [ld   a,(ds_plyr_actv +_b_not_chllg_stg)] ==(stg_ctr+1)%4 ...i.e. 0 if challenge stage
 	                               	| [and  a]
@@ -8452,7 +8459,7 @@ l_30AA:
 
 * jp here from section _314C
 l_30B5_next_char_selectn:
-	jbsr	c_puts_top5scores_321d                 	| [call c_puts_top5scores_321d]
+	jbsr	c_puts_top5scores_321d              | [call c_puts_top5scores_321d]
 	jbsr	c_plyr_initials_entry_hilite_line 	| [call c_plyr_initials_entry_hilite_line]
 
 * get time 0 from frame counter
@@ -8465,7 +8472,7 @@ l_30BF_frame_sync:
 	jbsr	c_32ED_top5_dlg_endproc           	| [call c_32ED_top5_dlg_endproc] checks coin-in once per frame
 	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
 	cmp.b	d2,d0                            	| [cp   c]
-	jeq	l_30BF_frame_sync                  	| [jr   z,l_30BF_frame_sync]
+	jeq	l_30BF_frame_sync                  	    | [jr   z,l_30BF_frame_sync]
 
 	move.b	d0,d2                           	| [ld   c,a]
 	and.b	#0x0F,d0                         	| [and  #0x0F] 15 frames
@@ -8871,7 +8878,6 @@ c_mach_hiscore_show_3214:
 	lea	str_3345,a0                    			| [$3214: ld   hl,#str_3345] 'GALACTIC HEROES'
 	jbsr	c_text_out_ce_3328                  | [$3217: call c_text_out_ce_3328]
 	jbsr	c_text_out_ce_3328                  | [$321A: call c_text_out_ce_3328] 'BEST 5'  hl==335c
-
 *=============================================================================
 * hiscore_scrn()
 *  Description:
@@ -8885,7 +8891,7 @@ c_mach_hiscore_show_3214:
 *-----------------------------------------------------------------------------
 c_puts_top5scores_321d:
 	lea	s_32B4_score_name,a0           			| [ld   hl,#s_32B4_score_name]
-	jbsr	c_text_out_331b                        	| [call c_text_out_331b] puts 'SCORE     NAME' below 'TOP 5'
+	jbsr	c_text_out_331b                     | [call c_text_out_331b] puts 'SCORE     NAME' below 'TOP 5'
 	move.b	#1,d1                           	| [ld   b,#1] starting index for c_3231
 	jbsr	c_3231                            	| [call c_3231] '1ST............'
 	jbsr	c_3231                            	| [call c_3231] '2ND............'
@@ -8905,56 +8911,52 @@ c_puts_top5scores_321d:
 *-----------------------------------------------------------------------------
 c_3231:
 	moveq	#0,d0
-	move.b	d1,d0                           	| [ld   a,b] B=rank (1 to 5)
-	subq.b	#1,d0                           	| [dec  a]
-	lsl.b	#4,d0                            	| [add  a,a]
+	move.b	d1,d0                           	| [$3231: ld   a,b] B=rank (1 to 5)
+	subq.b	#1,d0                           	| [$3232: dec  a]
+	lsl.w	#4,d0                            	| [$3233: add  a,a]
 												| [add  a,a]
 												| [add  a,a] A=offset into table ... (B-1)*8
-	lea	best_score_table_32C5,a0                      	| [ld   hl,#best_score_table_32C5] score placement characters: 'ST', 'ND', 'RD' etc.
-	move.l	(a0,d0.w),a0                            	| [rst  0x10] HL += A
-	move.l	(a0)+,a1                         	| [ld   e,(hl)] destination lo-byte
-												| [inc  hl]
-												| [ld   d,(hl)] destination hi-byte
-												| [inc  hl]
-	move.b	d1,d0                           	| [ld   a,b] B=numerical score placement
-	move.b	d0,(a1)                         	| [ld   (de),a] putc '5' of '5TH' on screen.
-	jbsr	c_3273                            	| [call c_3273] DE:-=$20
-	jbsr	c_put_initial_3270                  | [call c_put_initial_3270] putc 'T' of '5TH' on screen.
-	jbsr	c_put_initial_3270                  | [call c_put_initial_3270] putc 'H' of '5TH' on screen.
-	jbsr	c_3273                            	| [call c_3273] DE:-=$20
-	jbsr	c_3273                            	| [call c_3273] DE:-=$20
-	move.b	(a0),d0                         	| [ld   a,(hl)] const ptr to score (lo-byte)
-	addq.w	#1,a0                           	| [inc  hl]
-	move.b	(a0),d2                         	| [ld   c,(hl)] const ptr to score (lo-byte)
-	addq.w	#1,a0                           	| [inc  hl]
-
-	move.l	a0,-(sp)                        	| [push hl] save const ptr to player initials.
-	move.b	d2,d5                           	| [ld   h,c]
-	move.b	d0,d6                           	| [ld   l,a] HL=ptr to 6-bytes score text
-	LOAD_D5_16_FROM_D5D6
-	move.l	d5,a1			| screen address
-	jbsr	string_copy_3275                            	| [call string_copy_3275] puts 'XXXXX' of 5th place on screen.
-	move.b	d4,d0                           	| [ld   a,e]
-	sub.b	#0x20*6,d0                        	| [$325A: sub  #0x20 * 6] advance column ptr right 6 characters.
-	jcc	l_3260                             		| [$325D: jr   nc,l_3260]
-	subq.b	#1,d3                           	| [$325F: dec  d] when not jr?
+	lea	best_score_table_32C5,a0                | [$3236: ld   hl,#best_score_table_32C5] score placement characters: 'ST', 'ND', 'RD' etc.
+	lea	(a0,d0.w),a0                            | [$3239: rst  0x10] HL += A
+	move.l	(a0)+,a1                         	| [$323A: ld   e,(hl)] destination lo-byte
+												| [$323B: inc  hl]
+												| [$323C: ld   d,(hl)] destination hi-byte
+												| [$323D: inc  hl]
+	move.b	d1,d0                           	| [$323E: ld   a,b] B=numerical score placement
+	jbsr	write_videoram_to_a1                | [$323F: ld   (de),a] putc '5' of '5TH' on screen.
+	sub.w	#0x20,a1                          	| [$3240: call c_3273] DE:-=$20
+	jbsr	c_put_initial_3270                  | [$3243: call c_put_initial_3270] putc 'T' of '5TH' on screen.
+	jbsr	c_put_initial_3270                  | [$3246: call c_put_initial_3270] putc 'H' of '5TH' on screen.
+	sub.w	#0x40,a1                            | [$3249: call c_3273] DE:-=$20
+												| [$324C: call c_3273] DE:-=$20
+	move.l	(a0)+,a2                         	| [$324F: ld   a,(hl)] const ptr to score (hi-byte)
+												| [$3250: inc  hl]
+												| [$3251: ld   c,(hl)] const ptr to score (lo-byte)
+												| [$3252: inc  hl]
+	move.l	a0,-(sp)                        	| [$3253: push hl] save const ptr to player initials.
+												| [$3254: ld   h,c]
+												| [$3255: ld   l,a] HL=ptr to 6-bytes score text
+	
+	
+	move.l	a2,a0								| source address
+	jbsr	string_copy_3275                    | [$3256: call string_copy_3275] puts 'XXXXX' of 5th place on screen.
+												| [$3259: ld   a,e]
+	sub.w	#0x20*6,a1                        	| [$325A: sub  #0x20 * 6] advance column ptr right 6 characters.
+	                          		            | [$325D: jr   nc,l_3260]
+	                                        	| [$325F: dec  d] when not jr?
 l_3260:
-	move.b	d0,d4                           	| [$325C: ld   e,a]
+                 	                           	| [$325C: ld   e,a]
 	move.l	(sp)+,a0                        	| [$3260: pop  hl]
-	move.b	(a0)+,d0                         	| [$3261: ld   a,(hl)]
+	move.l	(a0),a0                         	| [$3261: ld   a,(hl)]
 												| [$3262: inc  hl]
-	illegal
-	nop
-	nop
-	nop
-	move.b	(a0),d5                         	| [ld   h,(hl)]
-	move.b	d0,d6                           	| [ld   l,a]
-	* pointer in d5/D6...
-	jbsr	c_put_initial_3270                            	| [call c_put_initial_3270] putc 1st initial
-	jbsr	c_put_initial_3270                            	| [call c_put_initial_3270] putc 2nd initial
-	jbsr	c_put_initial_3270                            	| [call c_put_initial_3270] putc 3rd initial
-	addq.b	#1,d1                           	| [inc  b]
-	rts                                    	| [ret]
+	                         	                | [$3263: ld   h,(hl)]
+	                         	                | [$3264: ld   l,a]
+	* ROM? pointer in d5/D6...
+	jbsr	c_put_initial_3270                  | [$3265: call c_put_initial_3270] putc 1st initial
+	jbsr	c_put_initial_3270                  | [$3268: call c_put_initial_3270] putc 2nd initial
+	jbsr	c_put_initial_3270                  | [$326B: call c_put_initial_3270] putc 3rd initial
+	addq.b	#1,d1                           	| [$326E: inc  b]
+	rts                                    	    | [$326F: ret]
 
 *=============================================================================
 * c_put_initial_3270()
@@ -9174,15 +9176,16 @@ l_3321:
 *  Description:
 *   Text out, color attribute encoded. Text blocks are length-encoded.
 *   Used by game_over.
-* IN:
+* IN: A0: pointer on text structure to display
 *  ...
-* OUT:
+* OUT: A0: A0 when IN plus 4
 *  ...
 *-----------------------------------------------------------------------------
 c_text_out_ce_3328:
-	move.b	(a0)+,d4                         	| [$3328: ld   e,(hl)] LSB
+	addq	#2,a0
+	move.b	(a0)+,d3                         	| [$3328: ld   e,(hl)] LSB
 	                           	                | [$3329: inc  hl]
-	move.b	(a0)+,d3                         	| [$332A: ld   d,(hl)] MSB
+	move.b	(a0)+,d4                         	| [$332A: ld   d,(hl)] MSB
 	                           	                | [$332B: inc  hl]
 	move.b	(a0)+,d1                         	| [$332C: ld   b,(hl)] strlen
 	                           	                | [$332D: inc  hl]
@@ -9190,24 +9193,25 @@ c_text_out_ce_3328:
 	                           	                | [$332F: inc  hl]
 	LOAD_D3_16_FROM_D3D4
 	exg	d3,d7                              	    | [$3330: ex   de,hl]
+	exg		a1,a0
 l_3331:
-	move.b	(a0)+,d0                         	| [$3331: ld   a,(de)] data address
+	move.b	(a1)+,d0                         	| [$3331: ld   a,(de)] data address
 	jbsr	osd_w_videoram                     	| [$3332: ld   (hl),a]
-	bset.b	#2,d7                           	| [$3333: set  2,h] dest+=$0400 (tile color regs)
+	bset.b	#10,d7                           	| [$3333: set  2,h] dest+=$0400 (tile color regs)
 	move.b	d2,d0                         	    | [$3335: ld   (hl),c]
 	jbsr	osd_w_colorram
-	bclr.b	#2,d7                           	| [$3336: res  2,h]
+	bclr.b	#10,d7                           	| [$3336: res  2,h]
 	                                        	| [$3338: inc  de]
 	move.b	#-0x20,d0                       	| [$3339: ld   a,#-0x20]
-	subq.b	#1,d7                           	| [$333B: dec  h]
+	sub.w	#0x100,d7                           | [$333B: dec  h]
 	add.b	d7,d0                            	| [$333C: add  a,l]
 	jcc	l_3340                             	    | [$333D: jr   nc,l_3340]
-	addq.b	#1,d7                           	| [$333F: inc  h]
+	add.w	#0x100,d7                           | [$333F: inc  h]
 l_3340:
 	move.b	d0,d7                           	| [$3340: ld   l,a]
 	subq.b	#1,d1                           	| [...]
 	jne	l_3331                             	    | [$3341: djnz l_3331]
-	exg	d3,d7                              	    | [$3343: ex   de,hl]
+	exg		a1,a0                              	| [$3343: ex   de,hl]
 	rts                                    	    | [$3344: ret]
 
 *=============================================================================

@@ -13,9 +13,9 @@
 	* all options must be zeroed for release
     OPT_START_SCORE=0
 
-	OPT_SKIP_TITLE_SCREEN=0
-
+	OPT_START_WITH_HIGH_SCORE_TABLE=0
 	OPT_SKIP_GAME_DEMO=0
+
 	OPT_ONLY_ONE_LIFE=0
 
 ***

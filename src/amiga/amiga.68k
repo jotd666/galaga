@@ -803,7 +803,7 @@ _vblank:
 	subq	#1,d1
 
 	.ifndef	RELEASE
-	move.w	d1,0xF0
+	move.w	d1,0xF8
 	.endif
 	move.w	d1,music_tick
 	bne.b	13f
@@ -3029,6 +3029,13 @@ handle_keyboard:
 	*move.b	d1,player_1_score_address_60b2+1
 	movem.w	(a7)+,d0/d1
 0:
+*	cmp.b	#0x53,d0	| F4 key
+*	bne.b	0f
+*	st.b	cheat_used
+*	* no more enemies => goto next level
+*	move.w	#0x0FF,_custom+color
+*	clr.b	b_bugs_actv_nbr
+*0:
 	.ifndef	RELEASE
 	* cheat but not very rewarding as it triggers a "hurry up!"
 	cmp.b	#0x58,d0	| F9 key

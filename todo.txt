@@ -1,15 +1,12 @@
 - demo: fighter kills captured ship, then is invincible (bombs go through it)
-- when boss-capturing ship is shot, it's still possible to shoot captured ship
-  but it should be invincible at that point
 - red flashes (frame drop) even with very few sprites with cycle exact!!
   (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - default DSW are wrong
 - player score not displayed, debug gctl_supv_score_072B check in MAME for screen addresses
-- implement level skip trainer
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
-- music not working properly, plays unexpectedly during level!!
-
+- music not working properly, plays unexpectedly during level!! try with some other mod
+- understand when l_2681_end_of_table reached, ILLEGAL remaining
 - optimize: player ship should be HW sprite, even if captured
   sprite layout: 2 slots for player ship
                  2 slots for captured ship (1 wasted)
@@ -24,15 +21,15 @@
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
 - top of screen bobs are not erased
-- 2 first rows colors: ??? white on real hardware
 - stars & colors trashed near the PAL wait region: copperlist conflict between sprite/color
 - stars glitching (when scrolling)
 - redraw bottom tiles all the time or maybe only if some sprite Y > some value
 - missing/wrong sounds:
   * swarm sound (when)
-  * all tunes
+  * missing tunes
   * extra life (but again, score doesn't work)
   * last moths attack again when on bottom of screen, but no sound is played
+- implement level skip trainer
   
 maybe already fixed:
 

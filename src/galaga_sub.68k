@@ -1062,7 +1062,7 @@ l_0738:
 
 	lea	ds_sprite_posn_9300+0x08,a0         	| [$0750: ld   hl,#ds_sprite_posn_9300 + 0x08] skip first 4 objects...
 	move.b	#44,d1                          	| [$0753: ld   b,#44] 0x30 - 4
-												| [$0755: jr   l_075C_call_hit_detection]
+	jra	l_075C_call_hit_detection   			| [$0755: jr   l_075C_call_hit_detection]
 
 l_0757_call_hit_detection_all:
 * reset HL and count to check $30 objects
@@ -2697,12 +2697,11 @@ l_0E3A:
 * also, if status==4 (capturing boss shot while in home-position, freeing a rogue ship)
 case_make_object_inactive_0e49: | 0x0
 	lea	b_8800,a0                      			| [$0E49: ld   h,#>b_8800]
-	move.b	(mq_object_id_10,a2),d6                    	| [$0E4B: ld   l,0x10(ix)] object offset ...8800[L]
+	move.b	(mq_object_id_10,a2),d6             | [$0E4B: ld   l,0x10(ix)] object offset ...8800[L]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#0x80,(a0)                      	| [$0E4E: ld   (hl),#0x80] make inactive
 	lea	ds_sprite_posn_9300,a0              	| [$0E50: ld   h,#>ds_sprite_posn_9300]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [$0E52: ld   (hl),#0]
 	clr.b	(mq_state_13,a2)                        	| [$0E54: ld   0x13(ix),#0x00] make inactive
