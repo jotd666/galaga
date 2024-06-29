@@ -2192,7 +2192,7 @@ platform_init:
 	* set other sprites to blank
 	move.l		#blank_sprite,d0
 
-	moveq	#7,d1
+	moveq	#NB_HOST_SPRITES-1+1,d1   | only 6 sprites are in the list
 	lea		sprites,a1
 0:
     move.w	d0,(6,a1)
@@ -2452,8 +2452,7 @@ update_bg_color:
 	cmp.w	#2,d7
 	bcs.b	0f				| below 2: ignore
 
-	subq	#1,d3
-	bmi.b	0f
+
 	* D3 contains Y row
 	lea		bg_color_table(pc),a0
 	add.w	d3,d3
@@ -3320,14 +3319,14 @@ _end_of_ng_code:
 * table of the colors for fg tiles in the copperlist
 	.set	row_offset,0
 bg_color_table:
-	.rept	27
+	.rept	28
 	.long	color_row_0+row_offset
 	* warning: this offset increase depends on what's in color_row_0
 	* 16=4 colors to change, 32 bytes per star pattern * 8 patterns per row
 	.set	row_offset,row_offset+copper_8x8_row_size
 	.endr
-	.long	color_row_27
 	.long	color_row_28
+	.long	color_row_29
 	.set	row_offset,0
 	.rept	4
 	.long	color_row_29_plus+row_offset
@@ -3480,12 +3479,12 @@ sprites:
     * #6
     .word    sprpt+24,0
     .word    sprpt+26,0
-
+	* 2 last sprites cannot be used
 	
- 	.set    beampos,0x2401	| first displayed row
+ 	.set    beampos,0x1C01	| first displayed row
 	.word	beampos,0xFFFE
 color_row_0:
-	.rept	27
+	.rept	28
 	* set 4 colors for that 8-high row: 16 bytes
 	.word	start_color,default_color_1
 	.word	start_color+8,default_color_2
@@ -3496,7 +3495,7 @@ color_row_0:
 	STAR_COPPER_ROW
 	.endr
 	.endr
-color_row_27:
+color_row_28:
 	.word	start_color,default_color_1 
 	.word	start_color+8,default_color_2 
 	.word	start_color+16,default_color_3     
@@ -3512,7 +3511,7 @@ color_row_27:
 	.set    beampos,0x0401
     .word   beampos,0xFFFE	
 	
-color_row_28:
+color_row_29:
 	.word	start_color,default_color_1
 	.word	start_color+8,default_color_2  
 	.word	start_color+16,default_color_3  

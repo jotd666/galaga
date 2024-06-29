@@ -21,8 +21,6 @@
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
 - top of screen bobs are not erased
-- stars & colors trashed near the PAL wait region: copperlist conflict between sprite/color
-- stars glitching (when scrolling)
 - redraw bottom tiles all the time or maybe only if some sprite Y > some value
 - missing/wrong sounds:
   * swarm sound (when)
