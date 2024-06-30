@@ -2,6 +2,7 @@
 - when "perfect" music ends, play "attack" sound: to test
 - default DSW are wrong
 - hit miss ratio can be wrong: 386/585 => 0.4%!!
+- extra life works, test sound
 - high score entry seems buggy!
 - understand when l_2681_end_of_table reached, ILLEGAL remaining
 - optimize: player ship should be HW sprite, even if captured
@@ -11,10 +12,6 @@
 				 2 spare slots (maybe their 3 spare colors will be useful)
 - HW sprites seem not to work but is the code aligned with .py (orientations/flip/mirror) ?
 
-- tiles on last row can have different CLUTs and cannot be handled by dynamic colors
-  generate subset of tiles (only used in last row anyway) and try to match colors with
-  sprites colors else not a problem we have a few 16-31 colors left from unused sprites (5 max)
-   tiles $36->$4D (included)
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
 - red flashes (frame drop) even with very few sprites with cycle exact!!
@@ -23,7 +20,6 @@
 - missing/wrong sounds:
   * swarm sound (when) => after ship capture, at another time???
   * missing tunes
-  * extra life (but again, score doesn't work)
   * last moths attack again when on bottom of screen, but no sound is played
 - namco logo should be red
 - double buffering: don't double buffer last plane for tiles

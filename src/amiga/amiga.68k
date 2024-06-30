@@ -813,7 +813,7 @@ _vblank:
 	move.w	d1,music_tick
 	bne.b	13f
 	bsr		osd_sound_stop
-	cmp.w	#6,music_track_start_number
+	cmp.b	#6,music_track_start_number
 	jne		13f
 	* special case end of "PERFECT" play attack sound
 	move.w	#ATTACK_SND,d0

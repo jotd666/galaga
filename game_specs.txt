@@ -17,7 +17,8 @@ over some.
 
 We noticed that
 * when a line is colored, all chars are of the same color (notable
-  exception: when entering high score, we'll handle that in a corner case
+  exception: when entering high score, we'll handle that in a corner case,
+  also notable exception: status bar on the bottom with lives & current stage flags
 * chars are mostly mono-planar (except for flags & lives: 3 colors + black)
   
 So we can:
@@ -38,6 +39,12 @@ So we can:
 This allows to draw & erase BOBs without having to care about the background: better blitter speed!
 Also handles tile/sprites colors, allowing to use 16 exclusive colors for BOBs, making
 a 32 color game but with only 16 color blitter bandwidth.
+
+For status bar, reserve ships (left) and stage flags (right) don't share the same colors, so
+the copper color change at the start of the line doesn't work there. So we use BOBs palette plus
+some spare colors above color 15 (not all hardware sprites are used) to allocate the missing colors,
+and if needed we disable the copper writes on those 2 last rows
+
 
 reuses part of the Galaxian port code for dynamic color rows, only with different colors
 

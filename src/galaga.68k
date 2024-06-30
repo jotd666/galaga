@@ -1228,7 +1228,9 @@ l_07BC:
 	add.b	d1,d0                            	| [$07BC: add  a,b] actv_plyr_state[0x1E] += mchn_cfg_bonus[1]
 l_07BD:
 	move.b	d0,(a0)                         	| [$07BD: ld   (hl),a]
-	*move.b	d0,b_9AA0+0x0A                  	| [$07BE: ld   (b_9AA0 + 0x0A),a] sound-fx count/enable registers, bonus ship awarded sound (set non-zero)
+	move.b	d0,b_9AA0+0x0A                  	| [$07BE: ld   (b_9AA0 + 0x0A),a] sound-fx count/enable registers, bonus ship awarded sound (set non-zero)
+	move.w	#EXTRA_LIFE_SND,d0
+	jbsr	osd_sound_start
 	lea	ds_plyr_actv+_b_nships,a0      	        | [$07C1: ld   hl,#ds_plyr_actv +_b_nships]
 	addq.b	#1,(a0)                         	| [$07C4: inc  (hl)]
 	jbsr	draw_resv_ships_136c                | [$07C5: call draw_resv_ships_136c] new spare ship added
