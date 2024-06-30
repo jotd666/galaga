@@ -813,7 +813,11 @@ _vblank:
 	move.w	d1,music_tick
 	bne.b	13f
 	bsr		osd_sound_stop
-
+	cmp.w	#6,music_track_start_number
+	jne		13f
+	* special case end of "PERFECT" play attack sound
+	move.w	#ATTACK_SND,d0
+	jbsr	osd_sound_start
 13:
 	lea		_custom,a5
 	
@@ -2260,7 +2264,7 @@ platform_init:
 load_palette_in_copperlist:
 	movem.l	d0-d1/a0-a1,-(a7)
 	lea		palette(pc),a0
-	move.w	#TOTAL_NB_COLORS,d0
+	move.w	#TOTAL_NB_COLORS*2,d0
 	lea		colors,a1
 	bsr		load_palette
 	movem.l	(a7)+,d0-d1/a0-a1

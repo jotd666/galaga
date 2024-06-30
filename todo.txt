@@ -1,5 +1,5 @@
 - top of screen bobs are not erased. only happens when enemies pass from bottom to top
-- when "perfect" music ends, play "attack" sound
+- when "perfect" music ends, play "attack" sound: to test
 - default DSW are wrong
 - hit miss ratio can be wrong: 386/585 => 0.4%!!
 - high score entry seems buggy!
@@ -14,14 +14,14 @@
 - tiles on last row can have different CLUTs and cannot be handled by dynamic colors
   generate subset of tiles (only used in last row anyway) and try to match colors with
   sprites colors else not a problem we have a few 16-31 colors left from unused sprites (5 max)
-
+   tiles $36->$4D (included)
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
 - red flashes (frame drop) even with very few sprites with cycle exact!!
   (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - redraw bottom tiles all the time or maybe only if some sprite Y > some value
 - missing/wrong sounds:
-  * swarm sound (when)
+  * swarm sound (when) => after ship capture, at another time???
   * missing tunes
   * extra life (but again, score doesn't work)
   * last moths attack again when on bottom of screen, but no sound is played

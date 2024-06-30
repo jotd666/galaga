@@ -191,7 +191,7 @@ add_sprite_block(0x30,0x34,"bomb",[0x9,0xB])
 add_sprite_block(0x41,0x44,"enemy_explosion",0xA,mirror=True)
 add_sprite(0x34,"score_150",0xA)
 add_sprite(0x35,"score_400",0xA)
-add_sprite(0x36,"score_500",0)  # wrong clut
+#add_sprite(0x36,"score_500",0)  # wrong clut, probably not used either!
 add_sprite(0x37,"score_800",0xD)
 add_sprite(0x38,"score_1000",0xD)
 add_sprite(0x39,"score_1500",0xD)
@@ -251,11 +251,11 @@ def tile_rgb(x):
     return (r,g,b)
 
 # palette looks ok for tiles, thanks Mark!!
-tiles_palette = [tuple(x) for x in block_dict["palette"]["data"]]
+tiles_palette = [(x[0],x[2],x[1]) for x in block_dict["palette"]["data"]]
 # palette is wrong for sprites. MAME gfxsave to the rescue!
 palette = [tuple(int(x) for x in line.split(",")[0:3]) for line in ripped_palette]
 sprite_clut = [[tuple(palette[x]) for x in clut] for clut in block_dict["sprite_clut"]["data"]]
-fg_tile_clut = [[tile_rgb(x) for x in clut] for clut in block_dict["fg_tile_clut"]["data"]]
+fg_tile_clut = [[tiles_palette[x] for x in clut] for clut in block_dict["fg_tile_clut"]["data"]]
 
 
 def replace_color(img,color,replacement_color):
@@ -372,27 +372,40 @@ with open(os.path.join(src_dir,"palette_cluts.68k"),"w") as f:
 
 
 
+extended_palette = palette + (32-len(palette)) * [dummy_color]
+# add missing colors in some unused slots > index 16
+extended_palette[30] = (222, 0, 0)
+extended_palette[31] = (0, 0, 255)
+extended_palette[25] =  (222, 104, 0)
 
 with open(os.path.join(src_dir,"palette.68k"),"w") as f:
     f.write("palette:\n")
-    bitplanelib.palette_dump(palette,f,pformat=bitplanelib.PALETTE_FORMAT_ASMGNU)
+    bitplanelib.palette_dump(extended_palette,f,pformat=bitplanelib.PALETTE_FORMAT_ASMGNU)
 
 # cancel color 4 (not sure it's useful)
 palette[4] = dummy_color
-
 
 with open(os.path.join(src_dir,"tile_cluts.68k"),"w") as f:
 
     for c in fg_tile_clut:
         bitplanelib.palette_dump(c,f,pformat=bitplanelib.PALETTE_FORMAT_ASMGNU)
 
-bitplanelib.palette_dump(palette,os.path.join(dump_dir,"colors.png"),pformat=bitplanelib.PALETTE_FORMAT_PNG)
+bitplanelib.palette_dump(extended_palette,os.path.join(dump_dir,"colors.png"),pformat=bitplanelib.PALETTE_FORMAT_PNG)
 
 tile_plane_cache = {bytes(8):0}  # so empty line has index 0
 
 character_codes = []
 tile_index = 1
 
+special_tile_clut_dict = {
+0x36:1,0x37:1,   # stage flag (1 level)
+0x38:1,0x39:1,   # stage flag (5 levels)
+0x3A:2,0x3B:2,0x3C:2,0x3D:2,   # stage flag (10 levels)
+0x42:2,0x43:2,0x44:2,0x45:2,   # stage flag (30 levels)
+0x46:1,0x47:1,0x48:1,0x49:1,   # stage flag (50 levels)
+0x3E:2,0x3F:2,0x40:2,0x41:2,   # stage flag (20 levels)
+0x4A:3,0x4B:3,0x4C:3,0x4D:3,   # extra ship  clut is wrong
+}
 if True:
     for k,chardat in enumerate(block_dict["fg_tile"]["data"]):
         if k==128:
@@ -400,11 +413,22 @@ if True:
         img = Image.new('RGB',(8,8))
 
         d = iter(chardat)
-        for i in range(8):
-            for j in range(8):
-                v = index_conv[next(d)]   # 0-3 to real index in 32 color palette
-                img.putpixel((j,i),fake_4_color_palette[v])
-        data = bitplanelib.palette_image2raw(img,None,fake_4_color_palette)
+        if 0x36 <= k <= 0x4D:
+            idx = special_tile_clut_dict.get(k,2)
+            clut = fg_tile_clut[idx]
+            if idx in [1,3]:
+                clut = [(x[2],x[1],x[0]) for x in clut]
+            for i in range(8):
+                for j in range(8):
+                    v = clut[next(d)]
+                    img.putpixel((j,i),v)
+            data = bitplanelib.palette_image2raw(img,None,extended_palette)
+        else:
+            for i in range(8):
+                for j in range(8):
+                    v = index_conv[next(d)]   # 0-3 to real index in 32 color palette
+                    img.putpixel((j,i),fake_4_color_palette[v])
+            data = bitplanelib.palette_image2raw(img,None,fake_4_color_palette)
         chunk_len,remainder = divmod(len(data),5)
         if remainder:
             raise Exception("tile bitmap not a multiple of 5!")
