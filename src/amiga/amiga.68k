@@ -945,11 +945,62 @@ really_update_sprites:
 	
 	bsr		update_hardware_sprites
 	bsr		update_bobs
-	
+	bsr		refresh_status_bar
 	rts
 	
 sprite_toggle:
 	dc.w	0
+	
+refresh_status_bar:
+	lea			hardware_sprite_flag_table,a2
+	* previous sprites are now current sprites
+	move.l		bob_previous_drawed_sprites(pc),a4
+	clr.b		d4
+	clr.b		d5
+	clr.b		d6
+	****************************************
+	* CHECK IF LOW SPRITE ON LEFT OR RIGHT *
+	****************************************
+	
+	moveq	#NB_TARGET_SPRITES-1,d7
+1:
+	moveq	#0,d0
+	move.w	(PREVIOUS_SPRITE_X,a4),d0
+	beq.b	11f		| x=0: was inactive
+
+	moveq	#0,d2
+	move.b	(PREVIOUS_SPRITE_CODE,a4),d2
+	tst.b	(a2,d2.w)					| is this sprite a HW sprite?
+	bne.b	11f		| hardware sprite: don't consider
+	move.w	(PREVIOUS_SPRITE_Y,a4),d1
+	cmp.w	#Y_MAX-16,d1
+	bcs.b	11f
+	* conflict: sprite probably overwrote tiles: redraw
+	cmp.w	#24,d0
+	bcc.b	12f
+	* redraw left part if not already done
+	tst.b	d4
+	bne.b	11f
+	st.b	d4
+	* really redraw left part
+12:
+	cmp.w	#NB_ROWS*8-112-16,d0
+	bcs.b	11f
+	* redraw right part if not already done
+	tst.b	d5
+	bne.b	11f
+	st.b	d5
+	* really redraw right part
+
+11:
+	move.b	d4,d0
+	and.b	d5,d0
+	bne.b	0f		| both sides redrawn: quit loop
+	lea		(PREVIOUS_SPRITE_SIZE,a4),a4
+	addq	#CURRENT_SPRITE_SIZE,a0
+	dbf		d7,1b
+0:
+	rts
 	
 update_hardware_sprites:
 	lea		sfr_sprite_code_8B80,a0
@@ -2367,7 +2418,8 @@ osd_w_videoram:
 
 	move.b	d0,(a1)	| update logical grid
 
-
+	st.b	d6		| both buffers
+	
 	jbsr		update_bg_tile
 0:
 	movem.l	(a7)+,d0-d7/a0-a3
@@ -2405,7 +2457,6 @@ osd_w_colorram:
 *3:
 *
 	move.b	d0,(a1)	| update logical grid
-
 
 	jbsr		update_bg_color
 0:
@@ -2455,6 +2506,8 @@ compute_tile_xy:
 update_bg_color:
 	and.w	#0x3F,d0	| mask up to 63
 	bsr		compute_tile_xy
+	*cmp.w	#(Y_MAX/8)-2,d3
+	*jcc		0f				| don't change colors on last rows
 	cmp.w	#MAX_ROW_X,d7
 	bcc.b	0f				| above 28: ignore
 	cmp.w	#2,d7
@@ -2476,6 +2529,7 @@ update_bg_color:
 	rts
 	
 * d7: screen offset
+* d6: 0: update only drawed plane, 0xFF: both
 * d0: tile code
 *
 
@@ -2506,12 +2560,14 @@ update_bg_tile:
 
 	* we update the drawed bitplanes and also the backbuffer
 	* that we use to erase the sprites with
-	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
+	tst.b	d6
+	bne.b	1110f
 	move.l	bg_drawed_screen_ptr(pc),a1
-	.else
+	jra		1111f
+1110:
 	lea		bg_screen_data_1,a1
 	lea		bg_screen_data_2,a3
-	.endif
+1111:	
 	lea		bg_background_data,a2
 
 	swap	d7
@@ -2538,7 +2594,34 @@ update_bg_tile:
 	jeq	2f
 	move.l	d0,a0		| pointer on char plane list (reversed)
 	
-	* just copy
+	tst.b	d6
+	jne		4f
+
+	* just copy (current buffer)
+
+3:
+	move.l	(a0)+,d0	| pointer on bitplane or 0 or -1
+	bmi.b	0f			| -1 encountered, stop copying
+	beq.b	31f			| 0 encountered: skip that plane (maybe later we'll need to write 0)
+	* positive, non-null: it's a pointer on a bitplane
+	move.l	d0,a4
+	
+	.set	offset,0
+	.rept	8
+	move.b	(a4)+,d0
+	move.b	d0,(offset,a1)	
+	move.b	d0,(offset,a2)
+	.set	offset,offset+NB_BYTES_PER_ROW
+	.endr
+31:
+	sub.w	d5,a1
+	sub.w	d5,a2
+	dbf		d4,3b
+0:
+	rts	
+	
+	
+	* just copy (both buffers)
 4:
 	move.l	(a0)+,d0	| pointer on bitplane or 0 or -1
 	bmi.b	0f			| -1 encountered, stop copying
@@ -2568,8 +2651,20 @@ update_bg_tile:
 
 	
 	* clear tile
-
 11:
+	tst.b	d6
+	jne		111f
+110:
+	.set	offset,0
+	.rept	8
+	clr.b	(offset,a1)
+	clr.b	(offset,a2)
+	.set	offset,offset+NB_BYTES_PER_ROW
+	.endr
+	sub.w	d5,a1
+	sub.w	d5,a2
+	dbf		d4,110b
+	rts
 
 111:
 	.set	offset,0

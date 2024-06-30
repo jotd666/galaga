@@ -1,3 +1,6 @@
+- crash check coredump
+- shoot capturing ship: capture loop sound plays forever: stop sound when ship is shot
+- complete char redraw  refresh_status_bar
 - top of screen bobs are not erased. only happens when enemies pass from bottom to top
 - when "perfect" music ends, play "attack" sound: to test
 - default DSW are wrong
