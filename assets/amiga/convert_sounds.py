@@ -45,10 +45,10 @@ sound_dict = {
 "EXTRA_LIFE_SND"       :{"index":0x1B,"channel":3,"sample_rate":hq_sample_rate},
 
 "GAME_START_SND"       :{"index":0x9,"pattern":0,"volume":32,"ticks":340,'loops':False},
-#"HIGH_SCORE_SND"       :{"index":0x9,"pattern":2,"volume":32,'loops':True},
-#"HIGHEST_SCORE_SND"       :{"index":0x9,"pattern":0,"volume":32,'loops':True},
-"END_CHALLENGE_SND"       :{"index":0xE,"pattern":4,"volume":32,"ticks":340,'loops':False},
-"PERFECT_SND"         :{"index":0x14,"pattern":6,"volume":48,'loops':False,"ticks":280},
+"HIGH_SCORE_SND"       :{"index":0xA,"pattern":2,"volume":32,'loops':True},
+"HIGHEST_SCORE_SND"       :{"index":0xB,"pattern":3,"volume":32,'loops':True},
+"END_CHALLENGE_SND"       :{"index":0xE,"pattern":8,"volume":32,"ticks":340,'loops':False},
+"PERFECT_SND"         :{"index":0x14,"pattern":10,"volume":48,'loops':False,"ticks":280},
 
 }
 

@@ -245,6 +245,7 @@ start:
 		.global osd_write_high_scores
 		.global osd_sound_start
 		.global osd_sound_stop
+		.global osd_loop_stop
 		.global	osd_update_palette_bank
 		.global	osd_wait
 
@@ -955,9 +956,9 @@ refresh_status_bar:
 	lea			hardware_sprite_flag_table,a2
 	* previous sprites are now current sprites
 	move.l		bob_previous_drawed_sprites(pc),a4
-	clr.b		d4
-	clr.b		d5
-	clr.b		d6
+	clr.b		d5		| done at right flag
+	clr.b		d4		| done at left flag
+	clr.b		d6		| on current buffer
 	****************************************
 	* CHECK IF LOW SPRITE ON LEFT OR RIGHT *
 	****************************************
@@ -973,24 +974,36 @@ refresh_status_bar:
 	tst.b	(a2,d2.w)					| is this sprite a HW sprite?
 	bne.b	11f		| hardware sprite: don't consider
 	move.w	(PREVIOUS_SPRITE_Y,a4),d1
-	cmp.w	#Y_MAX-16,d1
+	cmp.w	#Y_MAX-16+1,d1
 	bcs.b	11f
 	* conflict: sprite probably overwrote tiles: redraw
-	cmp.w	#24,d0
-	bcc.b	12f
 	* redraw left part if not already done
 	tst.b	d4
 	bne.b	11f
-	st.b	d4
+	cmp.w	#24,d0
+	bcc.b	12f
 	* really redraw left part
+	movem.w	d4/d5/d7,-(a7)
+	move.w	#0x8002,d7
+	move.w	#12-1,d4
+	jbsr	redraw_2_rows
+	movem.w	(a7)+,d4/d5/d7
+	st.b	d4
 12:
-	cmp.w	#NB_ROWS*8-112-16,d0
-	bcs.b	11f
 	* redraw right part if not already done
 	tst.b	d5
 	bne.b	11f
-	st.b	d5
+	cmp.w	#NB_ROWS*8-112-16,d0
+	bcs.b	11f
 	* really redraw right part
+	exg	d5,d4
+	movem.w	d4/d5/d7,-(a7)
+	move.w	#0x8014,d7
+	move.w	#12-1,d4
+	jbsr	redraw_2_rows
+	movem.w	(a7)+,d4/d5/d7
+	* d4 is aleady FF
+	st.b	d5
 
 11:
 	move.b	d4,d0
@@ -1000,6 +1013,24 @@ refresh_status_bar:
 	addq	#CURRENT_SPRITE_SIZE,a0
 	dbf		d7,1b
 0:
+	rts
+	
+redraw_2_rows:
+0:
+	move.w	d4,-(a7)
+	jbsr	osd_r_videoram
+	move.b	#0x02,d0
+	move.w	d7,-(a7)
+	bsr		update_bg_tile
+	move.w	(a7),d7
+	add.w	#0x20,d7
+	jbsr	osd_r_videoram
+	move.b	#0x01,d0
+	bsr		update_bg_tile
+	move.w	(a7)+,d7
+	addq.w	#0x1,d7
+	move.w	(a7)+,d4
+	dbf		d4,0b
 	rts
 	
 update_hardware_sprites:
@@ -2063,7 +2094,18 @@ osd_sound_start:
 	jra	1b
 
 	
-	
+osd_loop_stop:
+	movem.l	d0/a0/a6,-(a7)
+	lea		_custom,a6
+	move.w	#3,d0		| channel used by sound loops
+	jbsr	_mt_stopfx
+	lea		playing_sounds(pc),a0
+	* those are no longer playing if they were playing
+	clr.b	(CAPTURE_DOWN_SND,a0)
+	clr.b	(CAPTURE_UP_SND,a0)
+	movem.l	(a7)+,d0/a0/a6
+	rts
+
 osd_sound_stop:
 	movem.l	d0/a0/a6,-(a7)
 	lea		_custom,a6

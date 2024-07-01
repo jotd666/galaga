@@ -1,10 +1,12 @@
 - crash check coredump
-- shoot capturing ship: capture loop sound plays forever: stop sound when ship is shot
+- tile refresh doesn't work at all, try on small display
+- killed when capture is active: does sound stop??
+- shoot capturing ship: capture loop sound plays forever: stop sound when ship is shot: to test
 - complete char redraw  refresh_status_bar
 - top of screen bobs are not erased. only happens when enemies pass from bottom to top
 - when "perfect" music ends, play "attack" sound: to test
 - default DSW are wrong
-- hit miss ratio can be wrong: 386/585 => 0.4%!!
+- hit miss ratio can be wrong: 386/585 => 0.4%!! ok for low ratios
 - extra life works, test sound
 - high score entry seems buggy!
 - understand when l_2681_end_of_table reached, ILLEGAL remaining

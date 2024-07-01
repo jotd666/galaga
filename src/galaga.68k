@@ -4294,7 +4294,7 @@ l_19C7:
 	rts                                    	    | [$19D1: ret]
 
 l_19D2_fighter_captured:
-	jbsr	osd_sound_stop
+	jbsr	osd_loop_stop
 * sets up a captured-fighter as an enemy object
 	move.b	#0x0A,d2                        	| [$19D2: ld   c,#0x0A] index of string
 	jbsr	string_out_pe_30                    | [$19D4: rst  0x30] string_out_pe "FIGHTER CAPTURED"
@@ -6249,7 +6249,7 @@ l_20BF:
 	clr.b	d0                               	| [$20BF: xor  a]
 	move.b	d0,ds_cpu0_task_actv_9000+0x1D      | [$20C0: ld   (ds_cpu0_task_actv_9000 + 0x1D),a] 0 ... this task
 	move.b	d0,b_9AA0+0x11                  	| [$20C3: ld   (b_9AA0 + 0x11),a] 0 ... sound-fx count/enable registers, stop "rescued ship" music
-	jbsr	osd_sound_stop
+	jbsr	osd_loop_stop
 	rts                                    	    | [$20C6: ret]
 
 l_20C7:                                         | *( ds5_928A_captr_status + 0x01 ) == 0
@@ -6763,6 +6763,7 @@ l_231C:
 	rts                                    	    | [$2326: ret]
 
 l_2327_shot_boss_while_capturing:
+	jbsr	osd_loop_stop
 	move.b	#3,d0                           	| [$2327: ld   a,#3]
 	move.b	d0,ds_plyr_actv+_b_captr_flag   	| [$2329: ld   (ds_plyr_actv +_b_captr_flag),a] 3 (shot_boss_while_capturing)
 	move.b	#0x80,(a0)                      	| [$232C: ld   (hl),#0x80] HL == ds5_928A_captr_status + 0x01
