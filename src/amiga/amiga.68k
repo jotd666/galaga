@@ -2610,8 +2610,6 @@ update_bg_tile:
 	lea		bg_screen_data_1,a1
 	lea		bg_screen_data_2,a3
 1111:	
-	lea		bg_background_data,a2
-
 	swap	d7
 	clr		d7
 	swap	d7
@@ -2619,7 +2617,6 @@ update_bg_tile:
 
 	add.w	#BG_SCREEN_PLANE_SIZE*NB_BOBS_PLANES,d7  | last plane (5th here) first
 	add.l	d7,a1	| long add required!
-	add.l	d7,a2
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	add.l	d7,a3
 	.endif
@@ -2651,13 +2648,11 @@ update_bg_tile:
 	.set	offset,0
 	.rept	8
 	move.b	(a4)+,d0
-	move.b	d0,(offset,a1)	
-	move.b	d0,(offset,a2)
+	or.b	d0,(offset,a1)	
 	.set	offset,offset+NB_BYTES_PER_ROW
 	.endr
 31:
 	sub.w	d5,a1
-	sub.w	d5,a2
 	dbf		d4,3b
 0:
 	rts	
@@ -2675,7 +2670,6 @@ update_bg_tile:
 	.rept	8
 	move.b	(a4)+,d0
 	move.b	d0,(offset,a1)	
-	move.b	d0,(offset,a2)
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	move.b	d0,(offset,a3)
 	.endif
@@ -2683,7 +2677,6 @@ update_bg_tile:
 	.endr
 5:
 	sub.w	d5,a1
-	sub.w	d5,a2
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	sub.w	d5,a3
 	.endif
@@ -2700,11 +2693,9 @@ update_bg_tile:
 	.set	offset,0
 	.rept	8
 	clr.b	(offset,a1)
-	clr.b	(offset,a2)
 	.set	offset,offset+NB_BYTES_PER_ROW
 	.endr
 	sub.w	d5,a1
-	sub.w	d5,a2
 	dbf		d4,110b
 	rts
 
@@ -2712,14 +2703,12 @@ update_bg_tile:
 	.set	offset,0
 	.rept	8
 	clr.b	(offset,a1)
-	clr.b	(offset,a2)
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	clr.b	(offset,a3)
 	.endif
 	.set	offset,offset+NB_BYTES_PER_ROW
 	.endr
 	sub.w	d5,a1
-	sub.w	d5,a2
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	sub.w	d5,a3
 	.endif
@@ -3688,9 +3677,6 @@ color_row_29_plus:
 	.align	8
 	
 		.section .bsschip
-bg_background_data:
-	ds.b	BG_SCREEN_SIZE
-	ds.b	NB_BYTES_PER_ROW*16*NB_BOBS_PLANES
 bg_screen_data_1:
 	ds.b	BG_SCREEN_SIZE
 	ds.b	NB_BYTES_PER_ROW*16*NB_BOBS_PLANES

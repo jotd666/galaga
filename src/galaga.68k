@@ -4295,6 +4295,8 @@ l_19C7:
 
 l_19D2_fighter_captured:
 	jbsr	osd_loop_stop
+	move.w	#FIGHTER_CAPTURED_SND,d0
+	jbsr	osd_sound_start
 * sets up a captured-fighter as an enemy object
 	move.b	#0x0A,d2                        	| [$19D2: ld   c,#0x0A] index of string
 	jbsr	string_out_pe_30                    | [$19D4: rst  0x30] string_out_pe "FIGHTER CAPTURED"

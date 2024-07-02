@@ -49,6 +49,7 @@ sound_dict = {
 "HIGHEST_SCORE_SND"       :{"index":0xB,"pattern":3,"volume":32,'loops':True},
 "END_CHALLENGE_SND"       :{"index":0xE,"pattern":8,"volume":32,"ticks":340,'loops':False},
 "PERFECT_SND"         :{"index":0x14,"pattern":10,"volume":48,'loops':False,"ticks":280},
+"FIGHTER_CAPTURED_SND"    :{"index":0x16,"pattern":12,"volume":32,'loops':False,"ticks":280},
 
 }
 

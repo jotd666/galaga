@@ -44,6 +44,7 @@
     .equ  EXTRA_LIFE_SND,         0x1B
 	
     .equ  GAME_START_SND,         0x9
+    .equ  FIGHTER_CAPTURED_SND,         0x16
     
     .equ  END_CHALLENGE_SND,         0xE
     .equ  PERFECT_SND,         0x14

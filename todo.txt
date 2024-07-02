@@ -1,10 +1,10 @@
 - crash check coredump
+- if let alone, capture ship beam retracts and sound doesn't stop
 - tile refresh doesn't work at all, try on small display
-- killed when capture is active: does sound stop??
 - shoot capturing ship: capture loop sound plays forever: stop sound when ship is shot: to test
 - complete char redraw  refresh_status_bar
 - top of screen bobs are not erased. only happens when enemies pass from bottom to top
-- when "perfect" music ends, play "attack" sound: to test
+- when "perfect" music ends, play "attack" sound: doesn't work
 - default DSW are wrong
 - hit miss ratio can be wrong: 386/585 => 0.4%!! ok for low ratios
 - extra life works, test sound
