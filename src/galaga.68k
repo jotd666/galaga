@@ -439,7 +439,7 @@ d_attrmode_sptiles_ships:
 *-----------------------------------------------------------------------------
 gctl_game_runner:
 l_045E_while:
-	jbsr	gctl_supv_score_072B                   	| [call gctl_supv_score_072B]
+	jbsr	gctl_supv_score_0728                   	| [call gctl_supv_score_0728]
 	jbsr	gctl_supv_stage                   	| [call gctl_supv_stage]
 	jra	l_045E_while                       	    | [jr   l_045E_while]
 
@@ -569,7 +569,7 @@ l_04C1_while:
 	                               	           | [and  a]
 	jne	l_04A4_wait                        	   | [jr   nz,l_04A4_wait]
 
-	jbsr	gctl_supv_score_072B                    | [call gctl_supv_score_072B]
+	jbsr	gctl_supv_score_0728               | [call gctl_supv_score_0728]
 
 * plyr_state_actv.b_nbugs = b_bugs_actv_nbr
 	move.b	b_bugs_actv_nbr,d0                 | [ld   a,(b_bugs_actv_nbr)]
@@ -666,29 +666,31 @@ l_0540_while:
 	                               	            | [$0541: and  a]
 	jne	l_0540_while                       	    | [$0542: jr   nz,l_0540_while]
 	jbsr	c_sctrl_playfld_clr_0160            | [$0544: call c_sctrl_playfld_clr_0160]
-	jbsr	c_top5_dlg_proc                   	| [$0547: call c_top5_dlg_proc] returns immediately if not in top-5
+	jbsr	c_top5_dlg_proc_3000                | [$0547: call c_top5_dlg_proc_3000] returns immediately if not in top-5
 	clr.b	d0                               	| [$054A: xor  a]
-	move.b	d0,b_9AA0+0x10                  	| [$054B: ld   (b_9AA0 + 0x10),a] 0 ... sound-fx count/enable registers, hi-score dialog?
-
-* while (_fx[0x0C] || _fx[0x16]) ... (finished when both 0)
-	lea	b_9AA0+0x0C,a0                         	| [$054E: ld   hl,#b_9AA0 + 0x0C] sound-fx count/enable registers, hi-score dialog
-	lea	b_9AA0+0x16,a1                         	| [$0551: ld   de,#b_9AA0 + 0x16] sound-fx count/enable registers, hi-score dialog
-l_0554_while:
-	move.b	(a1),d0                         	| [$0554: ld   a,(de)] sound_fx[0x16] ... probably 0
-	move.b	(a0),d1                         	| [$0555: ld   b,(hl)] sound_fx[0x0C] ... probably still running
-	or.b	d1,d0                             	| [$0556: or   b]
-	jeq	l_0562                             	    | [$0557: jr   z,l_0562]
-* if (0 != _fx[0x0C]) then _fx[0x0C] = 1 ... snd[$0C] used as timer, enable snd[$16] when 0 is reached
-	                                        	| [$0559: inc  b]
-	tst.b	d1                                	| [$055A: dec  b]
-	jeq	l_055F                             	    | [$055B: jr   z,l_055F]
-	move.b	#1,(a0)                         	| [$055D: ld   (hl),#1]
-l_055F:
+*	move.b	d0,b_9AA0+0x10                  	| [$054B: ld   (b_9AA0 + 0x10),a] 0 ... sound-fx count/enable registers, hi-score dialog?
+*
+** while (_fx[0x0C] || _fx[0x16]) ... (finished when both 0)
+*	lea	b_9AA0+0x0C,a0                         	| [$054E: ld   hl,#b_9AA0 + 0x0C] sound-fx count/enable registers, hi-score dialog
+*	lea	b_9AA0+0x16,a1                         	| [$0551: ld   de,#b_9AA0 + 0x16] sound-fx count/enable registers, hi-score dialog
+*l_0554_while:
+*	move.b	(a1),d0                         	| [$0554: ld   a,(de)] sound_fx[0x16] ... probably 0
+*	move.b	(a0),d1                         	| [$0555: ld   b,(hl)] sound_fx[0x0C] ... probably still running
+*	or.b	d1,d0                             	| [$0556: or   b]
+*	jeq	l_0562                             	    | [$0557: jr   z,l_0562]
+** if (0 != _fx[0x0C]) then _fx[0x0C] = 1 ... snd[$0C] used as timer, enable snd[$16] when 0 is reached
+*	                                        	| [$0559: inc  b]
+*	tst.b	d1                                	| [$055A: dec  b]
+*	jeq	l_055F                             	    | [$055B: jr   z,l_055F]
+*	move.b	#1,(a0)                         	| [$055D: ld   (hl),#1]
+*l_055F:
 * On halt, processor wakes at maskable or nonmaskable interrupt providing
 * something like a busy-wait with sleep(n) where n is the interrupt period.
-	ILLEGAL										| hi-score, finished name entry (wait for music to stop)
-	jra	l_0554_while                       	| [jr   l_0554_while]
-
+							| hi-score, finished name entry (wait for music to stop)
+	*jra	l_0554_while                       	    | [jr   l_0554_while]
+	
+	* stop music immediately
+	jbsr	osd_sound_stop
 l_0562:
 	jbsr	c_sctrl_playfld_clr_0160               	| [call c_sctrl_playfld_clr_0160] clear screen at end of game
 
@@ -1001,7 +1003,7 @@ l_06BA:
 	lea	ds_bug_collsn_hit_mult+0x0F,a0 	        | [ld   hl,#ds_bug_collsn_hit_mult + 0x0F] challenge bonus score += 10000
 	add.b	(a0),d0                          	| [add  a,(hl)]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-	jbsr	gctl_supv_score_072B                | [call gctl_supv_score_072B] add bonus to player score
+	jbsr	gctl_supv_score_0728                | [call gctl_supv_score_0728] add bonus to player score
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 	jbsr	c_tdelay_3                        	| [call c_tdelay_3]
 
@@ -1092,27 +1094,27 @@ d_0725:
 	.byte 0x02,0x02,0x02
 	.align	2
 *=============================================================================
-* gctl_supv_score_072B()
-*  Description:
+* gctl_supv_score_0728()
+*  Description: adds to player score / add_to_score
 *
 * IN:
-*  ix
+*  
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-gctl_supv_score_072B:
+gctl_supv_score_0728:
 *  if ( activ_plyr_state.plyr_1or2 == plyr1 )
-	                               	            | [$072B: and  a]
+	                            	            | [$072B: and  a]
 *    tmp = $f9
 	move.b	#0xF9,d0                        	| [$072C: ld   a,#0xF9] offset to 10's place from _tile_ram + 0x0300 (plyr 1)
-	tst.b	ds_plyr_actv+_b_plyr_nbr     	    | [$072E: ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
-	jeq	l_0732                             	    | [$0730: jr   z,l_0732]
+	tst.b	ds_plyr_actv+_b_plyr_nbr     	    | [$0728: ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
+	jeq	l_0732                             	    | [$072E: jr   z,l_0732]
 *  else tmp = $E4
 	move.b	#0xE4,d0                        	| [$0730: ld   a,#0xE4] offset to 10's place from _tile_ram + 0x0300 (plyr 2)
 l_0732:
-	move.b	d0,ixl							    | [$0732: ld   ixl,a]   parameter to c_scoreman_incr_add (tile ram offset)
+	move.b	d0,ixl							    | [$0732: ld   ixl,a]   parameter to c_scoreman_incr_add_07d8 (tile ram offset)
 	move.b	#0x10,d1                        	| [$0734: ld   b,#0x10] sizeof scoreman_inc_lut[]
-	lea	ds_bug_collsn_hit_mult,a0 	            | [$0736: ld   hl,#ds_bug_collsn_hit_mult + 0x00]
+	lea	ds_bug_collsn_hit_mult,a0 	            | [$0736: ld   hl,#ds_bug_collsn_hit_mult + 0x00] 9290
 l_0739_while_B:
 	exg	a1,a0                              	    | [$0739: ex   de,hl] DE := &bug_collsn[hl]
 	lea	d_scoreman_inc_lut-1,a0        	        | [$073A: ld   hl,#d_scoreman_inc_lut - 1] effective start index is $10 - 1
@@ -1133,7 +1135,7 @@ l_0740:
 	add.w	d0,a0                           	| [$074B: ld   l,a]
 	move.b	d2,d0                           	| [$074C: ld   a,c] scoreman_inc_lut[B-1]
 	and.b	#0x0F,d0                         	| [$074D: and  #0x0F]
-	jbsr	c_scoreman_incr_add               	| [$074F: call c_scoreman_incr_add] add to 10's
+	jbsr	c_scoreman_incr_add_07d8            | [$074F: call c_scoreman_incr_add_07d8] add to 10's
 	lea		0x8300,a0
 	jbsr	read_ixl_into_d0                    | [$0752: ld   a,ixl] increment offset to 10's place in tile ram
 	addq.b	#1,d0                           	| [$0754: inc  a]
@@ -1141,7 +1143,7 @@ l_0740:
 	move.b	d2,d0                           	| [$0756: ld   a,c] scoreman_inc_lut[B-1]
 	rol.b	#4,d0                            	| [$0757: rlca] upper nibble of "score increment" * 4
 	and.b	#0x0F,d0                         	| [$075B: and  #0x0F]
-	jbsr	c_scoreman_incr_add               	| [$075D: call c_scoreman_incr_add] add to 100's
+	jbsr	c_scoreman_incr_add_07d8            | [$075D: call c_scoreman_incr_add_07d8] add to 100's
 	jra	l_0740                             	    | [$0760: jr   l_0740]
 
 l_0762:
@@ -1252,9 +1254,9 @@ l_07BD:
 * end call $0728
 
 *=============================================================================
-* c_scoreman_incr_add()
+* c_scoreman_incr_add_07d8()
 *  Description:
-*   Handle score increment (score manager)
+*   Handle score increment (score manager) / adds to score
 *   Score is not stored other than in character ram, so this function is
 *   specific to the layout of decimal digits in the character map.
 * IN:
@@ -1265,47 +1267,47 @@ l_07BD:
 * PRESERVES:
 *  HL
 *-----------------------------------------------------------------------------
-c_scoreman_incr_add:
-	tst.b	d0                               	| [and  a]
+c_scoreman_incr_add_07d8:
+	tst.b	d0                               	| [$07D8: and  a]
 	bne.b	0f                               	| [...]
-	rts                                    	    | [ret  z] [...]
+	rts                                    	    | [$07D9: ret  z] [...]
 0:
 	exg		a0,d7
 	move.b	d0,d1
 	jbsr	osd_r_videoram
-	add.b	d1,d0                           	| [add  a,(hl)] a += _tile_ram[hl]
-	cmp.b	#0x24,d0                         	| [cp   #0x24] $23=='Z', $24==' '
-	jcs	l_07E1                             	    | [jr   c,l_07E1]
-	sub.b	#0x24,d0                         	| [sub  #0x24] when is jr not taken?
+	add.b	d1,d0                           	| [$07DA: add  a,(hl)] a += _tile_ram[hl]
+	cmp.b	#0x24,d0                         	| [$07DB: cp   #0x24] $23=='Z', $24==' '
+	jcs	l_07E1                             	    | [$07DD: jr   c,l_07E1]
+	sub.b	#0x24,d0                         	| [$07DF: sub  #0x24] when is jr not taken?
 
 l_07E1:
-	cmp.b	#0x0A,d0                         	| [cp   #0x0A] $0A='A'
-	jcc	l_07E7                             	    | [jr   nc,l_07E7]
-	jbsr	osd_w_videoram                      | [ld   (hl),a]
+	cmp.b	#0x0A,d0                         	| [$07E1: cp   #0x0A] $0A='A'
+	jcc	l_07E7                             	    | [$07E3: jr   nc,l_07E7]
+	jbsr	osd_w_videoram                      | [$07E5: ld   (hl),a]
 	exg		a0,d7
-	rts                                    	    | [ret]
+	rts                                    	    | [$07E6: ret]
 
 l_07E7:
-	sub.b	#0x0A,d0                         	| [sub  #0x0A]
+	sub.b	#0x0A,d0                         	| [$07E7: sub  #0x0A]
 
 l_07E9_while_1:
-	jbsr	osd_w_videoram                     	| [ld   (hl),a] 0x8000[hl] = a
-	addq.w	#1,d7              	                | [inc  l]
-	jbsr	osd_r_videoram                    	| [ld   a,(hl)] a = 0x8000[hl + 1]
-	cmp.b	#0x24,d0                         	| [cp   #0x24] $24==' '
-	jne	l_07F1                             	    | [jr   nz,l_07F1]
-	clr.b	d0                               	| [xor  a]
+	jbsr	osd_w_videoram                     	| [$07E9: ld   (hl),a] 0x8000[hl] = a
+	addq.w	#1,d7              	                | [$07EA: inc  l]
+	jbsr	osd_r_videoram                    	| [$07EB: ld   a,(hl)] a = 0x8000[hl + 1]
+	cmp.b	#0x24,d0                         	| [$07EC: cp   #0x24] $24==' '
+	jne	l_07F1                             	    | [$07EE: jr   nz,l_07F1]
+	clr.b	d0                               	| [$07F0: xor  a]
 l_07F1:
-	cmp.b	#0x09,d0                         	| [cp   #0x09]
-	jeq	l_07F8_while                       	    | [jr   z,l_07F8_while]
-	addq.b	#1,d0                           	| [inc  a]
-	jbsr	osd_w_videoram                      | [ld   (hl),a] 0x8000[hl] = a
-	exg		a0,d7
-	rts                                    	    | [ret] end call 07d8
+	cmp.b	#0x09,d0                         	| [$07F1: cp   #0x09]
+	jeq	l_07F8_while                       	    | [$07F3: jr   z,l_07F8_while]
+	addq.b	#1,d0                           	| [$07F5: inc  a]
+	jbsr	osd_w_videoram                      | [$07F6: ld   (hl),a] 0x8000[hl] = a
+	exg		a0,d7                                   
+	rts                                    	    | [$07F7: ret] end call 07d8
 
 l_07F8_while:
-	clr.b	d0                               	| [xor  a]
-	jra	l_07E9_while_1                     	    | [jr   l_07E9_while_1]
+	clr.b	d0                               	| [$07F8: xor  a]
+	jra	l_07E9_while_1                     	    | [$07F9: jr   l_07E9_while_1]
 
 *=============================================================================
 * Base-factors of points awarded for enemy hits, applied to multiples
@@ -1786,7 +1788,7 @@ l_099F_update_freeplay_or_credit:
        * puts "CREDIT"
 	lea	str_09CA+6-1,a0                	        | [$09AC: ld   hl,#str_09CA + 6 - 1] source of 'C' in reversed string
 	move.w	#0x06,d1                        	| [$09AF: ld   bc,#0x0006] strlen(strCredit) 6
-	jbsr		lddr_video                            | [$09B2: lddr]
+	jbsr		lddr_to_video                            | [$09B2: lddr]
        * leave the "space" following the 'T'
 	subq.w	#1,a1                           	| [dec  e] de-- advances one cell to the right (note: bottom row, so not de-20!)
 	move.l	a1,d7
@@ -1825,7 +1827,7 @@ str_09D0:
 l_09D9_puts_freeplay:
 	lea	str_09D0+9-1,a0                	    | [$09D9: ld   hl,#str_09D0 + 9 - 1] load src (last byte) of string "FREE PLAY"
 	move.w	#0x09,d1                        | [$09DC: ld   bc,#0x0009] 9
-	jbsr	lddr_video                      | [$09DF: lddr]
+	jbsr	lddr_to_video                   | [$09DF: lddr]
 
 l_09E1_update_game_state:
 
@@ -6717,6 +6719,7 @@ l_22D2:
 
 * capture beam has stopped (whether or not ship is captured or got destroyed by a bomb)
 l_22E3:
+	jbsr	osd_loop_stop
 	clr.b	d0                               	| [$22E3: xor  a]
 	move.b	d0,ds_cpu0_task_actv_9000+0x18      | [$22E4: ld   (ds_cpu0_task_actv_9000 + 0x18),a] 0 (disable f_boss_starts_tractor_beam_2222 ... this one)
 	                                         	| [$22E7: ld   (b_9AA0 + 0x05),a] 0 ... sound-fx count/enable registers, capture beam sound active uno
@@ -6765,7 +6768,6 @@ l_231C:
 	rts                                    	    | [$2326: ret]
 
 l_2327_shot_boss_while_capturing:
-	jbsr	osd_loop_stop
 	move.b	#3,d0                           	| [$2327: ld   a,#3]
 	move.b	d0,ds_plyr_actv+_b_captr_flag   	| [$2329: ld   (ds_plyr_actv +_b_captr_flag),a] 3 (shot_boss_while_capturing)
 	move.b	#0x80,(a0)                      	| [$232C: ld   (hl),#0x80] HL == ds5_928A_captr_status + 0x01
@@ -8348,112 +8350,110 @@ l_2AE9_done:
 *  ...
 * Note: 83ED-83F2 is high score in tile RAM.
 *-----------------------------------------------------------------------------
-c_top5_dlg_proc:
-	lea	0x8000+0x03E0+0x1D,a0      	| [ld   hl,#0x8000 + 0x03E0 + 0x1D] 100000's digit of plyr1 score (83F8-FD)
-	move.b	ds_plyr_actv+_b_plyr_nbr,d0     	| [ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
-	                               	| [and  a]
-	jeq	l_300C                             	| [jr   z,l_300C]
-	lea	0x8000+0x03E0+0x08,a0      	| [ld   hl,#0x8000 + 0x03E0 + 0x08] 100000's digit of plyr2 score (83E3-E8)
+c_top5_dlg_proc_3000:
+	lea	0x8000+0x03E0+0x1D,a0      	                | [$3000: ld   hl,#0x8000 + 0x03E0 + 0x1D] 100000's digit of plyr1 score (83F8-FD)
+	move.b	ds_plyr_actv+_b_plyr_nbr,d0             | [$3003: ld   a,(ds_plyr_actv +_b_plyr_nbr)] 0==plyr1, 1==plyr2
+	                               	                | [$3006: and  a]
+	jeq	l_300C                             	        | [$3007: jr   z,l_300C]
+	lea	0x8000+0x03E0+0x08,a0      	                | [$3009: ld   hl,#0x8000 + 0x03E0 + 0x08] 100000's digit of plyr2 score (83E3-E8)
 
 l_300C:
 * setup pointer to active player score in HL. Offset 5 advances pointer to 100000's place character.
-	move.l	a0,b_8A00                  	| [ld   (b_8A00 + 0x00),hl] ptr to plyr1 score or plyr2 score on screen.
-
-	lea	b_best5_score5+0x05,a1         	| [ld   de,#b_best5_score5 + 0x05]
-	jbsr	c_31F7_chk_score_rank             	| [call c_31F7_chk_score_rank] score > 5th place?
-	bcs.b	0f                               	| [...]
-	rts                                    	| [ret  nc] [...]
+	move.l	a0,b_8A00                  	            | [$300C: ld   (b_8A00 + 0x00),hl] ptr to plyr1 score or plyr2 score on screen.
+	lea	b_best5_score5+0x05,a1         	            | [$300F: ld   de,#b_best5_score5 + 0x05]
+	jbsr	c_31F7_chk_score_rank                   | [$3012: call c_31F7_chk_score_rank] score > 5th place?
+	bcs.b	0f                                      | [...]
+	rts                                    	        | [$3015: ret  nc] [...]
 0:
-
-	lea	b_best5_score4+0x05,a1         	| [ld   de,#b_best5_score4 + 0x05]
-	jbsr	c_31F7_chk_score_rank       | [call c_31F7_chk_score_rank] score > 4th place?
-	scs		d7
-	move.b	#5,d0                       | [ld   a,#5]
-	tst.b	d7
-	jeq	l_3047                          | [jr   nc,l_3047]
-
-	lea	b_best5_score3+0x05,a1         	| [ld   de,#b_best5_score3 + 0x05]
-	jbsr	c_31F7_chk_score_rank       | [call c_31F7_chk_score_rank] score > 4th place?
-	scs		d7
-	move.b	#4,d0                       | [ld   a,#4]
-	tst.b	d7
-	jeq	l_3047                          | [jr   nc,l_3047]
-
-	lea	b_best5_score2+0x05,a1         	| [ld   de,#b_best5_score2 + 0x05]
-	jbsr	c_31F7_chk_score_rank       | [call c_31F7_chk_score_rank] score > 3th place?
-	scs		d7
-	move.b	#3,d0                       | [ld   a,#3]
-	tst.b	d7
-	jeq	l_3047                          | [jr   nc,l_3047]
- 
-	lea	b_best5_score1+0x05,a1         	| [ld   de,#b_best5_score1 + 0x05]
-	jbsr	c_31F7_chk_score_rank       | [call c_31F7_chk_score_rank] score > 2th place?
-	scs		d7
-	move.b	#2,d0                       | [ld   a,#2]
-	tst.b	d7
-	jeq	l_3047                          | [jr   nc,l_3047]
-	st.b	d0                          | [ld   a,#0xFF]
-	*move.b	d0,0x9AA0+0x0C              | [ld   (0x9AA0 + 0x0C),a] special tune for 1st place
-	move.b	#1,d0                       | [ld   a,#1]
-	jra	l_304A                          | [jr   l_304A]
-l_3047:
-	*move.b	d0,0x9AA0+0x10              | [ld   (0x9AA0 + 0x10),a] select the tune
+	lea	b_best5_score4+0x05,a1         	            | [$3016: ld   de,#b_best5_score4 + 0x05]
+	jbsr	c_31F7_chk_score_rank                   | [$3019: call c_31F7_chk_score_rank] score > 4th place?
+	scs		d7                                      
+	move.b	#5,d0                                   | [$301C: ld   a,#5]
+	tst.b	d7                                      
+	jeq	l_3047                                      | [$301E: jr   nc,l_3047]   
+	lea	b_best5_score3+0x05,a1         	            | [$3020: ld   de,#b_best5_score3 + 0x05]
+	jbsr	c_31F7_chk_score_rank                   | [$3023: call c_31F7_chk_score_rank] score > 4th place?
+	scs		d7                                      
+	move.b	#4,d0                                   | [$3026: ld   a,#4]
+	tst.b	d7                                      
+	jeq	l_3047                                      | [$3028: jr   nc,l_3047]
+	lea	b_best5_score2+0x05,a1         	            | [$302A: ld   de,#b_best5_score2 + 0x05]
+	jbsr	c_31F7_chk_score_rank                   | [$302D: call c_31F7_chk_score_rank] score > 3th place?
+	scs		d7                                      
+	move.b	#3,d0                                   | [$3030: ld   a,#3]
+	tst.b	d7                                      
+	jeq	l_3047                                      | [$3032: jr   nc,l_3047]	            
+	lea	b_best5_score1+0x05,a1         	            | [$3034: ld   de,#b_best5_score1 + 0x05]
+	jbsr	c_31F7_chk_score_rank                   | [$3037: call c_31F7_chk_score_rank] score > 2th place?
+	scs		d7                                      
+	move.b	#2,d0                                   | [$303A: ld   a,#2]
+	tst.b	d7                                      
+	jeq	l_3047                                      | [$303C: jr   nc,l_3047]
+	st.b	d0                                      | [$303E: ld   a,#0xFF]
+	move.w	#HIGHEST_SCORE_SND,d0
+	jbsr	osd_sound_start
+	*move.b	d0,0x9AA0+0x0C                          | [$3040: ld   (0x9AA0 + 0x0C),a] special tune for 1st place
+	move.b	#1,d0                                   | [$3043: ld   a,#1]
+	jra	l_304A                                      | [$3045: jr   l_304A]
+l_3047:                                             
+	move.w	#HIGH_SCORE_SND,d0
+	jbsr	osd_sound_start
+	*move.b	d0,0x9AA0+0x10                          | [$3047: ld   (0x9AA0 + 0x10),a] select the tune
 
 l_304A:
 * set the jp address for the subroutine.
-	move.b	d0,b_8A00+0x11              | [ld   (b_8A00 + 0x11),a] 1==1ST place etc.
-	lea	d_31A6,a0                      	| [ld   hl,#d_31A6] jp table address
-	subq.b	#1,d0                       | [dec  a]
-	jbsr	add_4_times_d0_to_a0_0008   | [rst  0x08] HL += 2A
-	jbsr	c_3118_insert_top5_score    | [call c_3118_insert_top5_score]
+	move.b	d0,b_8A00+0x11                          | [$304A: ld   (b_8A00 + 0x11),a] 1==1ST place etc.
+	lea	d_31A6,a0                      	            | [$304D: ld   hl,#d_31A6] jp table address
+	subq.b	#1,d0                                   | [$3050: dec  a]
+	jbsr	add_4_times_d0_to_a0_0008               | [$3051: rst  0x08] HL += 2A
+	jbsr	c_3118_insert_top5_score                | [$3052: call c_3118_insert_top5_score]
 
 * insert new player name in table.
 * data: 0,3,6,9,12 (12 for first place)
 * the table gives repetition count for ldir below ( 5 - X * 3 ) where X is 1st through 5th place.
-	move.b	b_8A00+0x11,d0                  	| [ld   a,(b_8A00 + 0x11)] 1==1ST place etc. ... d_31A1 [ A - 1 ]
-	lea	d_31A1,a0                      	| [ld   hl,#d_31A1] ld the table address
-	subq.b	#1,d0                           	| [dec  a]
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	lea	b_best5_name4+0x02,a0          	| [ld   hl,#b_best5_name4 + 0x02] 3rd letter of 4th place name
-	lea	b_best5_name5+0x02,a1          	| [ld   de,#b_best5_name5 + 0x02] 3rd letter of 5th place name
-	tst.b	d0                               	| [and  a]
-	jeq	l_306C                             	| [jr   z,l_306C]
-	move.b	d0,d2                           	| [ld   c,a]
-	clr.b	d1                               	| [ld   b,#0]
-    jbsr   lddr
+	move.b	b_8A00+0x11,d0                  	    | [$3055: ld   a,(b_8A00 + 0x11)] 1==1ST place etc. ... d_31A1 [ A - 1 ]
+	lea	d_31A1,a0                      	            | [$3058: ld   hl,#d_31A1] ld the table address
+	subq.b	#1,d0                           	    | [$305B: dec  a]
+	jbsr	add_d0_to_a0_0010                       | [$305C: rst  0x10] HL += A
+	move.b	(a0),d0                         	    | [$305D: ld   a,(hl)]
+	lea	b_best5_name4+0x02,a0          	            | [$305E: ld   hl,#b_best5_name4 + 0x02] 3rd letter of 4th place name
+	lea	b_best5_name5+0x02,a1          	            | [$3061: ld   de,#b_best5_name5 + 0x02] 3rd letter of 5th place name
+	tst.b	d0                               	    | [$3064: and  a]
+	jeq	l_306C                                   	| [$3065: jr   z,l_306C]
+	move.b	d0,d2                               	| [$3067: ld   c,a]
+	clr.b	d1                                   	| [$3068: ld   b,#0]
+    jbsr   lddr                                     | [$306A: lddr]
 * note, HL now == &newname[0] - 1
 l_306C:
-	move.b	#3,d1                           	| [ld   b,#3]
-	move.b	#0x24,d0                        	| [ld   a,#0x24] clear the old name out (3 space characters)
-	move.l	a0,b_8A00+0x06                  	| [ld   (b_8A00 + 0x04),hl] pointer to new name in table... address would be  &newname[0] - 1
+	move.b	#3,d1                           	    | [$306C: ld   b,#3]
+	move.b	#0x24,d0                        	    | [$306E: ld   a,#0x24] clear the old name out (3 space characters)
+	move.l	a0,b_8A00+0x06                  	    | [$3070: ld   (b_8A00 + 0x04),hl] pointer to new name in table... address would be  &newname[0] - 1
 l_3073:
-	addq.w	#1,a0                           	| [inc  l] pre-increment since we start at ( &newname[0] - 1 )
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	subq.b	#1,d1                           	| [...]
-	jne	l_3073                             	| [djnz l_3073]
-
-	move.b	#0x49,d0                        	| [ld   a,#0x49]
-	move.b	d0,b_8A00+0x10                  	| [ld   (b_8A00 + 0x10),a] $49 ... lower address byte of first character of name entry in tile-ram
+	addq.w	#1,a0                           	    | [$3073: inc  l] pre-increment since we start at ( &newname[0] - 1 )
+	move.b	d0,(a0)                         	    | [$3074: ld   (hl),a]
+	subq.b	#1,d1                           	    | [...]
+	jne	l_3073                             	        | [$3075: djnz l_3073]
+	move.b	#0x49,d0                        	    | [$3077: ld   a,#0x49]
+	move.b	d0,b_8A00+0x10                  	    | [$3079: ld   (b_8A00 + 0x10),a] $49 ... lower address byte of first character of name entry in tile-ram
 
 	lea	s_327F_enter_your_initials,a0  	| [ld   hl,#s_327F_enter_your_initials]
-	jbsr	c_text_out_ce_3328                     	| [call c_text_out_ce_3328] "ENTER YOUR INITIALS !"
-	jbsr	c_text_out_331b                        	| [call c_text_out_331b] "SCORE  NAME"          HL==3298
-	jbsr	c_text_out_ce_3328                     	| [call c_text_out_ce_3328] "TOP 5"                HL==32AB
+	jbsr	c_text_out_ce_3328                     	| [$307F: call c_text_out_ce_3328] "ENTER YOUR INITIALS !"
+	jbsr	c_text_out_331b                        	| [$3082: call c_text_out_331b] "SCORE  NAME"          HL==3298
+	jbsr	c_text_out_ce_3328                     	| [$3085: call c_text_out_ce_3328] "TOP 5"                HL==32AB
 
-	move.w	#0x8000+0x0300+0x09,d7      	        | [ld   de,#0x8000 + 0x0300 + 0x09]
-	move.l	b_8A00,a0              	                | [ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
- 	jbsr	string_copy_3275                        | [call string_copy_3275] puts players score below "SCORE"
+	lea		0x8000+0x0300+0x09,a1      	        | [$3088: ld   de,#0x8000 + 0x0300 + 0x09]
+	move.l	b_8A00,a0              	                | [$308B: ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
+ 	jbsr	string_copy_3275                        | [$308E: call string_copy_3275] puts players score below "SCORE"
 
 * puts_AAA (default initials of new score entry) below NAME
-	move.w	#0x8000+0x0140+0x09,d7      	| [ld   hl,#0x8000 + 0x0140 + 0x09] row below 'A' in "NAME"
-	move.w	#-32,d3                         	| [ld   de,#-32] offset 1 column right -32
+	move.w	#0x8000+0x0140+0x09,d7      	        | [$3091: ld   hl,#0x8000 + 0x0140 + 0x09] row below 'A' in "NAME"
+	move.w	#-32,d3                         	    | [$3094: ld   de,#-32] offset 1 column right -32
 	moveq	#10,d0
-	jbsr	osd_w_videoram                      	| [ld   (hl),#0x0A]
-	add.w	d3,d7                            	| [add  hl,de]
-	jbsr	osd_w_videoram                      	| [ld   (hl),#0x0A]
-	add.w	d3,d7                            	| [add  hl,de]
-	jbsr	osd_w_videoram                      	| [ld   (hl),#0x0A]
+	jbsr	osd_w_videoram                      	| [$3097: ld   (hl),#0x0A]
+	add.w	d3,d7                            	    | [$3099: add  hl,de]
+	jbsr	osd_w_videoram                      	| [$309A: ld   (hl),#0x0A]
+	add.w	d3,d7                            	    | [$309C: add  hl,de]
+	jbsr	osd_w_videoram                      	| [$309D: ld   (hl),#0x0A]
 
 	jbsr	c_puts_top5scores_321d                 	| [call c_puts_top5scores_321d]
 	jbsr	c_plyr_initials_entry_hilite_line 	| [call c_plyr_initials_entry_hilite_line]
@@ -8731,23 +8731,24 @@ l_3179:
 *  ...
 *-----------------------------------------------------------------------------
 c_plyr_initials_entry_hilite_line:
+	moveq	#0,d0
 	move.b	b_8A00+0x11,d0                  	| [ld   a,(b_8A00 + 0x11)] 1==1ST place etc.
-	lea	d_3197_hiscore_line_ptrs,a0    	| [ld   hl,#d_3197_hiscore_line_ptrs]
+	lea	d_3197_hiscore_line_ptrs(pc),a0	        | [ld   hl,#d_3197_hiscore_line_ptrs]
 	subq.b	#1,d0                           	| [dec  a]
-	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A (determine index into table of word ptrs)
-	move.l	a0,d7           | [ld   a,(hl)]
-	                       	| [inc  hl]
-	                       	| [ld   h,(hl)]
-	                       	| [ld   l,a]
+	add.w	d0,d0                               | [rst  0x08] HL += 2A (determine index into table of word ptrs)
+	move.w	(a0,d0.w),d7                        | [ld   a,(hl)]
+	                       	                    | [inc  hl]
+	                       	                    | [ld   h,(hl)]
+	                       	                    | [ld   l,a]
 	move.b	#0x16,d1                        	| [ld   b,#0x16] number of characters to modify
-	                       	| [ld   de,#-0x20] advance 1 cell column to the right
+	                       	                    | [ld   de,#-0x20] advance 1 cell column to the right
 	move.b	#5,d0
 l_3191:
-	jbsr	osd_w_colorram                         	| [ld   (hl),#5] set character attribute byte to hi-lite color.
-	sub.w	#0x20,d7                            	| [add  hl,de]
+	jbsr	osd_w_colorram                      | [ld   (hl),#5] set character attribute byte to hi-lite color.
+	sub.w	#0x20,d7                            | [add  hl,de]
 	subq.b	#1,d1                           	| [...]
-	jne	l_3191                             	| [djnz l_3191]
-	rts                                    	| [ret]
+	jne	l_3191                             	    | [djnz l_3191]
+	rts                                    	    | [ret]
 
 *=============================================================================
 * Table of pointers to each line of on-screen Top 5 table. Reminider that each
@@ -8755,11 +8756,11 @@ l_3191:
 * is organized).
 *
 d_3197_hiscore_line_ptrs:
-	.long 0x8400 + 0x0374
-	.long 0x8400 + 0x0376
-	.long 0x8400 + 0x0378
-	.long 0x8400 + 0x037A
-	.long 0x8400 + 0x037C
+	.word 0x8400 + 0x0374
+	.word 0x8400 + 0x0376
+	.word 0x8400 + 0x0378
+	.word 0x8400 + 0x037A
+	.word 0x8400 + 0x037C
 
 *=============================================================================
 d_31A1:
@@ -8786,34 +8787,34 @@ case_31B4:
 case_31B8:
 	move.b	#0x06,d0                        	| [ld   a,#0x06]
 l_31BA:
-	lea	b_best5_score4+0x05,a0         	| [ld   hl,#b_best5_score4 + 0x05]
-	lea	b_best5_score5+0x05,a1         	| [ld   de,#b_best5_score5 + 0x05]
+	lea	b_best5_score4+0x05,a0         	        | [ld   hl,#b_best5_score4 + 0x05]
+	lea	b_best5_score5+0x05,a1         	        | [ld   de,#b_best5_score5 + 0x05]
 	move.b	#0x00,d1                        	| [ld   bc,#0x0006] 6
 	move.b	#0x06,d2                        	| [ld   bc,#0x0006] 6
     jbsr   lddr
-	lea	b_best5_score4+0x05,a1         	| [ld   de,#b_best5_score4 + 0x05]
+	lea	b_best5_score4+0x05,a1         	        | [ld   de,#b_best5_score4 + 0x05]
 	move.b	d0,d2                           	| [ld   c,a]
     jbsr   lddr
-	jra	case_31D9                          	| [jp   case_31D9]
+	jra	case_31D9                          	    | [jp   case_31D9]
 
 case_31CE:
-	lea	b_best5_score5+0x05,a1         	| [ld   de,#b_best5_score5 + 0x05]
-	lea	b_best5_score4+0x05,a0         	| [ld   hl,#b_best5_score4 + 0x05]
+	lea	b_best5_score5+0x05,a1         	        | [ld   de,#b_best5_score5 + 0x05]
+	lea	b_best5_score4+0x05,a0         	        | [ld   hl,#b_best5_score4 + 0x05]
 	move.w	#0x06,d1                        	| [ld   bc,#0x0006] 6
 	jbsr	lddr
 
 case_31D9:
 	move.b	b_8A00+0x11,d0                  	| [ld   a,(b_8A00 + 0x11)] 1==1ST place etc. ... index into hi-score table ... d_31ED[ 2 * (A - 1) ]
 	subq.b	#1,d0                           	| [dec  a]
-	lea	d_31ED_hi_score_tbl,a0         	| [ld   hl,#d_31ED_hi_score_tbl] array of addresses of score table elements
-	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
-	move.l	(a0),a1                        	| [ld   e,(hl)]
-	                        	| [inc  hl]
-	                        	| [ld   d,(hl)]
-	move.l	b_8A00,a0              	| [ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
+	lea	d_31ED_hi_score_tbl,a0         	        | [ld   hl,#d_31ED_hi_score_tbl] array of addresses of score table elements
+	jbsr	add_4_times_d0_to_a0_0008           | [rst  0x08] HL += 2A
+	move.l	(a0),a1                        	    | [ld   e,(hl)]
+	                        	                | [inc  hl]
+	                        	                | [ld   d,(hl)]
+	move.l	b_8A00,a0              	            | [ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
 	move.w	#0x06,d1                        	| [ld   bc,#0x0006] 6
-	jbsr	lddr
-	rts                                    	| [ret]
+	jbsr	lddr_from_video                     | [lddr]
+	rts                                    	    | [ret]
 
 *=============================================================================
 * pointers to individual score strings of Top 5 table (documented elsewhere)
@@ -8838,37 +8839,35 @@ d_31ED_hi_score_tbl:
 *  Cy (Player Score > Table Entry)
 *-----------------------------------------------------------------------------
 c_31F7_chk_score_rank:
-	move.l	b_8A00,a0              	| [ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
+	move.l	b_8A00,a0              	            | [ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
 	move.b	#6,d1                           	| [ld   b,#6]
 l_31FC:
 	move.b	(a1),d0                         	| [ld   a,(de)] score digit
 
 * skip "spaces" (only the 100000 place of table entry could be "space" character)
 	cmp.b	#0x24,d0                         	| [cp   #0x24]
-	jeq	l_320E                             	| [jr   z,l_320E]
+	jeq	l_320E                             	    | [jr   z,l_320E]
 
 * ... and since table entries are all at least 20000, then any space in the player score will not place.
 	move.b	(a0),d0                         	| [ld   a,(hl)] ptr to plyr1 score or plyr2 score on screen
 	cmp.b	#0x24,d0                         	| [cp   #0x24]
 	bne.b	0f                               	| [...]
-	rts                                    	| [ret  z] [...]
+	rts                                    	    | [ret  z] [...]
 0:
-
 	move.b	(a1),d0                         	| [ld   a,(de)]
 l_3206:
 * sets Cy if score digit > table digit
 	cmp.b	(a0),d0                          	| [cp   (hl)] ptr to plyr1 score or plyr2 score on screen
 	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] [...]
+	rts                                    	    | [ret  nz] [...]
 0:
 l_3208:
 	subq.w	#1,a0                           	| [dec  l]
 	subq.w	#1,a1                           	| [dec  e]
 	subq.b	#1,d1                           	| [...]
-	jne	l_31FC                             	| [djnz l_31FC]
-
+	jne	l_31FC                             	    | [djnz l_31FC]
 	clr.b	d0                               	| [xor  a]
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 l_320E:
 * table digit == $24
@@ -8930,7 +8929,7 @@ c_3231:
 												| [add  a,a] A=offset into table ... (B-1)*8
 	lea	best_score_table_32C5,a0                | [$3236: ld   hl,#best_score_table_32C5] score placement characters: 'ST', 'ND', 'RD' etc.
 	lea	(a0,d0.w),a0                            | [$3239: rst  0x10] HL += A
-	move.l	(a0)+,a1                         	| [$323A: ld   e,(hl)] destination lo-byte
+	move.l	(a0)+,d7                         	| [$323A: ld   e,(hl)] destination lo-byte
 												| [$323B: inc  hl]
 												| [$323C: ld   d,(hl)] destination hi-byte
 												| [$323D: inc  hl]
@@ -9005,8 +9004,8 @@ c_3273:
 *  Copies a 6 byte string.
 *  The format for '12345' is: "0x05 0x04 0x03 0x02 0x01 0x24" (24 is space)
 * IN:
-*  HL=pointer to source string (last character i.e. the "space")
-*  DE="puts" destination address (on screen)
+*  A0=pointer to source string (last character i.e. the "space")
+*  D7="puts" destination address (on screen)
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------

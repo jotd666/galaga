@@ -1,13 +1,11 @@
-- crash check coredump
+- crash check coredump: null pointer in lddr
 - if let alone, capture ship beam retracts and sound doesn't stop
-- tile refresh doesn't work at all, try on small display
 - shoot capturing ship: capture loop sound plays forever: stop sound when ship is shot: to test
-- complete char redraw  refresh_status_bar
 - top of screen bobs are not erased. only happens when enemies pass from bottom to top
 - when "perfect" music ends, play "attack" sound: doesn't work
 - default DSW are wrong
-- hit miss ratio can be wrong: 386/585 => 0.4%!! ok for low ratios
-- extra life works, test sound
+- hit miss ratio can be wrong: 386/585 => 0.4%!! ok for low ratios: l_0509_while hardcode values! 
+  followed by highscore entry, where 8A00 is written to
 - high score entry seems buggy!
 - understand when l_2681_end_of_table reached, ILLEGAL remaining
 - optimize: player ship should be HW sprite, even if captured
@@ -31,6 +29,7 @@
 - double shot should optimize height
 - demo: disable invincible flag
 - implement level skip trainer
+- c_plyr_initials_entry_hilite_line: one letter is yellow, rest is white/cyan??
 
 maybe already fixed:
 

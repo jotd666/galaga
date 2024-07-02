@@ -21,7 +21,8 @@
 	.global		ldir
 	.global		lddr
 	.global		ldir_video
-	.global		lddr_video
+	.global		lddr_to_video
+	.global		lddr_from_video
 	.global		rrd
 	.global		rld
 
@@ -134,6 +135,16 @@ ldir_video:
 lddr:
     subq.w    #1,d1
 0:
+	.ifndef	RELEASE
+	cmp.l	#0,a0
+	bne.b	1f
+	jbsr	osd_break
+1:
+	cmp.l	#0,a1
+	bne.b	1f
+	jbsr	osd_break
+1:
+	.endif
     move.b    (a0),(a1)
     subq.w  #1,a0
     subq.w  #1,a1
@@ -144,7 +155,7 @@ lddr:
 * < A0: source (HL)
 * < A1: destination (DE) (video memory)
 * < D1: length (16 bit)
-lddr_video:
+lddr_to_video:
 	move.w	d0,-(a7)
     subq.w    #1,d1
 	exg		d7,a1
@@ -156,6 +167,24 @@ lddr_video:
     dbf        d1,0b
     clr.w    d1
  	exg		d7,a1
+	move.w	(a7)+,d0
+    rts
+	
+* < A0: source (HL) (video memory)
+* < A1: destination (DE)
+* < D1: length (16 bit)
+lddr_from_video:
+	move.w	d0,-(a7)
+    subq.w    #1,d1
+	exg		d7,a0
+0:
+	jbsr	osd_r_videoram
+	move.b	d0,(a1)
+    subq.w  #1,a1
+    subq.w  #1,d7
+    dbf        d1,0b
+    clr.w    d1
+ 	exg		d7,a0
 	move.w	(a7)+,d0
     rts
 

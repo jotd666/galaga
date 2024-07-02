@@ -40,6 +40,8 @@
     .equ  ATTACK_SND,         0x13
     .equ  TICK_SND,           0x15
     .equ  EXPLOSION_SND,         0x19
+    .equ  HIGHEST_SCORE_SND,         0xc
+    .equ  HIGH_SCORE_SND,         0x10
     .equ  CREDIT_SND,         0x1A
     .equ  EXTRA_LIFE_SND,         0x1B
 	

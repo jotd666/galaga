@@ -984,7 +984,7 @@ refresh_status_bar:
 	bcc.b	12f
 	* really redraw left part
 	movem.w	d4/d5/d7,-(a7)
-	move.w	#0x8002,d7
+	moveq	#0x0014,d7
 	move.w	#12-1,d4
 	jbsr	redraw_2_rows
 	movem.w	(a7)+,d4/d5/d7
@@ -998,7 +998,7 @@ refresh_status_bar:
 	* really redraw right part
 	exg	d5,d4
 	movem.w	d4/d5/d7,-(a7)
-	move.w	#0x8014,d7
+	move.w	#0x2,d7
 	move.w	#12-1,d4
 	jbsr	redraw_2_rows
 	movem.w	(a7)+,d4/d5/d7
@@ -1016,20 +1016,22 @@ refresh_status_bar:
 	rts
 	
 redraw_2_rows:
+	lea		bg_videoram,a5
 0:
+	move.b	(a5,d7.w),d0		| read video
+	cmp.b	#0x24,d0
+	beq.b	1f		| nothing here: no need to redraw anything on this column
 	move.w	d4,-(a7)
-	jbsr	osd_r_videoram
-	move.b	#0x02,d0
 	move.w	d7,-(a7)
 	bsr		update_bg_tile
 	move.w	(a7),d7
 	add.w	#0x20,d7
-	jbsr	osd_r_videoram
-	move.b	#0x01,d0
+	move.b	(a5,d7.w),d0		| read video
 	bsr		update_bg_tile
 	move.w	(a7)+,d7
-	addq.w	#0x1,d7
 	move.w	(a7)+,d4
+1:
+	addq.w	#0x1,d7
 	dbf		d4,0b
 	rts
 	
@@ -2595,9 +2597,9 @@ update_bg_tile:
 	move.w	#BG_SCREEN_PLANE_SIZE,d5
 	
 	* D3 = Y
-	cmp.w	#272*NB_BYTES_PER_ROW,d3
+	cmp.w	#264*NB_BYTES_PER_ROW,d3
 	bcs.b	1100f
-	sub.w	#3*NB_BYTES_PER_ROW,d3		| last row is too low!
+	sub.w	#3*NB_BYTES_PER_ROW,d3		| last rows are too low!
 1100:
 
 	* we update the drawed bitplanes and also the backbuffer
@@ -3153,13 +3155,9 @@ handle_keyboard:
 	cmp.b	#0x52,d0	| F3 key
 	bne.b	0f
 	st.b	cheat_used
-	* add 1000 points
+	* add 10000+ points
 	movem.w	d0/d1,-(a7)
-	move.b	#0x8,d0
-	add.b	d0,d0		| clears X
-	*move.b	player_1_score_address_60b2+1,d1
-	abcd	d0,d1
-	*move.b	d1,player_1_score_address_60b2+1
+	move.b	#0x90,ds_bug_collsn_hit_mult+1
 	movem.w	(a7)+,d0/d1
 0:
 *	cmp.b	#0x53,d0	| F4 key
