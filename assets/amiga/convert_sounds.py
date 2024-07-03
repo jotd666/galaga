@@ -24,9 +24,6 @@ vhq_sample_rate = 22050
 
 EMPTY_SND = "EMPTY_SND"
 sound_dict = {
-#"HISCORE_MUSIC_SND"             :{"index":9,"pattern":15,"loops":True,"volume":32},
-#"IN_GAME_MUSIC_FAST_SND"             :{"index":10,"pattern":5,"loops":True,"volume":32},
-#"IN_GAME_MUSIC_FASTER_SND"             :{"index":11,"pattern":8,"loops":True,"volume":32},
 
 
 "BOSS_KILLED_SND"               :{"index":0,"channel":2,"sample_rate":hq_sample_rate,"priority":1},
@@ -48,8 +45,10 @@ sound_dict = {
 "HIGH_SCORE_SND"       :{"index":0x10,"pattern":2,"volume":32,'loops':True},
 "HIGHEST_SCORE_SND"       :{"index":0xC,"pattern":3,"volume":32,'loops':True},
 "END_CHALLENGE_SND"       :{"index":0xE,"pattern":8,"volume":32,"ticks":340,'loops':False},
-"PERFECT_SND"         :{"index":0x14,"pattern":10,"volume":48,'loops':False,"ticks":280},
-"FIGHTER_CAPTURED_SND"    :{"index":0x16,"pattern":12,"volume":32,'loops':False,"ticks":280},
+"PERFECT_SND"         :{"index":0x14,"pattern":10,"volume":48,'loops':False,"ticks":260},
+"FIGHTER_CAPTURED_SND"    :{"index":0x16,"pattern":12,"volume":32,'loops':False,"ticks":320},
+"FIGHTER_KILLED_SND"    :{"index":0x17,"pattern":13,"volume":32,'loops':False,"ticks":120},
+#"FIGHTER_RESCUED_SND"    :{"index":0x18,"pattern":14,"volume":32,'loops':False,"ticks":120},
 
 }
 

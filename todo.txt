@@ -1,7 +1,20 @@
-- crash check coredump: null pointer in lddr
-- if let alone, capture ship beam retracts and sound doesn't stop
-- shoot capturing ship: capture loop sound plays forever: stop sound when ship is shot: to test
-- top of screen bobs are not erased. only happens when enemies pass from bottom to top
+- crash on game over check coredump: $0008d044 bcs.b        $8d058
+$0008d046 lea          ($89744,pc),a1
+$0008d04a move.w       d0,d1
+$0008d04c move.w       #$a,d2
+$0008d050 jsr          ($7060a)
+›1m$0008d056 illegal   D0 = $4E!!!!
+›22m$0008d058 asl.b        #2,d0
+$0008d05a move.l       (0,a0,d0.w),a0                 ;$0008d0ae
+$0008d05e jmp          (a0)                           ;$0008d060
+
+- "cheat" key to remove all lives
+- stage 60: needs indirection selects wrong stage
+- stage 24: flag reduction doesn't work!
+- yellow flash on mutating enemy!!!
+- icons not properly refreshed (bottom) when ship is erased and wraps to Y around 0 probably
+- diagonal ship shots work but wrong BOB
+- shot capturing ship: capture sound stays
 - when "perfect" music ends, play "attack" sound: doesn't work
 - default DSW are wrong
 - hit miss ratio can be wrong: 386/585 => 0.4%!! ok for low ratios: l_0509_while hardcode values! 
@@ -31,15 +44,6 @@
 - implement level skip trainer
 - c_plyr_initials_entry_hilite_line: one letter is yellow, rest is white/cyan??
 
-maybe already fixed:
-
-- enemies definitely stop shooting after a few levels: check
-  sub at 0D66 is it called?
-
-
-traj issues: Traj computed in subcpu D23 / D50 probe there!
-
-l_2ADA_done: all bugs arrived: phase 2 diving attacks!
 
 
 mutants:

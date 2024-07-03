@@ -145,7 +145,7 @@
 	.global		b_bug_flyng_hits_p_round_9288
 	.global		b_bug_que_idx_9289
 	.global		ds5_928A_captr_status
-	.global		ds_bug_collsn_hit_mult
+	.global		ds_bug_collsn_hit_mult_9290
 	.global		b_92A0
 	.global		ds3_frame_cts_92A0
 	.global		b_bugs_actv_cnt
@@ -469,7 +469,7 @@ ds5_928A_captr_status:
                             * [4] if 1 fighter is captured (show fighter captured text)
        ds.b     0x01       | unused
 
-ds_bug_collsn_hit_mult:
+ds_bug_collsn_hit_mult_9290:
        ds.b     0x10       | hit-count/multiplier from collision manager, see d_scoreman_inc_lut
 
 b_92A0:

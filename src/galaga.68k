@@ -358,7 +358,7 @@ l_0414_while_tmr_3:
 	jne	l_0414_while_tmr_3                 	| [jr   nz,l_0414_while_tmr_3]
 
 * memset($9290,$10,0)
-	lea	ds_bug_collsn_hit_mult,a0      	| [ld   hl,#ds_bug_collsn_hit_mult] memset(...,$10,0)
+	lea	ds_bug_collsn_hit_mult_9290,a0      	| [ld   hl,#ds_bug_collsn_hit_mult_9290] memset(...,$10,0)
 	move.b	#0x10,d1                        	| [ld   b,#0x10]
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
@@ -794,9 +794,9 @@ l_05D1:
 	jbsr	c_12C3                            	| [call c_12C3] A==$3F ... set MOB coordinates, player changeover
 
 * set Cy to disable sound clicks for level tokens on player change (value of A is irrelevant)
-	SET_XC_FLAGS                           	| [scf]
-	scs	d7                              	| [ex   af,af']
-	jbsr	c_new_level_tokens_117f                	| [call c_new_level_tokens_117f] Cy' == 1, A == don't care
+	                                     	   | [scf]
+	st	d7                              	   | [ex   af,af']
+	jbsr	c_new_level_tokens_117f            | [call c_new_level_tokens_117f] Cy' == 1, A == don't care
 
 * if ( _enmy_ct_actv == 0 )  ... then _stg_init ... player was previously destroyed by collision with last enemy in the round
 	move.b	ds_plyr_actv+_b_enmy_ct_actv,d0 	| [ld   a,(ds_plyr_actv +_b_enmy_ct_actv)]
@@ -1000,7 +1000,7 @@ l_06AC_while_fcnt:
 
 	move.b	#100,d0                         	| [ld   a,#100] 100 * 10 ... special bonus (d_scoreman_inc_lut[0] == $10)
 l_06BA:
-	lea	ds_bug_collsn_hit_mult+0x0F,a0 	        | [ld   hl,#ds_bug_collsn_hit_mult + 0x0F] challenge bonus score += 10000
+	lea	ds_bug_collsn_hit_mult_9290+0x0F,a0 	        | [ld   hl,#ds_bug_collsn_hit_mult_9290 + 0x0F] challenge bonus score += 10000
 	add.b	(a0),d0                          	| [add  a,(hl)]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	jbsr	gctl_supv_score_0728                | [call gctl_supv_score_0728] add bonus to player score
@@ -1114,7 +1114,7 @@ gctl_supv_score_0728:
 l_0732:
 	move.b	d0,ixl							    | [$0732: ld   ixl,a]   parameter to c_scoreman_incr_add_07d8 (tile ram offset)
 	move.b	#0x10,d1                        	| [$0734: ld   b,#0x10] sizeof scoreman_inc_lut[]
-	lea	ds_bug_collsn_hit_mult,a0 	            | [$0736: ld   hl,#ds_bug_collsn_hit_mult + 0x00] 9290
+	lea	ds_bug_collsn_hit_mult_9290,a0 	            | [$0736: ld   hl,#ds_bug_collsn_hit_mult_9290 + 0x00] 9290
 l_0739_while_B:
 	exg	a1,a0                              	    | [$0739: ex   de,hl] DE := &bug_collsn[hl]
 	lea	d_scoreman_inc_lut-1,a0        	        | [$073A: ld   hl,#d_scoreman_inc_lut - 1] effective start index is $10 - 1
@@ -2827,31 +2827,30 @@ l_11FA_show_10s_20s_30s_50s:
 *   HL -= 1
 *-----------------------------------------------------------------------------
 c_build_token_1:
-
 * check sound_disable_flag
-	exg	d0,d7                              	| [ex   af,af']
+	exg	d0,d7                              	    | [$1201: ex   af,af']
 	tst.b	d0
-	jeq	l_1215_restore_A_and_continue      	| [jr   c,l_1215_restore_A_and_continue]
+	jeq	l_1215_restore_A_and_continue      	    | [$1202: jr   c,l_1215_restore_A_and_continue]
 * put it back
-	exg	d0,d7                              	| [ex   af,af']
+	exg	d0,d7                              	    | [$1204: ex   af,af']
 * set the delay count 8 ... preserve frame count
-	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
-	add.b	#8,d0                            	| [add  a,#8]
-	move.b	d0,d4                           	| [ld   e,a]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [$1205: ld   a,(ds3_frame_cts_92A0 + 0)]
+	add.b	#8,d0                            	| [$1208: add  a,#8]
+	move.b	d0,d4                           	| [$120A: ld   e,a]
 l_120B:
-	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
-	sub.b	d4,d0                            	| [sub  e]
-	jne	l_120B                             	| [jr   nz,l_120B]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [$120B: ld   a,(ds3_frame_cts_92A0 + 0)]
+	sub.b	d4,d0                            	| [$120E: sub  e]
+	jne	l_120B                             	    | [$120F: jr   nz,l_120B]
 
 * actv_plyr_state[0x05]==0 for challenge stage ... 0 count/enable for stage tokens clicks
-	exg	d7,d0                              	| [ex   af,af']
+	exg	d7,d0                              	    | [$1211: ex   af,af']
 	
 	move.w	#TICK_SND,d0
 	jbsr	osd_sound_start
-	*move.b	d0,b_9AA0+0x15                  	| [ld   (b_9AA0 + 0x15),a] 2 ... sound-fx count/enable registers, clicks for stage tokens
+	*move.b	d0,b_9AA0+0x15                  	| [$1212: ld   (b_9AA0 + 0x15),a] 2 ... sound-fx count/enable registers, clicks for stage tokens
 
 l_1215_restore_A_and_continue:
-	exg	d7,d0                              	| [ex   af,af']
+	exg	d7,d0                              	    | [$1212: ex   af,af']
  
 
 *=============================================================================
@@ -8789,11 +8788,10 @@ case_31B8:
 l_31BA:
 	lea	b_best5_score4+0x05,a0         	        | [ld   hl,#b_best5_score4 + 0x05]
 	lea	b_best5_score5+0x05,a1         	        | [ld   de,#b_best5_score5 + 0x05]
-	move.b	#0x00,d1                        	| [ld   bc,#0x0006] 6
-	move.b	#0x06,d2                        	| [ld   bc,#0x0006] 6
+	move.w	#0x06,d1                        	| [ld   bc,#0x0006] 6
     jbsr   lddr
 	lea	b_best5_score4+0x05,a1         	        | [ld   de,#b_best5_score4 + 0x05]
-	move.b	d0,d2                           	| [ld   c,a]
+	move.b	d0,d1                           	| [ld   c,a]
     jbsr   lddr
 	jra	case_31D9                          	    | [jp   case_31D9]
 
@@ -10890,6 +10888,7 @@ l_01AC:
 	move.b	ds_plyr_actv+_b_not_chllg_stg,d0	| [$01B7: ld   a,(ds_plyr_actv +_b_not_chllg_stg)] parameter to sound manager passed through to c_build_token_1
 	                               	            | [$01BA: and  a] clear Cy if A != 0
 	seq	d7                              	    | [$01BB: ex   af,af']
+	exg	d0,d7
 	jbsr	c_new_level_tokens_117f             | [$01BC: call c_new_level_tokens_117f] A' == 0 if challenge stg, else non-zero (stage_ct + 1)
 
 * while ( game_tmrs[2] ){}

@@ -1303,7 +1303,7 @@ l_07F8_:
 
 l_0808:
 * _bug_collsn[ color ] += 1
-	lea	ds_bug_collsn_hit_mult,a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x00] rocket/bug or ship/bug collision
+	lea	ds_bug_collsn_hit_mult_9290,a0 	| [ld   hl,#ds_bug_collsn_hit_mult_9290 + 0x00] rocket/bug or ship/bug collision
 	jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A ... _collsn_hit_mult[sprite.cclr.b1]
 	addq.b	#1,(a0)                         	| [inc  (hl)]
 	tst.b	d7                              	| [ex   af,af'] un-stash parameter/flag
@@ -1363,18 +1363,20 @@ l_hdl_flyng_bug_081e:
 	move.b	d0,(a0)                         	| [$083B: ld   (hl),a]
 	move.b	ds2_stg_chllg_rnd_attrib+0,d0   	| [$083C: ld   a,(ds2_stg_chllg_rnd_attrib + 0)] add "score" to bug_collsn[$0F] (why add?)
 	move.b	d0,d5                           	| [$083F: ld   h,a]
-	move.b	ds_bug_collsn_hit_mult+0x0F,d0  	| [$0840: ld   a,(ds_bug_collsn_hit_mult + 0x0F)]
+	move.b	ds_bug_collsn_hit_mult_9290+0x0F,d0  	| [$0840: ld   a,(ds_bug_collsn_hit_mult_9290 + 0x0F)]
 	add.b	d5,d0                            	| [$0843: add  a,h]
-	move.b	d0,ds_bug_collsn_hit_mult+0x0F  	| [$0844: ld   (ds_bug_collsn_hit_mult + 0x0F),a] += b_9280[4 + 0] ... "score"
+	move.b	d0,ds_bug_collsn_hit_mult_9290+0x0F  	| [$0844: ld   (ds_bug_collsn_hit_mult_9290 + 0x0F),a] += b_9280[4 + 0] ... "score"
 	jra	l_07DF                             		| [$0847: jr   l_07DF]
 
 l_0849:
 * handle special cases of flying bugs, then jp   l_07DF
 
-* if (hit == captured ship)
+* if (hit == captured ship)   (captured ship shot/destroyed)
 	move.b	d2,d0                           	| [ld   a,c] .... sprite.cclr.b1
 	cmp.b	#7,d0                            	| [cp   #7] color map 7 ... red captured ship
 	jne	l_0852                             		| [jr   nz,l_0852]
+	move.w	#FIGHTER_KILLED_SND,d0
+	jbsr	osd_sound_start
 	move.b	#0xB8,d3                        	| [ld   d,#0xB8]
 	jra	l_08B0_set_bonus_sprite_code       		| [jr   l_08B0_set_bonus_sprite_code]
 
@@ -1456,7 +1458,7 @@ l_0899:
 												| [inc  l]
 	move.b	(a0),d3                         	| [ld   d,(hl)] .b1 -> obj_collsn_notif[L] ... sprite code + 0x80
 l_08AA:
-	lea	ds_bug_collsn_hit_mult+0x0F,a0 	| [ld   hl,#ds_bug_collsn_hit_mult + 0x0F] bonus score increment boss killed
+	lea	ds_bug_collsn_hit_mult_9290+0x0F,a0 	| [ld   hl,#ds_bug_collsn_hit_mult_9290 + 0x0F] bonus score increment boss killed
 	add.b	(a0),d0                          	| [add  a,(hl)]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	move.l	(sp)+,a0                        	| [pop  hl]

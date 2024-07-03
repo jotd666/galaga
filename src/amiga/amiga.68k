@@ -817,6 +817,7 @@ _vblank:
 	cmp.b	#6,music_track_start_number
 	jne		13f
 	* special case end of "PERFECT" play attack sound
+	jbsr		osd_break
 	move.w	#ATTACK_SND,d0
 	jbsr	osd_sound_start
 13:
@@ -1346,6 +1347,10 @@ update_bobs:
 16:
 	move.b	(PREVIOUS_ACTIVE_BITPLANE_MASK,a4),d3	| erase only needed bitplanes
 	add.w	(PREVIOUS_Y_START,a4),d1				| add Y start offset
+	jpl		13f
+	* negative? make it 0 else erase is going to fail
+	moveq	#0,d1
+13:	
 	move.w	(PREVIOUS_SPRITE_HEIGHT,a4),d4
 	bsr		restore_16x_background
 11:
@@ -3157,7 +3162,7 @@ handle_keyboard:
 	st.b	cheat_used
 	* add 10000+ points
 	movem.w	d0/d1,-(a7)
-	move.b	#0x90,ds_bug_collsn_hit_mult+1
+	move.b	#0x90,ds_bug_collsn_hit_mult_9290+1
 	movem.w	(a7)+,d0/d1
 0:
 *	cmp.b	#0x53,d0	| F4 key

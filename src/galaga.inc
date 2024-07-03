@@ -47,6 +47,8 @@
 	
     .equ  GAME_START_SND,         0x9
     .equ  FIGHTER_CAPTURED_SND,         0x16
+    .equ  FIGHTER_KILLED_SND,         0x17
+    *.equ  FIGHTER_RESCUED_SND,         0x18
     
     .equ  END_CHALLENGE_SND,         0xE
     .equ  PERFECT_SND,         0x14
