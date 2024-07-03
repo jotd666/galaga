@@ -1,4 +1,6 @@
-- crash on game over check coredump: $0008d044 bcs.b        $8d058
+- hit miss ratio can be wrong: 386/585 => 0.4%!! ok for low ratios: l_0509_while hardcode values! 
+  followed by highscore entry, where 8A00 is written to
+- regression: crash on game over check coredump: $0008d044 bcs.b        $8d058
 $0008d046 lea          ($89744,pc),a1
 $0008d04a move.w       d0,d1
 $0008d04c move.w       #$a,d2
@@ -9,16 +11,14 @@ $0008d05a move.l       (0,a0,d0.w),a0                 ;$0008d0ae
 $0008d05e jmp          (a0)                           ;$0008d060
 
 - "cheat" key to remove all lives
-- stage 60: needs indirection selects wrong stage
+- stage 60: needs indirection selects wrong stage: to test
 - stage 24: flag reduction doesn't work!
 - yellow flash on mutating enemy!!!
 - icons not properly refreshed (bottom) when ship is erased and wraps to Y around 0 probably
 - diagonal ship shots work but wrong BOB
-- shot capturing ship: capture sound stays
-- when "perfect" music ends, play "attack" sound: doesn't work
+- when capturing ship shot while using tractor beam: capture sound stays
+- when "perfect" music ends, play "attack" sound: doesn't work: test again
 - default DSW are wrong
-- hit miss ratio can be wrong: 386/585 => 0.4%!! ok for low ratios: l_0509_while hardcode values! 
-  followed by highscore entry, where 8A00 is written to
 - high score entry seems buggy!
 - understand when l_2681_end_of_table reached, ILLEGAL remaining
 - optimize: player ship should be HW sprite, even if captured
