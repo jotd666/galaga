@@ -45,10 +45,10 @@ sound_dict = {
 "HIGH_SCORE_SND"       :{"index":0x10,"pattern":2,"volume":32,'loops':True},
 "HIGHEST_SCORE_SND"       :{"index":0xC,"pattern":3,"volume":32,'loops':True},
 "END_CHALLENGE_SND"       :{"index":0xE,"pattern":8,"volume":32,"ticks":340,'loops':False},
-"PERFECT_SND"         :{"index":0x14,"pattern":10,"volume":48,'loops':False,"ticks":260},
-"FIGHTER_CAPTURED_SND"    :{"index":0x16,"pattern":12,"volume":32,'loops':False,"ticks":320},
-"FIGHTER_KILLED_SND"    :{"index":0x17,"pattern":13,"volume":32,'loops':False,"ticks":120},
-#"FIGHTER_RESCUED_SND"    :{"index":0x18,"pattern":14,"volume":32,'loops':False,"ticks":120},
+"PERFECT_SND"         :{"index":0x14,"pattern":10,"volume":48,'loops':False,"ticks":250},
+"FIGHTER_CAPTURED_SND"    :{"index":0x16,"pattern":12,"volume":32,'loops':False,"ticks":280},
+"FIGHTER_KILLED_SND"    :{"index":0x17,"pattern":13,"volume":32,'loops':False,"ticks":160},
+"FIGHTER_RESCUED_SND"    :{"index":0x18,"pattern":14,"volume":32,'loops':False,"ticks":280},
 
 }
 

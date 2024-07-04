@@ -1440,6 +1440,8 @@ l_0852:
 	move.b	d0,ds_cpu0_task_actv_9000+0x1D      | [ld   (ds_cpu0_task_actv_9000 + 0x1D),a] 1 ... shot the boss that captured the ship
 	move.b	d0,ds5_928A_captr_status+0x03   	| [ld   (ds5_928A_captr_status + 0x03),a] 1
 	move.b	d0,b_9AA0+0x11                  	| [ld   (b_9AA0 + 0x11),a] 1 ... sound-fx count/enable registers, "rescued ship" music
+	move.w	#FIGHTER_RESCUED_SND,d0
+	jbsr	osd_sound_start
 	movem.l	(sp)+,a0/d6                        	| [pop  hl] restore boss object locator e.g. b_883x
 
 l_0899:
