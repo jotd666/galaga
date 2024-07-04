@@ -2070,6 +2070,8 @@ l_0B76:
 												| [$0B7E: and  a]
 	jeq	l_0B8B                             		| [$0B7F: jp   z,l_0B8B] inc hl and finalize
 	move.b	d0,b_9AA0+0x13                  	| [$0B82: ld   (b_9AA0 + 0x13),a] ~0 ... sound-fx count/enable registers, bug dive attack sound
+	move.w	#ATTACK_SND,d0
+	jbsr	osd_sound_start
 	jra	l_0B8B                             		| [$0B85: jr   l_0B8B] inc hl and finalize
 
 * red alien flew through bottom of screen to top, heading for home

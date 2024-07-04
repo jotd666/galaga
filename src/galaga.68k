@@ -770,6 +770,8 @@ l_05A3_while:
 	move.b	d0,ds4_game_tmrs_92ac+2             | [ld   (ds4_game_tmrs_92ac + 2),a] actv_plyr_state[0x1F]
 	move.b	ds_plyr_actv+_b_sndflag,d0      	| [ld   a,(ds_plyr_actv +_b_sndflag)] _fx[0] ... enable for pulsing_sound
 	move.b	d0,b_9AA0+0x00                  	| [ld   (b_9AA0 + 0x00),a] enable for pulsing_sound
+	*move.w	#PUSLING_SND,d0
+	*jbsr	osd_sound_start
 	jbsr	draw_resv_ships_136c                | [call draw_resv_ships_136c]
 
 * if ( _enmy_ct_actv != 0 ) ...
@@ -1343,6 +1345,7 @@ gctl_supv_stage:
 	or.b	d1,d0                             	| [or   b]
 	jne	l_081B                             	| [jr   nz,l_081B]
 * then ...
+	jbsr	osd_loop_stop
 	move.b	d0,b_9AA0+0x00                  	| [ld   (b_9AA0 + 0x00),a] 0 ... sound-fx count/enable registers, pulsing formation sound effect
 
 	jra	gctl_stg_restart_hdlr              	| [jp   gctl_stg_restart_hdlr] cleared the round ... num_bugs_on_screen ==0|| !f_insert_attackers_2916_active
@@ -1470,6 +1473,7 @@ l_0865:
 	jbsr	rst_18                            	| [$0882: rst  0x18] memset((HL), A=fill, B=ct)
 	clr.b	d0                               	| [$0883: xor  a]
 	move.b	d0,b_9AA0+0x00                  	| [$0884: ld   (b_9AA0 + 0x00),a] 0 ... sound-fx count/enable registers, kill pulsing sound effect (free-fly)
+	jbsr	osd_loop_stop
 	rts                                    	    | [$0887: ret]
 
 l_0888:
@@ -2844,11 +2848,12 @@ l_120B:
 
 * actv_plyr_state[0x05]==0 for challenge stage ... 0 count/enable for stage tokens clicks
 	exg	d7,d0                              	    | [$1211: ex   af,af']
-	
+	tst.b	ds_plyr_actv+_b_not_chllg_stg		| JOTD: couldn't make the original code work properly
+	jeq		0f
 	move.w	#TICK_SND,d0
 	jbsr	osd_sound_start
 	*move.b	d0,b_9AA0+0x15                  	| [$1212: ld   (b_9AA0 + 0x15),a] 2 ... sound-fx count/enable registers, clicks for stage tokens
-
+0:
 l_1215_restore_A_and_continue:
 	exg	d7,d0                              	    | [$1212: ex   af,af']
  
@@ -8297,6 +8302,8 @@ l_2ADA_done:
 	move.b	d0,ds_cpu0_task_actv_9000+0x0A      | [ld   (ds_cpu0_task_actv_9000 + 0x0A),a] 0 ... disable this task (f_lateral_movement_at_round_start_2a90)
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,b_9AA0+0x00                  	| [ld   (b_9AA0 + 0x00),a] 1 ... sound-fx count/enable register, pulsing formation sound effect
+	*move.w	#PUSLING_SND,d0
+	*jbsr	osd_sound_start
 	move.b	d0,ds_cpu0_task_actv_9000+0x09      | [ld   (ds_cpu0_task_actv_9000 + 0x09),a] 1 ... enable f_pulsating_swarm_movement_1de6 ... collective bug movement
 	rts                                    	    | [ret]
 

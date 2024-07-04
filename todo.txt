@@ -10,14 +10,13 @@ $0008d050 jsr          ($7060a)
 $0008d05a move.l       (0,a0,d0.w),a0                 ;$0008d0ae
 $0008d05e jmp          (a0)                           ;$0008d060
 
-- "cheat" key to remove all lives
-- stage 60: needs indirection selects wrong stage: to test
-- stage 24: flag reduction doesn't work!
+- when "perfect" music ends, play "attack" sound: test again
+- ticks play when challenging stage: to test again, seems to work
+- stage 24 or 60: flag reduction doesn't work! debug c_new_level_tokens_117f
 - yellow flash on mutating enemy!!!
 - icons not properly refreshed (bottom) when ship is erased and wraps to Y around 0 probably
 - diagonal ship shots work but wrong BOB
 - when capturing ship shot while using tractor beam: capture sound stays
-- when "perfect" music ends, play "attack" sound: doesn't work: test again
 - default DSW are wrong
 - high score entry seems buggy!
 - understand when l_2681_end_of_table reached, ILLEGAL remaining
@@ -33,15 +32,11 @@ $0008d05e jmp          (a0)                           ;$0008d060
 - red flashes (frame drop) even with very few sprites with cycle exact!!
   (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - redraw bottom tiles all the time or maybe only if some sprite Y > some value
-- missing/wrong sounds:
-  * swarm sound (when) => after ship capture, at another time???
-  * missing tunes
-  * last moths attack again when on bottom of screen, but no sound is played
+- missing/wrong sounds: swarm pusling sound: rip from MAME with invincible & attack sound off
 - namco logo should be red
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
 - demo: disable invincible flag
-- implement level skip trainer
 - c_plyr_initials_entry_hilite_line: one letter is yellow, rest is white/cyan??
 
 
