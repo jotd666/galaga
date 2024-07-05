@@ -1,17 +1,6 @@
 - hit miss ratio can be wrong: 386/585 => 0.4%!! ok for low ratios: 
   c_puts_hitmiss_ratio_0A72 hardcode values!  (OK for 402/187)
 - 0 shots fired / 0 hits => 30% hit miss!!!
-- issue in c_plyr_initials_entry_hilite_line
-  followed by highscore entry, where 8A00 is written to
-- regression: crash on game over check coredump: $0008d044 bcs.b        $8d058
-$0008d046 lea          ($89744,pc),a1
-$0008d04a move.w       d0,d1
-$0008d04c move.w       #$a,d2
-$0008d050 jsr          ($7060a)
-›1m$0008d056 illegal   D0 = $4E!!!!
-›22m$0008d058 asl.b        #2,d0
-$0008d05a move.l       (0,a0,d0.w),a0                 ;$0008d0ae
-$0008d05e jmp          (a0)                           ;$0008d060
 
 - when "perfect" music ends, play "attack" sound: test again
 - ticks play when challenging stage: to test again, seems to work
@@ -19,8 +8,10 @@ $0008d05e jmp          (a0)                           ;$0008d060
 - icons not properly refreshed (bottom) when ship is erased and wraps to Y around 0 probably
 - diagonal ship shots work but wrong BOB
 - when capturing ship shot while using tractor beam: capture sound stays
-- default DSW are wrong
-- high score entry seems buggy!
+- l_38AB: bonus ships are hardcoded 20000/60000 ATM
+- high score entry: ok to advance letter, but backletter wrong X pos
+- high score entry: always first!!
+- high score entry: music should loop, end of the module should be manual?
 - understand when l_2681_end_of_table reached, ILLEGAL remaining
 - optimize: player ship should be HW sprite, even if captured
   sprite layout: 2 slots for player ship
@@ -40,6 +31,7 @@ $0008d05e jmp          (a0)                           ;$0008d060
 - double shot should optimize height
 - demo: disable invincible flag
 - c_plyr_initials_entry_hilite_line: one letter is yellow, rest is white/cyan??
+  doesn't matter!!!
 
 
 

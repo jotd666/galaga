@@ -40,7 +40,14 @@
 	.global		galaga_reset
 	.global		galaga_irq
 
-
+stop_pulsing_sound_effect:
+	rts
+	
+start_pulsing_sound_effect:
+	*jbsr	osd_loop_stop
+	move.b	d0,b_9AA0+0x00           
+	rts
+	
 *=============================================================================
 * por_inits()
 *  Description:
@@ -1345,8 +1352,7 @@ gctl_supv_stage:
 	or.b	d1,d0                             	| [or   b]
 	jne	l_081B                             	| [jr   nz,l_081B]
 * then ...
-	jbsr	osd_loop_stop
-	move.b	d0,b_9AA0+0x00                  	| [ld   (b_9AA0 + 0x00),a] 0 ... sound-fx count/enable registers, pulsing formation sound effect
+	jbsr	start_pulsing_sound_effect     	| [ld   (b_9AA0 + 0x00),a] 0 ... sound-fx count/enable registers, pulsing formation sound effect
 
 	jra	gctl_stg_restart_hdlr              	| [jp   gctl_stg_restart_hdlr] cleared the round ... num_bugs_on_screen ==0|| !f_insert_attackers_2916_active
 
@@ -1473,7 +1479,7 @@ l_0865:
 	jbsr	rst_18                            	| [$0882: rst  0x18] memset((HL), A=fill, B=ct)
 	clr.b	d0                               	| [$0883: xor  a]
 	move.b	d0,b_9AA0+0x00                  	| [$0884: ld   (b_9AA0 + 0x00),a] 0 ... sound-fx count/enable registers, kill pulsing sound effect (free-fly)
-	jbsr	osd_loop_stop
+	jbsr	stop_pulsing_sound_effect
 	rts                                    	    | [$0887: ret]
 
 l_0888:
@@ -9549,16 +9555,18 @@ c_svc_updt_dsply:
 *     0xC0 -> 5
 
 * configuration setting is "number of fighters - 1"
-	jbsr	osd_read_dsw_7                 	    | [$3832: ld   hl,#_sfr_dsw7] get DSWB#7 (sfr_dsw7:0)
+* fuck this code, this is way too complex
+
+	jbsr	osd_read_nb_fighters           	    | [$3832: ld   hl,#_sfr_dsw7] get DSWB#7 (sfr_dsw7:0)
 	                         	                | [$3835: ld   a,(hl)] hi-bit
-	move.b		d0,d7
-	jbsr	osd_read_dsw_8   			        | [$3836: inc  hl] get DSWB#8 (sfr_dsw8:0)
-	move.b	d0,d2                         	    | [$3837: ld   c,(hl)] lo-bit
-	move.b	d7,d0
-	roxr.b	#1,d2                           	| [$3838: rr   c] "right-shift" lo-bit into Cy flag.
-	addx.b	d0,d0								| [$383A: adc  a,a]   | "left-shift" the hi-bit and add the lo-bit from Cy flag.
-	and.b	#0x03,d0                         	| [$383B: and  #0x03]
-	addq.b	#1,d0                           	| [$383D: inc  a] this gives "cfg = nbr_of_ships - 1"
+							
+												| [$3836: inc  hl] get DSWB#8 (sfr_dsw8:0)
+													| [$3837: ld   c,(hl)] lo-bit
+							
+												| [$3838: rr   c] "right-shift" lo-bit into Cy flag.
+													| [$383A: adc  a,a]   | "left-shift" the hi-bit and add the lo-bit from Cy flag.
+												| [$383B: and  #0x03]
+												| [$383D: inc  a] this gives "cfg = nbr_of_ships - 1"
 	move.b	d0,b_mchn_cfg_nships            	| [$383E: ld   (b_mchn_cfg_nships),a]
 
 *  0x8000[$02EA] = mchn_cfg_nships + 1
@@ -9670,12 +9678,10 @@ l_38A0:
 l_38AB:
 	sub.w	#4,a7
 	move.l	a7,a0
-	jbsr		osd_read_dsw_4
-	move.b	d0,(a0)
-	jbsr		osd_read_dsw_5
-	move.b	d0,(1,a0)
-	jbsr		osd_read_dsw_6
-	move.b	d0,(2,a0)
+
+	move.b	#1,(a0)
+	move.b	#1,(1,a0)
+	move.b	#0,(2,a0)
 	                                    		| [ld   hl,#_sfr_dsw4] bonus levels
 
 	move.b	#3,d1                           	| [ld   b,#3] 3 positions to read

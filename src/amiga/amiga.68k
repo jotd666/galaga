@@ -237,8 +237,7 @@ start:
 		.global osd_read_dsw_4
 		.global osd_read_dsw_5
 		.global osd_read_dsw_6
-		.global osd_read_dsw_7
-		.global osd_read_dsw_8
+		.global osd_read_nb_fighters
 		.global osd_read_in_2
 		.global osd_read_in_0
 		.global osd_read_high_scores
@@ -3001,54 +3000,23 @@ osd_read_dsw_3:
 	rts
 	
 
-
-osd_read_dsw_4:
-	moveq	#1,d0
-	rts
-
-	* < 5 fighters
-	*PORT_DIPSETTING(    0x20, "20K, 60K, Every 60K" )   PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0) /* Began with 2, 3 or 4 fighters */
-	*PORT_DIPSETTING(    0x18, "20K and 60K Only" )      PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0)
-	*PORT_DIPSETTING(    0x10, "20K, 70K, Every 70K" )   PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0) // factory default = "20K, 70K, Every70K"
-	*PORT_DIPSETTING(    0x30, "20K, 80K, Every 80K" )   PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0)
-	*PORT_DIPSETTING(    0x38, "30K and 80K Only" )      PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0)
-	*PORT_DIPSETTING(    0x08, "30K, 100K, Every 100K" ) PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0)
-	*PORT_DIPSETTING(    0x28, "30K, 120K, Every 120K" ) PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0)
-	*PORT_DIPSETTING(    0x00, DEF_STR( None ) )         PORT_CONDITION("DSWB",0xc0,NOTEQUALS,0xc0)
-
-	* with 5 fighters
-	*PORT_DIPSETTING(    0x20, "30K, 100K, Every 100K" ) PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0) /* Began with 5 fighters */
-	*PORT_DIPSETTING(    0x18, "30K and 150K Only" )     PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
-	*PORT_DIPSETTING(    0x10, "30K, 120K, Every 120K" ) PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
-	*PORT_DIPSETTING(    0x30, "30K, 150K, Every 150K" ) PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
-	*PORT_DIPSETTING(    0x38, "30K Only" )              PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
-	*PORT_DIPSETTING(    0x08, "30K and 100K Only" )     PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
-	*PORT_DIPSETTING(    0x28, "30K and 120K Only" )     PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
-	*PORT_DIPSETTING(    0x00, DEF_STR( None ) )         PORT_CONDITION("DSWB",0xc0,EQUALS,0xc0)
-	*PORT_DIPNAME( 0xc0, 0x80, DEF_STR( Lives ) )        PORT_DIPLOCATION("SWA:7,8")
-	
-osd_read_dsw_5:
-	* bonus life
-	moveq	#3,d0
-	rts
 	
 osd_read_dsw_6:
 	moveq	#0,d0
 	rts
 
-* NUMBER OF FIGHTERS (DSWB)
-*     0x00 -> 2
-*     0x40 -> 4
-*     0x80 -> 3
-*     0xC0 -> 5
 
-osd_read_dsw_7:
-	move	#0x80,d0
+
+osd_read_nb_fighters:
+	move.l	dip_switch_start_lives,d0
+	move.l	a0,-(a7)
+	lea		start_lives_table(pc),a0
+	move.b	(a0,d0.w),d0
+	move.l	(a7)+,a0
 	rts
 	
-osd_read_dsw_8:
-	moveq	#0,d0
-	rts
+start_lives_table:
+	.byte	3-1,2-1,4-1,5-1
 	
 
 		
