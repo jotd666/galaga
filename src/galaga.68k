@@ -8394,15 +8394,17 @@ l_300C:
 	move.b	#2,d0                                   | [$303A: ld   a,#2]
 	tst.b	d7                                      
 	jeq	l_3047                                      | [$303C: jr   nc,l_3047]
-	st.b	d0                                      | [$303E: ld   a,#0xFF]
+													| [$303E: ld   a,#0xFF]
 	move.w	#HIGHEST_SCORE_SND,d0
 	jbsr	osd_sound_start
 	*move.b	d0,0x9AA0+0x0C                          | [$3040: ld   (0x9AA0 + 0x0C),a] special tune for 1st place
 	move.b	#1,d0                                   | [$3043: ld   a,#1]
 	jra	l_304A                                      | [$3045: jr   l_304A]
-l_3047:                                             
+l_3047:
+	move.w	d0,-(a7)											
 	move.w	#HIGH_SCORE_SND,d0
 	jbsr	osd_sound_start
+	move.w	(a7)+,d0
 	*move.b	d0,0x9AA0+0x10                          | [$3047: ld   (0x9AA0 + 0x10),a] select the tune
 
 l_304A:
@@ -8425,8 +8427,8 @@ l_304A:
 	lea	b_best5_name5+0x02,a1          	            | [$3061: ld   de,#b_best5_name5 + 0x02] 3rd letter of 5th place name
 	tst.b	d0                               	    | [$3064: and  a]
 	jeq	l_306C                                   	| [$3065: jr   z,l_306C]
-	move.b	d0,d2                               	| [$3067: ld   c,a]
-	clr.b	d1                                   	| [$3068: ld   b,#0]
+	moveq	#0,d1									| [$3068: ld   b,#0]
+	move.b	d0,d1                               	| [$3067: ld   c,a]                        	
     jbsr   lddr                                     | [$306A: lddr]
 * note, HL now == &newname[0] - 1
 l_306C:
@@ -8461,7 +8463,7 @@ l_3073:
 	jbsr	osd_w_videoram                      	| [$309D: ld   (hl),#0x0A]
 
 	jbsr	c_puts_top5scores_321d                 	| [call c_puts_top5scores_321d]
-	jbsr	c_plyr_initials_entry_hilite_line 	| [call c_plyr_initials_entry_hilite_line]
+	jbsr	c_plyr_initials_entry_hilite_line 	    | [call c_plyr_initials_entry_hilite_line]
 
 * wait 2 seconds
 	move.b	#4,d0                           	| [ld   a,#4]
@@ -8907,14 +8909,14 @@ c_mach_hiscore_show_3214:
 c_puts_top5scores_321d:
 	lea	s_32B4_score_name,a0           			| [ld   hl,#s_32B4_score_name]
 	jbsr	c_text_out_331b                     | [call c_text_out_331b] puts 'SCORE     NAME' below 'TOP 5'
-	move.b	#1,d1                           	| [ld   b,#1] starting index for c_3231
-	jbsr	c_3231                            	| [call c_3231] '1ST............'
-	jbsr	c_3231                            	| [call c_3231] '2ND............'
-	jbsr	c_3231                            	| [call c_3231] '3RD............'
-	jbsr	c_3231                            	| [call c_3231] '4RD............'
+	move.b	#1,d1                           	| [ld   b,#1] starting index for put_highscore_line_3231
+	jbsr	put_highscore_line_3231             | [call put_highscore_line_3231] '1ST............'
+	jbsr	put_highscore_line_3231             | [call put_highscore_line_3231] '2ND............'
+	jbsr	put_highscore_line_3231             | [call put_highscore_line_3231] '3RD............'
+	jbsr	put_highscore_line_3231             | [call put_highscore_line_3231] '4RD............'
                                                   * continue to '5TH' ...
 *=============================================================================
-* c_3231()
+* put_highscore_line_3231()
 *  Description:
 *   Setting lines for hi-score table. 1st,2nd,3rd,and 4th are by calling the
 *   function. 5th is by allowing execution to fall through from c_puts_top5scores_321d.
@@ -8924,7 +8926,7 @@ c_puts_top5scores_321d:
 * OUT:
 *  B+=1
 *-----------------------------------------------------------------------------
-c_3231:
+put_highscore_line_3231:
 	moveq	#0,d0
 	move.b	d1,d0                           	| [$3231: ld   a,b] B=rank (1 to 5)
 	subq.b	#1,d0                           	| [$3232: dec  a]
@@ -8933,7 +8935,7 @@ c_3231:
 												| [add  a,a] A=offset into table ... (B-1)*8
 	lea	best_score_table_32C5,a0                | [$3236: ld   hl,#best_score_table_32C5] score placement characters: 'ST', 'ND', 'RD' etc.
 	lea	(a0,d0.w),a0                            | [$3239: rst  0x10] HL += A
-	move.l	(a0)+,d7                         	| [$323A: ld   e,(hl)] destination lo-byte
+	move.l	(a0)+,a1                         	| [$323A: ld   e,(hl)] destination lo-byte
 												| [$323B: inc  hl]
 												| [$323C: ld   d,(hl)] destination hi-byte
 												| [$323D: inc  hl]
@@ -8997,9 +8999,9 @@ c_put_initial_3270:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_3273:
-	jbsr	rst_20                            	| [rst  0x20] DE-=$20
-	rts                                    	| [ret]
+
+	sub.w	#0x20,a1		| [rst  0x20] DE-=$20
+    rts						| [ret]
 * end 'call _3270'
 
 *=============================================================================

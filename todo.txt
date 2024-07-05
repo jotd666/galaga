@@ -1,5 +1,7 @@
 - hit miss ratio can be wrong: 386/585 => 0.4%!! ok for low ratios: 
   c_puts_hitmiss_ratio_0A72 hardcode values!  (OK for 402/187)
+- 0 shots fired / 0 hits => 30% hit miss!!!
+- issue in c_plyr_initials_entry_hilite_line
   followed by highscore entry, where 8A00 is written to
 - regression: crash on game over check coredump: $0008d044 bcs.b        $8d058
 $0008d046 lea          ($89744,pc),a1
