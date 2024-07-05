@@ -280,7 +280,9 @@ _user:
 	lea		start_levels_whd(pc),a0
 	move.l	start_level_option,d0
 	and.w	#0x3F,d0
-	move.b	(a0,d0.w),start_level_option+3
+	move.b	(a0,d0.w),d0
+	subq	#1,d0		| zero indexed after all!
+	move.b	d0,start_level_option+3
 	
     bra		.no_forbid
 .standard:

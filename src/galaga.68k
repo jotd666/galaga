@@ -2678,10 +2678,9 @@ c_new_level_tokens_117f:
 	move.b	#0x24,d0                        	| [$1184: ld   a,#0x24]
 	jbsr	rst_18_video                        | [$1186: rst  0x18] memset((HL), A=fill, B=ct)
 *  memset($8022,$24,$12)                          | bottom row at right
-	move.b	#0x22,d6                        	| [$1187: ld   l,#0x22]
+	lea	0x8020+2,a0                        	    | [$1187: ld   l,#0x22]
 	move.b	#0x12,d1                        	| [$1189: ld   b,#0x12]
 	jbsr	rst_18_video                        | [$118B: rst  0x18] memset((HL), A=fill, B=ct)
-
 	move.b	ds_plyr_actv+_b_stgctr,d0       	| [$118C: ld   a,(ds_plyr_actv +_b_stgctr)] c_new_level_tokens_117f
 	clr.b	d1                               	| [$118F: ld   b,#0] tmp_quotient 50
 	lea	0x8000+1,a0                	            | [$1191: ld   hl,#0x8000 + 1] offset into tile ram
@@ -2703,8 +2702,8 @@ l_119F:
 	exg	a1,a0                              	    | [$119F: ex   de,hl] stash the tileram offset in DE
 	move.b	d0,d6                           	| [$11A0: ld   l,a] stage_ctr % 50
 
-	clr.b	d5                               	| [$11A1: ld   h,#0]
-	move.b	#10,d0                          	| [$11A3: ld   a,#10]
+	clr.w	d5                               	| [$11A1: ld   h,#0]
+	move.w	#10,d0                          	| [$11A3: ld   a,#10]
 	jbsr	c_divmod                          	| [$11A5: call c_divmod] HL = HL / 10
 	move.b	d0,d5                           	| [$11A8: ld   h,a] A = HL % 10 ... (still have L==HL/10)
 

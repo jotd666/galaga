@@ -1,4 +1,5 @@
-- hit miss ratio can be wrong: 386/585 => 0.4%!! ok for low ratios: l_0509_while hardcode values! 
+- hit miss ratio can be wrong: 386/585 => 0.4%!! ok for low ratios: 
+  c_puts_hitmiss_ratio_0A72 hardcode values!  (OK for 402/187)
   followed by highscore entry, where 8A00 is written to
 - regression: crash on game over check coredump: $0008d044 bcs.b        $8d058
 $0008d046 lea          ($89744,pc),a1
@@ -12,7 +13,6 @@ $0008d05e jmp          (a0)                           ;$0008d060
 
 - when "perfect" music ends, play "attack" sound: test again
 - ticks play when challenging stage: to test again, seems to work
-- stage 24 or 60: flag reduction doesn't work! debug c_new_level_tokens_117f
 - yellow flash on mutating enemy!!!
 - icons not properly refreshed (bottom) when ship is erased and wraps to Y around 0 probably
 - diagonal ship shots work but wrong BOB
