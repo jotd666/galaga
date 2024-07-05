@@ -6777,6 +6777,7 @@ l_231C:
 	rts                                    	    | [$2326: ret]
 
 l_2327_shot_boss_while_capturing:
+	jbsr	osd_loop_stop
 	move.b	#3,d0                           	| [$2327: ld   a,#3]
 	move.b	d0,ds_plyr_actv+_b_captr_flag   	| [$2329: ld   (ds_plyr_actv +_b_captr_flag),a] 3 (shot_boss_while_capturing)
 	move.b	#0x80,(a0)                      	| [$232C: ld   (hl),#0x80] HL == ds5_928A_captr_status + 0x01

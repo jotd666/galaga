@@ -2,24 +2,24 @@
   c_puts_hitmiss_ratio_0A72 hardcode values!  (OK for 402/187)
 - 0 shots fired / 0 hits => 30% hit miss!!!
 
-- when "perfect" music ends, play "attack" sound: test again
-- ticks play when challenging stage: to test again, seems to work
 - yellow flash on mutating enemy!!!
 - icons not properly refreshed (bottom) when ship is erased and wraps to Y around 0 probably
+  also should take explosions (double height) into account
 - diagonal ship shots work but wrong BOB
-- when capturing ship shot while using tractor beam: capture sound stays
+- when capturing ship shot while using tractor beam: capture sound stays: to test again
 - l_38AB: bonus ships are hardcoded 20000/60000 ATM
 - high score entry: ok to advance letter, but backletter wrong X pos
 - high score entry: always first!!
 - high score entry: music should loop, end of the module should be manual?
+- save highscores
 - understand when l_2681_end_of_table reached, ILLEGAL remaining
 - optimize: player ship should be HW sprite, even if captured
   sprite layout: 2 slots for player ship
                  2 slots for captured ship (1 wasted)
 				 2 slots for background stars (1 wasted, maybe 2 spare colors will be useful)
-				 2 spare slots (maybe their 3 spare colors will be useful)
+				 2 spare slots (their 3 spare colors are used for tiles)
 - HW sprites seem not to work but is the code aligned with .py (orientations/flip/mirror) ?
-
+- DSW skill level?
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
 - red flashes (frame drop) even with very few sprites with cycle exact!!
