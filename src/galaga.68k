@@ -2051,6 +2051,7 @@ c_puts_hitmiss_ratio_0A72:
 * if ( shots fired  == 0 )
 	MOVE_TO_REG	ds_plyr_actv+_w_shot_ct,d3  | [ld   de,(ds_plyr_actv +_w_shot_ct)]
 											| [ld   a,d]
+											
 	tst.w	d3								| [or   e]
 	jne	l_0A82                             	| [jr   nz,l_0A82]
 * then
@@ -2077,7 +2078,7 @@ l_0A90:
 * HL = hl_adjusted_hits / (de_adjusted_shots / 0x0100)
 	LOAD_D5D6_FROM_D5_16
 	move.w	d3,d0                           	| [ld   a,d] divisor in A
-	ror.w	#8,d0
+	lsr.w	#8,d0
 	jbsr	c_divmod                          	| [call c_divmod] HL=HL/A (preserves DE)
 	movem.w D5/D6,-(sp)                        	| [push hl]
 
@@ -2085,7 +2086,7 @@ l_0A90:
 	move.b	d0,d5                           	| [ld   h,a] result of HL%A
 	clr.b	d6                               	| [ld   l,#0]
 	move.w	d3,d0                           	| [ld   a,d] divisor in A
-	ror.w	#8,d0
+	lsr.w	#8,d0
 	jbsr	c_divmod                          	| [call c_divmod] HL=HL/A (preserves DE)
 
 * SP points to lsb of 1st quotient (msb)
@@ -2130,15 +2131,16 @@ l_0AAD:
 	abcd	d7,d3                           	| [add  a,#1]+daa
 	                           	                | [ld   d,a]
 *  if
-	jcc	l_0AD3                             	    | [jr   nc,l_0AD3]
+	jcc	l_0AD3_1                           	    | [jr   nc,l_0AD3]
 *  then
 	                           	                | [ld   a,e]
 	abcd	d7,d4                           	| [add  a,#1]+daa
 	                           	                | [ld   e,a]
 *  fi
 
-l_0AD3:
+l_0AD3_1:
 	LOAD_D3_16_FROM_D3D4
+l_0AD3:
 	MOVE_TO_VAR	d3,b16_99B0_tmp                 | [$0AD3: ld   (b16_99B0_tmp),de] tmp computed hit-miss ratio (BCD)
 * setup for display of computed ratio
 l_0AD7:

@@ -1,7 +1,7 @@
-- hit miss ratio can be wrong: 386/585 => 0.4%!! ok for low ratios: 
-  c_puts_hitmiss_ratio_0A72 hardcode values!  (OK for 402/187)
 - 0 shots fired / 0 hits => 30% hit miss!!!
-
+- autoframeskip: if too many slowdowns, game switches to fixed stars/30 fps
+- insert coin with fire, start game up/down
+- test 2 player game!
 - yellow flash on mutating enemy!!!
 - icons not properly refreshed (bottom) when ship is erased and wraps to Y around 0 probably
   also should take explosions (double height) into account
@@ -32,6 +32,8 @@
 - demo: disable invincible flag
 - c_plyr_initials_entry_hilite_line: one letter is yellow, rest is white/cyan??
   doesn't matter!!!
+- some noise in the main fire 
+- clic at the end of the sound when you got captured
 
 
 
