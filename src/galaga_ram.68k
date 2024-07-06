@@ -6,8 +6,8 @@
 	.global start_level
 	.global vb_ticks_count
 	.global break_at_startup_flag
-	.global	regscopy_cpu1
 	.global log_ptr
+	.global highscore_needs_saving_flag
 	
 	.ifdef   __amiga__
 	.ascii	"RAM_STRT"
@@ -66,6 +66,8 @@ invincible_flag:
 infinite_lives_flag:
 	.byte	0
 perfect_challenge_stage_flag:
+	.byte	0
+highscore_needs_saving_flag:
 	.byte	0
 vb_ticks_count:
 	.byte	0

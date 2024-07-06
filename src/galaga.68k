@@ -116,21 +116,21 @@ j_Game_init_02d3:
 * all tile ram is now wiped
 
 * Sets up "Heroes" screen
-	lea	b_best5_score,a1               	|  [$0313: ld   de,#b_best5_score] 1st score (100000's)
-	move.b	#5,d0                           	| [ld   a,#5]
-	                              	| [ld   b,#0]
+	lea	b_best5_score_8a20,a1               	| [$0310: ld   de,#b_best5_score_8a20] 1st score (100000's)
+	move.b	#5,d0                           	| [$0313: ld   a,#5]
+	                              	            | [$0315: ld   b,#0]
 l_0317:
-	lea	d_str20000,a0                  	| [ld   hl,#d_str20000] "00002 " (20000 reversed)
-	move.w	#0x06,d1                        	| [ld   c,#0x06]
-	jbsr	ldir                              	| [ldir]
- 	subq.b	#1,d0                           	| [dec  a]
-	jne	l_0317                             	| [jr   nz,l_0317]
+	lea	d_str20000,a0                  	        | [$0317: ld   hl,#d_str20000] "00002 " (20000 reversed)
+	move.w	#0x06,d1                        	| [$031A: ld   c,#0x06]
+	jbsr	ldir                              	| [$031C: ldir]
+ 	subq.b	#1,d0                           	| [$031E: dec  a]
+	jne	l_0317                             	    | [$031F: jr   nz,l_0317]
 
 
-	lea	d_strScore,a0                  	| [ld   hl,#d_strScore] "SCORE" (reversed)
+	lea	d_strScore,a0                  	        | [ld   hl,#d_strScore] "SCORE" (reversed)
 	move.b	#0x2A,d0                        	| [ld   a,#0x2A] period character '.'
 	move.w	#0x05FF,d1                        	| [ld   b,#0x05]
-	move.w	#5-1,d2											| [ld   c,#0xFF]
+	move.w	#5-1,d2								| [ld   c,#0xFF]
 * de==8a3e
 l_032A:
 	jbsr	ldi                               	| [ldi]
@@ -138,8 +138,8 @@ l_032A:
 	move.b	d0,(a1)+                         	| [ld   (de),a]
 												| [inc  e]
 	jbsr	ldi                               	| [ldi]
-	                           	| [...]
-	dbf		d2,l_032A                             	| [djnz l_032A]
+	                           	                | [...]
+	dbf		d2,l_032A                           | [djnz l_032A]
 
 	
 * initialize game state
@@ -155,6 +155,8 @@ l_032A:
 * display 1UP HIGH SCORE 20000 (1 time only after boot)
 	jbsr	c_textout_1uphighscore_onetime    	| [call c_textout_1uphighscore_onetime]
 
+* load high scores
+	jbsr	osd_read_high_scores
 
 	
 	jbsr	c_init_taskman_structs_1230       	| [call c_init_taskman_structs_1230]
@@ -361,8 +363,8 @@ j_0003D8_wrdy:
 	move.b	#8,(a0)                         	| [ld   (hl),#8]
 l_0414_while_tmr_3:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	| [and  a]
-	jne	l_0414_while_tmr_3                 	| [jr   nz,l_0414_while_tmr_3]
+	                               	            | [and  a]
+	jne	l_0414_while_tmr_3                 	    | [jr   nz,l_0414_while_tmr_3]
 
 * memset($9290,$10,0)
 	lea	ds_bug_collsn_hit_mult_9290,a0      	| [ld   hl,#ds_bug_collsn_hit_mult_9290] memset(...,$10,0)
@@ -371,7 +373,7 @@ l_0414_while_tmr_3:
 
 * memset($98B0,$30,0)
 	move.b	#0x30,d1                        	| [ld   b,#0x30]
-	lea	ds_susp_plyr_obj_data,a0       	| [ld   hl,#ds_susp_plyr_obj_data] memset(...,$30,0)
+	lea	ds_susp_plyr_obj_data,a0       	        | [ld   hl,#ds_susp_plyr_obj_data] memset(...,$30,0)
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
 * settext($0b, $83b0)
@@ -673,7 +675,11 @@ l_0540_while:
 	                               	            | [$0541: and  a]
 	jne	l_0540_while                       	    | [$0542: jr   nz,l_0540_while]
 	jbsr	c_sctrl_playfld_clr_0160            | [$0544: call c_sctrl_playfld_clr_0160]
-	jbsr	c_top5_dlg_proc_3000                | [$0547: call c_top5_dlg_proc_3000] returns immediately if not in top-5
+	jbsr	c_top5_dlg_proc_3000                | [$0547: call c_top5_dlg_proc_3000] enter highscore returns immediately if not in top-5
+	tst.b	highscore_needs_saving_flag
+	beq		0f
+	jbsr	osd_write_high_scores
+0:
 	clr.b	d0                               	| [$054A: xor  a]
 *	move.b	d0,b_9AA0+0x10                  	| [$054B: ld   (b_9AA0 + 0x10),a] 0 ... sound-fx count/enable registers, hi-score dialog?
 *
@@ -8379,6 +8385,7 @@ l_300C:
 	bcs.b	0f                                      | [...]
 	rts                                    	        | [$3015: ret  nc] [...]
 0:
+	st		highscore_needs_saving_flag
 	lea	b_best5_score4+0x05,a1         	            | [$3016: ld   de,#b_best5_score4 + 0x05]
 	jbsr	c_31F7_chk_score_rank                   | [$3019: call c_31F7_chk_score_rank] score > 4th place?
 	scs		d7                                      
@@ -8534,7 +8541,7 @@ l_30ED:
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,(a1)                         	| [ld   (de),a] *($8A03)++
 	and.b	#0x0F,d0                         	| [and  #0x0F]
-	jne	l_30BF_dlg_proc                    	| [jr   nz,l_30BF_dlg_proc] done with this frame
+	jne	l_30BF_dlg_proc                    	    | [jr   nz,l_30BF_dlg_proc] done with this frame
 
 * update letter selection every 1/4 second based on stick input.
 	move.b	(a0),d0                         	| [ld   a,(hl)] get control stick value L==2, R==8 X==A
@@ -8552,14 +8559,14 @@ l_30ED:
 	subq.b	#1,d0                           	| [dec  a]
 	cmp.b	#9,d0                            	| [cp   #9] check for if wrap around bottom-to-top
 	bne.b	0f                               	| [...]
-	jbsr	c_3138_lda2A                      	| [call z,c_3138_lda2A] A:=$2A  (allow the '.' character)
+	move.b	#0x2A,d0	                      	| [call z,c_3138_lda2A] A:=$2A  (allow the '.' character)
 0:
 	cmp.b	#0x29,d0                         	| [cp   #0x29]
 	bne.b	0f                               	| [...]
-	jbsr	c_313B_lda24                      	| [call z,c_313B_lda24] A:=$24  (24 is "space", 23 is 'Z')
+	move.b	#0x24,d0                        	| [call z,c_313B_lda24] A:=$24  (24 is "space", 23 is 'Z')
 0:
-	jbsr	osd_w_videoram                         	| [ld   (hl),a]
-	jra	l_30BF_dlg_proc                    	| [jp   l_30BF_dlg_proc]
+	jbsr	osd_w_videoram                      | [ld   (hl),a]
+	jra	l_30BF_dlg_proc                    	    | [jp   l_30BF_dlg_proc]
 
 *=============================================================================
 * c_3118_insert_top5_score()
@@ -8605,11 +8612,11 @@ l_311D_stick_right:
 	addq.b	#1,d0                           	| [inc  a]
 	cmp.b	#0x2B,d0                         	| [cp   #0x2B] 2A is '.' character which is allowed
 	bne.b	0f                               	| [...]
-	jbsr	c_313E_lda0A                      	| [call z,c_313E_lda0A]
+	move.b	#0x0A,d0                      	    | [call z,c_313E_lda0A]
 0:
 	cmp.b	#0x25,d0                         	| [cp   #0x25] 2A is ' ' character which is allowed
 	bne.b	0f                               	| [...]
-	jbsr	c_3138_lda2A                      	| [call z,c_3138_lda2A]
+	move.b	#0x2A,d0	                      	| [call z,c_3138_lda2A]
 0:
 	jbsr	osd_w_videoram                      | [ld   (hl),a]
 	jra	l_30BF_dlg_proc                    	    | [jp   l_30BF_dlg_proc]
@@ -8623,9 +8630,9 @@ l_311D_stick_right:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_3138_lda2A:
-	move.b	#0x2A,d0                        	| [ld   a,#0x2A]
-	rts                                    	| [ret]
+*c_3138_lda2A:
+*	move.b	#0x2A,d0                        	| [ld   a,#0x2A]
+*	rts                                    	| [ret]
 
 *=============================================================================
 * c_313B_lda24()
@@ -8636,9 +8643,9 @@ c_3138_lda2A:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_313B_lda24:
-	move.b	#0x24,d0                        	| [ld   a,#0x24]
-	rts                                    	| [ret]
+*c_313B_lda24:
+*	move.b	#0x24,d0                        	| [ld   a,#0x24]
+*	rts                                    	| [ret]
 
 *=============================================================================
 * c_313E_lda0A()
@@ -8649,9 +8656,9 @@ c_313B_lda24:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_313E_lda0A:
-	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
-	rts                                    	| [ret]
+*c_313E_lda0A:
+*	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
+*	rts                                    	| [ret]
 
 *=============================================================================
 * c_3141_xor_char_color()
@@ -8791,41 +8798,41 @@ d_31A6:
 	.long case_31D9
 
 case_31B0:
-	move.b	#0x12,d0                        	| [ld   a,#0x12]
-	jra	l_31BA                             	| [jr   l_31BA]
+	move.b	#0x12,d0                        	| [$31B0: ld   a,#0x12]
+	jra	l_31BA                             	    | [$31B2: jr   l_31BA]
 case_31B4:
-	move.b	#0x0C,d0                        	| [ld   a,#0x0C]
-	jra	l_31BA                             	| [jr   l_31BA]
+	move.b	#0x0C,d0                        	| [$31B4: ld   a,#0x0C]
+	jra	l_31BA                             	    | [$31B6: jr   l_31BA]
 case_31B8:
-	move.b	#0x06,d0                        	| [ld   a,#0x06]
+	move.b	#0x06,d0                        	| [$31B8: ld   a,#0x06]
 l_31BA:
-	lea	b_best5_score4+0x05,a0         	        | [ld   hl,#b_best5_score4 + 0x05]
-	lea	b_best5_score5+0x05,a1         	        | [ld   de,#b_best5_score5 + 0x05]
-	move.w	#0x06,d1                        	| [ld   bc,#0x0006] 6
+	lea	b_best5_score4+0x05,a0         	        | [$31BA: ld   hl,#b_best5_score4 + 0x05]
+	lea	b_best5_score5+0x05,a1         	        | [$31BD: ld   de,#b_best5_score5 + 0x05]
+	move.w	#0x06,d1                        	| [$31C0: ld   bc,#0x0006] 6
     jbsr   lddr
-	lea	b_best5_score4+0x05,a1         	        | [ld   de,#b_best5_score4 + 0x05]
-	move.b	d0,d1                           	| [ld   c,a]
+	lea	b_best5_score4+0x05,a1         	        | [$31C3: ld   de,#b_best5_score4 + 0x05]
+	move.b	d0,d1                           	| [$31C5: ld   c,a]
     jbsr   lddr
-	jra	case_31D9                          	    | [jp   case_31D9]
+	jra	case_31D9                          	    | [$31CB: jp   case_31D9]
 
 case_31CE:
-	lea	b_best5_score5+0x05,a1         	        | [ld   de,#b_best5_score5 + 0x05]
-	lea	b_best5_score4+0x05,a0         	        | [ld   hl,#b_best5_score4 + 0x05]
-	move.w	#0x06,d1                        	| [ld   bc,#0x0006] 6
-	jbsr	lddr
+	lea	b_best5_score5+0x05,a1         	        | [$31CE: ld   de,#b_best5_score5 + 0x05]
+	lea	b_best5_score4+0x05,a0         	        | [$31D1: ld   hl,#b_best5_score4 + 0x05]
+	move.w	#0x06,d1                        	| [$31D4: ld   bc,#0x0006] 6
+	jbsr	lddr                                | [$31D7: lddr]
 
 case_31D9:
-	move.b	b_8A00+0x11,d0                  	| [ld   a,(b_8A00 + 0x11)] 1==1ST place etc. ... index into hi-score table ... d_31ED[ 2 * (A - 1) ]
-	subq.b	#1,d0                           	| [dec  a]
-	lea	d_31ED_hi_score_tbl,a0         	        | [ld   hl,#d_31ED_hi_score_tbl] array of addresses of score table elements
-	jbsr	add_4_times_d0_to_a0_0008           | [rst  0x08] HL += 2A
-	move.l	(a0),a1                        	    | [ld   e,(hl)]
-	                        	                | [inc  hl]
-	                        	                | [ld   d,(hl)]
-	move.l	b_8A00,a0              	            | [ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
-	move.w	#0x06,d1                        	| [ld   bc,#0x0006] 6
-	jbsr	lddr_from_video                     | [lddr]
-	rts                                    	    | [ret]
+	move.b	b_8A00+0x11,d0                  	| [$31D9: ld   a,(b_8A00 + 0x11)] 1==1ST place etc. ... index into hi-score table ... d_31ED[ 2 * (A - 1) ]
+	subq.b	#1,d0                           	| [$31DC: dec  a]
+	lea	d_31ED_hi_score_tbl,a0         	        | [$31DD: ld   hl,#d_31ED_hi_score_tbl] array of addresses of score table elements
+	jbsr	add_4_times_d0_to_a0_0008           | [$31E0: rst  0x08] HL += 2A
+	move.l	(a0),a1                        	    | [$31E1: ld   e,(hl)]
+	                        	                | [$31E2: inc  hl]
+	                        	                | [$31E3: ld   d,(hl)]
+	move.l	b_8A00,a0              	            | [$31E4: ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
+	move.w	#0x06,d1                        	| [$31E7: ld   bc,#0x0006] 6
+	jbsr	lddr_from_video                     | [$31EA: lddr]
+	rts                                    	    | [$31EC: ret]
 
 *=============================================================================
 * pointers to individual score strings of Top 5 table (documented elsewhere)

@@ -33,7 +33,7 @@ copper_8x8_row_size = copper_stars_offset+copper_row_size*8
 MAX_ROW_X = 31
 
 BORDERBLANK = 0
-SCORE_FILE_SIZE = 0xAA
+SCORE_FILE_SIZE = 9*5
 
 * if the alloc_sprite & update_sprite routines
 * are reused, changing those offsets can make
@@ -2161,7 +2161,8 @@ switch_screen_buffers:
 	move.l	a5,bg_displayed_screen_ptr
 	move.l	a3,bob_previous_displayed_sprites
 	move.l	a2,bob_previous_drawed_sprites
-	jbsr		set_bitplanes
+	*jbsr		set_4_first_bitplanes
+	jbsr	set_bitplanes
 	.endif
 	
 	rts
@@ -2802,7 +2803,9 @@ HW_SpriteYTable_\height:
 	DEF_HW_SPRITE_Y_TABLE	32
 
 
-
+set_4_first_bitplanes:
+    moveq #NB_PLAYFIELD_PLANES-2,d1
+	bra.b	0f
 
 * set_bitplanes
 * what: sets bitplanes in copperlist
@@ -2813,8 +2816,9 @@ HW_SpriteYTable_\height:
 * maybe we can use that memory for something at some point.
 
 set_bitplanes:
-    move.l	bg_displayed_screen_ptr(pc),a0
     moveq #NB_PLAYFIELD_PLANES-1,d1
+0:
+    move.l	bg_displayed_screen_ptr(pc),a0
 	move.l	a0,d0
     lea	panel_bitplanes+2,a0
 	moveq	#0,d2
@@ -2907,14 +2911,22 @@ osd_update_inputs:
 *0:	
 
 
-*0:
-*	btst	#JPB_BTN_RED,d1
-*	beq.b	1f
-*	btst	#JPB_BTN_RED,d2
-*	bne.b	1f
-*	* game not in play, accept insert coin with fire
+	cmp.b	#3,b8_game_state_9201
+	beq.b	2f
+	btst	#JPB_BTN_RED,d1
+	beq.b	2f
+	btst	#JPB_BTN_RED,d2
+	bne.b	2f
+	* game not in play, accept insert coin with fire	
+	bset	#JPB_BTN_REVERSE,d1		| add one credit
+2:	
+	btst	#JPB_BTN_UP,d1
+	beq.b	1f
+	btst	#JPB_BTN_UP,d2
+	bne.b	1f
+	bset	#JPB_BTN_FORWARD,d1		| start 1P game
 	
-*	bset	#JPB_BTN_REVERSE,d1		| add one credit
+
 1:
 	btst	#JPB_BTN_FORWARD,d1
 	beq.b	0f
@@ -3026,26 +3038,34 @@ osd_read_high_scores:
 	move.l	_resload(pc),d0
 	beq.b	0f
 	move.l	d0,a2
-	move.l	a0,a3
 	bsr		get_hiscore_name
  	jsr		resload_GetFileSize(a2)		
 	tst.l	d0
-	beq.b	1f
+	beq.b	2f
 	bsr		get_hiscore_name
-	move.l	a3,a1
+	lea	b_best5_score_8a20,a1
 	jsr		resload_LoadFile(a2)		
 	bra.b	1f
 0:
 	tst.b	highscore_loaded
-	beq.b	1f
+	beq.b	2f
 	* from DOS: just copy buffer
 	lea		high_score_buffer(pc),a1
-	* set highest score entry
 	move.w	#SCORE_FILE_SIZE-1,d0
 0:
     move.b    (a1)+,(a4)+
 	dbf		d0,0b
 1:
+	* need to update screen 83ED-
+	lea		b_best5_score1,a0
+	move.w	#0x83F2-5,d7
+	moveq	#5,d1
+10:
+	move.b	(a0)+,d0
+	jbsr	osd_w_videoram
+	addq.w	#1,d7
+	dbf		d1,10b
+2:
 	movem.l	(a7)+,d0-d7/a0-a6
 	rts
 	
@@ -3060,7 +3080,7 @@ osd_write_high_scores:
 	beq.b	0f
 	move.l	d0,a2
 	move.l	#SCORE_FILE_SIZE,d0
-	move.l	a0,a1
+	lea		b_best5_score_8a20,a1
 	bsr		get_hiscore_name
 	jsr		resload_SaveFile(a2)
 	bra.b	1f

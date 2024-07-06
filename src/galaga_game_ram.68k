@@ -103,7 +103,7 @@
 	.global		ds_8920
 	.global		ds_89E0
 	.global		b_8A00
-	.global		b_best5_score
+	.global		b_best5_score_8a20
 	.global		b_best5_score1
 	.global		b_best5_score2
 	.global		b_best5_score3
@@ -262,7 +262,7 @@ b_8A00:
        ds.b     0x0E       | unused
 
 * Top5 Table scores
-b_best5_score:
+b_best5_score_8a20:
 
 b_best5_score1:
        ds.b     0x06

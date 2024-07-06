@@ -1,15 +1,12 @@
-- 0 shots fired / 0 hits => 30% hit miss!!!
+- clic at the end of the sound when you got captured: to test
 - autoframeskip: if too many slowdowns, game switches to fixed stars/30 fps
 - insert coin with fire, start game up/down
 - test 2 player game!
-- yellow flash on mutating enemy!!!
+- yellow flash at some point!!!
 - icons not properly refreshed (bottom) when ship is erased and wraps to Y around 0 probably
   also should take explosions (double height) into account
 - diagonal ship shots work but wrong BOB
-- when capturing ship shot while using tractor beam: capture sound stays: to test again
-- l_38AB: bonus ships are hardcoded 20000/60000 ATM
 - highest score entry: music should loop, end of the module should be manual?
-- save highscores
 - understand when l_2681_end_of_table reached, ILLEGAL remaining
 - optimize: player ship should be HW sprite, even if captured
   sprite layout: 2 slots for player ship
@@ -17,21 +14,25 @@
 				 2 slots for background stars (1 wasted, maybe 2 spare colors will be useful)
 				 2 spare slots (their 3 spare colors are used for tiles)
 - HW sprites seem not to work but is the code aligned with .py (orientations/flip/mirror) ?
-- DSW skill level?
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
-- red flashes (frame drop) even with very few sprites with cycle exact!!
-  (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - redraw bottom tiles all the time or maybe only if some sprite Y > some value
 - missing/wrong sounds: swarm pusling sound: rip from MAME with invincible & attack sound off
-- namco logo should be red
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
+
+minor:
+
+- namco logo should be red
+- red flashes (frame drop) even with very few sprites with cycle exact!!
+  (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - demo: disable invincible flag
 - c_plyr_initials_entry_hilite_line: one letter is yellow, rest is white/cyan??
   doesn't matter!!!
 - some noise in the main fire 
-- clic at the end of the sound when you got captured
+- l_38AB: bonus ships are hardcoded 20000/60000 ATM
+- 0 shots fired / 0 hits => 30% hit miss!!!
+- DSW skill level?
 
 
 
