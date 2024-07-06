@@ -39,7 +39,7 @@ _config
 	dc.b	"C1:X:invincibility:0;"
 	dc.b	"C1:X:infinite lives:1;"
 	dc.b	"C1:X:perfect challenge stages:2;"
-	dc.b	"C1:X:cheat keys F1..F3:4;"
+	dc.b	"C1:X:cheat keys F1..F4:4;"
 	IFD		CHIP_ONLY
 	dc.b	"C3:X:break at startup:31;"
 	ENDC
@@ -69,9 +69,8 @@ _data   dc.b    0
 _name	dc.b	'Galaga',0
 _copy	dc.b	'2024 JOTD',0
 _info
-    *dc.b    "Music by no9",10,10
+    dc.b    "Music by no9",10,10
 	dc.b	"Press fire + up to start 1P game",10
-	dc.b	"Press Q to abort game",0
 	dc.b	0
 _kickname   dc.b    0
 ;--- version id

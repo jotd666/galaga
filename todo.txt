@@ -1,12 +1,11 @@
-- clic at the end of the sound when you got captured: to test
+- clic at the end of the sound when you got captured and when capturing
 - autoframeskip: if too many slowdowns, game switches to fixed stars/30 fps
-- insert coin with fire, start game up/down
-- test 2 player game!
+- start 2 player game!
+- flag tick timer sometimes super slow
 - yellow flash at some point!!!
 - icons not properly refreshed (bottom) when ship is erased and wraps to Y around 0 probably
   also should take explosions (double height) into account
 - diagonal ship shots work but wrong BOB
-- highest score entry: music should loop, end of the module should be manual?
 - understand when l_2681_end_of_table reached, ILLEGAL remaining
 - optimize: player ship should be HW sprite, even if captured
   sprite layout: 2 slots for player ship
@@ -33,6 +32,7 @@ minor:
 - l_38AB: bonus ships are hardcoded 20000/60000 ATM
 - 0 shots fired / 0 hits => 30% hit miss!!!
 - DSW skill level?
+- highest score entry: music should loop, end of the module should be manual?
 
 
 
