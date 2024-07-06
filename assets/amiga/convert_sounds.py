@@ -41,14 +41,14 @@ sound_dict = {
 "CREDIT_SND"               :{"index":0X1A,"channel":0,"sample_rate":hq_sample_rate},
 "EXTRA_LIFE_SND"       :{"index":0x1B,"channel":3,"sample_rate":hq_sample_rate,"priority":20},
 
-"GAME_START_SND"       :{"index":0x9,"pattern":0,"volume":32,"ticks":340,'loops':False},
-"HIGH_SCORE_SND"       :{"index":0x10,"pattern":2,"volume":32,'loops':True},
-"HIGHEST_SCORE_SND"       :{"index":0xC,"pattern":3,"volume":32,'loops':True},
-"END_CHALLENGE_SND"       :{"index":0xE,"pattern":8,"volume":32,"ticks":360,'loops':False},
-"PERFECT_SND"         :{"index":0x14,"pattern":10,"volume":48,'loops':False,"ticks":240},
-"FIGHTER_CAPTURED_SND"    :{"index":0x16,"pattern":12,"volume":32,'loops':False,"ticks":280},
-"FIGHTER_KILLED_SND"    :{"index":0x17,"pattern":13,"volume":32,'loops':False,"ticks":160},
-"FIGHTER_RESCUED_SND"    :{"index":0x18,"pattern":14,"volume":32,'loops':False,"ticks":280},
+"GAME_START_SND"       :{"index":0x9,"pattern":0,"volume":24,"ticks":340,'loops':False},
+"HIGH_SCORE_SND"       :{"index":0x10,"pattern":2,"volume":24,'loops':True},
+"HIGHEST_SCORE_SND"       :{"index":0xC,"pattern":4,"volume":24,'loops':True},
+"END_CHALLENGE_SND"       :{"index":0xE,"pattern":12,"volume":24,"ticks":360,'loops':False},
+"PERFECT_SND"         :{"index":0x14,"pattern":14,"volume":36,'loops':False,"ticks":240},
+"FIGHTER_CAPTURED_SND"    :{"index":0x16,"pattern":16,"volume":24,'loops':False,"ticks":280},
+"FIGHTER_KILLED_SND"    :{"index":0x17,"pattern":17,"volume":24,'loops':False,"ticks":140},
+"FIGHTER_RESCUED_SND"    :{"index":0x18,"pattern":18,"volume":24,'loops':False,"ticks":280},
 
 }
 

@@ -2485,7 +2485,7 @@ l_10A0_got_one:
 	move.b	d4,(mq_fp_lsb_08,a2)                | [$10A1: ld   0x08(ix),e] data pointer lsb
 	move.b	d3,(mq_fp_msb_09,a2)                | [$10A4: ld   0x09(ix),d] data pointer msb
 	move.b	#1,(mq_timeout_0d,a2)               | [$10A7: ld   0x0D(ix),#1] expiration counter
-	move.b	#0x00,(mq_angle_lsb_04,a2)          | [$10AB: ld   0x04(ix),#<0x0100] msb, 0x0100 (90 degrees)
+	clr.b	(mq_angle_lsb_04,a2)                | [$10AB: ld   0x04(ix),#<0x0100] msb, 0x0100 (90 degrees)
 	move.b	#0x01,(mq_angle_msb_05,a2)          | [$10AF: ld   0x05(ix),#>0x0100] lsb
 	move.b	d6,d2                           	| [$10B3: ld   c,l] stash index to obj_status[], sprite etc.
 	move.b	d2,(mq_object_id_10,a2)            	| [$10B4: ld   0x10(ix),c] index of object, sprite etc.
@@ -2852,7 +2852,7 @@ c_build_token_1:
 	exg	d0,d7                              	    | [$1204: ex   af,af']
 * set the delay count 8 ... preserve frame count
 	move.b	ds3_frame_cts_92A0+0,d0         	| [$1205: ld   a,(ds3_frame_cts_92A0 + 0)]
-	add.b	#8,d0                            	| [$1208: add  a,#8]
+	addq.b	#8,d0                            	| [$1208: add  a,#8]
 	move.b	d0,d4                           	| [$120A: ld   e,a]
 l_120B:
 	move.b	ds3_frame_cts_92A0+0,d0         	| [$120B: ld   a,(ds3_frame_cts_92A0 + 0)]
@@ -8162,11 +8162,11 @@ l_2A05:
 	move.b	d0,(0x03,a2)                    	| [$2A0C: ld   0x03(ix),a] db_2A6C[L].b1
 	move.b	(a0)+,d0                         	| [$2A0F: ld   a,(hl)]
 	                           	                | [$2A10: inc  hl]
-	move.b	d0,(mq_angle_msb_05,a2)                    	| [$2A11: ld   0x05(ix),a] db_2A6C[L].b2
+	move.b	d0,(mq_angle_msb_05,a2)             | [$2A11: ld   0x05(ix),a] db_2A6C[L].b2
 	clr.b	d0                               	| [$2A14: xor  a]
 	move.b	d0,(0x00,a2)                    	| [$2A15: ld   0x00(ix),a] 0
 	move.b	d0,(0x02,a2)                    	| [$2A18: ld   0x02(ix),a] 0
-	move.b	d0,(mq_angle_lsb_04,a2)                    	| [$2A1B: ld   0x04(ix),a] 0
+	move.b	d0,(mq_angle_lsb_04,a2)             | [$2A1B: ld   0x04(ix),a] 0
 	addq.b	#1,d0                           	| [$2A1E: inc  a]
 	move.b	d0,(0x0D,a2)                    	| [$2A1F: ld   0x0D(ix),a] 1 ... expiration counter
 	or.b	d3,d0                             	| [$2A22: or   d] 1st byte of current byte-pair (left shifted 1, so in _stg_dat it is 0x40)

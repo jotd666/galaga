@@ -905,8 +905,12 @@ while_06B7:
 	ror.b	#1,d2                            	| [$06DB: rrc  c]
 	SET_X_FROM_C
 	roxr.b	#1,d0                           	| [$06DD: rra]
+	cmp.b	#3,b8_game_state_9201
+	bne.b	0f
+	* only when game is really running, not in demo
 	tst.b	invincible_flag
 	bne.b	l_06F0
+0:
 	sub.b	ixh,d0                           	| [$06DE: sub  ixh]
 	subq.b	#4,d0                           	| [$06E0: sub  #4]
 	addq.b	#7,d0                           	| [$06E2: add  a,#7]

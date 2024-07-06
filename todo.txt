@@ -1,11 +1,10 @@
-- clic at the end of the sound when you got captured and when capturing
-- autoframeskip: if too many slowdowns, game switches to fixed stars/30 fps
-- start 2 player game!
-- flag tick timer sometimes super slow
-- yellow flash at some point!!!
+- 2P game: swarm saved position is wrong when switching players!
 - icons not properly refreshed (bottom) when ship is erased and wraps to Y around 0 probably
   also should take explosions (double height) into account
-- diagonal ship shots work but wrong BOB
+  specially left side (ships) is not refreshed properly!
+- autoframeskip: if too many slowdowns, game should switch to fixed stars/30 fps
+- flag tick timer sometimes super slow: loops at l_120B
+- yellow flash at some point!!!
 - understand when l_2681_end_of_table reached, ILLEGAL remaining
 - optimize: player ship should be HW sprite, even if captured
   sprite layout: 2 slots for player ship
@@ -15,9 +14,7 @@
 - HW sprites seem not to work but is the code aligned with .py (orientations/flip/mirror) ?
 - generate proper HW sprite cluts
 - make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
-- redraw bottom tiles all the time or maybe only if some sprite Y > some value
-- missing/wrong sounds: swarm pusling sound: rip from MAME with invincible & attack sound off
-- double buffering: don't double buffer last plane for tiles
+- missing/wrong sounds: swarm pusling sound: rip from MAME or YT video with invincible & attack sound off
 - double shot should optimize height
 
 minor:
@@ -25,14 +22,13 @@ minor:
 - namco logo should be red
 - red flashes (frame drop) even with very few sprites with cycle exact!!
   (why are we flashing red when only ship and double shot (single shot?) are displayed!
-- demo: disable invincible flag
 - c_plyr_initials_entry_hilite_line: one letter is yellow, rest is white/cyan??
   doesn't matter!!!
-- some noise in the main fire 
+- some noise in the main fire: Toni is looking into this
 - l_38AB: bonus ships are hardcoded 20000/60000 ATM
-- 0 shots fired / 0 hits => 30% hit miss!!!
 - DSW skill level?
-- highest score entry: music should loop, end of the module should be manual?
+- double buffering: don't double buffer last plane for tiles
+- clic at the end of the sound when you got captured and when capturing
 
 
 

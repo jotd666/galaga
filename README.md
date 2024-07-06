@@ -37,7 +37,7 @@ This is a transcode from the original arcade game Z80 to 68K assembly.
 
 - fire/5 key: insert coin (from menu)
 - up/1 key: start game
-- down/1 key: start 2P game
+- down/2 key: start 2P game
 - P key: pause
 
 ## REBUILDING FROM SOURCES:
