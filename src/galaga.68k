@@ -8452,12 +8452,12 @@ l_3073:
 	move.b	#0x49,d0                        	    | [$3077: ld   a,#0x49]
 	move.b	d0,b_8A00+0x10                  	    | [$3079: ld   (b_8A00 + 0x10),a] $49 ... lower address byte of first character of name entry in tile-ram
 
-	lea	s_327F_enter_your_initials,a0  	| [ld   hl,#s_327F_enter_your_initials]
+	lea	s_327F_enter_your_initials,a0  	            | [ld   hl,#s_327F_enter_your_initials]
 	jbsr	c_text_out_ce_3328                     	| [$307F: call c_text_out_ce_3328] "ENTER YOUR INITIALS !"
 	jbsr	c_text_out_331b                        	| [$3082: call c_text_out_331b] "SCORE  NAME"          HL==3298
 	jbsr	c_text_out_ce_3328                     	| [$3085: call c_text_out_ce_3328] "TOP 5"                HL==32AB
 
-	lea		0x8000+0x0300+0x09,a1      	        | [$3088: ld   de,#0x8000 + 0x0300 + 0x09]
+	lea		0x8000+0x0300+0x09,a1      	            | [$3088: ld   de,#0x8000 + 0x0300 + 0x09]
 	move.l	b_8A00,a0              	                | [$308B: ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
  	jbsr	string_copy_3275                        | [$308E: call string_copy_3275] puts players score below "SCORE"
 
@@ -8539,18 +8539,16 @@ l_30ED:
 * update letter selection every 1/4 second based on stick input.
 	move.b	(a0),d0                         	| [ld   a,(hl)] get control stick value L==2, R==8 X==A
 	cmp.b	#8,d0                            	| [cp   #8]
-	jeq	l_311D_stick_right                 	| [jr   z,l_311D_stick_right] returns by  jp l_30BF
+	jeq	l_311D_stick_right                 	    | [jr   z,l_311D_stick_right] returns by jp l_30BF
 	cmp.b	#2,d0                            	| [cp   #2]
-	jne	l_30BF_dlg_proc                    	| [jr   nz,l_30BF_dlg_proc] stick not left (or right)
+	jne	l_30BF_dlg_proc                    	    | [jr   nz,l_30BF_dlg_proc] stick not left (or right)
 	move.b	#40,d0                          	| [ld   a,#40] 20 seconds
-	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] reset timer
-
-	move.b	b_8A00+0x10,d0                  	| [ld   a,(b_8A00 + 0x10)] lower byte of first character's address in v-ram
-	move.b	d0,d6                           	| [ld   l,a]
-	move.w	#0x8000+0100,d7          	| [ld   h,#>0x8000 + >0x0100]
-	and.w	#0xFF,d6
-	add.w	d6,d7
-	jbsr	osd_r_videoram                         	| [ld   a,(hl)]
+	* stick_left stick left
+	move.b	d0,ds4_game_tmrs_92ac+2             | [ld   (ds4_game_tmrs_92ac + 2),a] reset timer
+	move.w	#0x8100,d7          	            | [ld   h,#>0x8000 + >0x0100]
+	move.b	b_8A00+0x10,d7                  	| [ld   a,(b_8A00 + 0x10)] lower byte of first character's address in v-ram
+												| [ld   l,a]
+	jbsr	osd_r_videoram                      | [ld   a,(hl)]
 	subq.b	#1,d0                           	| [dec  a]
 	cmp.b	#9,d0                            	| [cp   #9] check for if wrap around bottom-to-top
 	bne.b	0f                               	| [...]
@@ -8598,14 +8596,12 @@ c_3118_insert_top5_score:
 *-----------------------------------------------------------------------------
 l_311D_stick_right:
 * get lower byte of current character's address in v-ram
-	move.b	b_8A00+0x10,d0                  	| [ld   a,(b_8A00 + 0x10)] HL = $8000 + $0100 + b_8A00[ 0x10 ]
-	move.b	d0,d6                           	| [ld   l,a]
-	move.w	#0x8100,d7          	| [ld   h,#>0x8000 + >0x0100]
-	and.w	#0xFF,d6
-	add.w	d6,d7
+	move.w	#0x8100,d7          	            | [ld   h,#>0x8000 + >0x0100]
+	move.b	b_8A00+0x10,d7                  	| [ld   a,(b_8A00 + 0x10)] HL = $8000 + $0100 + b_8A00[ 0x10 ]
+												| [ld   l,a]
 	move.b	#40,d0                          	| [ld   a,#40] 20 seconds
-	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] reset timer
-	jbsr	osd_r_videoram                         	| [ld   a,(hl)]
+	move.b	d0,ds4_game_tmrs_92ac+2             | [ld   (ds4_game_tmrs_92ac + 2),a] reset timer
+	jbsr	osd_r_videoram                      | [ld   a,(hl)]
 	addq.b	#1,d0                           	| [inc  a]
 	cmp.b	#0x2B,d0                         	| [cp   #0x2B] 2A is '.' character which is allowed
 	bne.b	0f                               	| [...]
@@ -8615,8 +8611,8 @@ l_311D_stick_right:
 	bne.b	0f                               	| [...]
 	jbsr	c_3138_lda2A                      	| [call z,c_3138_lda2A]
 0:
-	jbsr	osd_w_videoram                         	| [ld   (hl),a]
-	jra	l_30BF_dlg_proc                    	| [jp   l_30BF_dlg_proc]
+	jbsr	osd_w_videoram                      | [ld   (hl),a]
+	jra	l_30BF_dlg_proc                    	    | [jp   l_30BF_dlg_proc]
 
 *=============================================================================
 * c_3138_lda2A()
@@ -8854,7 +8850,7 @@ d_31ED_hi_score_tbl:
 *  Cy (Player Score > Table Entry)
 *-----------------------------------------------------------------------------
 c_31F7_chk_score_rank:
-	move.l	b_8A00,a0              	            | [ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
+	move.l	b_8A00,d7              	            | [ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
 	move.b	#6,d1                           	| [ld   b,#6]
 l_31FC:
 	move.b	(a1),d0                         	| [ld   a,(de)] score digit
@@ -8864,7 +8860,7 @@ l_31FC:
 	jeq	l_320E                             	    | [jr   z,l_320E]
 
 * ... and since table entries are all at least 20000, then any space in the player score will not place.
-	move.b	(a0),d0                         	| [ld   a,(hl)] ptr to plyr1 score or plyr2 score on screen
+	jbsr	osd_r_videoram                    	| [ld   a,(hl)] ptr to plyr1 score or plyr2 score on screen
 	cmp.b	#0x24,d0                         	| [cp   #0x24]
 	bne.b	0f                               	| [...]
 	rts                                    	    | [ret  z] [...]
@@ -8872,12 +8868,15 @@ l_31FC:
 	move.b	(a1),d0                         	| [ld   a,(de)]
 l_3206:
 * sets Cy if score digit > table digit
-	cmp.b	(a0),d0                          	| [cp   (hl)] ptr to plyr1 score or plyr2 score on screen
+	exg		d0,d2
+	jbsr	osd_r_videoram                      
+	exg		d0,d2
+	cmp.b	d2,d0								| [cp   (hl)] ptr to plyr1 score or plyr2 score on screen
 	beq.b	0f                               	| [...]
 	rts                                    	    | [ret  nz] [...]
 0:
 l_3208:
-	subq.w	#1,a0                           	| [dec  l]
+	subq.w	#1,d7                           	| [dec  l]
 	subq.w	#1,a1                           	| [dec  e]
 	subq.b	#1,d1                           	| [...]
 	jne	l_31FC                             	    | [djnz l_31FC]
@@ -8886,7 +8885,10 @@ l_3208:
 
 l_320E:
 * table digit == $24
-	cmp.b	(a0),d0                          	| [cp   (hl)] ptr to plyr1 score or plyr2 score on screen
+	exg		d0,d2
+	jbsr	osd_r_videoram
+	exg		d0,d2
+	cmp.b	d2,d0         	                 	| [cp   (hl)] ptr to plyr1 score or plyr2 score on screen
 	jeq	l_3208                             		| [jr   z,l_3208] if both spaces, jp to next
 * score digit != $24 ...
 	clr.b	d0                               	| [xor  a] "table digit"

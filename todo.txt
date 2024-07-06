@@ -8,9 +8,7 @@
 - diagonal ship shots work but wrong BOB
 - when capturing ship shot while using tractor beam: capture sound stays: to test again
 - l_38AB: bonus ships are hardcoded 20000/60000 ATM
-- high score entry: ok to advance letter, but backletter wrong X pos
-- high score entry: always first!!
-- high score entry: music should loop, end of the module should be manual?
+- highest score entry: music should loop, end of the module should be manual?
 - save highscores
 - understand when l_2681_end_of_table reached, ILLEGAL remaining
 - optimize: player ship should be HW sprite, even if captured
