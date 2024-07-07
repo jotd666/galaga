@@ -18,6 +18,8 @@ NO68020 = 1
 
 SPRITE_Y_CORRECTION = -8
 SPRITE_X_CORRECTION = 8
+HW_SPRITE_X_CORRECTION = 0
+HW_SPRITE_Y_CORRECTION = -2
 
 BASE_BPLCON2_VALUE = 0x0000   | sprites behind
 SCREEN_ADDRESS = 0x8000
@@ -397,6 +399,24 @@ _user:
 	move.l	#-1,184(A0)	| pr_WindowPtr: no more system requesters (insert volume, write protected...)
 
 .no_forbid:
+	* align bitplanes
+	
+	lea		bg_screen_buffer_1,a0
+	bsr		align_for_fmode
+	move.l	a0,bg_screen_data_1
+	move.l	a0,bg_drawed_screen_ptr
+	move.l	a0,bg_displayed_screen_ptr
+	
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	lea		bg_screen_buffer_2,a0
+	bsr		align_for_fmode
+	move.l	a0,bg_screen_data_2
+	move.l	a0,bg_displayed_screen_ptr
+	.endif
+	
+
+
+
 	moveq	#0,d0
 	
 	move.b	dip_switch_start_lives+3(pc),d0
@@ -1100,22 +1120,22 @@ update_hardware_sprites:
 	tst		d0
 	beq.b	2f			| X set to 0: not shown
 	
-	.ifne	SPRITE_Y_CORRECTION
-	add.w	#SPRITE_Y_CORRECTION,d1
+	.ifne	HW_SPRITE_Y_CORRECTION
+	add.w	#HW_SPRITE_Y_CORRECTION,d1
 	.endif
-	.ifne	SPRITE_X_CORRECTION
-	add.w	#SPRITE_X_CORRECTION,d0
+	.ifne	HW_SPRITE_X_CORRECTION
+	add.w	#HW_SPRITE_X_CORRECTION,d0
 	.endif
 	
-	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d3
-	and.b	#0x3F,d3	| get attributes
+	move.b	(TARGET_SPRITE_COLOR,a0),d3
+	and.b	#0x0F,d3
 
 * < D2: sprite code & flags
 * < D3: sprite color (clut index)
 * > D6: allocated sprite index
-
+* (also updates host_sprites table)
 	* sprite active: allocate a sprite in host table
-	* it HAS to succeed (in Pengo it did, here I'm less sure)
+	* it HAS to succeed (it will as we only use a few sprites at the same time)
 	bsr		alloc_sprite
 2:
 	addq.w	#CURRENT_SPRITE_SIZE,a0
@@ -1173,20 +1193,21 @@ update_hardware_sprites:
 	moveq	#0,d3
 	move.b	(SPRITE_CLUT,a2),d3
 
-	bclr	#7,d3
-	beq.b	26f
-	addq	#8,a5		| y flip
-26:
-	tst.b	d5
-	beq.b	27f
-	addq	#4,a5		| x mirror
-27:
+* we don't use flipping in the ship sprites
+*	bclr	#7,d3
+*	beq.b	26f
+*	addq	#8,a5		| y flip
+*26:
+*	tst.b	d5
+*	beq.b	27f
+*	addq	#4,a5		| x mirror
+*27:
 	move.l	(a5),d4
 	jne		28f
-	* orientation not available for that sprite
+	* orientation not available for that sprite, can't happen
 	move.b	(SPRITE_CLUT,a2),d3
 	move.b	(SPRITE_CODE,a2),d2
-	move.w	#0x0F0,0xDFF180
+	move.w	#0x0F0,_custom+color
 	bra		30f
 28:
 
@@ -1959,6 +1980,7 @@ alloc_sprite:
 	* entry, no color conflict
 	lea		(-SPRITE_SIZEOF,a2),a2
 9:
+	
 	move.b	d0,(a2)+		| X
 	move.b	d1,(a2)+		| Y
 	move.b	d2,(a2)+		| code
@@ -2169,6 +2191,14 @@ osd_sound_stop:
 	
 
 
+* so memory is quadword-aligned (not trusting .align directives)
+align_for_fmode:
+	add.w	#0x10,a0
+	move.l	a0,d0
+	and.b	#0xF8,d0
+	move.l	d0,a0
+	rts
+
 switch_screen_buffers:
 
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
@@ -2178,8 +2208,8 @@ switch_screen_buffers:
 	lea		bg_drawed_screen_ptr(pc),a0
 	lea		bob_previous_positions_1(pc),a2
 	lea		bob_previous_positions_2(pc),a3
-	lea		bg_screen_data_1,a1
-	lea		bg_screen_data_2,a5
+	move.l	bg_screen_data_1,a1
+	move.l	bg_screen_data_2,a5
 	* also switch previous state memory
 	cmp.l	(a0),a1
 	bne.b	2f
@@ -2675,8 +2705,8 @@ update_bg_tile:
 	move.l	bg_drawed_screen_ptr(pc),a1
 	jra		1111f
 1110:
-	lea		bg_screen_data_1,a1
-	lea		bg_screen_data_2,a3
+	move.l		bg_screen_data_1,a1
+	move.l		bg_screen_data_2,a3
 1111:	
 	swap	d7
 	clr		d7
@@ -3470,13 +3500,14 @@ delay_timer:
 one_out_of_five:
 	.word	0
 bg_drawed_screen_ptr:
-	.long	bg_screen_data_1
+	.long	0
 bg_displayed_screen_ptr:
-	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-	.long	bg_screen_data_2
-	.else
-	.long	bg_screen_data_1
-	.endif
+	.long	0
+bg_screen_data_1:
+	.long	0
+bg_screen_data_2:
+	.long	0
+
 
 
 	.include	"sound_entries.68k"
@@ -3581,7 +3612,7 @@ palette:
 
 	* hardware sprites "individual" 4-color palettes
 sprite_cluts:
-	**.include "sprite_cluts.68k"
+	.include "sprite_cluts.68k"
 	* tiles "individual" 4-color palettes
 tile_cluts:
 	.include "tile_cluts.68k"
@@ -3757,11 +3788,13 @@ color_row_29_plus:
 	.align	8
 	
 		.section .bsschip
-bg_screen_data_1:
+bg_screen_buffer_1:
+	ds.b	8
 	ds.b	BG_SCREEN_SIZE
 	ds.b	NB_BYTES_PER_ROW*16*NB_BOBS_PLANES
 	.ifne  OPT_ENABLE_DOUBLE_BUFFERING
-bg_screen_data_2:
+bg_screen_buffer_2:
+	ds.b	8
 	ds.b	BG_SCREEN_SIZE
 	ds.b	NB_BYTES_PER_ROW*16*NB_BOBS_PLANES
 	.endif

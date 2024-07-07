@@ -123,7 +123,8 @@ flip=False,double_wh=False,):
             # merge
             sprite_config[i]["cluts"].extend(cluts)
         else:
-            sprite_config[i] = {"name":f"{prefix}_{i:02x}","cluts":cluts,
+            sprite_config[i] = {"name":f"{prefix}_{i:02x}",
+                                "cluts":cluts,
                                 "sprite_type":sprite_type,
                                 "double_wh":double_wh,
                                 "mirror":mirror,
@@ -174,11 +175,9 @@ def add_sprite(code,prefix,cluts,sprite_type=ST_BOB,mirror=False,flip=False,doub
     add_sprite_block(code,code+1,prefix,cluts,sprite_type,mirror,flip=flip,double_wh=double_wh)
 
 add_sprite_block(0x8,0x10,"boss_ship",[0,1,10],mirror=True)   # 10: yellow when about to explode
-# I'd like to hack player ship into a sprite only for clut 2
-# but use a BOB for clut 9 (captured)
-#add_sprite_block(0,0x8,"ship",[2,9])
-add_sprite_block(0,0x7,"ship",[2,5,7,9,0xA],mirror=True)
-add_sprite(7,"ship",[2,5,7,9,0xA],mirror=True) #,sprite_type=ST_HW_SPRITE)
+add_sprite_block(0,0x6,"ship",[2,5,7,9,0xA],mirror=True)
+# use hardware sprite for non-rotating ship, straight
+add_sprite_block(6,8,"ship",[2,5,7,9,0xA],mirror=True,sprite_type=ST_HW_SPRITE)
 add_sprite_block(0x10,0x18,"moth",[2,4,0xA],mirror=True)
 add_sprite_block(0x18,0x20,"bee",[3,4,6,0xA,0x5],mirror=True)
 add_sprite_block(0x50,0x57,"mutant_galaxian_boss",[4,0xA],mirror=True) # sprite_type=ST_HW_SPRITE,
@@ -256,6 +255,7 @@ tiles_palette = [(x[0],x[2],x[1]) for x in block_dict["palette"]["data"]]
 palette = [tuple(int(x) for x in line.split(",")[0:3]) for line in ripped_palette]
 sprite_clut = [[tuple(palette[x]) for x in clut] for clut in block_dict["sprite_clut"]["data"]]
 fg_tile_clut = [[tiles_palette[x] for x in clut] for clut in block_dict["fg_tile_clut"]["data"]]
+
 
 
 def replace_color(img,color,replacement_color):
@@ -363,7 +363,7 @@ moth_palette[3] = dummy_color
 boss_ship_palette = moth_palette
 
 # dump cluts as RGB4 for sprites
-with open(os.path.join(src_dir,"palette_cluts.68k"),"w") as f:
+with open(os.path.join(src_dir,"sprite_cluts.68k"),"w") as f:
     for clut_index in range(16):
         clut = get_sprite_clut(clut_index)   # simple slice of palette
 

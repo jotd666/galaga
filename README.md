@@ -11,8 +11,9 @@ This is a transcode from the original arcade game Z80 to 68K assembly.
 #### AMIGA
 
 - fully playable with sound
-- minor bugs
-- missing features
+- minor graphical & sound bugs
+- missing 2P mode
+- 50 fps/scrolling stars on accelerated amigas, 25 fps on bare amigas
 
 #### NEO GEO
 

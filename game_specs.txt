@@ -1,14 +1,17 @@
-SPRITES STRATEGY:
+HARDWARE SPRITES STRATEGY:
 
 - using first 4 bitplanes for BOBs, with full palette dedicated to them, no
   dynamic colors possible (copperlist already too complicated)
-- mockup of 40+ sprites
-- 1/2 HW sprites for ship, 2 for lasers
+- 1/2 HW sprites for ship
 - 1 sprite for stars (takes a slot of 2 sprites!)
-- 2 sprites for explosions?
-- sprite multiplexing is that realistic given the complexity of copperlist?
-  maybe possible for swarm? tricky
-  
+
+So:
+
+- 2 slots for player ship
+- 2 slots for captured ship (1 wasted)
+- 2 slots for background stars (1 wasted, maybe 2 spare colors will be useful)
+- 2 spare slots (their 3 spare colors are used for tiles)
+
 TILES STRATEGY:
 
 The tiles are scarce but their color model and placement often get in the way
@@ -35,6 +38,11 @@ So we can:
   lives & flags each time or if sprite goes past them
 - tractor beam are multi-color tiles, but the ship is a HW sprite so we get away with it
   (or we can systematically redraw them if they are present, once again corner cases)
+- status tiles (lives & flags) use more than 1 clut on the same line, so we can't just use
+  the 5th plane and get away with it. We generate full 5-bitplane tiles for them, and use some
+  spare color slots that sprites don't use after color 16. There's a system to redraw the tiles
+  on the left & right part, only if a BOB is in the area.
+  
 
 This allows to draw & erase BOBs without having to care about the background: better blitter speed!
 Also handles tile/sprites colors, allowing to use 16 exclusive colors for BOBs, making

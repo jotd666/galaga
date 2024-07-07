@@ -1,27 +1,15 @@
 - allow extra life sound /  credit sound at any time: to test!!
 - 2P game: swarm saved position is wrong when switching players! (f_move_swarm_when_player_changes_1d32, c_player_active_switch_110c)
-- icons not properly refreshed (bottom) when ship is erased and wraps to Y around 0 probably
-  also should take explosions (double height) into account
-  specially left side (ships) is not refreshed properly! => to test again!!
-- autoframeskip: if too many slowdowns, game should switch to fixed stars/30 fps
-
-
-- flag tick timer sometimes super slow: loops at l_120B
-- yellow flash at some point!!!
+- icons refreshed even with HW sprites (ship)???
+- kill captured ship makes the swarm bug: some bees stay in the air
 - understand when l_2681_end_of_table reached, ILLEGAL remaining
-- optimize: player ship should be HW sprite, even if captured
-  sprite layout: 2 slots for player ship
-                 2 slots for captured ship (1 wasted)
-				 2 slots for background stars (1 wasted, maybe 2 spare colors will be useful)
-				 2 spare slots (their 3 spare colors are used for tiles)
-- HW sprites seem not to work but is the code aligned with .py (orientations/flip/mirror) ?
-- generate proper HW sprite cluts
-- make stars scroll configurable, make 30 fps / 60 fps, enable fmode=3 on AGA
 - missing/wrong sounds: swarm pusling sound: rip from MAME or YT video with invincible & attack sound off
 
 minor:
 
 - namco logo should be red
+- flag tick timer sometimes super slow: loops at l_120B
+- yellow flash at some point!!!
 - red flashes (frame drop) even with very few sprites with cycle exact!!
   (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - c_plyr_initials_entry_hilite_line: one letter is yellow, rest is white/cyan??
@@ -32,6 +20,7 @@ minor:
 - double buffering: don't double buffer last plane for tiles
 - clic at the end of the sound when you got captured and when capturing
 - double shot should optimize height
+- autoframeskip: if too many slowdowns, game should switch to fixed stars/30 fps
 
 
 

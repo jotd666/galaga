@@ -47,7 +47,7 @@ sound_dict = {
 "END_CHALLENGE_SND"       :{"index":0xE,"pattern":12,"volume":24,"ticks":360,'loops':False},
 "PERFECT_SND"         :{"index":0x14,"pattern":14,"volume":36,'loops':False,"ticks":240},
 "FIGHTER_CAPTURED_SND"    :{"index":0x16,"pattern":16,"volume":24,'loops':False,"ticks":280},
-"FIGHTER_KILLED_SND"    :{"index":0x17,"pattern":17,"volume":24,'loops':False,"ticks":140},
+"FIGHTER_KILLED_SND"    :{"index":0x17,"pattern":17,"volume":24,'loops':False,"ticks":130},
 "FIGHTER_RESCUED_SND"    :{"index":0x18,"pattern":18,"volume":24,'loops':False,"ticks":280},
 
 }
