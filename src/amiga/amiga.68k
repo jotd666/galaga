@@ -3308,12 +3308,8 @@ handle_keyboard:
 	
 toggle_pause:
 	* pause only within game
-*	tst.b	gameplay_allowed_6054
-*	beq.b	0f
-*	tst.b	check_scenery_disabled_61ED
-*	bne.b	0f
-*	tst.b	game_locked_6053
-*	bne.b	0f
+	cmp.b	#3,b8_game_state_9201
+	bne.b	0f
 	eor.b   #1,pause_flag
 0:
 	rts

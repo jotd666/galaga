@@ -7569,6 +7569,7 @@ l_2631:
 * Insert the 8 non-transient bugs into the temporary attack wave (object IDs of
 * bugs that have a final home positions).... $FFs remain in unused slots, e.g.
 *   0x58,0x5A,0x5C,0x5E,0xFF,0xFF,0xFF,0xFF,0x28,0x2A,0x2C,0x2E,0xFF,0xFF,0xFF,0xFF,
+* also insert the rogue ship that escaped in the final wave so it can be rescued again!
 
 l_2636:
 	lea	ds_atk_wav_tmp_buf_9100,a0          	| [$2636: ld   hl,#ds_atk_wav_tmp_buf_9100]
@@ -7634,50 +7635,47 @@ l_2662_form_pair:
 l_2679_next_wave:
 	move.b	#0x7E,d0                        	| [ld   a,#0x7E] start token of each group (will overwrite with 7f if finished)
 	move.b	d0,(a1)+                         	| [ld   (de),a]
-	                           	| [inc  e] DE = &ds_8920[ $11 * n + 1 ]
+	                           	                | [inc  e] DE = &ds_8920[ $11 * n + 1 ]
 	move.l	(sp)+,a0                        	| [pop  hl] &_stg_dat[ 2 + 3 * n + 0 ]
-	jra	l_25F5_while_not_end_stg_dat       	| [jp   l_25F5_while_not_end_stg_dat]
+	jra	l_25F5_while_not_end_stg_dat       	    | [jp   l_25F5_while_not_end_stg_dat]
 
 
 l_2681_end_of_table:
 * pointer is already advanced, so decrement it so we overwrite the 7E with 7F
-	subq.w	#1,a1                           	| [dec  e]
+	subq.w	#1,a1                           	| [$2681: dec  e]
 
 * check capture-mode and two-ship status
-	move.b	ds_plyr_actv+_b_bmbr_boss_cflag,d0	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cflag)] 1 if capture-mode is active
-	move.b	d0,d1                           	| [ld   b,a]
-	move.b	ds_plyr_actv+_b_2ship,d0        	| [ld   a,(ds_plyr_actv +_b_2ship)]
-	subq.b	#1,d0                           	| [dec  a]
-	and.b	d1,d0                            	| [and  b]
-	jeq	l_26A4_done                        	    | [jr   z,l_26A4_done]
-* !capture-mode and !two-ship-status... we have a rogue fighter in the mob.
-	move.b	ds_plyr_actv+_b_not_chllg_stg,d0	| [ld   a,(ds_plyr_actv +_b_not_chllg_stg)] ==(stg_ctr+1)%4 ...i.e. 0 if challenge stage
-	                               	| [and  a]
-	jeq	l_26A4_done                        	| [jr   z,l_26A4_done] doesn't matter on a challenge stage.
+	move.b	ds_plyr_actv+_b_bmbr_boss_cflag,d0	| [$2682: ld   a,(ds_plyr_actv +_b_bmbr_boss_cflag)] 1 if capture-mode is active
+	move.b	d0,d1                           	| [$2685: ld   b,a]
+	move.b	ds_plyr_actv+_b_2ship,d0        	| [$2686: ld   a,(ds_plyr_actv +_b_2ship)]
+	subq.b	#1,d0                           	| [$2689: dec  a]
+	and.b	d1,d0                            	| [$268A: and  b]
+	jeq	l_26A4_done                        	    | [$268B: jr   z,l_26A4_done]
+* !capture-mode and !two-ship-status... we have a rogue fighter in the mob (fighter that escaped
+* at the previous stage)
+	move.b	ds_plyr_actv+_b_not_chllg_stg,d0	| [$268D: ld   a,(ds_plyr_actv +_b_not_chllg_stg)] ==(stg_ctr+1)%4 ...i.e. 0 if challenge stage
+	                               	            | [$2690: and  a]
+	jeq	l_26A4_done                        	    | [$2691: jr   z,l_26A4_done] doesn't matter on a challenge stage.
 
-	illegal		| screen shit??? check pointers?
 * HL = DE-4 ... e.g. 8975-4==8971
-	move.w	d3,d5
-	subq.w	#4,d5
-	                           	| [ld   h,d]
-	                           	| [ld   a,e]
-	                           	| [sub  #4]
-	                           	| [ld   l,a]
-
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	move.b	d0,(a1)+                         	| [ld   (de),a]
-	                           	| [inc  e] e.g. DE = 8976
-	move.b	#4,d0                           	| [ld   a,#4]
-	move.b	d0,(a1)+                         	| [ld   (de),a]
-	                           	| [inc  e]
-	move.b	#0x80+0x07,d0                   	| [ld   a,#0x80 + 0x07]
-	move.b	d0,ds_sprite_code_8B00+0x04          	| [ld   (ds_sprite_code_8B00 + 0x04),a] = $80 + $07
-
+	
+* reinsert the rogue fighter in the wave
+	lea		-4(a1),a0        					| [$2693: ld   h,d]
+												| [$2694: ld   a,e]
+												| [$2695: sub  #4]
+												| [$2697: ld   l,a]
+	move.b	(a0),d0                         	| [$2698: ld   a,(hl)]
+	move.b	d0,(a1)+                         	| [$2699: ld   (de),a]
+	                           	                | [$269A: inc  e] e.g. DE = 8976
+	move.b	#4,d0                           	| [$269B: ld   a,#4]
+	move.b	d0,(a1)+                         	| [$269D: ld   (de),a]
+	                           	                | [$269E: inc  e]
+	move.b	#0x80+0x07,d0                   	| [$269F: ld   a,#0x80 + 0x07]
+	move.b	d0,ds_sprite_code_8B00+0x04         | [$26A1: ld   (ds_sprite_code_8B00 + 0x04),a] = $80 + $07
 l_26A4_done:
-	move.b	#0x7F,d0                        	| [ld   a,#0x7F] end token marker
-	move.b	d0,(a1)                         	| [ld   (de),a] ($8920 + $11*5)
-
-	rts                                    	| [ret]
+	move.b	#0x7F,d0                        	| [$26A4: ld   a,#0x7F] end token marker
+	move.b	d0,(a1)                         	| [$26A6: ld   (de),a] ($8920 + $11*5)
+	rts                                    	    | [$26A7: ret]
 
 
 *=============================================================================
@@ -9181,6 +9179,7 @@ l_3315:
 *  HL=start address at next string
 *-----------------------------------------------------------------------------
 c_text_out_331b:
+	
 * destination address
 	moveq	#0,d7
 	move.b	(2,a0),d7
@@ -9189,7 +9188,7 @@ c_text_out_331b:
 	addq.w	#4,a0                               | [$331C: inc  hl]
 	                         	                | [$331D: ld   d,(hl)] MSB
 	                                            | [$331E: inc  hl]
-								
+
 * byte count of string
 	move.b	(a0)+,d1                         	| [$331F: ld   b,(hl)]
 	                           	                | [$3320: inc  hl]
@@ -9667,7 +9666,7 @@ l_38A0:
 	jne	l_38A0                             	| [djnz l_38A0]
 
 	lea	str_3B04,a0                    	| [ld   hl,#str_3B04]
-	jbsr	c_text_out_331b                        	| [call c_text_out_331b] "FREE PLAY"
+	jbsr	c_text_out_331b             | [call c_text_out_331b] "FREE PLAY"
 
 * Bonus Ships Awarded (DSWB)
 * Mask  Selection    S#4 S#5 S#6    Index into table 3AA4
@@ -9691,98 +9690,100 @@ l_38AB:
 	move.b	#1,(a0)
 	move.b	#1,(1,a0)
 	move.b	#0,(2,a0)
-	                                    		| [ld   hl,#_sfr_dsw4] bonus levels
-
-	move.b	#3,d1                           	| [ld   b,#3] 3 positions to read
-	clr.b	d0                               	| [xor  a]
+	                                    		| [$38AB: ld   hl,#_sfr_dsw4] bonus levels
+	move.b	#3,d1                           	| [$38AE: ld   b,#3] 3 positions to read
+	clr.b	d0                               	| [$38B0: xor  a]
 	CLEAR_XC_FLAGS
 l_38B1:
-	move.b	(a0)+,d2                         	| [ld   c,(hl)]
-	roxr.b	#1,d2                           	| [rr   c] "right-shift" lo-bit into Cy flag.
-	addx.b	d0,d0				                | [adc  a,a]  "left-shift" the hi-bit and add the lo-bit from Cy flag.
-	                           	| [inc  hl]
+	move.b	(a0)+,d2                         	| [$38B1: ld   c,(hl)]
+	roxr.b	#1,d2                           	| [$38B2: rr   c] "right-shift" lo-bit into Cy flag.
+	addx.b	d0,d0				                | [$38B4: adc  a,a]  "left-shift" the hi-bit and add the lo-bit from Cy flag.
+	                           	                | [$38B5: inc  hl]
 	subq.b	#1,d1                           	| [...]
-	jne	l_38B1                             	| [djnz l_38B1]
+	jne	l_38B1                             	    | [$38B6: djnz l_38B1]
 
 	addq.w	#4,a7
 *  if ( 0 == switch_selection ) goto 392D  // display "BONUS NOTHING", ret to 35be
-	and.b	#0x07,d0                         	| [and  #0x07]
-	jeq	l_392D                             	| [jp   z,l_392D]
-
-	move.b	d0,d2                           	| [ld   c,a]
-	move.b	b_mchn_cfg_nships,d0            	| [ld   a,(b_mchn_cfg_nships)] Bonus levels depend upon number of fighters starting.
-	and.b	#0x04,d0                         	| [and  #0x04] note: num_ships = mchn_cfg_nships + 1
-	add.b	d0,d0                            	| [add  a,a]
-	add.b	d2,d0                            	| [add  a,c] add dsw value
-	add.b	d0,d0                            	| [add  a,a] a:=a*2 ... use as offset into table
-	lea	str_3AA4,a0                    	| [ld   hl,#str_3AA4] bonus config data
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A...A==2,C,4,6,E,8,A
-	lea	w_mchn_cfg_bonus_9980,a1            	| [ld   de,#w_mchn_cfg_bonus_9980] ld two-bytes (str_3AA4)
-	jbsr	ldi                               	| [ldi]
-	jbsr	ldi                               	| [ldi]
-	subq.w	#1,a0                           	| [dec  hl] point to second byte of two-byte Table entry
-	move.b	#1,d2                           	| [ld   c,#1] flag tells 38DA that it was 'called' i.e. get out by return
-	jbsr	c_38DA                            	| [call c_38DA] display 'second and every' bonus settings
-	subq.w	#1,a0                           	| [dec  hl] point to first byte of two-byte table entry
-	clr.b	d2                               	| [ld   c,#0] flag allows 3904 ret to occur
+	and.b	#0x07,d0                         	| [$38B8: and  #0x07]
+	jeq	l_392D                             	    | [$38BA: jp   z,l_392D]
+	move.b	d0,d2                           	| [$38BD: ld   c,a]
+	moveq	#2,d2
+	move.b	b_mchn_cfg_nships,d0            	| [$38BE: ld   a,(b_mchn_cfg_nships)] Bonus levels depend upon number of fighters starting.
+	and.b	#0x04,d0                         	| [$38C1: and  #0x04] note: num_ships = mchn_cfg_nships + 1
+	add.b	d0,d0                            	| [$38C3: add  a,a]
+	add.b	d2,d0                            	| [$38C4: add  a,c] add dsw value
+	add.b	d0,d0                            	| [$38C5: add  a,a] a:=a*2 ... use as offset into table
+	lea	str_3AA4,a0                    	        | [$38C6: ld   hl,#str_3AA4] bonus config data
+	jbsr	add_d0_to_a0_0010                   | [$38C9: rst  0x10] HL += A...A==2,C,4,6,E,8,A
+	lea	w_mchn_cfg_bonus_9980,a1            	| [$38CA: ld   de,#w_mchn_cfg_bonus_9980] ld two-bytes (str_3AA4)
+	jbsr	ldi                               	| [$38CD: ldi]
+	jbsr	ldi                               	| [$38CF: ldi]
+	subq.w	#1,a0                           	| [$38D1: dec  hl] point to second byte of two-byte Table entry
+	move.b	#1,d2                           	| [$38D2: ld   c,#1] flag tells 38DA that it was 'called' i.e. get out by return
+	jbsr	c_38DA                            	| [$38D4: call c_38DA] display 'second and every' bonus settings
+	subq.w	#1,a0                           	| [$38D7: dec  hl] point to first byte of two-byte table entry
+	clr.b	d2                               	| [$38D8: ld   c,#0] flag allows 3904 ret to occur
 
 *=============================================================================
 * c_38DA()
-*  Description:
+*  Description: at boot write dipswitches (too fast to read anyway)
+*  Disabled as it crashes when "AT EVERY" option is set, when it works properly
+*  during game so let's drop it
 * IN:
 *  ...
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
 c_38DA:
-	moveq	#0,d0
-	move.b	(a0),d0                         	| [ld   a,(hl)] ld one byte from the two-byte table entry
-	addq.b	#1,d0                           	| [inc  a] setup test for $FF in the bonus-none parameters
-	jeq	l_393B                             	    | [jp   z,l_393B] if 'bonus none', skip the 'second and every' display (when?)
-	move.b	d2,d0                           	| [ld   a,c] first-pass (second-and-every) indicated by 1, second-pass indicated by 0..
-	add.b	d0,d0                            	| [add  a,a] ...so A==2 or A==0  (offset from 3B1A to string address loaded into HL)
-	move.l	a0,-(sp)                        	| [push hl] save address of table-entry
-	lea	bonus_text_ptr_table_3b1a,a0                    	        | [ld   hl,#str_3B1A] i.e., 1E 3B "1ST BONUS ", 36 3B "2ND BONUS"
-	add.b	d0,d0                   | [rst  0x10] HL += A                                  | HL += A
-	move.l	(a0,d0.w),a0                         	| [ld   a,(hl)] get LSB of src address
-	                                        	| [inc  hl]
-                                               	| [ld   h,(hl)] get MSB of src address
-                                               	| [ld   l,a] ld LSB to L
-	movem.w	d1/d2,-(sp)                    	    | [push bc] C holds the so-called 'first-bonus/second-bonus' flag, save it!
-	jbsr	c_text_out_331b                        	| [call c_text_out_331b] display "2ND BONUS" or "1ST BONUS"
-	jbsr	c_text_out_331b                        	| [call c_text_out_331b] display "0000 PTS" of "??? BONUS XX0000 PTS"...
-                                                  * HL==$3B2B or HL==$3B42, as there are two copies of "0000 PTS"
-                                                  * DE==$80B2, that value will be used later......?
-
-	movem.w	(sp)+,d1/d2                    	    | [pop  bc] get back the first-pass-second-pass flag
-	move.l	(sp)+,a0                        	| [pop  hl] get back the address of the table-entry
-	move.b	(a0),d0                         	| [ld   a,(hl)] ld the table-entry...
-	and.b	#0x7F,d0                         	| [and  #0x7F] ... and mask out bit-7 which indicates there is no 'and-every' setting
-	exg	a1,a0                              	    | [ex   de,hl] save address of table-entry in HL... DE==$80B2 (address of ' ' in "PTS ")
-	lea	0x8000+0x01E0+0x10,a0      	            | [ld   hl,#0x8000 + 0x01E0 + 0x10]
-	move.b	d2,d1                           	| [ld   b,c] the first time through here, C==1...
-	subq.b	#1,d1                           	| [...]
-	jne	l_38FF                             	    | [djnz l_38FF] ... so the second time, when the Flag is 0 we skip next two lines
-	addq.w	#2,a0                           	| [inc  hl] * 2
-l_38FF:
-	jbsr	c_391E                            	| [call c_391E] display "X" of "??? BONUS XX0000 PTS"
-	exg	a1,a0                              	| [ex   de,hl] HL:= to second-or-first-table-entry again
-	subq.b	#1,d2                           	| [dec  c] C:=$00 at end of first-pass...
-	beq.b	0f                               	| [...]
-	rts                                    	| [ret  nz] ...after second-pass, ret to _35BE, end 'call _37F4' (displaying dsw menu) [...]
-0:
-	exg	a1,a0                              	| [ex   de,hl] save the current bonus-parameter-table-entry into DE
-	move.b	(a1),d0                         	| [ld   a,(de)] A:=$86 for 20-60 setting, the second of the two byte-parameters
-	btst.b	#7,d0                           	| [bit  7,a] if (bit-7)...
-	jne	l_3949                             	| [jp   nz,l_3949] ... then jp (bit test is Z flag... bit-7 set if no 'and-every' bonus)
-	lea	0x8000+0x01E0+0x14,a0      	| [ld   hl,#0x8000 + 0x01E0 + 0x14] address of character X in "AND EVERY X 0000 PTS"
-	jbsr	c_391E                            	| [call c_391E] display XX of "AND EVERY XX0000 PTS"
-	movem.w	d3/d4,-(sp)                    	| [push de]
-	move.l	a1,-(sp)                        	| [push de]
-	lea	str_3B4D,a0                    	| [ld   hl,#str_3B4D] "AND EVERY"
-	jbsr	c_text_out_331b                        	| [call c_text_out_331b]
-	jbsr	c_text_out_331b                        	| [call c_text_out_331b] display "0000 PTS" of "AND EVERY XX0000 PTS"  ( HL expected to be $3B59)
-	move.l	(sp)+,a0                        	| [pop  hl]
+	
+*	moveq	#0,d0
+*	move.b	(a0),d0                         	| [ld   a,(hl)] ld one byte from the two-byte table entry
+*	addq.b	#1,d0                           	| [inc  a] setup test for $FF in the bonus-none parameters
+*	jeq	l_393B                             	    | [jp   z,l_393B] if 'bonus none', skip the 'second and every' display (when?)
+*	move.b	d2,d0                           	| [ld   a,c] first-pass (second-and-every) indicated by 1, second-pass indicated by 0..
+*	add.b	d0,d0                            	| [add  a,a] ...so A==2 or A==0  (offset from 3B1A to string address loaded into HL)
+*	move.l	a0,-(sp)                        	| [push hl] save address of table-entry
+*	lea	bonus_text_ptr_table_3b1a,a0                    	        | [ld   hl,#str_3B1A] i.e., 1E 3B "1ST BONUS ", 36 3B "2ND BONUS"
+*	add.b	d0,d0                   | [rst  0x10] HL += A                                  | HL += A
+*	move.l	(a0,d0.w),a0                         	| [ld   a,(hl)] get LSB of src address
+*	                                        	| [inc  hl]
+*                                               	| [ld   h,(hl)] get MSB of src address
+*                                               	| [ld   l,a] ld LSB to L
+*	movem.w	d1/d2,-(sp)                    	    | [push bc] C holds the so-called 'first-bonus/second-bonus' flag, save it!
+*	jbsr	c_text_out_331b                        	| [call c_text_out_331b] display "2ND BONUS" or "1ST BONUS"
+*	jbsr	c_text_out_331b                        	| [call c_text_out_331b] display "0000 PTS" of "??? BONUS XX0000 PTS"...
+*                                                  * HL==$3B2B or HL==$3B42, as there are two copies of "0000 PTS"
+*                                                  * DE==$80B2, that value will be used later......?
+*
+*	movem.w	(sp)+,d1/d2                    	    | [pop  bc] get back the first-pass-second-pass flag
+*	move.l	(sp)+,a0                        	| [pop  hl] get back the address of the table-entry
+*	move.b	(a0),d0                         	| [ld   a,(hl)] ld the table-entry...
+*	and.b	#0x7F,d0                         	| [and  #0x7F] ... and mask out bit-7 which indicates there is no 'and-every' setting
+*	exg	a1,a0                              	    | [ex   de,hl] save address of table-entry in HL... DE==$80B2 (address of ' ' in "PTS ")
+*	lea	0x8000+0x01E0+0x10,a0      	            | [ld   hl,#0x8000 + 0x01E0 + 0x10]
+*	move.b	d2,d1                           	| [ld   b,c] the first time through here, C==1...
+*	subq.b	#1,d1                           	| [...]
+*	jne	l_38FF                             	    | [djnz l_38FF] ... so the second time, when the Flag is 0 we skip next two lines
+*	addq.w	#2,a0                           	| [inc  hl] * 2
+*l_38FF:
+*	jbsr	c_391E                            	| [call c_391E] display "X" of "??? BONUS XX0000 PTS"
+*	exg	a1,a0                              	| [ex   de,hl] HL:= to second-or-first-table-entry again
+*	subq.b	#1,d2                           	| [dec  c] C:=$00 at end of first-pass...
+*	beq.b	0f                               	| [...]
+*	rts                                    	| [ret  nz] ...after second-pass, ret to _35BE, end 'call _37F4' (displaying dsw menu) [...]
+*0:
+*	exg	a1,a0                              	| [ex   de,hl] save the current bonus-parameter-table-entry into DE
+*	move.b	(a1),d0                         	| [ld   a,(de)] A:=$86 for 20-60 setting, the second of the two byte-parameters
+*	btst.b	#7,d0                           	| [bit  7,a] if (bit-7)...
+*	jne	l_3949                             	| [jp   nz,l_3949] ... then jp (bit test is Z flag... bit-7 set if no 'and-every' bonus)
+*	lea	0x8000+0x01E0+0x14,a0      	| [ld   hl,#0x8000 + 0x01E0 + 0x14] address of character X in "AND EVERY X 0000 PTS"
+*	jbsr	c_391E                            	| [call c_391E] display XX of "AND EVERY XX0000 PTS"
+*	movem.w	d3/d4,-(sp)                    	| [push de]
+*	move.l	a1,-(sp)                        	| [push de]
+*	lea	str_3B4D,a0                    	       | [ld   hl,#str_3B4D] "AND EVERY"
+*	jbsr	c_text_out_331b                        	| [call c_text_out_331b]
+*	jbsr	c_text_out_331b                        	| [call c_text_out_331b] display "0000 PTS" of "AND EVERY XX0000 PTS"  ( HL expected to be $3B59)
+*	move.l	(sp)+,a0                        	| [pop  hl]
 	rts                                    	| [ret]
 * end 'call 38DA', ret to _38D7
 
@@ -10063,19 +10064,18 @@ l_39C3:
 
 * c_svc_test_input_hdlr : entry point is below...
 
-l_39C9_call397D:
-	illegal
-	move.l	a0,-(sp)                        	| [push hl]
-	jbsr	c_svc_machine_totals              	| [call c_svc_machine_totals]
-
-*  reset Machine Totals timer
-	move.w	#15*60,d5                    	| [ld   hl,#(15 * 60)]
-	move.w	d5,w_svc_15sec_tmr              	| [ld   (w_svc_15sec_tmr),hl] init timer (15*60)
-
-	move.l	(sp)+,a0                        	| [pop  hl]
-
-	movem.w	(sp)+,d1/d2                    	| [pop  bc]
-	rts                                    	| [ret]
+*l_39C9_call397D:
+*	move.l	a0,-(sp)                        	| [push hl]
+*	jbsr	c_svc_machine_totals              	| [call c_svc_machine_totals]
+*
+**  reset Machine Totals timer
+*	move.w	#15*60,d5                    	| [ld   hl,#(15 * 60)]
+*	move.w	d5,w_svc_15sec_tmr              	| [ld   (w_svc_15sec_tmr),hl] init timer (15*60)
+*
+*	move.l	(sp)+,a0                        	| [pop  hl]
+*
+*	movem.w	(sp)+,d1/d2                    	| [pop  bc]
+*	rts                                    	| [ret]
 
 
 *=============================================================================

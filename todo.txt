@@ -1,21 +1,20 @@
-- allow extra life sound /  credit sound at any time: to test!!
+- kill captured ship makes the swarm bug: some bees stay in the air
+- kill boss that captured ship: ship remains static and doesn't attack / flee
+- handle flipped HW sprites (captured ship)
 - 2P game: swarm saved position is wrong when switching players! (f_move_swarm_when_player_changes_1d32, c_player_active_switch_110c)
 - icons refreshed even with HW sprites (ship)???
-- kill captured ship makes the swarm bug: some bees stay in the air
-- understand when l_2681_end_of_table reached, ILLEGAL remaining
 - missing/wrong sounds: swarm pusling sound: rip from MAME or YT video with invincible & attack sound off
+- namco logo should be red
 
 minor:
 
-- namco logo should be red
 - flag tick timer sometimes super slow: loops at l_120B
 - yellow flash at some point!!!
 - red flashes (frame drop) even with very few sprites with cycle exact!!
   (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - c_plyr_initials_entry_hilite_line: one letter is yellow, rest is white/cyan??
   doesn't matter!!!
-- some noise in the main fire: Toni is looking into this
-- l_38AB: bonus ships are hardcoded 20000/60000 ATM
+- some noise in the main fire sound: Toni is looking into this
 - DSW skill level?
 - double buffering: don't double buffer last plane for tiles
 - clic at the end of the sound when you got captured and when capturing
