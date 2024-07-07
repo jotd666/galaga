@@ -167,7 +167,7 @@
 	.global		ds_plyr_data
 	.global		ds_plyr_actv
 	.global		ds_plyr_susp
-	.global		ds_susp_plyr_obj_data
+	.global		ds_susp_plyr_obj_data_9b80
 	.global		ds_cpu0_task_resrv
 	.global		ds_hpos_loc_offs
 	.global		ds_hpos_loc_orig_9900
@@ -599,7 +599,7 @@ ds_plyr_susp:
 
        ds.b     0x10       | unused
 
-ds_susp_plyr_obj_data:
+ds_susp_plyr_obj_data_9b80:
        ds.b     0x30       | resv player game object status tokens (copied from 8800)
 
 ds_cpu0_task_resrv:

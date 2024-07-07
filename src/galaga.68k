@@ -373,7 +373,7 @@ l_0414_while_tmr_3:
 
 * memset($98B0,$30,0)
 	move.b	#0x30,d1                        	| [ld   b,#0x30]
-	lea	ds_susp_plyr_obj_data,a0       	        | [ld   hl,#ds_susp_plyr_obj_data] memset(...,$30,0)
+	lea	ds_susp_plyr_obj_data_9b80,a0       	        | [ld   hl,#ds_susp_plyr_obj_data_9b80] memset(...,$30,0)
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
 * settext($0b, $83b0)
@@ -777,7 +777,7 @@ l_05A3_while:
 	move.b	d0,ds_plyr_actv+_b_sndflag      	| [ld   (ds_plyr_actv +_b_sndflag),a] _fx[0] ... enable for pulsing_sound
 	move.b	ds4_game_tmrs_92ac+2,d0             | [ld   a,(ds4_game_tmrs_92ac + 2)]
 	move.b	d0,ds_plyr_actv+_b_plyr_swap_tmr	| [ld   (ds_plyr_actv +_b_plyr_swap_tmr),a] game_tmr[2]
-	jbsr	c_player_active_switch            	| [call c_player_active_switch]
+	jbsr	c_player_active_switch_110c         | [call c_player_active_switch_110c]
 	jbsr	new_stage_setup_2c00                | [call new_stage_setup_2c00] new stage setup
 	move.b	ds_plyr_actv+_b_plyr_swap_tmr,d0	| [ld   a,(ds_plyr_actv +_b_plyr_swap_tmr)] game_tmr[2]
 	move.b	d0,ds4_game_tmrs_92ac+2             | [ld   (ds4_game_tmrs_92ac + 2),a] actv_plyr_state[0x1F]
@@ -2564,115 +2564,113 @@ l_1108:
 	rts                                    		| [$110B: ret]
 
 *=============================================================================
-* c_player_active_switch()
+* c_player_active_switch_110c()
 *  Description:
 *   End a player's turn and/or prep for next player.
 *   Called when bug nest has already retreated.
-*   Never on single player game and not at and of player 2's final ship.
+*   Never on single player game and not at end of player 2's final ship.
 * IN:
 *  ...
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_player_active_switch:
+c_player_active_switch_110c:
 *  active_plyr_task_tbl[0] = reserve_plyr_task_tbl[0] = $1F
-	move.b	#0x1F,d0                        	| [ld   a,#0x1F]
-	move.b	d0,ds_cpu0_task_actv_9000+0          	| [ld   (ds_cpu0_task_actv_9000 + 0),a] $1F
-	move.b	d0,ds_cpu0_task_resrv+0         	| [ld   (ds_cpu0_task_resrv + 0),a] $1F
+	move.b	#0x1F,d0                             | [$110C: ld   a,#0x1F]
+	move.b	d0,ds_cpu0_task_actv_9000+0          | [$110E: ld   (ds_cpu0_task_actv_9000 + 0),a] $1F
+	move.b	d0,ds_cpu0_task_resrv+0              | [$1111: ld   (ds_cpu0_task_resrv + 0),a] $1F
 
 * swap active player and waiting player state data structures
-	lea	ds_plyr_actv,a0                	| [ld   hl,#ds_plyr_actv] $40 bytes
-	lea	ds_plyr_susp,a1                	| [ld   de,#ds_plyr_susp] $40 bytes
-	move.b	#0x40,d1                        	| [ld   b,#0x40]
-l_111C:
-	move.b	(a0),d2                         	| [ld   c,(hl)]
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	move.b	d0,(a0)+                         	| [ld   (hl),a]
-	move.b	d2,d0                           	| [ld   a,c]
-	move.b	d0,(a1)+                         	| [ld   (de),a]
-	                           	| [inc  l]
-	                           	| [inc  e]
-	subq.b	#1,d1                           	| [...]
-	jne	l_111C                             	| [djnz l_111C]
+	lea	ds_plyr_actv,a0                	         | [$1114: ld   hl,#ds_plyr_actv] $40 bytes
+	lea	ds_plyr_susp,a1                	         | [$1117: ld   de,#ds_plyr_susp] $40 bytes
+	move.b	#0x40,d1                             | [$111A: ld   b,#0x40]
+l_111C:                                          
+	move.b	(a0),d2                              | [$111C: ld   c,(hl)]
+	move.b	(a1),d0                              | [$111D: ld   a,(de)]
+	move.b	d0,(a0)+                             | [$111E: ld   (hl),a]
+	move.b	d2,d0                                | [$111F: ld   a,c]
+	move.b	d0,(a1)+                             | [$1120: ld   (de),a]
+	                           	                 | [$1121: inc  l]
+	                           	                 | [$1122: inc  e]
+	subq.b	#1,d1                                | [...]
+	jne	l_111C                                   | [$1123: djnz l_111C]
 
 * swap active player and waiting player game object data
-	lea	b_8800,a0                      	| [ld   hl,#b_8800] $30 bytes to 98B0
-	lea	ds_susp_plyr_obj_data,a1       	| [ld   de,#ds_susp_plyr_obj_data]
-	move.b	#0x30,d1                        	| [ld   b,#0x30]
+	lea	b_8800,a0                      	         | [$1125: ld   hl,#b_8800] $30 bytes to 98B0
+	lea	ds_susp_plyr_obj_data_9b80,a1       | [$1128: ld   de,#ds_susp_plyr_obj_data_9b80]
+	move.b	#0x30,d1                             | [$112B: ld   b,#0x30]
 l_112D:
 	* compute d6 offset from 8800 base (applied on ds_sprite_code_8B00 too)
 	COMPUTE_LSB_A0_D6		b_8800
-		
-	move.b	(a0),d0                         	| [ld   a,(hl)] &sprt_mctl_objs[n]
-	move.b	d0,d2                           	| [ld   c,a]
-	
-	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
-	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	and.b	#0x7F,d0                         	| [and  #0x7F]
-	subq.b	#1,d2                           	| [dec  c]
-	jne	l_1142                             	| [jr   nz,l_1142] starts at $80?
-	and.b	#0x78,d0                         	| [and  #0x78] sprite[n].cclr.code
-	move.b	d0,d2                           	| [ld   c,a]
-												| [inc  l]
-	move.b	(1,a0),d0                         	| [ld   a,(hl)] sprite[n].cclr.colr
-												| [dec  l]
-	and.b	#0x07,d0                         	| [and  #0x07]
-	or.b	d2,d0                             	| [or   c]
-	or.b	#0x80,d0                          	| [or   #0x80]
-l_1142:
-	exg	a1,a0                              	| [ex   de,hl] hl := &susp_plyr_obj_data[n]
-	move.b	(a0),d2                         	| [ld   c,(hl)] hl==98b0, de==8b00
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	exg	a1,a0                              	| [ex   de,hl] hl := sprite[n].cclr.code
-	btst.b	#7,d2                           	| [bit  7,c]
-	jeq	l_115A                             	| [jr   z,l_115A]
-	move.b	d2,d0                           	| [ld   a,c] 114a, player 2->plyr 1
-	and.b	#0x78,d0                         	| [and  #0x78]
-	addq.b	#6,d0                           	| [add  a,#6]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-												| [inc  l]
-	move.b	d2,d0                           	| [ld   a,c]
-	and.b	#0x07,d0                         	| [and  #0x07]
-	move.b	d0,(1,a0)                         	| [ld   (hl),a]
-												| [dec  l]
- 	move.b	#1,d0                           	| [ld   a,#1]
+	move.b	(a0),d0                              | [$112D: ld   a,(hl)] &sprt_mctl_objs[n]
+	move.b	d0,d2                                | [$112E: ld   c,a]
+	lea	ds_sprite_code_8B00,a0                   | [$112F: ld   h,#>ds_sprite_code_8B00]
+	add.w	d6,a0                                
+	move.b	(a0),d0                              | [$1131: ld   a,(hl)]
+	and.b	#0x7F,d0                             | [$1132: and  #0x7F]
+	subq.b	#1,d2                                | [$1134: dec  c]
+	jne	l_1142                                   | [$1135: jr   nz,l_1142] starts at $80?
+	and.b	#0x78,d0                             | [$1137: and  #0x78] sprite[n].cclr.code
+	move.b	d0,d2                                | [$1139: ld   c,a]
+										         | [$113A: inc  l]
+	move.b	(1,a0),d0                            | [$113B: ld   a,(hl)] sprite[n].cclr.colr
+										         | [$113C: dec  l]
+	and.b	#0x07,d0                             | [$113D: and  #0x07]
+	or.b	d2,d0                                | [$113F: or   c]
+	or.b	#0x80,d0                             | [$1140: or   #0x80]
+l_1142:                                          
+										         | [$1142: ex   de,hl] hl := &susp_plyr_obj_data[n]
+	move.b	(a1),d2                              | [$1143: ld   c,(hl)] hl==98b0, de==8b00
+	move.b	d0,(a1)                              | [$1144: ld   (hl),a]
+										         | [$1145: ex   de,hl] hl := sprite[n].cclr.code
+	btst.b	#7,d2                                | [$1146: bit  7,c]
+	jeq	l_115A                                   | [$1148: jr   z,l_115A]
+	move.b	d2,d0                                | [$114A: ld   a,c] 114a, player 2->plyr 1
+	and.b	#0x78,d0                             | [$114B: and  #0x78]
+	addq.b	#6,d0                                | [$114D: add  a,#6]
+	move.b	d0,(a0)                              | [$114F: ld   (hl),a]
+										         | [$1150: inc  l]
+	move.b	d2,d0                                | [$1151: ld   a,c]
+	and.b	#0x07,d0                             | [$1152: and  #0x07]
+	move.b	d0,(1,a0)                            | [$1154: ld   (hl),a]
+										         | [$1155: dec  l]
+ 	move.b	#1,d0                                | [$1156: ld   a,#1]
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
-	jra	l_1161                             	| [jr   l_1161]
+	jra	l_1161                                   | [jr   l_1161]
 
 l_115A:
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
-	move.b	d2,(a0)                         	| [ld   (hl),c] hl==8b00
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
-	add.w	d6,a0
-	clr.b	(a0)                             	| [ld   (hl),#0] hl==9300
-	move.b	#0x80,d0                        	| [ld   a,#0x80]
-l_1161:
-	lea	b_8800,a0                      	| [ld   h,#>b_8800]
-	add.w	d6,a0
-	move.b	d0,(a0)                         	| [ld   (hl),a]
-	addq.w	#1,a1                           	| [inc  de] de==98b0
-	addq.w	#2,a0                           	| [inc  l]
-	subq.b	#1,d1                           	| [...]
-	jne	l_112D                             	| [djnz l_112D]
-
-	lea	ds_cpu0_task_actv_9000,a0           	| [ld   hl,#ds_cpu0_task_actv_9000] cp $20 bytes to reserve task tbl
-	lea	ds_cpu0_task_resrv,a1          	| [ld   de,#ds_cpu0_task_resrv] cp $20 bytes from active task tbl
-	move.b	#0x20,d1                        	| [ld   b,#0x20]
-l_1171:
-	move.b	(a0),d2                         	| [ld   c,(hl)]
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	move.b	d0,(a0)+                         	| [ld   (hl),a]
-	move.b	d2,d0                           	| [ld   a,c]
-	move.b	d0,(a1)+                         	| [ld   (de),a]
-	                          	| [inc  l]
-	                           	| [inc  e]
- 	subq.b	#1,d1                           	| [...]
-	jne	l_1171                             	| [djnz l_1171]
-
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0          	| [ld   (ds_cpu0_task_actv_9000 + 0),a] 0
-	rts                                    	| [ret]
+	move.b	d2,(a0)                         	 | [ld   (hl),c] hl==8b00
+	lea	ds_sprite_posn_9300,a0              	 | [ld   h,#>ds_sprite_posn_9300]
+	add.w	d6,a0                                
+	clr.b	(a0)                             	 | [ld   (hl),#0] hl==93xx
+	move.b	#0x80,d0                        	 | [ld   a,#0x80]
+l_1161:                                          
+	lea	b_8800,a0                      	         | [ld   h,#>b_8800]
+	add.w	d6,a0                                
+	move.b	d0,(a0)                         	 | [ld   (hl),a]
+	addq.w	#1,a1                           	 | [inc  de] de==98b0
+	addq.w	#2,a0                           	 | [inc  l]
+	subq.b	#1,d1                           	 | [...]
+	jne	l_112D                             	     | [djnz l_112D]
+												 
+	lea	ds_cpu0_task_actv_9000,a0           	 | [ld   hl,#ds_cpu0_task_actv_9000] cp $20 bytes to reserve task tbl
+	lea	ds_cpu0_task_resrv,a1          	         | [ld   de,#ds_cpu0_task_resrv] cp $20 bytes from active task tbl
+	move.b	#0x20,d1                        	 | [ld   b,#0x20]
+l_1171:                                          
+	move.b	(a0),d2                         	 | [ld   c,(hl)]
+	move.b	(a1),d0                         	 | [ld   a,(de)]
+	move.b	d0,(a0)+                         	 | [ld   (hl),a]
+	move.b	d2,d0                           	 | [ld   a,c]
+	move.b	d0,(a1)+                         	 | [ld   (de),a]
+	                          	                 | [inc  l]
+	                           	                 | [inc  e]
+ 	subq.b	#1,d1                           	 | [...]
+	jne	l_1171                             	     | [djnz l_1171]
+												 
+	clr.b	d0                               	 | [xor  a]
+	move.b	d0,ds_cpu0_task_actv_9000+0          | [ld   (ds_cpu0_task_actv_9000 + 0),a] 0
+	rts                                    	     | [ret]
 
 *=============================================================================
 * gctl_stg_tokens()
@@ -5208,68 +5206,63 @@ d_1D2C_wingmen:
 *  ...
 *-----------------------------------------------------------------------------
 f_move_swarm_when_player_changes_1d32:
-	lea	b8_99B4_bugnest_onoff_scrn_tmr,a0	| [ld   hl,#b8_99B4_bugnest_onoff_scrn_tmr] increment timer
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	and.b	#0x7F,d0                         	| [and  #0x7F]
-	sub.b	#0x7E,d0                         	| [sub  #0x7E] 126 (frames?)
-	jeq	l_1D72                             	| [jr   z,l_1D72] A==0 ...
-
-	move.b	(a0),d2                         	| [ld   c,(hl)]
-	addq.b	#1,(a0)                         	| [inc  (hl)] update timer
-
-	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
+	lea	b8_99B4_bugnest_onoff_scrn_tmr,a0	    | [$1D32: ld   hl,#b8_99B4_bugnest_onoff_scrn_tmr] increment timer
+	move.b	(a0),d0                         	| [$1D35: ld   a,(hl)]
+	and.b	#0x7F,d0                         	| [$1D36: and  #0x7F]
+	sub.b	#0x7E,d0                         	| [$1D38: sub  #0x7E] 126 (frames?)
+	jeq	l_1D72                             	    | [$1D3A: jr   z,l_1D72] A==0 ...
+	move.b	(a0),d2                         	| [$1D3C: ld   c,(hl)]
+	addq.b	#1,(a0)                         	| [$1D3D: inc  (hl)] update timer
+	move.b	b_9215_flip_screen,d0           	| [$1D3E: ld   a,(b_9215_flip_screen)]
 
 * rotate _scrn_tmr<7> into Cy for testing
-	rol.b	#1,d2                            	| [rlc  c]
-	eor.b	d2,d0                            	| [xor  c]
-	ror.b	#1,d0                            	| [rrca]
-
-	jcs	l_1D4B                             	    | [jr   c,l_1D4B]
-	move.b	#-1,d0                           	| [ld   a,#1] offset is +1
-	                               	            | [neg] offset is -1
+	rol.b	#1,d2                            	| [$1D41: rlc  c]
+	eor.b	d2,d0                            	| [$1D43: xor  c]
+	ror.b	#1,d0                            	| [$1D44: rrca]
+	jcs	l_1D4B                             	    | [$1D45: jr   c,l_1D4B]
+	move.b	#-1,d0                           	| [$1D47: ld   a,#1] offset is +1
+	                               	            | [$1D49: neg] offset is -1
 	jra		0f
 l_1D4B:
-	move.b	#1,d0                           	| [ld   a,#1] offset is +1
+	move.b	#1,d0                           	| [$1D45: ld   a,#1] offset is +1
 0:
-	move.b	d0,d2                           	| [ld   c,a]
-	lea	ds_hpos_spcoords_9800+(10*2),a0      	| [ld   hl,#ds_hpos_spcoords_9800 + (10 * 2)] + byte offset to row coordinates
-
-	move.b	#6,d1                           	| [ld   b,#6] 6 row coordinates to update
+	move.b	d0,d2                           	| [$1D47: ld   c,a]
+	lea	ds_hpos_spcoords_9800+(10*2),a0      	| [$1D49: ld   hl,#ds_hpos_spcoords_9800 + (10 * 2)] + byte offset to row coordinates
+	move.b	#6,d1                           	| [$1D4B: ld   b,#6] 6 row coordinates to update
 l_1D51:
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	add.b	d2,d0                            	| [add  a,c] + or - 1
-	move.b	d0,(a0)+                         	| [ld   (hl),a] _sprite_coords[ n ] ... LSB
-	roxr.b	#1,d0                           	| [rra]
-	eor.b	d2,d0                            	| [xor  c]
-	                           	                | [inc  l]
-	rol.b	#1,d0                            	| [rlca]
-	jcc	l_1D5E                             	    | [jr   nc,l_1D5E]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	eor.b	#0x01,d0                         	| [xor  #0x01]
-	move.b	d0,(a0)                         	| [ld   (hl),a] add carry (if any) into MSB
+	move.b	(a0),d0                         	| [$1D51: ld   a,(hl)]
+	add.b	d2,d0                            	| [$1D52: add  a,c] + or - 1
+	move.b	d0,(a0)+                         	| [$1D53: ld   (hl),a] _sprite_coords[ n ] ... LSB
+	roxr.b	#1,d0                           	| [$1D54: rra]
+	eor.b	d2,d0                            	| [$1D55: xor  c]
+	                           	                | [$1D56: inc  l]											
+	rol.b	#1,d0                            	| [$1D57: rlca]
+	jcc	l_1D5E                             	    | [$1D58: jr   nc,l_1D5E]
+	move.b	(a0),d0                         	| [$1D5A: ld   a,(hl)]
+	eor.b	#0x01,d0                         	| [$1D5B: xor  #0x01]
+	move.b	d0,(a0)                         	| [$1D5D: ld   (hl),a] add carry (if any) into MSB
 l_1D5E:
-	addq.w	#1,a0                           	| [inc  l]
+	addq.w	#1,a0                           	| [$1D5E: inc  l]
 	subq.b	#1,d1                           	| [...]
-	jne	l_1D51                             	| [djnz l_1D51]
+	jne	l_1D51                             	    | [$1D5F: djnz l_1D51]
 
 * call MOB manager to get everything updated (each call updates half the mob)
 * The call expects the frame count in A, but here it is overkill because the
 * subroutine is only using bits 0-3 ("A % 4") and updates half of the objects
 * on each odd count.
-	move.b	ds3_frame_cts_92A0+0,d0         	| [ld   a,(ds3_frame_cts_92A0 + 0)]
-	and.b	#0xFC,d0                         	| [and  #0xFC] force A%4 == 0
-	addq.b	#1,d0                           	| [inc  a] force A%4 == 1
-	move.w	d0,-(sp)                        	| [push af]
-	jbsr	f_update_objects_23e0                            	| [call f_update_objects_23e0]
-	move.w	(sp)+,d0                        	| [pop  af]
-	addq.b	#2,d0                           	| [add  a,#2] force A%4 = 3
-	jbsr	f_update_objects_23e0                            	| [call f_update_objects_23e0]
-
-	rts                                    	| [ret]
+	move.b	ds3_frame_cts_92A0+0,d0         	| [$1D61: ld   a,(ds3_frame_cts_92A0 + 0)]
+	and.b	#0xFC,d0                         	| [$1D64: and  #0xFC] force A%4 == 0
+	addq.b	#1,d0                           	| [$1D66: inc  a] force A%4 == 1
+	move.w	d0,-(sp)                        	| [$1D67: push af]
+	jbsr	f_update_objects_23e0               | [$1D68: call f_update_objects_23e0]
+	move.w	(sp)+,d0                        	| [$1D6B: pop  af]
+	addq.b	#2,d0                           	| [$1D6C: add  a,#2] force A%4 = 3
+	jbsr	f_update_objects_23e0               | [$1D6E: call f_update_objects_23e0]
+	rts                                    	    | [$1D71: ret]
 
 l_1D72:
-	move.b	d0,ds_cpu0_task_actv_9000+0x0E       	| [ld   (ds_cpu0_task_actv_9000 + 0x0E),a] f_move_swarm_when_player_changes_1d32
-	rts                                    	| [ret]
+	move.b	d0,ds_cpu0_task_actv_9000+0x0E      | [$1D72: ld   (ds_cpu0_task_actv_9000 + 0x0E),a] f_move_swarm_when_player_changes_1d32
+	rts                                    	    | [$1D75: ret]
 
 *=============================================================================
 * f_star_control_1d76()
@@ -5281,6 +5274,9 @@ l_1D72:
 *  ...
 *-----------------------------------------------------------------------------
 f_star_control_1d76:
+	rts
+	* this is not supported by the amiga port
+	.ifne	0
 	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
 	move.b	d0,d1                           	| [ld   b,a]
 	lea	ds_99B9_star_ctrl+0x00,a0      	| [ld   hl,#ds_99B9_star_ctrl + 0x00] 1 when ship on screen
@@ -5329,7 +5325,8 @@ l_1DA8:
 	move.b	d0,(a0)                         	| [ld   (hl),a] 0 ... 99BD?
 	move.b	#7,d0                           	| [ld   a,#7] stops stars
 	jra	l_1DA4                             	| [jr   l_1DA4] set star ctrl state
-
+	.endif
+	
 *=============================================================================
 * f_update_enemy_status_1db3() ... 0x0B
 *  Description:
@@ -10575,8 +10572,7 @@ l_2C5B:
 	and.b	#0x70,d0                         	| [and  #0x70]
 	add.b	#0x40,d0                         	| [add  a,#0x40]
 	move.b	d0,ds_99B9_star_ctrl+0x02       	| [ld   (ds_99B9_star_ctrl + 0x02),a]
-
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 *=============================================================================
 * selected table is by difficulty (rank) configured by dip switch setting

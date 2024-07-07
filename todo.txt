@@ -1,7 +1,7 @@
-- 2P game: swarm saved position is wrong when switching players!
+- 2P game: swarm saved position is wrong when switching players! (f_move_swarm_when_player_changes_1d32, c_player_active_switch_110c)
 - icons not properly refreshed (bottom) when ship is erased and wraps to Y around 0 probably
   also should take explosions (double height) into account
-  specially left side (ships) is not refreshed properly!
+  specially left side (ships) is not refreshed properly! => to test again!!
 - autoframeskip: if too many slowdowns, game should switch to fixed stars/30 fps
 - flag tick timer sometimes super slow: loops at l_120B
 - yellow flash at some point!!!

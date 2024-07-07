@@ -982,15 +982,26 @@ refresh_status_bar:
 	tst.b	(a2,d2.w)					| is this sprite a HW sprite?
 	bne.b	11f		| hardware sprite: don't consider
 	move.w	(PREVIOUS_SPRITE_Y,a4),d1
-	cmp.w	#Y_MAX-16+1,d1
+	add.w	(PREVIOUS_SPRITE_HEIGHT,a4),d1	| Y bottom for sprite
+	cmp.w	#Y_MAX+1,d1
 	bcs.b	11f
 	* conflict: sprite probably overwrote tiles: redraw
 	* redraw left part if not already done
 	tst.b	d4
 	bne.b	11f
-	cmp.w	#24,d0
+	moveq	#0,d3
+	* optimize: redraw just the ships, for that we need to
+	* know how many lives are left
+	move.b	ds_plyr_actv+_b_nships,d3
+	jeq		12f			| no more lives, no need to redraw
+	cmp.b	#7,d3
+	bcs.b	13f
+	move.b	#6,d3		| max 6 lives displayed
+13:
+	lsl.w	#4,d3		| 16 pixels per ship, max 6 ships
+	cmp.w	d3,d0
 	bcc.b	12f
-	* really redraw left part
+	* really redraw left part with the ships
 	movem.w	d4/d5/d7,-(a7)
 	moveq	#0x0014,d7
 	move.w	#12-1,d4
