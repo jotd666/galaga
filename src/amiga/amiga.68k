@@ -2215,10 +2215,15 @@ store_system:
 	jsr		_LVOSupervisor(a6)
 	move.l	d0,system_vbr
 1:
-	
+	pea		2f(pc)	
+2:
+	move.l	(a7)+,d0
+	cmp.l	#0x200000,d0
+	bcs.b	3f				| will crawl if no fastmem
 	move.w	AttnFlags(a6),d0
 	btst	#AFB_68020,d0
 	bne.b	1f
+3:
 	* no whdload, no 68020: assume slow
 	* if running on PiStorm, well, too bad use whdload
 	st.b	slow_machine
@@ -2331,10 +2336,27 @@ platform_init:
     move.w #0x0011,bplcon4(a5)     | ECS default for sprite colors
     move.w #0,fmode(a5)			
     move.w #0,bplcon1(a5)
-
 	move.w	#0,d0
     move.w d0,bpl1mod(a5)
     move.w d0,bpl2mod(a5)
+
+	* read twice to make sure!
+	move.w	0xdff07c,d0
+	cmp.b	#0xF8,d0		|  AGA (Lisa) is $f8.
+	bne.b	0f
+	move.w	0xdff07c,d0
+	cmp.b	#0xF8,d0		|  AGA (Lisa) is $f8.
+	bne.b	0f
+
+	* AGA version
+    move.w #3,fmode(a5)			
+	move.w	#-8,d0
+    move.w d0,bpl1mod(a5)
+    move.w d0,bpl2mod(a5)
+
+0:
+
+
 
 	* set other sprites to blank
 	move.l		#blank_sprite,d0
