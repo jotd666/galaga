@@ -1367,37 +1367,37 @@ l_hdl_flyng_bug_081e:
 	move.b	d0,(a0)                         	| [$083B: ld   (hl),a]
 	move.b	ds2_stg_chllg_rnd_attrib+0,d0   	| [$083C: ld   a,(ds2_stg_chllg_rnd_attrib + 0)] add "score" to bug_collsn[$0F] (why add?)
 	move.b	d0,d5                           	| [$083F: ld   h,a]
-	move.b	ds_bug_collsn_hit_mult_9290+0x0F,d0  	| [$0840: ld   a,(ds_bug_collsn_hit_mult_9290 + 0x0F)]
+	move.b	ds_bug_collsn_hit_mult_9290+0x0F,d0 | [$0840: ld   a,(ds_bug_collsn_hit_mult_9290 + 0x0F)]
 	add.b	d5,d0                            	| [$0843: add  a,h]
-	move.b	d0,ds_bug_collsn_hit_mult_9290+0x0F  	| [$0844: ld   (ds_bug_collsn_hit_mult_9290 + 0x0F),a] += b_9280[4 + 0] ... "score"
+	move.b	d0,ds_bug_collsn_hit_mult_9290+0x0F | [$0844: ld   (ds_bug_collsn_hit_mult_9290 + 0x0F),a] += b_9280[4 + 0] ... "score"
 	jra	l_07DF                             		| [$0847: jr   l_07DF]
 
 l_0849:
 * handle special cases of flying bugs, then jp   l_07DF
 
 * if (hit == captured ship)   (captured ship shot/destroyed)
-	move.b	d2,d0                           	| [ld   a,c] .... sprite.cclr.b1
-	cmp.b	#7,d0                            	| [cp   #7] color map 7 ... red captured ship
-	jne	l_0852                             		| [jr   nz,l_0852]
+	move.b	d2,d0                           	| [$0849: ld   a,c] .... sprite.cclr.b1
+	cmp.b	#7,d0                            	| [$084A: cp   #7] color map 7 ... red captured ship
+	jne	l_0852                             		| [$084C: jr   nz,l_0852]
 	move.w	#FIGHTER_KILLED_SND,d0
 	jbsr	osd_sound_start
-	move.b	#0xB8,d3                        	| [ld   d,#0xB8]
-	jra	l_08B0_set_bonus_sprite_code       		| [jr   l_08B0_set_bonus_sprite_code]
+	move.b	#0xB8,d3                        	| [$084E: ld   d,#0xB8]
+	jra	l_08B0_set_bonus_sprite_code       		| [$0850: jr   l_08B0_set_bonus_sprite_code]
 
 * else if ( hit bonus-bee or clone bonus-bee )
 l_0852:
-	move.b	ds_plyr_actv+_b_bbee_obj,d0     	| [ld   a,(ds_plyr_actv +_b_bbee_obj)] get object of parent bonus-bee
-	cmp.b	d6,d0                            	| [cp   l]
-	jeq	l_08B6                             		| [jp   z,l_08B6]
-	move.b	d6,d0                           	| [ld   a,l] check if this one is one of the clones ("transients" i.e.... $38 etc.)
-	and.b	#0x38,d0                         	| [and  #0x38]
-	cmp.b	#0x38,d0                         	| [cp   #0x38]
-	jeq	l_08B6                             		| [jp   z,l_08B6]
+	move.b	ds_plyr_actv+_b_bbee_obj,d0     	| [$0852: ld   a,(ds_plyr_actv +_b_bbee_obj)] get object of parent bonus-bee
+	cmp.b	d6,d0                            	| [$0855: cp   l]
+	jeq	l_08B6                             		| [$0856: jp   z,l_08B6]
+	move.b	d6,d0                           	| [$0859: ld   a,l] check if this one is one of the clones ("transients" i.e.... $38 etc.)
+	and.b	#0x38,d0                         	| [$085A: and  #0x38]
+	cmp.b	#0x38,d0                         	| [$085C: cp   #0x38]
+	jeq	l_08B6                             		| [$085E: jp   z,l_08B6]
 
 * else if ! blue-boss ... l_07DB
-	move.b	d2,d0                           	| [ld   a,c] .... sprite.cclr.b1
-	cmp.b	#0x01,d0                         	| [cp   #0x01] color map 1 ... blue boss hit once
-	jne	l_07DB                             		| [jp   nz,l_07DB]
+	move.b	d2,d0                           	| [$0861: ld   a,c] .... sprite.cclr.b1
+	cmp.b	#0x01,d0                         	| [$0862: cp   #0x01] color map 1 ... blue boss hit once
+	jne	l_07DB                             		| [$0864: jp   nz,l_07DB]
 
 * ... else ... handle blue boss
 * check for captured-fighter

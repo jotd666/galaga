@@ -6985,7 +6985,7 @@ l_2416:
 	jne	l_next_object_23EF                      | [djnz l_next_object_23EF] next object
 	jbsr	read_ixl_into_d0                    | [ld  a,ixl] b_bugs_actv_cnt
 	move.b	d0,b_bugs_actv_cnt              	| [ld  (b_bugs_actv_cnt),a]
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 * 09: diving
 case_diving_attack_or_loop_2422:
@@ -6997,7 +6997,6 @@ case_diving_attack_or_loop_2422:
 												| [$2426: inc  l]
 	move.b	(a0),d6                         	| [$2427: ld   l,(hl)] column position index
 	lea	ds_hpos_loc_offs_9900,a0            	| [$2428: ld   h,#>ds_hpos_loc_offs_9900] .b0
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$242A: ld   a,(hl)] X coordinate offset
 	exg		d0,d7                              	| [$242B: ex   af,af']
@@ -7051,7 +7050,6 @@ l_2451:
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	d0,(a0)                         	| [ld   (hl),a]
 	subq.b	#1,d4					            | [dec  e]
@@ -7067,7 +7065,6 @@ case_rotating_into_collective_245F:
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$2462: ld   a,(hl)]
 	lea	ds_sprite_code_8B00,a0              	| [$2465: ld   h,#>ds_sprite_code_8B00]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	and.b	#0x01,d0                         	| [$2463: and  #0x01] test flip X
 	jne	l_2473                             	    | [$2467: jr   nz,l_2473]
