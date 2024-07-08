@@ -1542,7 +1542,7 @@ for__pool_idx_08E4:
 	lea	b_8800,a0                      			| [$08F2: ld   h,#>b_8800]
 	add.w	d6,a0
 
-* 9 is diving, 7 is spawning, 3 (and 6) bomb?
+* 9 is diving, 7 is spawning, 3 (and 6) bomb?, 4 non-flying capturing boss
 * if (!(A == 3 || A == 7|| A == 9)) ...
 	move.b	(a0),d0                         	| [$08F4: ld   a,(hl)]
 	cmp.b	#3,d0                            	| [$08F5: cp   #3] status 3 is what?
@@ -1551,7 +1551,7 @@ for__pool_idx_08E4:
 	jeq	mctl_fltpn_dspchr                  		| [$08FB: jr   z,mctl_fltpn_dspchr]
 	cmp.b	#7,d0                            	| [$08FD: cp   #7] if 8800[L]==7 ... spawning (new stage)
 * ... then ...
-* status==4 ... shot a non-flying capturing boss (ship will soon go rogue and launch out)
+* status==4 ... shot a non-flying capturing boss (captured ship will soon go rogue and launch out)
 * HL==8830, *HL==04, 8831==40
 	jne	case_make_object_inactive_0e49     		| [$08FF: jp   nz,case_make_object_inactive_0e49] sets object state to $80
 
@@ -1616,10 +1616,10 @@ j_090E_flite_path_init:
 
 d_0920_jp_tbl:
 	.long case_make_object_inactive_0e49
-	.long case_0B16   | 1: attack elements that break formation to attack ship (level 3+)
-	.long case_0B46   | 2: returning to base: moths or bosses from top of screen, bees from bottom of loop-around.
-	.long case_0B4E   | 3: bee dive and starting loopback, or boss left position and starting dive down
-	.long case_heads_to_home_0aa0   | 4: attack wave element hits turning point and heads to home
+	.long case_0B16                              | 1: attack elements that break formation to attack ship (level 3+)
+	.long case_0B46                              | 2: returning to base: moths or bosses from top of screen, bees from bottom of loop-around.
+	.long case_0B4E                              | 3: bee dive and starting loopback, or boss left position and starting dive down
+	.long case_heads_to_home_0aa0                | 4: attack wave element hits turning point and heads to home
 	.long case_0BD1                              | 5: bee has flown under bottom of screen and now turns for home
 	.long case_0B5F                              | 6: bee has flown under bottom of screen and now turns for home
 	.long case_0B87                              | 7: tractor beam reaches ship
@@ -1627,13 +1627,13 @@ d_0920_jp_tbl:
 	.long case_0BA8                              | 9: one red moth left in "free flight mode"
 	.long case_0942                              | A: ?
 	.long case_capturing_boss_starts_dive_0A53   | B: capture boss diving
-	.long case_0A01   | C: diving elements have left formation and fired
-	.long case_097B   | D: bonus bee
-	.long case_0968   | E: diving attacks stop and bugs go home
-	.long case_0955   | F: attack wave
-	.long case_094E   | 10: one red moth left in "free flight mode"
+	.long case_0A01                              | C: diving elements have left formation and fired
+	.long case_097B                              | D: bonus bee
+	.long case_0968                              | E: diving attacks stop and bugs go home
+	.long case_0955                              | F: attack wave
+	.long case_094E                              | 10: one red moth left in "free flight mode"
 
-* when ... no idea
+* when ... no idea but called a lot!
 case_0942:  | 0x0A
 	move.b	(mq_object_id_10,a2),d4             | [ld   e,0x10(ix)] offset of object ...8800[E]
 	lea	b_8800,a1                      			| [ld   d,#>b_8800]
@@ -2716,7 +2716,7 @@ case_make_object_inactive_0e49: | 0x0
 	lea	ds_sprite_posn_9300,a0              	| [$0E50: ld   h,#>ds_sprite_posn_9300]
 	add.w	d6,a0
 	clr.b	(a0)                             	| [$0E52: ld   (hl),#0]
-	clr.b	(mq_state_13,a2)                        	| [$0E54: ld   0x13(ix),#0x00] make inactive
+	clr.b	(mq_state_13,a2)                    | [$0E54: ld   0x13(ix),#0x00] make inactive
 	jra	next__pool_idx_0dfb                     | [$0E58: jp   next__pool_idx_0dfb]
 * end f_bug_motion_runner_08d3
 

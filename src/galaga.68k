@@ -6099,59 +6099,58 @@ l_1FD4_update_two_ship:
 * arrays which share the same lsb... Annoying as hell to port!
 *-----------------------------------------------------------------------------
 f_boss_capturing_ship_killed_2000:
-	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d6	| [ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)] object locator for captured ship
-	                           	                | [ld   l,a]
-	lea	b_8800,a0                      	        | [ld   h,#>b_8800]
+	move.b	ds_plyr_actv+_b_bmbr_boss_cobj,d6	| [$2000: ld   a,(ds_plyr_actv +_b_bmbr_boss_cobj)] object locator for captured ship
+	                           	                | [$2003: ld   l,a]
+	lea	b_8800,a0                      	        | [$2004: ld   h,#>b_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	            | [and  a]
-	jne	l_20BF                             	    | [jp   nz,l_20BF] no idea how it could be nz...
+	move.b	(a0),d0                         	| [$2006: ld   a,(hl)]
+	                               	            | [$2007: and  a]
+	jne	l_20BF                             	    | [$2008: jp   nz,l_20BF] no idea how it could be nz...
 * if ( captr_status_1 == 0 )
-	move.b	ds5_928A_captr_status+0x01,d0   	| [ld   a,(ds5_928A_captr_status + 0x01)]
-	                               	            | [and  a]
-	jeq	l_20C7                             	    | [jp   z,l_20C7]
+	move.b	ds5_928A_captr_status+0x01,d0   	| [$200B: ld   a,(ds5_928A_captr_status + 0x01)]
+	                               	            | [$200E: and  a]
+	jeq	l_20C7                             	    | [$200F: jp   z,l_20C7]
 * else if ( captr_status_1 == 1 )
-	subq.b	#1,d0                           	| [dec  a]
-	jeq	l_20D1_update_ship_spin            	    | [jp   z,l_20D1_update_ship_spin]
+	subq.b	#1,d0                           	| [$2012: dec  a]
+	jeq	l_20D1_update_ship_spin            	    | [$2013: jp   z,l_20D1_update_ship_spin]
 * else ... status is 2 when stopped spinning and preparing for landing
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	lea	ds_sprite_posn_9300,a0              	| [$2016: ld   h,#>ds_sprite_posn_9300]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	cmp.b	#0x80,d0                         	| [cp   #0x80]
-	jeq	l_2026                             	    | [jr   z,l_2026]
-	jpl	l_2023                             	    | [jp   p,l_2023]
-	addq.b	#1,(a0)                         	| [inc  (hl)]
-	jra	l_205E                             	    | [jr   l_205E]
+	move.b	(a0),d0                         	| [$2018: ld   a,(hl)]
+	cmp.b	#0x80,d0                         	| [$2019: cp   #0x80]
+	jeq	l_2026                             	    | [$201B: jr   z,l_2026]
+	jpl	l_2023                             	    | [$201D: jp   p,l_2023]
+	addq.b	#1,(a0)                         	| [$2020: inc  (hl)]
+	jra	l_205E                             	    | [$2021: jr   l_205E]
 l_2023:
-	subq.b	#1,(a0)                         	| [dec  (hl)]
-	jra	l_205E                             	    | [jr   l_205E]
+	subq.b	#1,(a0)                         	| [$2023: dec  (hl)]
+	jra	l_205E                             	    | [$2024: jr   l_205E]
 
 l_2026:
-	addq.w	#1,a0                           	| [inc l]
+	addq.w	#1,a0                           	| [$2026: inc l]
 	addq.w	#1,d6                           	| [inc l] inc d6 too to follow offset
 	move.b	b_9215_flip_screen,d0           	| [ld   a,(b_9215_flip_screen)]
-	                               	| [and  a]
-	jne	l_204C                             	| [jr   nz,l_204C]
+	                               	            | [and  a]
+	jne	l_204C                             	    | [jr   nz,l_204C]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	cmp.b	#0x29,d0                         	| [cp   #0x29]
-	jne	l_2041                             	| [jr   nz,l_2041]
+	jne	l_2041                             	    | [jr   nz,l_2041]
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
-	move.b	(a0,d6.w),d0                         	| [ld   a,(hl)]
+	move.b	(a0,d6.w),d0                        | [ld   a,(hl)]
 	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	subq.b	#1,d0                           	| [dec  a]
-	jne	l_2041                             	| [jr   nz,l_2041]
+	jne	l_2041                             	    | [jr   nz,l_2041]
 l_203A:
 	move.b	#3,d0                           	| [ld   a,#3]
 	move.b	d0,ds5_928A_captr_status+0x01   	| [ld   (ds5_928A_captr_status + 0x01),a] 3 (ships are joined now)
-	jra	l_205E                             	| [jr   l_205E]
+	jra	l_205E                             	    | [jr   l_205E]
 
 l_2041:
 	addq.b	#1,(a0)                         	| [inc  (hl)]
-	jne	l_205E                             	| [jr   nz,l_205E]
+	jne	l_205E                             	    | [jr   nz,l_205E]
 l_2044:
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00] rescued ship is "landing"
 	and.w	#0xFF,d6
@@ -6159,11 +6158,11 @@ l_2044:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	eor.b	#0x01,d0                         	| [xor  #0x01]
 	move.b	d0,(a0)                         	| [ld   (hl),a]
-	jra	l_205E                             	| [jr   l_205E]
+	jra	l_205E                             	    | [jr   l_205E]
 l_204C:
 	move.b	(a0),d0                         	| [ld   a,(hl)] when?
 	cmp.b	#0x37,d0                         	| [cp   #0x37]
-	jne	l_2059                             	| [jr   nz,l_2059]
+	jne	l_2059                             	    | [jr   nz,l_2059]
 	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -6172,28 +6171,28 @@ l_204C:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	tst.b	d0                               	| [and  a]
-	jeq	l_203A                             	| [jr   z,l_203A]
+	jeq	l_203A                             	    | [jr   z,l_203A]
 l_2059:
 	subq.b	#1,(a0)                         	| [dec  (hl)]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	addq.b	#1,d0                           	| [inc  a]
-	jeq	l_2044                             	| [jr   z,l_2044]
+	jeq	l_2044                             	    | [jr   z,l_2044]
 l_205E:
 	lea	ds_sprite_code_8B00+0x62,a0         	| [ld   hl,#ds_sprite_code_8B00 + 0x62] ship (1) sprite code
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	subq.b	#6,d0                           	| [sub  #6] glyphs 6 & 7 are both for upright ship... (7 is "wings closed" if captured)
 	lea	ds_sprite_posn_9300+0x62,a0             | [ld   h,#>ds_sprite_posn_9300]
 	move.b	d0,d2                           	| [ld   c,a] ... so we have 0 or possibly 1 here.
-	jne	l_2075                             	| [jr   nz,l_2075]
+	jne	l_2075                             	    | [jr   nz,l_2075]
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	cmp.b	#0x71,d0                         	| [cp   #0x71]
-	jeq	l_2075                             	| [jr   z,l_2075]
-	jpl	l_2073                             	| [jp   p,l_2073]
+	jeq	l_2075                             	    | [jr   z,l_2075]
+	jpl	l_2073                             	    | [jp   p,l_2073]
 	addq.b	#1,(a0)                         	| [inc  (hl)] when?
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 l_2073:
 	subq.b	#1,(a0)                         	| [dec  (hl)]
-	rts                                    	| [ret]
+	rts                                    	    | [ret]
 
 * the rescued ship has been moved horizontally to column adjacent to main-ship
 l_2075:

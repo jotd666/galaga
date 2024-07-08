@@ -19,8 +19,8 @@ src_dir = os.path.join(this_dir,"../../src/amiga")
 outfile = os.path.join(src_dir,"sounds.68k")
 sndfile = os.path.join(src_dir,"sound_entries.68k")
 
-hq_sample_rate = 18000
-vhq_sample_rate = 22050
+hq_sample_rate = 18004
+vhq_sample_rate = 22030
 
 EMPTY_SND = "EMPTY_SND"
 sound_dict = {

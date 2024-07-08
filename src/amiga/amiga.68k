@@ -1022,8 +1022,6 @@ refresh_status_bar:
 	lsl.w	#4,d3		| 16 pixels per ship, max 6 ships
 	cmp.w	d3,d0
 	bcc.b	12f
-	lea		_custom,a5
-	WAIT_BLIT
 	* really redraw left part with the ships
 	movem.w	d4/d5/d7,-(a7)
 	moveq	#0x0014,d7
@@ -1032,8 +1030,6 @@ refresh_status_bar:
 	movem.w	(a7)+,d4/d5/d7
 	st.b	d4
 12:
-	lea		_custom,a5
-	WAIT_BLIT
 	* redraw right part if not already done
 	tst.b	d5
 	bne.b	11f
@@ -1060,6 +1056,8 @@ refresh_status_bar:
 	rts
 	
 redraw_2_rows:	
+	lea		_custom,a5
+	WAIT_BLIT
 	lea		bg_videoram,a5
 0:
 	move.b	(a5,d7.w),d0		| read video
@@ -1130,8 +1128,19 @@ update_hardware_sprites:
 	move.b	(TARGET_SPRITE_COLOR,a0),d3
 	and.b	#0x0F,d3
 
+	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d4
+	btst	#1,d4		| clear & test X mirror mode (flipx, but screen is rotated)
+	jeq		100f		
+	bset	#7,d3		| we'll use mirrored sprite data
+100:
+	btst	#0,d4
+	jeq		101f		
+	bset	#6,d3	| means we'll use flipped data
+101:
+	
+
 * < D2: sprite code & flags
-* < D3: sprite color (clut index)
+* < D3: sprite color (clut index) plus flags
 * > D6: allocated sprite index
 * (also updates host_sprites table)
 	* sprite active: allocate a sprite in host table
@@ -1192,19 +1201,19 @@ update_hardware_sprites:
 	* we'll add 0 to 12 to select the proper orientation depending on the attributes
 	moveq	#0,d3
 	move.b	(SPRITE_CLUT,a2),d3
-
-* we don't use flipping in the ship sprites
-*	bclr	#7,d3
-*	beq.b	26f
-*	addq	#8,a5		| y flip
-*26:
-*	tst.b	d5
-*	beq.b	27f
-*	addq	#4,a5		| x mirror
-*27:
+	
+	
+	bclr	#6,d3
+	beq.b	26f
+	addq	#8,a5		| y flip
+26:
+	bclr	#7,d3
+	beq.b	27f
+	addq	#4,a5		| x mirror
+27:
 	move.l	(a5),d4
 	jne		28f
-	* orientation not available for that sprite, can't happen
+	* orientation not available for that sprite
 	move.b	(SPRITE_CLUT,a2),d3
 	move.b	(SPRITE_CODE,a2),d2
 	move.w	#0x0F0,_custom+color
@@ -1956,15 +1965,20 @@ process_1_plane:
 * < D0: sprite X
 * < D1: sprite Y
 * < D2: sprite code & flags
-* < D3: sprite color (clut index, no flip information)
+* < D3: sprite color (clut index, plus encoded flip information on last 2 bits)
 * > D6: allocated sprite index
+* D4 and D5 are destroyed
 alloc_sprite:
 	* first pass: find a free sprite next to a sprite with
 	* same clut
 	lea		host_sprites(pc),a2
 	moveq	#0,d6
 0:
-	cmp.b	(SPRITE_CLUT,a2),d3
+	move.b	(SPRITE_CLUT,a2),d4
+	move.b	d3,d5
+	and.b	#0x0F,d4
+	and.b	#0x0F,d5
+	cmp.b	d4,d5
 	bne.b	10f
 	* allocated (else would be -1/invalid) + same clut
 	* check even/odd index
@@ -1984,7 +1998,7 @@ alloc_sprite:
 	move.b	d0,(a2)+		| X
 	move.b	d1,(a2)+		| Y
 	move.b	d2,(a2)+		| code
-	move.b	d3,(a2)+		| clut (no flip information)
+	move.b	d3,(a2)+		| clut (plus flip information)
 	rts						| done
 1:
 	* even: check if next entry is free
@@ -2828,18 +2842,23 @@ store_sprite_pos_16:
 	bsr		store_sprite_pos
 	move.l	(a7)+,a1
 	rts
-store_sprite_pos_32:
-	move.l	a1,-(a7)
-	lea		HW_SpriteYTable_32,a1
-	bsr		store_sprite_pos
-	move.l	(a7)+,a1
-	rts
+*store_sprite_pos_32:
+*	move.l	a1,-(a7)
+*	lea		HW_SpriteYTable_32,a1
+*	bsr		store_sprite_pos
+*	move.l	(a7)+,a1
+*	rts
 	
 * < d0.w: x
 * < d1.w: y
 * < a1: sprite pos table (depending on height)
 * > d0.L: control word
 store_sprite_pos:
+	tst.w	d1
+	jmi	0f
+	cmp.w	#Y_MAX,d1
+	jcc	0f
+
     move.l  a0,-(a7)
 
     lea	HW_SpriteXTable(pc),a0
@@ -2859,6 +2878,10 @@ store_sprite_pos:
 	.endc
     move.l  (a7)+,a0
     rts
+0:
+	moveq	#0,d0
+	rts
+	
 	
 HW_SpriteXTable:
 	.set	reptn,0
@@ -2871,7 +2894,7 @@ HW_SpriteXTable:
 	.macro DEF_HW_SPRITE_Y_TABLE	height
 HW_SpriteYTable_\height:
   .set	reptn,0
-  .rept 288
+  .rept Y_MAX
 	.set	ys,reptn+0x1c
 	.set	ye,ys+\height
     .byte  ys&255, 0, ye&255, ((ys>>6)&4)+((ye>>7)&2)
