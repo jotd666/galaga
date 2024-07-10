@@ -99,7 +99,7 @@
 *-----------------------------------------------------------------------------
 
 	.global		ds_8800_RAM0
-	.global		b_8800
+	.global		object_states_8800
 	.global		ds_8920
 	.global		ds_89E0
 	.global		b_8A00
@@ -227,7 +227,7 @@ ds_8800_RAM0:
 *  [ 0 + n ] : object state
 *  [ 1 + n ] : byte-offset (index) into bug_motion_que[]
 
-b_8800:
+object_states_8800:
        ds.b     0x40 * 2   | $40 elements
 
        ds.b     0x80       | unused
@@ -583,6 +583,7 @@ ds_9800_RAM2:
 
 
 * Pixel coordinates for object origin positions in the cylon fleet.
+* (logical coordinates, source used to update sprite registers)
 ds_hpos_spcoords_9800:
 
 * 10 column coordinates, 6 row coordinates, 16-bits per coordinate.

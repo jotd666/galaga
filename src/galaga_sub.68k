@@ -7,6 +7,7 @@
 *
 *.module cpu_sub
 
+	.include "galaga.inc"
 	.include "structs.inc"
 	.include	"m68k_macros.inc"
 	
@@ -757,7 +758,7 @@ l_064F:
 	                           	                | [$065D: dec  l]
 	move.b	#0x20,-(a0)                      	| [$065E: ld   (hl),#0x20] explosion tile
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
-	lea	b_8800,a0                            	| [$0660: ld   h,#>b_8800]
+	lea	object_states_8800,a0                            	| [$0660: ld   h,#>object_states_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#8,(a0)                         	| [$0662: ld   (hl),#8] .state, disposition from $80 to "exploding"
@@ -805,7 +806,7 @@ hitd_fghtr_notif_0681:
 	clr.b	d0                               	| [$0681: xor  a]
 	move.b	d0,b8_ship_collsn_detectd_status	| [$0682: ld   (b8_ship_collsn_detectd_status),a] 0 ... fighter hit notif
 
-	lea	b_8800,a0                      	        | [$0685: ld   h,#>b_8800]
+	lea	object_states_8800,a0                      	        | [$0685: ld   h,#>object_states_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$0687: ld   a,(hl)]
@@ -875,7 +876,7 @@ while_06B7:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$06B9: ld   a,(hl)]
-	lea	b_8800,a0                      	        | [$06BA: ld   h,#>b_8800]
+	lea	object_states_8800,a0                      	        | [$06BA: ld   h,#>object_states_8800]
 	add.w	d6,a0
 	or.b	(a0),d0                           	| [$06BC: or   (hl)]
 	rol.b	#1,d0                            	| [$06BD: rlca]
@@ -885,7 +886,6 @@ while_06B7:
 	cmp.b	#4,d0                            	| [$06C3: cp   #4]
 	jeq	l_06F0                             	    | [$06C5: jr   z,l_06F0]
 	lea	ds_sprite_posn_9300,a0              	| [$06C7: ld   h,#>ds_sprite_posn_9300]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$06C9: ld   a,(hl)]
 	                               	            | [$06CA: and  a]
@@ -1123,7 +1123,7 @@ l_076A_while_object:
 	lea	b_obj_collsn_notif_9200,a0     			| [$076A: ld   h,#>b_obj_collsn_notif_9200] is hit notification already in progress
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$076C: ld   a,(hl)]
-	lea	b_8800,a0                      			| [$076D: ld   h,#>b_8800]
+	lea	object_states_8800,a0                      			| [$076D: ld   h,#>object_states_8800]
 	add.w	d6,a0
 	or.b	(a0),d0                           	| [$076F: or   (hl)]
 	rol.b	#1,d0                            	| [$0770: rlca]
@@ -1258,7 +1258,7 @@ hitd_dspchr_07c1:
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
 	bra.b	l_07DB_1
 l_07DB:
-	COMPUTE_LSB_A0_D6	b_8800
+	COMPUTE_LSB_A0_D6	object_states_8800
 l_07DB_1:
 * set it up for elimination
 	lea	b_obj_collsn_notif_9200,a0     			| [ld   h,#>b_obj_collsn_notif_9200] = $81
@@ -1324,7 +1324,7 @@ l_0815_bomb_hit:
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	(a0)                             	| [ld   (hl),#0]
-	lea	b_8800,a0                      	| [ld   h,#>b_8800] sprt_mctl_objs[L].state
+	lea	object_states_8800,a0                      	| [ld   h,#>object_states_8800] sprt_mctl_objs[L].state
 	add.w	d6,a0
 	move.b	#0x80,(a0)                      	| [ld   (hl),#0x80] disposition = INACTIVE
 
@@ -1333,7 +1333,7 @@ l_0815_bomb_hit:
 * Handle flying bug collision (bullet or ship). Not stationary bugs.
 l_hdl_flyng_bug_081e:
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
-	lea	b_8800,a0                      			| [$081E: ld   h,#>b_8800]
+	lea	object_states_8800,a0                      			| [$081E: ld   h,#>object_states_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 
@@ -1406,7 +1406,7 @@ l_0852:
 	move.b	d6,d0                           	| [ld   a,l]
 	and.b	#0x07,d0                         	| [and  #0x07] mask off to reference the captured ship
 	move.b	d0,d4                           	| [ld   e,a]
-	lea	b_8800,a1                      			| [ld   d,#>b_8800]
+	lea	object_states_8800,a1                      			| [ld   d,#>object_states_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	move.b	(a1),d0                         	| [ld   a,(de)]
@@ -1425,7 +1425,7 @@ l_0852:
 	add.w	d4,a1
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,(a1)                         	| [ld   (de),a]
-	COMPUTE_LSB_A0_D6	b_8800
+	COMPUTE_LSB_A0_D6	object_states_8800
 	lea	ds_sprite_code_8B00,a0              	| [ld   h,#>ds_sprite_code_8B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -1434,7 +1434,7 @@ l_0852:
 	subq.b	#1,d6                           	| [dec  l] [a0 coherence]
 	move.b	d6,d0                           	| [ld   a,l]
 	move.b	d0,ds_plyr_actv+_b_bmbr_boss_cobj	| [ld   (ds_plyr_actv +_b_bmbr_boss_cobj),a] updated object locator token of rescued ship   (token was 1)
-	lea	b_8800,a0                      			| [ld   h,#>b_8800] the captured ship object becomes inactive (0)
+	lea	object_states_8800,a0                      			| [ld   h,#>object_states_8800] the captured ship object becomes inactive (0)
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	clr.b	d0                               	| [xor  a]
@@ -1531,15 +1531,16 @@ f_bug_motion_runner_08d3:
 for__pool_idx_08E4:
 	btst.b	#0,(mq_state_13,a2)                 | [$08E4: bit  0,0x13(ix)] check for activated state
 	jeq	next__pool_idx_0dfb                     | [$08E8: jp   z,next__pool_idx_0dfb]
-	* uncomment to enable just 1 bug per wave
-	*cmp.l	#ds_bug_motion_que_9100,a2
-	*bne		next__pool_idx_0dfb
+	.ifne	OPT_ONLY_ONE_BUG_PER_WAVE
+	cmp.l	#ds_bug_motion_que_9100,a2
+	bne		next__pool_idx_0dfb
+	.endif
 	
 	lea	b_bugs_flying_cnt,a0           			| [$08EB: ld   hl,#b_bugs_flying_cnt] +=1
 	addq.b	#1,(a0)                         	| [$08EE: inc  (hl)]
 	moveq	#0,d6
 	move.b	(mq_object_id_10,a2),d6             | [$08EF: ld   l,0x10(ix)] object identifier...8800[L]
-	lea	b_8800,a0                      			| [$08F2: ld   h,#>b_8800]
+	lea	object_states_8800,a0                      			| [$08F2: ld   h,#>object_states_8800]
 	add.w	d6,a0
 
 * 9 is diving, 7 is spawning, 3 (and 6) bomb?, 4 non-flying capturing boss
@@ -1636,7 +1637,7 @@ d_0920_jp_tbl:
 * when ... no idea but called a lot!
 case_0942:  | 0x0A
 	move.b	(mq_object_id_10,a2),d4             | [ld   e,0x10(ix)] offset of object ...8800[E]
-	lea	b_8800,a1                      			| [ld   d,#>b_8800]
+	lea	object_states_8800,a1                      			| [ld   d,#>object_states_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	move.b	#0x03,d0                        	| [ld   a,#0x03] set to state 3
@@ -1692,7 +1693,7 @@ case_097B:  | 0x0D
 	move.l	a0,-(sp)                        	| [push hl] ptr to data table
 	move.b	(mq_object_id_10,a2),d4             | [ld   e,0x10(ix)] object offset of bee that is to be split
 * find an inactive ($80) yellow alien or getout.
-	lea	b_8800+0x38,a0                 	        | [ld   hl,#b_8800 + 0x38]
+	lea	object_states_8800+0x38,a0                 	        | [ld   hl,#object_states_8800 + 0x38]
 	move.b	#4,d1                           	| [ld   b,#4]
 l_0984:
 	move.b	(a0),d0                         	| [ld   a,(hl)]
@@ -1704,7 +1705,7 @@ l_0984:
 	jra	l_09FA_bonusbee_creat_fail         	    | [jp   l_09FA_bonusbee_creat_fail]
 
 l_098F_do_split_off_bonus_bee:
-	COMPUTE_LSB_A0_D6	b_8800
+	COMPUTE_LSB_A0_D6	object_states_8800
 	lea	ds_sprite_code_8B00,a0              	| [$098F: ld   h,#>ds_sprite_code_8B00]
 	and.w	#0xFF,d6
 	add.w	d6,a0
@@ -1773,7 +1774,7 @@ l_09AE_doit:
 	exg		d0,d7                              	| [$09E8: ex   af,af'] index of spawning yellow alien
 	move.b	d0,(mq_object_id_10,a3)            	| [$09E9: ld   0x10(iy),a]
 	move.b	d0,d4                           	| [$09EC: ld   e,a]
-	lea	b_8800,a1                      	        | [$09ED: ld   d,#>b_8800]
+	lea	object_states_8800,a1                      	        | [$09ED: ld   d,#>object_states_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	move.b	#9,d0                           	| [$09EF: ld   a,#9] 09: diving -> 8800[i]
@@ -1901,7 +1902,7 @@ l_0A6C:
 case_heads_to_home_0aa0:  | 0x04
 	move.l	a0,-(sp)                        	| [$0AA0: $0AA0: push hl] ptr to data table
 	move.b	(mq_object_id_10,a2),d6             | [$0AA1: $0AA1: ld   l,0x10(ix)] update object disposition ... i.e. 8800[L]
-	lea	b_8800,a0                      	        | [$0AA4: $0AA4: ld   h,#>b_8800]
+	lea	object_states_8800,a0                      	        | [$0AA4: $0AA4: ld   h,#>object_states_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#9,(a0)                         	| [$0AA6: ld   (hl),#9] disposition = 9: diving/homing (currently 3)
@@ -2444,7 +2445,7 @@ l_0D03_flite_pth_posn_set:
 	move.b	(mq_x_03,a2),d3                    	| [$0D09: ld   d,0x03(ix)] bits<1:6> of x pixel ... could load directly to A
 * set Cy from .b02<7>
 	move.b	#0x7F,d0                        	| [$0D0C: ld   a,#0x7F]
-	cmp.b	(mq_fine_x_02,a2),d0                     	| [$0D0E: cp   0x02(ix)]
+	cmp.b	(mq_fine_x_02,a2),d0                | [$0D0E: cp   0x02(ix)]
 	SET_X_FROM_C
 	move.b	d3,d0                           	| [$0D11: ld   a,d] (ix)0x03
 	roxl.b	#1,d0                           	| [$0D12: rla] rotate Cy into A<0> (.b02<7>)
@@ -2463,12 +2464,12 @@ l_0D23:
 	move.b	(mq_y_01,a2),d1                    	| [$0D25: ld   b,0x01(ix)]
 * set Cy from .b00<7>
 	move.b	#0x7F,d0                        	| [$0D28: ld   a,#0x7F]
-	cmp.b	(a2),d0                     		| [$0D2A: cp   0x00(ix)]
+	cmp.b	(mq_fine_y_00,a2),d0                | [$0D2A: cp   0x00(ix)]
 	SET_X_FROM_C
 	roxl.b	#1,d4                           	| [$0D2D: rl   e] rotate Cy into E<0>
 	move.b	d1,d0                           	| [$0D2F: ld   a,b] (ix)0x01
-*	btst.b	#0,d2                           	| [$0D30: bit  0,c] test flip screen
-*	jne	l_0D38                             		| [$0D32: jr   nz,l_0D38]
+												| [$0D30: bit  0,c] test flip screen
+												| [$0D32: jr   nz,l_0D38]
 	subq.b	#1,d4                           	| [$0D37: dec  e] compliment bit-0 of 9-bit integer portion (done before add)
 	add.b	#0x4F,d0          					| [$0D34: add  a,#(<(-0x0160 - 0x02))>>1] not flipped ... lsb of result, right-shift 1
 	not.b	d0                               	| [$0D36: cpl]
@@ -2526,7 +2527,7 @@ l_0D50:
 
 * check for available bomb ... bombs are rendered inactive at l_0815
 	move.l	a0,a1                          		| [ex   de,hl] &sprite.ctrl[bmbr].b1 to DE ...
-	lea	b_8800+0x68,a0                 			| [ld   hl,#b_8800 + 0x68] bomb0 object/index
+	lea	object_states_8800+0x68,a0                 			| [ld   hl,#object_states_8800 + 0x68] bomb0 object/index
 	move.b	#8,d1                           	| [ld   b,#8] check 8 positions
 l_0D82:
 	move.b	(a0),d0                         	| [ld   a,(hl)] _objs[BOMB0].state
@@ -2540,7 +2541,7 @@ l_0D82:
 l_0D8D_got_a_bullet:
 	move.b	#6,(a0)                         	| [ld   (hl),#6] _objs[BOMB0].state = BOMB
 
-	COMPUTE_LSB_A0_D6	b_8800
+	COMPUTE_LSB_A0_D6	object_states_8800
 	move.w	d6,-(sp)                        	| [push hl] &_objs[BOMB0 + n]
 	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
@@ -2661,10 +2662,10 @@ next__pool_idx_0dfb:
 l_0E08_imhome:
 	                                         	| [$0E08: xor  a]
 	bclr.b	#0,(mq_state_13,a2)                 | [$0E09: res  0,0x13(ix)] mark the flying structure as inactive
-	clr.b	(a2)                    	        | [$0E0D: ld   0x00(ix),a] 0
-	clr.b	(mq_fine_x_02,a2)                    	    | [$0E10: ld   0x02(ix),a] 0
-	lea	b_8800,a0                      			| [$0E13: ld   h,#>b_8800]
-	move.b	(mq_object_id_10,a2),d6                    	| [$0E15: ld   l,0x10(ix)] offset of object ...8800[L]
+	clr.b	(mq_fine_y_00,a2)        	        | [$0E0D: ld   0x00(ix),a] 0
+	clr.b	(mq_fine_x_02,a2)                   | [$0E10: ld   0x02(ix),a] 0
+	lea	object_states_8800,a0                   | [$0E13: ld   h,#>object_states_8800]
+	move.b	(mq_object_id_10,a2),d6             | [$0E15: ld   l,0x10(ix)] offset of object ...8800[L]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#2,(a0)                         	| [$0E18: ld   (hl),#2] disposition = 02: rotating back into position in the collective
@@ -2694,6 +2695,7 @@ l_0E08_imhome:
 
 l_0E3A:
 * these could be off by one if not already equal
+	*jbsr	osd_break
 	move.b	(mq_home_position_y_06,a2),d0       | [$0E3A: ld   a,0x06(ix)] ->(ix)0x01 ... origin home position y (bits 15:8)
 	move.b	d0,(mq_y_01,a2)                    	| [$0E3D: ld   0x01(ix),a] (ix)0x06
 	move.b	(mq_home_position_x_07,a2),d0       | [$0E40: ld   a,0x07(ix)] ->(ix)0x03
@@ -2708,7 +2710,7 @@ l_0E3A:
 * a bonus bee (e.g. 883A) flying off screen. Sprite-Code 5B (scorpion), color 05, object status==9
 * also, if status==4 (capturing boss shot while in home-position, freeing a rogue ship)
 case_make_object_inactive_0e49: | 0x0
-	lea	b_8800,a0                      			| [$0E49: ld   h,#>b_8800]
+	lea	object_states_8800,a0                      			| [$0E49: ld   h,#>object_states_8800]
 	move.b	(mq_object_id_10,a2),d6             | [$0E4B: ld   l,0x10(ix)] object offset ...8800[L]
 	and.w	#0xFF,d6
 	add.w	d6,a0
