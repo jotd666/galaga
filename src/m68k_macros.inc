@@ -166,6 +166,7 @@
 	.endm
 
 
+	* to trace at some virtual PCs, insert this macro
 	
 	.ifndef	RELEASE
 	.macro	LOG_REGS	z80pc

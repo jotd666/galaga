@@ -1,5 +1,8 @@
 - swarm is 16 pixels too high!! jumps y-16 after reaching home! 
   E3A:sub set proper value, seems adjusted in 0D24:sub, cpu trace 0D24:sub
+  in case_rotating_into_collective_245F offset is already wrong
+  home position set in sub 0B07
+  
 - kill captured ship makes the swarm bug: some bees stay in the air: 8800 table probably wrongly updated
 - kill boss that captured ship: ship remains static and doesn't attack / flee: 
   move.b	#9,(a0)+                         	| [$10B9 should make rogue ship attack but does not, and ship is now stuck

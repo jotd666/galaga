@@ -171,7 +171,7 @@
 	.global		ds_cpu0_task_resrv
 	.global		ds_hpos_loc_offs
 	.global		ds_hpos_loc_orig_9900
-	.global		ds_hpos_loc_t
+	.global		ds_hpos_loc_orig_9900
 	.global		ds10_9920
 	.global		ds_mchn_cfg
 	.global		w_mchn_cfg_bonus_9980
@@ -615,9 +615,7 @@ ds_hpos_loc_offs_9900:
 
 * odd-bytes: copy of origin data for access in CPU1 address space (i.e. bits <8:1> of precision coordinate)
 ds_hpos_loc_orig_9900:
-
 * struct for home position locations
-ds_hpos_loc_t:
        ds.b     0x20
 
 

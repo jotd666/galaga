@@ -75,6 +75,7 @@ with open(r"K:\Emulation\MAME\galaga.tr") as f:
                 regstr = ["{}={}".format(reg.upper(),regs[reg]) for reg in regslist if reg not in avoid_regs]
                 rest = ", ".join(regstr)
                 lst.append(f"{pc}: {rest}\n")
+
 if sorted_cmp:
     lst.sort()
 with open("mame.tr","w") as fw:

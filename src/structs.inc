@@ -73,3 +73,8 @@ mq_object_id_10 = 0x10
 mq_x_offset_11 = 0x11
 mq_y_offset_12 = 0x12
 mq_state_13 = 0x13
+
+* states
+
+ST_ROTATING_BACK_TO_COLLECTIVE = 2
+

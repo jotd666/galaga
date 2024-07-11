@@ -1911,16 +1911,16 @@ case_heads_to_home_0aa0:  | 0x04
 	move.b	(a0)+,d2                         	| [$0AAA: ld   c,(hl)] row index
 	                           	                | [$0AAB: inc  l]
 	move.b	(a0),d6                         	| [$0AAC: ld   l,(hl)] column index
-	lea	ds_hpos_loc_t,a0               	        | [$0AAD: ld   h,#>ds_hpos_loc_t]
+	lea	ds_hpos_loc_orig_9900,a0               	| [$0AAD: ld   h,#>ds_hpos_loc_orig_9900]
 	add.w	d6,a0
 	move.b	(a0)+,d1                         	| [$0AAF: ld   b,(hl)] x offset
 	                           	                | [$0AB0: inc  l]
 	move.b	(a0),d4                         	| [$0AB1: ld   e,(hl)] x coordinate (ds_hpos_loc_orig_9900)
 	move.b	d2,d6                           	| [$0AB2: ld   l,c] row position index
-	lea	ds_hpos_loc_t,a0               	        | [$0AB3: ld   h,#>ds_hpos_loc_t]
+	lea	ds_hpos_loc_orig_9900,a0               	| [$0AB3: ld   h,#>ds_hpos_loc_orig_9900]
 	add.w	d6,a0
 	move.b	(a0)+,d2                         	| [$0AB3: ld   c,(hl)] y offset
-	                          	                | [$0AB4: inc  l]
+	addq.b	#1,d6              	                | [$0AB4: inc  l] (not really useful)
 	move.b	(a0),d3                         	| [$0AB5: ld   d,(hl)] y coordinate (ds_hpos_loc_orig_9900)
 	lsr.b	#1,d4                            	| [$0AB6: srl  e] x coordinate
 	movem.w	d3/d4,-(sp)                    		| [$0AB8: push de] y coord, x coord >> 1
@@ -2221,7 +2221,7 @@ l_0C3E:
 
 * load DE with local copy of rotation value and go ahead and update pool slot
 l_0C46:
-	move.b	(mq_angle_increment_0C,a2),d1               | [$0C46: ld   b,0x0C(ix)] add to (ix)0x04
+	move.b	(mq_angle_increment_0C,a2),d1       | [$0C46: ld   b,0x0C(ix)] add to (ix)0x04
 	move.b	(mq_angle_lsb_04,a2),d0             | [$0C49: ld   a,0x04(ix)]
 	move.b	d0,d4                           	| [$0C4C: ld   e,a] need this later ...
 	add.b	d1,d0                            	| [$0C4D: add  a,b] need this below for rra ...
@@ -2305,7 +2305,7 @@ l_0CA4:
 
 l_0CA7:
 	tst.b	d0                                	| [$0CA7: and  a] if zero, start of tractor beam and we can skip this crap
-	jeq	l_0D03_flite_pth_posn_set          		| [$0CA8: jp   z,l_0D03_flite_pth_posn_set] 2 "parameters": HL, and E (e saved from (ix)0x04)
+	jeq	l_flite_pth_posn_set_0D03          		| [$0CA8: jp   z,l_flite_pth_posn_set_0D03] 2 "parameters": HL, and E (e saved from (ix)0x04)
 
 * compute increment and update selected coordinate
 
@@ -2350,14 +2350,14 @@ l_0CC7:
 	move.b	d0,d2                           	| [$0CC7: ld   c,a] from 0x0A(ix) or 0x0B(ix)
 	asr.b	#1,d2                            	| [$0CC8: sra  c] sign extend, "bit-8" into Cy
 	jcc	l_0CD0                             		| [$0CCA: jr   nc,l_0CD0]
-	move.b	(a0),d0                         	| [$0CCC: ld   a,(hl)] b00 or b02, depends on "jr   c,l_0CBF"
+	move.b	(mq_fine_y_00,a0),d0                         	| [$0CCC: ld   a,(hl)] b00 or b02, depends on "jr   c,l_0CBF"
 	add.b	#0x80,d0                         	| [$0CCD: add  a,#0x80] add carry-out from sra
-	move.b	d0,(a0)                         	| [$0CCF: ld   (hl),a]
+	move.b	d0,(mq_fine_y_00,a0)                         	| [$0CCF: ld   (hl),a]
 l_0CD0:                         	
 												| [$0CD0: inc  l]
-	move.b	(1,a0),d0                         	| [$0CD1: ld   a,(hl)] b01 or b03, depends on "jr   c,l_0CBF"
+	move.b	(mq_y_01,a0),d0                     | [$0CD1: ld   a,(hl)] b01 or b03, depends on "jr   c,l_0CBF"
 	addx.b	d2,d0								| [$0CD2: adc  a,c]                                   ; add with carry-out from addition into lsb
-	move.b	d0,(1,a0)                         	| [$0CD3: ld   (hl),a]
+	move.b	d0,(mq_y_01,a0)                     | [$0CD3: ld   (hl),a]
 
 
 * stash the pointer to .b0/.b2 in DE (previous DE into HL but no longer used)
@@ -2425,15 +2425,15 @@ l_0CFA:
 	move.b	d4,d0                           | [$0CFB: ld   a,e] lsb of mul result
 	addq.b	#1,d6							| [$0CFE: inc  l] not really useful, done before...
 	add.b	(a0),d0                         | [$0CFC: add  a,(hl)]
-	move.b	d0,(a0)+                        | [$0CFD: ld   (hl),a]  .b00 or .b02
+	move.b	d0,(a0)+                        | [$0CFD: ld   (hl),a]  .b00 or .b02 (fine X or fine Y)
 	move.b	d3,d0                           | [$0CFF: ld   a,d] msb of mul result
 	move.b	(a0),d7
-	addx.b	d7,d0							| [$0D00: adc  a,(hl)] .b01 or .b03
+	addx.b	d7,d0							| [$0D00: adc  a,(hl)] .b01 or .b03 (X or Y)
 	move.b	d0,(a0)                         | [$0D01: ld   (hl),a]
 	move.l	(sp)+,a0                        | [$0D02: pop  hl] &mrw_sprite.ctrl[L].b1
 
 * almost done ... update the sprite x/y positions
-l_0D03_flite_pth_posn_set:
+l_flite_pth_posn_set_0D03:
 *	move.b	b_9215_flip_screen,d0           	| [$0D03: ld   a,(b_9215_flip_screen)]
 *	move.b	d0,d2                           	| [$0D06: ld   c,a]
 	moveq	#0,d2
@@ -2668,7 +2668,7 @@ l_0E08_imhome:
 	move.b	(mq_object_id_10,a2),d6             | [$0E15: ld   l,0x10(ix)] offset of object ...8800[L]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#2,(a0)                         	| [$0E18: ld   (hl),#2] disposition = 02: rotating back into position in the collective
+	move.b	#ST_ROTATING_BACK_TO_COLLECTIVE,(a0)   | [$0E18: ld   (hl),#2] disposition = 02: rotating back into position in the collective
 	lea	ds_sprite_code_8B00,a0              	| [$0E1A: ld   h,#>ds_sprite_code_8B00]
 	add.w	d6,a0
 												| [$0E1C: inc  l]
@@ -2695,7 +2695,6 @@ l_0E08_imhome:
 
 l_0E3A:
 * these could be off by one if not already equal
-	*jbsr	osd_break
 	move.b	(mq_home_position_y_06,a2),d0       | [$0E3A: ld   a,0x06(ix)] ->(ix)0x01 ... origin home position y (bits 15:8)
 	move.b	d0,(mq_y_01,a2)                    	| [$0E3D: ld   0x01(ix),a] (ix)0x06
 	move.b	(mq_home_position_x_07,a2),d0       | [$0E40: ld   a,0x07(ix)] ->(ix)0x03
@@ -2704,7 +2703,7 @@ l_0E3A:
 	COMPUTE_LSB_A0_D6 ds_sprite_code_8B00
 	lea		ds_sprite_ctrl_9B00,a0
 	add.w	d6,a0
-	jra	l_0D03_flite_pth_posn_set          	    | [$0E46: jp   l_0D03_flite_pth_posn_set]
+	jra	l_flite_pth_posn_set_0D03          	    | [$0E46: jp   l_flite_pth_posn_set_0D03]
 
 * training mode, make previous diving boss disabled
 * a bonus bee (e.g. 883A) flying off screen. Sprite-Code 5B (scorpion), color 05, object status==9

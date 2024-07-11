@@ -3155,7 +3155,7 @@ c_12C3:
 * init formation location tracking structure: relative (offset) initialize to 0
 * and origin coordinate bits<8:1> from data (copy of origin coordinate from
 * CPU0 data as it would be outside of address space of CPU1)
-	lea	ds_hpos_loc_t,a0               	| [ld   hl,#ds_hpos_loc_t] init home_posn_loc[]
+	lea	ds_hpos_loc_orig_9900,a0               	| [ld   hl,#ds_hpos_loc_orig_9900] init home_posn_loc[]
 	lea	db_fmtn_hpos_orig,a1           	| [ld   de,#db_fmtn_hpos_orig]
 	move.w	#16-1,d1                    | [ld   b,#16] table size
 l_12D1:
@@ -6955,7 +6955,7 @@ l_next_object_23EF:
 	move.l	(a0,d0.w),a0        | [$23FD: ld   l,a]
 	jra	(a0)                    | [$23FE: jp   (hl)]
 
-* each case is entered with D4 set to current object index, A1 points to object
+* each case is entered with D4 set to current object index, A1 points to object (offset 0 = state)
 
 d_23FF_jp_tbl:
 	.long case_inactive_2416                    | 80: inactive object (already tested for 0x80 so this is a placeholder)
@@ -7009,7 +7009,7 @@ case_diving_attack_or_loop_2422:
 	addq.w	#1,a1                           	| [$242E: inc  e]
 	addq.b	#1,d4								| [inc  e] [a1 coherence]
 	move.b	(a1),d0                         	| [$242F: ld   a,(de)]
-	add.b	#0x11,d0                         	| [$2430: add  a,#0x11] 0x11(ix)
+	add.b	#0x11,d0                         	| [$2430: add  a,#0x11]
 	move.b	d0,d6                           	| [$2432: ld   l,a]
 	lea	ds_bug_motion_que_9100,a0           	| [$2433: ld   h,#>ds_bug_motion_que_9100]
 	and.w	#0xFF,d6
@@ -7123,7 +7123,6 @@ l_249B:
 	                           	                | [$249E: inc  l]
 	move.b	(a0),d6                         	| [$249F: ld   l,(hl)] column position index
 	lea	ds_hpos_spcoords_9800,a0            	| [$24A0: ld   h,#>ds_hpos_spcoords_9800] L == offset to MSB
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$24A2: ld   a,(hl)]
 	lea	ds_sprite_posn_9300,a1              	| [$24A3: ld   d,#>ds_sprite_posn_9300]
@@ -7312,54 +7311,52 @@ case_show_score_2535:
 
 * 3 or 6: terminate cylons or bombs that have gone past the sides or bottom of screen
 case_state_progression_254D:
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300] read directly from SFRs (not buffer RAM)
-	move.b	d4,d6                           	| [ld   l,e] object offset
+	lea	ds_sprite_posn_9300,a0              	| [$254D: ld   h,#>ds_sprite_posn_9300] read directly from SFRs (not buffer RAM)
+	move.b	d4,d6                           	| [$254F: ld   l,e] object offset
 	and.w	#0xFF,d6
-	bset.b	#7,d6                           	| [set  7,l] +=$80 ... set pointer to read directly from the SFR
+	bset.b	#7,d6                           	| [$2550: set  7,l] +=$80 ... set pointer to read directly from the SFR
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	cmp.b	#0xF4,d0                         	| [cp   #0xF4]
+	move.b	(a0),d0                         	| [$2552: ld   a,(hl)]
+	cmp.b	#0xF4,d0                         	| [$2553: cp   #0xF4]
 * if (posn.x > $F4) ... skip check Y
-	jcc	l_2571                             	| [jr   nc,l_2571]
-	addq.w	#1,a0                           	| [inc  l]
+	jcc	l_2571                             	    | [$2555: jr   nc,l_2571]
+	addq.w	#1,a0                           	| [$2557: inc  l]
 	addq.b	#1,d6                           	| [inc  l] [a0 coherence]
-	move.b	(a0),d2                         	| [ld   c,(hl)] sprite_posn.y<0:7>
-	lea	ds_sprite_ctrl_9B00,a0              	| [ld   h,#>ds_sprite_ctrl_9B00]
-	and.w	#0xFF,d6
+	move.b	(a0),d2                         	| [$2558: ld   c,(hl)] sprite_posn.y<0:7>
+	lea	ds_sprite_ctrl_9B00,a0              	| [$2559: ld   h,#>ds_sprite_ctrl_9B00]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)] sprite_posn.y<8>
-	subq.w	#1,a0                           	| [dec  l]
+	move.b	(a0),d0                         	| [$255B: ld   a,(hl)] sprite_posn.y<8>
+	subq.w	#1,a0                           	| [$255C: dec  l]
 	subq.b	#1,d6                           	| [dec  l] [a0 coherence]
-	ror.b	#1,d0                            	| [rrca] sprite_posn.y<8> into Cy
+	ror.b	#1,d0                            	| [$255D: rrca] sprite_posn.y<8> into Cy
 	SET_X_FROM_C
-	move.b	d2,d0                           	| [ld   a,c]
-	roxr.b	#1,d0                           	| [rra] sprite_posn.y<8:1> in A
-	cmp.b	#22>>1,d0			| cp   #22 >> 1                              | 0x0B
-	jcs	l_2571                             	| [jr   c,l_2571]
-	cmp.b	#330>>1,d0				| cp   #330 >> 1                             | 0xA5
-	jcc	l_2571                             	| [jr   nc,l_2571]
+	move.b	d2,d0                           	| [$255E: ld   a,c]
+	roxr.b	#1,d0                           	| [$255F: rra] sprite_posn.y<8:1> in A
+	cmp.b	#0x0B,d0			                | [$2560: cp   #22 >> 1]
+	jcs	l_2571                             	    | [$2562: jr   c,l_2571]
+	cmp.b	#0xA5,d0				            | [$2564: cp   #330 >> 1]
+	jcc	l_2571                             	    | [$2566: jr   nc,l_2571]
 
 * in range ... if not a bomb then go increment count
-	move.b	(a1),d0                         	| [ld   a,(de)] object_states_8800[e].obj_status
-	cmp.b	#6,d0                            	| [cp   #6]
-	jne	l_2414_inc_active                  	    | [jp   nz,l_2414_inc_active] if not a bomb
-	jra	l_2416                             	    | [jp   l_2416] it's a bomb
+	move.b	(a1),d0                         	| [$2568: ld   a,(de)] object_states_8800[e].obj_status
+	cmp.b	#6,d0                            	| [$2569: cp   #6]
+	jne	l_2414_inc_active                  	    | [$256B: jp   nz,l_2414_inc_active] if not a bomb
+	jra	l_2416                             	    | [$256E: jp   l_2416] it's a bomb
 
 l_2571:
-	sub.b	#0x80,d6                 	        | [res  7,l]  subs 0x80 to l
-	sub.w	#0x80,a0                 	        | [res  7,l]
-	move.b	(a1),d0                         	| [ld   a,(de)]
-	cmp.b	#3,d0                            	| [cp   #3] check if flying bug object
-	jeq	l_2582_kill_bug_q_slot             	    | [jr   z,l_2582_kill_bug_q_slot] if bug object
+	bclr	#7,d6                 	            | [$2571: res  7,l]  subs 0x80 to l
+	move.b	(a1),d0                         	| [$2573: ld   a,(de)] state
+	cmp.b	#3,d0                            	| [$2574: cp   #3] check if flying bug object
+	jeq	l_2582_kill_bug_q_slot             	    | [$2576: jr   z,l_2582_kill_bug_q_slot] if bug object
 
 l_2578_mk_obj_inactive:
-	move.b	#0x80,d0                        	| [ld   a,#0x80]
-	move.b	d0,(a1)                         	| [ld   (de),a]
-	lea	ds_sprite_posn_9300,a0              	| [ld   h,#>ds_sprite_posn_9300]
+	move.b	#0x80,d0                        	| [$2578: ld   a,#0x80]
+	move.b	d0,(a1)                         	| [$257A: ld   (de),a]
+	lea	ds_sprite_posn_9300,a0              	| [$257B: ld   h,#>ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	clr.b	(a0)                             	| [ld   (hl),#0]
-	jra	l_2416                             	    | [jp   l_2416]
+	clr.b	(a0)                             	| [$257D: ld   (hl),#0]
+	jra	l_2416                             	    | [$257F: jp   l_2416]
 
 l_2582_kill_bug_q_slot:
 							                    | [$2582: inc  e]
@@ -10782,9 +10779,9 @@ d_TxtScore:
 *
 *  organization of row and column pixel position LUTs (fmtn_hpos):
 *
-*                                       	|<-------------- COLUMNS --------------------->|<---------- ROWS ---------->|
+*         |<-------------- COLUMNS --------------------->|<---------- ROWS ---------->|
 *
-*      00   02   04   06   08   0A   0C   0E   10   12   14   16   18   1A   1C   1E
+*         00   02   04   06   08   0A   0C   0E   10   12   14   16   18   1A   1C   1E
 *
 *-----------------------------------------------------------------------------
 db_obj_home_posn_rc:
@@ -11205,6 +11202,8 @@ galaga_reset:
 	move.l	#mrw_sprite_posn_9300,0x104
 	move.l	#mrw_sprite_ctrl_9B00,0x108
 	move.l	#object_states_8800,0x10C
+	move.l	log_ptr,a0
+	move.l	#log_ptr,(-4,a0)  | allows to reset the log pointer if needed
 	.endif
 	
 	.ifdef		VIDEO_TEST
