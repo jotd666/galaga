@@ -24,7 +24,7 @@
 _STRUCT  | plyr_state
   _DS  _b_nships             1   | 0x00  = mchn_cfg_nships
   _DS  _b_stgctr             1   | 0x01
-  _DS  _p_atkwav_tbl         2+2   | 0x02  player's private pointer to attack wave object setup tables
+  _DS  _p_atkwav_tbl         2+2 | 0x02  player's private pointer to attack wave object setup tables
   _DS  _b_nestlr_inh         1   | 0x04  1 or 0 .. flag to f_2A90, if 1 signifies nest left/right movement should stop
   _DS  _b_not_chllg_stg      1   | 0x05  stg_ctr+1%4 (1 if not challenge stage)
   _DS  _b_attkwv_ctr         1   | 0x06  atack_wave_ctr++

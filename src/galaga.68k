@@ -806,7 +806,7 @@ l_05D1:
 
 * gctl_stg_fmtn_hpos_init
 	move.b	#0x3F,d0                        	| [ld   a,#0x3F]
-	jbsr	c_12C3                            	| [call c_12C3] A==$3F ... set MOB coordinates, player changeover
+	jbsr	gctl_stg_formation_pos_init_12c3                            	| [call gctl_stg_formation_pos_init_12c3] A==$3F ... set MOB coordinates, player changeover
 
 * set Cy to disable sound clicks for level tokens on player change (value of A is irrelevant)
 	                                     	   | [scf]
@@ -3147,44 +3147,42 @@ l_12A6:
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
-c_12C3:
-	jbsr	read_ixl_into_d0			| [ld   ixl,a]
-	move.b	b_9215_flip_screen,d0       | [ld   a,(b_9215_flip_screen)]
-	move.b	d0,d2                       | [ld   c,a]
+gctl_stg_formation_pos_init_12c3:
+	move.b	d0,ixl			            | [$12C3: ld   ixl,a]
+	move.b	b_9215_flip_screen,d0       | [$12C5: ld   a,(b_9215_flip_screen)]
+	move.b	d0,d2                       | [$12C8: ld   c,a]
 
 * init formation location tracking structure: relative (offset) initialize to 0
 * and origin coordinate bits<8:1> from data (copy of origin coordinate from
 * CPU0 data as it would be outside of address space of CPU1)
-	lea	ds_hpos_loc_orig_9900,a0               	| [ld   hl,#ds_hpos_loc_orig_9900] init home_posn_loc[]
-	lea	db_fmtn_hpos_orig,a1           	| [ld   de,#db_fmtn_hpos_orig]
-	move.w	#16-1,d1                    | [ld   b,#16] table size
+	lea	ds_hpos_loc_orig_9900,a0        | [$12C9: ld   hl,#ds_hpos_loc_orig_9900] init home_posn_loc[]
+	lea	db_fmtn_hpos_orig,a1           	| [$12CC: ld   de,#db_fmtn_hpos_orig]
+	move.w	#16-1,d1                    | [$12CF: ld   b,#16] table size
 l_12D1:
-	clr.b	(a0)+                       | [ld   (hl),#0] fmtn_hpos.offs[]
-	                                    | [inc  l]
- 	move.b	(a1)+,d0                    | [ld   a,(de)]
-	                                    | [inc  de]
-	move.b	d0,(a0)+                    | [ld   (hl),a] pair.b1 i.e. ds_hpos_loc_orig_9900 ... copy data for reference in CPU1
-	                                    | [inc  l]
-	dbf		d1,l_12D1                   | [djnz l_12D1]
+	clr.b	(a0)+                       | [$12D1: ld   (hl),#0] fmtn_hpos.offs[]
+	                                    | [$12D3: inc  l]
+ 	move.b	(a1)+,d0                    | [$12D4: ld   a,(de)]
+	                                    | [$12D5: inc  de]
+	move.b	d0,(a0)+                    | [$12D6: ld   (hl),a] pair.b1 i.e. ds_hpos_loc_orig_9900 ... copy data for reference in CPU1
+	                                    | [$12D7: inc  l]
+	dbf		d1,l_12D1                   | [$12D8: djnz l_12D1]
 
 * X coordinates at origin (10 bytes) to even offsets, adjusted for flip-screen.
-	lea	ds_hpos_spcoords_9800,a0        | [ld   hl,#ds_hpos_spcoords_9800] init origin x-coords (10 columns)
-	lea	db_fmtn_hpos_orig,a1           	| [ld   de,#db_fmtn_hpos_orig]
-	move.b	#10,d1                      | [ld   b,#10]
+	lea	ds_hpos_spcoords_9800,a0        | [$12C9: ld   hl,#ds_hpos_spcoords_9800] init origin x-coords (10 columns)
+	lea	db_fmtn_hpos_orig,a1           	| [$12CC: ld   de,#db_fmtn_hpos_orig]
+	move.b	#10,d1                      | [$12CF: ld   b,#10]
 l_12E2:
-	move.b	(a1)+,d0                    | [ld   a,(de)] home_posn_ini[B]
-	                                    | [inc  de]
-
-	btst.b	#0,d2                       | [bit  0,c] test if flip_screen
-	jeq	l_12EB                          | [jr   z,l_12EB]
-	add.b	#0x0D,d0                    | [add  a,#0x0D] flipped
-	not.b	d0                          | [cpl]
-
+	move.b	(a1)+,d0                    | [$12E2: ld   a,(de)] home_posn_ini[B]
+	                                    | [$12E3: inc  de]
+                                        | [$12E4: bit  0,c] test if flip_screen
+                                        | [$12E6: jr   z,l_12EB]
+                                        | [$12E8: add  a,#0x0D] flipped
+                                        | [$12EA: cpl]
 l_12EB:
-	move.b	d0,(a0)                     | [ld   (hl),a] store lsb
-	addq.w	#2,a0                       | [inc  l]
+	move.b	d0,(a0)                     | [$12EB: ld   (hl),a] store lsb
+	addq.w	#2,a0                       | [$12EC: inc  l]
 	subq.b	#1,d1                       | [...]
-	jne	l_12E2                          | [djnz l_12E2]
+	jne	l_12E2                          | [$12EE: djnz l_12E2]
 
 * Y coordinates at origin (6 bytes) to even offsets. Offset argument (in ixl)
 * is added and result adjusted for flip-screen. Only bits <8:1> are stored.
@@ -3194,8 +3192,8 @@ l_12F2:
 	move.b	(a1)+,d0                    | [ld   a,(de)] db_fmtn_hpos_orig[B]
 	add.b	ixl,d0                      | [add  a,ixl]
 	                           	        | [inc  de]
-	btst.b	#0,d2                       | [bit  0,c] test if flip_screen
-	jne	l_12FD                          | [jr   nz,l_12FD]
+                                        | [bit  0,c] test if flip_screen
+                                        | [jr   nz,l_12FD]
 	add.b	#0x4F,d0                    | [add  a,#0x4F] add offset
 	not.b	d0                          | [cpl] negate
 l_12FD:
@@ -7071,7 +7069,7 @@ case_rotating_into_collective_245F:
 	and.b	#0x07,d0                         	| [$246A: and  #0x07]
 	cmp.b	#6,d0                            	| [$246C: cp   #6]
 	jeq	l_2483                             	    | [$246E: jr   z,l_2483]
-	addq.b	#1,(a0)                         	| [$2470: inc  (hl)]
+	addq.b	#1,(a0)                         	| [$2470: inc  (hl)]  6 -> 7
 	jra	l_249B                             	    | [$2471: jr   l_249B]
 
 l_2473:
@@ -7079,7 +7077,6 @@ l_2473:
 	and.b	#0x07,d0                         	| [$2474: and  #0x07]
 	jne	l_2480                             	    | [$2476: jr   nz,l_2480]
 	lea	ds_sprite_ctrl_9B00,a0              	| [$2478: ld   h,#>ds_sprite_ctrl_9B00]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	bclr.b	#0,(a0)                         	| [$247A: res  0,(hl)]
 	*lea	ds_sprite_code_8B00,a0              | [$247C: ld   h,#>ds_sprite_code_8B00] not used
@@ -8247,19 +8244,17 @@ f_lateral_movement_at_round_start_2a90:
 
 * initialize index and loop counter, update the table
 l_2AAB:
-	clr.b	d6                               	| [$2AAB: ld   l,#0] index into table
+	clr.w	d6                               	| [$2AAB: ld   l,#0] index into table
 	move.b	#10,d1                          	| [$2AAD: ld   b,#10] nbr of column positions
 l_2AAF:
 * increment the relative position
 	lea	ds_hpos_loc_offs_9900,a0            	| [$2AAF: ld   h,#>ds_hpos_loc_offs_9900] even-bytes, relative offset, all 0's, then all 1's, etc. etc.
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$2AB1: ld   a,(hl)]
 	add.b	d2,d0                            	| [$2AB2: add  a,c] +1 or -1
 	move.b	d0,(a0)                         	| [$2AB3: ld   (hl),a]
 * increment sprite position LSB
 	lea	ds_hpos_spcoords_9800,a0            	| [$2AB4: ld   h,#>ds_hpos_spcoords_9800]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$2AB6: ld   a,(hl)]
 	add.b	d2,d0                            	| [$2AB7: add  a,c]
@@ -10930,7 +10925,7 @@ stg_init_env_01c5:
 	move.b	#2,d0                           	| [$01D0: ld   a,#2]
 	move.b	d0,ds4_game_tmrs_92ac+0             | [$01D2: ld   (ds4_game_tmrs_92ac + 0),a] 2
 	clr.b	d0                               	| [$01D5: xor  a]
-	jbsr	c_12C3                            	| [$01D6: call c_12C3] A == 0 .... set MOB coordinates, new stage
+	jbsr	gctl_stg_formation_pos_init_12c3                            	| [$01D6: call gctl_stg_formation_pos_init_12c3] A == 0 .... set MOB coordinates, new stage
 
 * initialize array (even-bytes)
 	clr.b	d0                               	| [$01D9: xor  a]

@@ -986,7 +986,6 @@ l_0713:
 	btst.b	#6,d1                           	| [$0713: $0713: bit  6,b] flipY: inverted...
 	jeq	l_0719                             		| [$0715: $0715: jr   z,l_0719]
 	neg.b	d0                               	| [$0717: $0717: neg] .. NOT flipY...negate X offset (non-flipped sprite is leftfacing)
-
 l_0719:
 * add new dX
 	add.b	(a0),d0                          	| [$0719: add  a,(hl)] dX is 0 unless the ship is spinning/captured
@@ -2452,10 +2451,10 @@ l_flite_pth_posn_set_0D03:
 												| [$0D13: bit  0,c] test flip screen
 												| [$0D15: jr   z,l_0D1A]
 												| [$0D17: add  a,#0x0D] flipped
-												| [$0D19: cpl]
-					
+												| [$0D19: cpl]					
 	btst.b	#6,(mq_state_13,a2)                 | [$0D1A: bit  6,0x13(ix)] if !z, add  a,(ix)0x11 ... relative offset
 	jeq	l_0D23                             	    | [$0D1E: jr   z,l_0D23]
+	* arrives here when aliens are on a "heading home" path
 	add.b	(mq_x_offset_11,a2),d0              | [$0D20: add  a,0x11(ix)] heading home (add x-offset ... already bits<7:0>)
 l_0D23:
 	move.b	d0,(a0)+                         	| [$0D23: ld   (hl),a] &sprite[n].posn.x

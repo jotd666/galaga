@@ -3046,8 +3046,7 @@ osd_update_inputs:
 	sbcd	d4,d3		| sub one credit: this starts 1P game
 	move.b	d3,(a0)     | as game monitors previous credit count
 0:
-	* ATM 2P disabled
-	.ifne	0
+
 	btst	#JPB_BTN_GRN,d1
 	beq.b	0f
 	btst	#JPB_BTN_GRN,d2
@@ -3061,8 +3060,7 @@ osd_update_inputs:
 	sbcd	d4,d3		| sub one credit: this starts 2P game
 	move.b	d3,(a0)     | as game monitors previous credit count
 0:
-	.endif
-	
+
 	btst	#JPB_BTN_REVERSE,d1
 	beq.b	0f
 	btst	#JPB_BTN_REVERSE,d2

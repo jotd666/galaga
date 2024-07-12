@@ -1,8 +1,3 @@
-- swarm is 16 pixels too high!! jumps y-16 after reaching home! 
-  E3A:sub set proper value, seems adjusted in 0D24:sub, cpu trace 0D24:sub
-  in case_rotating_into_collective_245F offset is already wrong
-  home position set in sub 0B07
-  
 - kill captured ship makes the swarm bug: some bees stay in the air: 8800 table probably wrongly updated
 - kill boss that captured ship: ship remains static and doesn't attack / flee: 
   move.b	#9,(a0)+                         	| [$10B9 should make rogue ship attack but does not, and ship is now stuck
@@ -11,7 +6,6 @@
   
 main: case_shot_captured_ship_243C
 main: debug f_update_objects_23e0 when captured ship not moving
-- 2P game: swarm saved position is wrong when switching players! (f_move_swarm_when_player_changes_1d32, c_player_active_switch_110c)
 - missing/wrong sounds: swarm pusling sound: rip from MAME or YT video with invincible & attack sound off
 - namco logo should be red
 - check loop sounds when capturing
