@@ -620,6 +620,13 @@ show_stars:
 2:
 	* get address for the next 8 rows
 	move.l	(a3)+,a1
+	.ifndef RELEASE
+	cmp.w	#start_color,(a1)
+	jeq		20f
+	jbsr	osd_break
+20:
+	.endif
+	
 	add.w	#copper_stars_offset,a1
 
 	moveq	#8-1,d6
@@ -3768,10 +3775,9 @@ color_row_28:
 
 	* pal limit
     .word  0xFFDF,0xFFFE       | PAL wait (should be 0xFFDF but probably fmode=3 changes it)
-    .word  0x0401,0xFFFE
 
-	.set    beampos,0x0401
-    .word   beampos,0xFFFE	
+    .word   0x0001,0xFFFE	
+	.set    beampos,0x0001-0x100
 	
 color_row_29:
 	.word	start_color,default_color_1
@@ -3782,7 +3788,7 @@ color_row_29:
 	STAR_COPPER_ROW
 	.endr
 	
-	.set    beampos,0x0c01
+
 	
 color_row_29_plus:
 	.rept	4
