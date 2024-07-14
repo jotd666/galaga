@@ -8,6 +8,7 @@
 	.global break_at_startup_flag
 	.global log_ptr
 	.global highscore_needs_saving_flag
+	.global capture_up_sound_playing
 	
 	.ifdef   __amiga__
 	.ascii	"RAM_STRT"
@@ -61,6 +62,8 @@ stack_top:
 
 log_ptr:
 	dc.l	0x100
+capture_up_sound_playing:
+	.byte	0
 invincible_flag:
 	.byte	0
 infinite_lives_flag:

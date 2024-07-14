@@ -2102,7 +2102,7 @@ osd_sound_start:
 	
 	cmp.w	#1,d1
 	bne.b	4f		| music module
-	
+
 	* override music block for some sounds
 	cmp.w	#EXTRA_LIFE_SND,d2
 	beq.b	10f
@@ -2139,17 +2139,14 @@ osd_sound_start:
 	bra.b	1b
 	* music
 4:
-	* don't play if game not in play
-	* could have been handled at generic galaga.68k level
-	* but it's way simpler here. I suppose than the real game
-	* just turns music volume off to get away with it
-	*tst.b	game_playing_8817
-	*beq.b	1b
-	
+	lea		playing_sounds(pc),a1
+	* note that this sound is playing!
+	st.b	(a1,d2.w)
 	* play the proper module pattern
 	* load up the countdown if loop
 	move.w	(2,a0,d0.w),d1	| pattern number in .mod file
 	* since it's not zero, next vbl tick will play the music
+	
 	cmp.b	music_track_start_number(pc),d1
 	beq.b	1b		| same track, skip
 
@@ -2193,9 +2190,7 @@ osd_loop_stop:
 	move.w	#3,d0		| channel used by sound loops
 	jbsr	_mt_stopfx
 	lea		playing_sounds(pc),a0
-	* those are no longer playing if they were playing
-	clr.b	(CAPTURE_DOWN_SND,a0)
-	clr.b	(CAPTURE_UP_SND,a0)
+
 	movem.l	(a7)+,d0/a0/a6
 	rts
 

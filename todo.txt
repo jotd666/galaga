@@ -1,4 +1,4 @@
-- capture sound: capture UP module should lock capture down
+- kill captured ship music wrong pattern!!
 - kill captured ship makes the swarm bug: some bees stay in the air: 8800 table probably wrongly updated
 - kill boss that captured ship: ship doesn't attack
   then kill last boss in level: captured ship doesn't move anymore
@@ -15,8 +15,8 @@ main: case_shot_captured_ship_243C
 main: debug f_update_objects_23e0 when captured ship not moving
 - missing/wrong sounds: swarm pusling sound: rip from MAME or YT video with invincible & attack sound off
 - stage 14: big shield flag not refreshed
-- char grid & sprites too high by 8 pixels
-  (top status bar is OK, bottom & field chars are not)
+- capture bottom beam is red because of Namco logo hack
+  should detect namco logo and act accordignly
 
 - flag tick timer sometimes super slow: loops at l_120B
 - yellow flash at some point!!!
@@ -31,7 +31,9 @@ main: debug f_update_objects_23e0 when captured ship not moving
 - double shot should optimize height
 - autoframeskip: if too many slowdowns, game should switch to fixed stars/30 fps
 
-
+- char grid & sprites too high by 8 pixels
+  (top status bar is OK, bottom & field chars are not, maybe
+  better for Amiga display after all!
 
 mutants:
 

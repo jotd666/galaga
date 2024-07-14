@@ -4310,7 +4310,7 @@ l_19C7:
 	rts                                    	    | [$19D1: ret]
 
 l_19D2_fighter_captured:
-	jbsr	osd_loop_stop
+	jbsr	osd_sound_stop
 	move.w	#FIGHTER_CAPTURED_SND,d0
 	jbsr	osd_sound_start
 * sets up a captured-fighter as an enemy object
@@ -6516,6 +6516,7 @@ l_21C7:
 *  ...
 *-----------------------------------------------------------------------------
 f_boss_diving_down_to_capture_ship_21cb:
+	clr.b	capture_up_sound_playing
 * if ( HOMING == object_states_8800[ plyr_actv.captr_boss_id ] )0
 	lea	ds_plyr_actv+_b_bmbr_boss_cobj,a0	    | [$21CB: ld   hl,#ds_plyr_actv +_b_bmbr_boss_cobj] = $9828
 	move.b	(a0),d4                             | [$21CE: ld   e,(hl)]
@@ -6655,8 +6656,16 @@ l_226A:
 	jne	l_22AB                             	    | [$2275: jr   nz,l_22AB]
 * else
 	move.b	d0,b_9AA0+0x05                  	| [$227C: ld   (b_9AA0 + 0x05),a] sound-fx count/enable registers, trigger capture beam sound
+	tst.b	capture_up_sound_playing
+	jne		0f
+	* original game plays that sound even when capturing up
+	* we add an extra flag to avoid that, else that could7
+	* confuse our sfx player
+	* capture_up_sound_playing is set to 0 when a boss
+	* dives to capture, so it's fine
 	move.w	#CAPTURE_DOWN_SND,d0
 	jbsr	osd_sound_start
+0:
 	move.b	ds_plyr_actv+_b_cboss_slot,d0   	| [$227F: ld   a,(ds_plyr_actv +_b_cboss_slot)] bug_flite_que[ plyr.cboss_slot ].b0D = $FF
 	add.b	#0x0D,d0                         	| [$2282: add  a,#0x0D]
 	move.b	d0,d4                           	| [$2284: ld   e,a]
@@ -6730,7 +6739,7 @@ l_22D2:
 
 * capture beam has stopped (whether or not ship is captured or got destroyed by a bomb)
 l_22E3:
-	jbsr	osd_loop_stop
+	jbsr	osd_sound_stop
 	clr.b	d0                               	| [$22E3: xor  a]
 	move.b	d0,ds_cpu0_task_actv_9000+0x18      | [$22E4: ld   (ds_cpu0_task_actv_9000 + 0x18),a] 0 (disable f_boss_starts_tractor_beam_2222 ... this one)
 	                                         	| [$22E7: ld   (b_9AA0 + 0x05),a] 0 ... sound-fx count/enable registers, capture beam sound active uno
@@ -6779,7 +6788,7 @@ l_231C:
 	rts                                    	    | [$2326: ret]
 
 l_2327_shot_boss_while_capturing:
-	jbsr	osd_loop_stop
+	jbsr	osd_sound_stop
 	move.b	#3,d0                           	| [$2327: ld   a,#3]
 	move.b	d0,ds_plyr_actv+_b_captr_flag   	| [$2329: ld   (ds_plyr_actv +_b_captr_flag),a] 3 (shot_boss_while_capturing)
 	move.b	#0x80,(a0)                      	| [$232C: ld   (hl),#0x80] HL == ds5_928A_captr_status + 0x01
@@ -6839,6 +6848,7 @@ l_236D:
 	move.b	d0,ds_cpu0_task_actv_9000+0x1C      | [$237B: ld   (ds_cpu0_task_actv_9000 + 0x1C),a] 1: f_tractor_beam_captures_ship_20f2 ... tractor beam captures
 	move.w	#CAPTURE_UP_SND,d0
 	jbsr	osd_sound_start
+	st.b	capture_up_sound_playing
 	move.b	d0,b_9AA0+0x06                  	| [$237E: ld   (b_9AA0 + 0x06),a] 1 ... sound-fx count/enable registers, tractor beam
 	move.b	d0,ds_99B9_star_ctrl+0x01       	| [$2381: ld   (ds_99B9_star_ctrl + 0x01),a] 1
 	move.b	#0x0A,d0                        	| [$2384: ld   a,#0x0A]
