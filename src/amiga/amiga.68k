@@ -21,6 +21,8 @@ SPRITE_X_CORRECTION = 8
 HW_SPRITE_X_CORRECTION = 0
 HW_SPRITE_Y_CORRECTION = -2
 
+LOOP_CHANNEL = 3
+
 BASE_BPLCON2_VALUE = 0x0000   | sprites behind
 SCREEN_ADDRESS = 0x8000
 
@@ -2126,10 +2128,24 @@ osd_sound_start:
 	lea		playing_sounds(pc),a1
 	tst.b	(a1,d2.w)
 	bne.b	1f				| loop already playing: skipped
+	* also make loop less priority than other sounds of
+	* the same channel
+	* (with ptplayer it is the opposite so we have to do this
+	* manually)
+	tst.b	(BEE_KILLED_SND,a1)
+	bne.b	1f				| attack sound playing: skipped
+	tst.b	(ATTACK_SND,a1)
+	bne.b	1f				| attack sound playing: skipped
 	st		(a1,d2.w)
 	jsr		_mt_loopfx
 	bra.b	1f
 3:
+	cmp.b	#LOOP_CHANNEL,(10,a0)
+	bne.b	30f
+	* playing on loop channel (pulsing/swarm): stop the loop first
+	move.w	#0x0F0,0xDFF180
+	jbsr	osd_loop_stop
+30:
 	jsr		_mt_playfx
 1:
 	movem.l	(a7)+,d0-d2/a0-a1/a6
@@ -2187,7 +2203,7 @@ osd_sound_start:
 osd_loop_stop:
 	movem.l	d0/a0/a6,-(a7)
 	lea		_custom,a6
-	move.w	#3,d0		| channel used by sound loops
+	move.w	#LOOP_CHANNEL,d0		| channel used by sound loops
 	jbsr	_mt_stopfx
 	lea		playing_sounds(pc),a0
 

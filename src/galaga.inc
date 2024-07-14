@@ -68,5 +68,6 @@
     .equ  FIGHTER_RESCUED_SND,         0x18
     .equ  END_CHALLENGE_SND,         0xE
     .equ  PERFECT_SND,         0x14
+    .equ  SWARM_SND,         0x1C
 	.equ  SND_COUNT,  0x20
     

@@ -1,3 +1,6 @@
+- swarm sound interrupting attack sounds
+- yellow flash: mutants at level 10
+- attack sound no longer playing after "perfect" challenge stage music
 - kill captured ship (possibly only when in swarm)
   makes the swarm bug: some bees stay in the air: 8800 table probably wrongly updated
 - kill boss that captured ship: ship doesn't attack
@@ -13,16 +16,15 @@ Amiga: monitor 8802 for write when ship is captured
 
 main: case_shot_captured_ship_243C
 main: debug f_update_objects_23e0 when captured ship not moving
-- missing/wrong sounds: swarm pusling sound: rip from MAME or YT video with invincible & attack sound off
 - stage 14: big shield flag not refreshed
 - capture bottom beam is red because of Namco logo hack
   should detect namco logo and act accordignly
 
+minor issues:
+
 - flag tick timer sometimes super slow: loops at l_120B
-- yellow flash at some point!!!
 - red flashes (frame drop) even with very few sprites with cycle exact!!
   (why are we flashing red when only ship and double shot (single shot?) are displayed!
-- c_plyr_initials_entry_hilite_line: one letter is yellow, rest is white/cyan??
   doesn't matter!!!
 - (c) namco part of letters are cyan
 - DSW skill level?
@@ -30,10 +32,10 @@ main: debug f_update_objects_23e0 when captured ship not moving
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
 - autoframeskip: if too many slowdowns, game should switch to fixed stars/30 fps
-
+- c_plyr_initials_entry_hilite_line: one letter is yellow, rest is white/cyan??
 - char grid & sprites too high by 8 pixels
-  (top status bar is OK, bottom & field chars are not, maybe
-  better for Amiga display after all!
+  (top status bar is OK, bottom & field chars are not, a mistake at first
+  but maybe better for Amiga display after all!
 
 mutants:
 

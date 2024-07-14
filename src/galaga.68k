@@ -41,11 +41,15 @@
 	.global		galaga_irq
 
 stop_pulsing_sound_effect:
+	jbsr	osd_loop_stop
 	rts
 	
 start_pulsing_sound_effect:
-	*jbsr	osd_loop_stop
-	move.b	d0,b_9AA0+0x00           
+	move.b	d0,b_9AA0+0x00
+	move.w	d0,-(a7)
+	move.w	#SWARM_SND,d0
+	jbsr	osd_sound_start
+	move.w	(a7)+,d0
 	rts
 	
 *=============================================================================
@@ -4827,7 +4831,7 @@ l_1BEB_next:
 
 * bee or moth perform a diving attack
 l_1BF0_found_one:
-	move.b	d0,b_9AA0+0x13                  	| [ld   (b_9AA0 + 0x13),a] from C, !0 ... sound-fx count/enable registers, bug dive attack sound
+	move.b	d0,b_9AA0+0x13                  	| [$1BF0: ld   (b_9AA0 + 0x13),a] from C, !0 ... sound-fx count/enable registers, bug dive attack sound
 	move.w	#ATTACK_SND,d0
 	jbsr	osd_sound_start
 	jbsr	c_diving_movement_1083              | [call c_diving_movement_1083] bomber setup, red or yellow alien
@@ -6264,7 +6268,6 @@ l_20BF:
 	clr.b	d0                               	| [$20BF: xor  a]
 	move.b	d0,ds_cpu0_task_actv_9000+0x1D      | [$20C0: ld   (ds_cpu0_task_actv_9000 + 0x1D),a] 0 ... this task
 	move.b	d0,b_9AA0+0x11                  	| [$20C3: ld   (b_9AA0 + 0x11),a] 0 ... sound-fx count/enable registers, stop "rescued ship" music
-	jbsr	osd_loop_stop
 	rts                                    	    | [$20C6: ret]
 
 l_20C7:                                         | *( ds5_928A_captr_status + 0x01 ) == 0

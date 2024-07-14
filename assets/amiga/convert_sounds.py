@@ -20,14 +20,17 @@ outfile = os.path.join(src_dir,"sounds.68k")
 sndfile = os.path.join(src_dir,"sound_entries.68k")
 
 hq_sample_rate = 18004
+lq_sample_rate = hq_sample_rate//2
 vhq_sample_rate = 22030
+
+loop_channel = 3
 
 EMPTY_SND = "EMPTY_SND"
 sound_dict = {
 
 
 "BOSS_KILLED_SND"               :{"index":0,"channel":2,"sample_rate":hq_sample_rate,"priority":1},
-"BEE_KILLED_SND"               :{"index":1,"channel":3,"sample_rate":hq_sample_rate,"priority":1},
+"BEE_KILLED_SND"               :{"index":1,"channel":loop_channel,"sample_rate":hq_sample_rate,"priority":1},
 "MOTH_KILLED_SND"               :{"index":2,"channel":2,"sample_rate":hq_sample_rate,"priority":1},
 "GALAXIAN_KILLED_SND"        :{"index":3,"channel":2,"sample_rate":hq_sample_rate,"priority":1},
 "CAPTURE_DOWN_SND"               :{"index":5,"pattern":19,"volume":12,'loops':True},
@@ -35,11 +38,12 @@ sound_dict = {
 "SHOT_SND"               :{"index":0xF,"channel":1,"sample_rate":hq_sample_rate,"priority":10},
 "CHALLENGING_STAGE_SND"    :{"index":0xD,"channel":0,"sample_rate":hq_sample_rate},
 "MUTANT_SND"               :{"index":0x12,"channel":2,"sample_rate":hq_sample_rate},
-"ATTACK_SND"               :{"index":0x13,"channel":3,"sample_rate":hq_sample_rate},
+"ATTACK_SND"               :{"index":0x13,"channel":loop_channel,"sample_rate":hq_sample_rate},
 "TICK_SND"               :{"index":0x15,"channel":2,"sample_rate":hq_sample_rate,"priority":1},
 "EXPLOSION_SND"            :{"index":0x19,"channel":0,"sample_rate":hq_sample_rate},
 "CREDIT_SND"               :{"index":0X1A,"channel":0,"sample_rate":hq_sample_rate},
-"EXTRA_LIFE_SND"       :{"index":0x1B,"channel":3,"sample_rate":hq_sample_rate,"priority":20},
+"EXTRA_LIFE_SND"       :{"index":0x1B,"channel":2,"sample_rate":hq_sample_rate,"priority":20},
+"SWARM_SND"       :{"index":0x1C,"channel":loop_channel,"sample_rate":lq_sample_rate,"loops":True},
 
 "GAME_START_SND"       :{"index":0x9,"pattern":0,"volume":24,"ticks":340,'loops':False},
 "HIGH_SCORE_SND"       :{"index":0x10,"pattern":2,"volume":24,'loops':True},
