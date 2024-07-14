@@ -30,8 +30,8 @@ sound_dict = {
 "BEE_KILLED_SND"               :{"index":1,"channel":3,"sample_rate":hq_sample_rate,"priority":1},
 "MOTH_KILLED_SND"               :{"index":2,"channel":2,"sample_rate":hq_sample_rate,"priority":1},
 "GALAXIAN_KILLED_SND"        :{"index":3,"channel":2,"sample_rate":hq_sample_rate,"priority":1},
-"CAPTURE_DOWN_SND"               :{"index":5,"pattern":19,"volume":24,'loops':True},
-"CAPTURE_UP_SND"               :{"index":6,"pattern":20,"volume":24,'loops':True},
+"CAPTURE_DOWN_SND"               :{"index":5,"pattern":19,"volume":12,'loops':True},
+"CAPTURE_UP_SND"               :{"index":0x17,"pattern":20,"volume":12,'loops':True},
 "SHOT_SND"               :{"index":0xF,"channel":1,"sample_rate":hq_sample_rate,"priority":10},
 "CHALLENGING_STAGE_SND"    :{"index":0xD,"channel":0,"sample_rate":hq_sample_rate},
 "MUTANT_SND"               :{"index":0x12,"channel":2,"sample_rate":hq_sample_rate},
@@ -47,7 +47,7 @@ sound_dict = {
 "END_CHALLENGE_SND"       :{"index":0xE,"pattern":12,"volume":24,"ticks":360,'loops':False},
 "PERFECT_SND"         :{"index":0x14,"pattern":14,"volume":36,'loops':False,"ticks":240},
 "FIGHTER_CAPTURED_SND"    :{"index":0x16,"pattern":16,"volume":24,'loops':False,"ticks":280},
-"FIGHTER_KILLED_SND"    :{"index":0x17,"pattern":17,"volume":24,'loops':False,"ticks":130},
+"FIGHTER_KILLED_SND"    :{"index":6,"pattern":17,"volume":24,'loops':False,"ticks":130},
 "FIGHTER_RESCUED_SND"    :{"index":0x18,"pattern":18,"volume":24,'loops':False,"ticks":280},
 
 }

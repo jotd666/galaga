@@ -45,12 +45,12 @@
 * sound ordinals
 
     .equ  BOSS_KILLED_SND,         0x0
-    .equ  BEE_KILLED_SND,     0x01
-    .equ  MOTH_KILLED_SND,         0x02
-    .equ  GALAXIAN_KILLED_SND,    0x03
-    .equ  GREEN_BOSS_HIT_SND,     0x03
+    .equ  BEE_KILLED_SND,     0x01          | used around 07F8:sub 
+    .equ  MOTH_KILLED_SND,         0x02     | used around 07F8:sub 
+    .equ  GALAXIAN_KILLED_SND,    0x03      | used around 07F8:sub 
+    .equ  GREEN_BOSS_HIT_SND,     0x03      | used around 07F8:sub 
     .equ  CAPTURE_DOWN_SND,     0x05
-    .equ  CAPTURE_UP_SND,     0x06
+    .equ  FIGHTER_KILLED_SND,         0x06  | used around 07F8:sub 
     .equ  SHOT_SND,           0xF
 	.equ  CHALLENGING_STAGE_SND, 0xD
     .equ  MUTANT_SND,         0x12
@@ -64,9 +64,8 @@
 	
     .equ  GAME_START_SND,         0x9
     .equ  FIGHTER_CAPTURED_SND,         0x16
-    .equ  FIGHTER_KILLED_SND,         0x17
+    .equ  CAPTURE_UP_SND,     0x17    
     .equ  FIGHTER_RESCUED_SND,         0x18
-    
     .equ  END_CHALLENGE_SND,         0xE
     .equ  PERFECT_SND,         0x14
 	.equ  SND_COUNT,  0x20

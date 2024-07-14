@@ -1,5 +1,5 @@
-- kill captured ship music wrong pattern!!
-- kill captured ship makes the swarm bug: some bees stay in the air: 8800 table probably wrongly updated
+- kill captured ship (possibly only when in swarm)
+  makes the swarm bug: some bees stay in the air: 8800 table probably wrongly updated
 - kill boss that captured ship: ship doesn't attack
   then kill last boss in level: captured ship doesn't move anymore
 

@@ -1378,8 +1378,6 @@ l_0849:
 	move.b	d2,d0                           	| [$0849: ld   a,c] .... sprite.cclr.b1
 	cmp.b	#7,d0                            	| [$084A: cp   #7] color map 7 ... red captured ship
 	jne	l_0852                             		| [$084C: jr   nz,l_0852]
-	move.w	#FIGHTER_KILLED_SND,d0
-	jbsr	osd_sound_start
 	move.b	#0xB8,d3                        	| [$084E: ld   d,#0xB8]
 	jra	l_08B0_set_bonus_sprite_code       		| [$0850: jr   l_08B0_set_bonus_sprite_code]
 
