@@ -32,6 +32,8 @@ copper_stars_offset = 12
 copper_row_size = 32
 copper_8x8_row_size = copper_stars_offset+copper_row_size*8
 
+HFIRSTROW = 0x1C
+
 MAX_ROW_X = 31
 
 BORDERBLANK = 0
@@ -607,7 +609,7 @@ call_bcpl:
 	rts
 
 
-NB_STAR_ROWS = 32		| height: 256
+NB_STAR_ROWS = 34		| height: 256
 
 show_stars:
 	move.l	a5,-(a7)
@@ -621,7 +623,10 @@ show_stars:
 	* get address for the next 8 rows
 	move.l	(a3)+,a1
 	.ifndef RELEASE
+	* sanity check
 	cmp.w	#start_color,(a1)
+	jeq		20f
+	cmp.w	#0x1FE,(a1)
 	jeq		20f
 	jbsr	osd_break
 20:
@@ -2375,7 +2380,7 @@ platform_init:
 	
 	* restrict borders: we don't see bobs on the borders!
 	*         VVHH
-    move.w #0x1C99,diwstrt(a5)
+    move.w #(HFIRSTROW<<8) + 0x99,diwstrt(a5)
     move.w #0x3881-8,diwstop(a5)
     move.w #0x0038,ddfstrt(a5)
     move.w #0x00D0,ddfstop(a5)
@@ -3585,11 +3590,15 @@ bg_color_table:
 	.endr
 	.long	color_row_28
 	.long	color_row_29
-	.set	row_offset,0
-	.rept	4
-	.long	color_row_29_plus+row_offset
-	.set	row_offset,row_offset+copper_8x8_row_size
-	.endr
+
+	* special cases, we have to hack colors at some point
+	* so NAMCO logo is really red, else it remains white.
+	
+	.long	color_row_30
+	.long	color_row_31
+	.long	color_row_32
+	.long	color_row_33
+	.long	color_row_34
 
 
 	
@@ -3750,7 +3759,7 @@ sprites:
     .word    sprpt+26,0
 	* 2 last sprites cannot be used
 	
- 	.set    beampos,0x1C01	| first displayed row
+ 	.set    beampos,(HFIRSTROW<<8) + 0x01	| first displayed row
 	.word	beampos,0xFFFE
 color_row_0:
 	.rept	28
@@ -3774,11 +3783,10 @@ color_row_28:
 	.endr
 
 	* pal limit
-    .word  0xFFDF,0xFFFE       | PAL wait (should be 0xFFDF but probably fmode=3 changes it)
+    .word  0xFFCF,0xFFFE       | PAL wait (should be 0xFFDF but probably fmode=3 changes it)
 
     .word   0x0001,0xFFFE	
 	.set    beampos,0x0001-0x100
-	
 color_row_29:
 	.word	start_color,default_color_1
 	.word	start_color+8,default_color_2  
@@ -3787,11 +3795,8 @@ color_row_29:
 	.set	beampos,beampos+0x100
 	STAR_COPPER_ROW
 	.endr
-	
-
-	
-color_row_29_plus:
-	.rept	4
+		
+color_row_30:
 	.word	start_color,default_color_1 
 	.word	start_color+8,default_color_2
 	.word	start_color+16,default_color_3
@@ -3799,7 +3804,52 @@ color_row_29_plus:
 	.set	beampos,beampos+0x100
 	STAR_COPPER_ROW
 	.endr
+	* block dynamic colors on rows 31,32
+	* set red for those colors because color scheme
+	* doesn't work for NAMCO for some reason. It probably
+	* works for rest of letters out of luck, but NAMCO logo
+	* is of a different color and it fails. Nevermind, I'm sick
+	* of this copperlist, as long as it works it's fine by me
+	.word	start_color,0xF00
+	.word	start_color+8,0xF00
+	.word	start_color+16,0xF00
+	
+	* we have to leave 3 copperlist slots as the stars scroll
+	* expects it.
+color_row_31:
+	.word	0x1FE,default_color_1 
+	.word	0x1FE,default_color_2
+	.word	0x1FE,default_color_3
+	.rept	8
+	.set	beampos,beampos+0x100
+	STAR_COPPER_ROW
 	.endr
+color_row_32:
+	.word	0x1FE,default_color_1 
+	.word	0x1FE,default_color_2
+	.word	0x1FE,default_color_3
+	.rept	8
+	.set	beampos,beampos+0x100
+	STAR_COPPER_ROW
+	.endr
+	* restore dynamic colors, not sure it's useful
+color_row_33:
+	.word	start_color,default_color_1 
+	.word	start_color+8,default_color_2
+	.word	start_color+16,default_color_3
+	.rept	8
+	.set	beampos,beampos+0x100
+	STAR_COPPER_ROW
+	.endr
+color_row_34:
+	.word	start_color,default_color_1 
+	.word	start_color+8,default_color_2
+	.word	start_color+16,default_color_3
+	.rept	8
+	.set	beampos,beampos+0x100
+	STAR_COPPER_ROW
+	.endr
+
 
     .word	 intreq,0x8010	| no bobs from now on, get more drawing time
 	

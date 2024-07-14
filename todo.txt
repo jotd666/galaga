@@ -1,19 +1,22 @@
+- capture sound: capture UP module should lock capture down
 - kill captured ship makes the swarm bug: some bees stay in the air: 8800 table probably wrongly updated
 - kill boss that captured ship: ship doesn't attack
   then kill last boss in level: captured ship doesn't move anymore
 
   move.b	#9,(a0)+                         	| [$10B9 should make rogue ship attack but does not, and ship is now stuck
-  try on MAME: change value see if calls case_diving_attack_or_loop_2422 and with which parameters
-  also check where it is disabled when going past the screen
-  
+   debug: setup_motion_for_attackers_108a loop
+         case_diving_attack_or_loop_2422 called if 8802 set to 9
+		  but another 99xx value is not correct (0x80) and no object
+		  is moving (but possibly there's a corruption!)
+		 
+Amiga: monitor 8802 for write when ship is captured
+
 main: case_shot_captured_ship_243C
 main: debug f_update_objects_23e0 when captured ship not moving
 - missing/wrong sounds: swarm pusling sound: rip from MAME or YT video with invincible & attack sound off
-- namco logo should be red
-- check loop sounds when capturing
-- integrate new version of mod (capture pattern)
-
-minor:
+- stage 14: big shield flag not refreshed
+- char grid & sprites too high by 8 pixels
+  (top status bar is OK, bottom & field chars are not)
 
 - flag tick timer sometimes super slow: loops at l_120B
 - yellow flash at some point!!!
@@ -21,7 +24,9 @@ minor:
   (why are we flashing red when only ship and double shot (single shot?) are displayed!
 - c_plyr_initials_entry_hilite_line: one letter is yellow, rest is white/cyan??
   doesn't matter!!!
+- (c) namco part of letters are cyan
 - DSW skill level?
+- demo: continues after ship is killed, but with wrong actions
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
 - autoframeskip: if too many slowdowns, game should switch to fixed stars/30 fps

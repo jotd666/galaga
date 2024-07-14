@@ -87,7 +87,7 @@ j_Game_init_02d3:
 * galaga_interrupt_enable_1_w  seems to already be set, but we make sure anyway.
 * JOTD: let's NOT enable it for now, wait for task table to be initialized
 	*move.b	#1,d0                           	| [ld   a,#1]
-	*jbsr	osd_interrupt_control                    	| [ld   (_sfr_6820),a] 1 ,,,enable IRQ1
+	*jbsr	osd_interrupt_control               | [ld   (_sfr_6820),a] 1 ,,,enable IRQ1
 
 * The test grid is now cleared from screen. Due to odd organization of tile ram
 * it is done in 3 steps. 1 grid row is cleared from top and bottom (each grid
@@ -95,24 +95,24 @@ j_Game_init_02d3:
 * playfield area.
 
 *  memset($83c0,$24,$40)
-	move.w	#0x83C0,a0           	| $02F8: [ld   hl,#0x8000 + 0x03C0] clear top 2 tile rows ($40 bytes)
+	move.w	#0x83C0,a0           	            | [$02F8: ld   hl,#0x8000 + 0x03C0] clear top 2 tile rows ($40 bytes)
 	move.b	#0x40,d1                        	| [ld   b,#0x40]
 	move.b	#0x24,d0                        	| [ld   a,#0x24] "space" character
-	jbsr	rst_18_video                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	jbsr	rst_18_video                        | [rst  0x18] memset((HL), A=fill, B=ct)
 
 *  memset($8000,$24,$40)
-	move.w	#0x8000,a0                   	| [ld   h,#>0x8000] clear bottom 2 tile rows ($40 bytes)
+	move.w	#0x8000,a0                   	    | [ld   h,#>0x8000] clear bottom 2 tile rows ($40 bytes)
 	move.b	#0x40,d1                        	| [ld   b,#0x40]
-	jbsr	rst_18_video                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	jbsr	rst_18_video                        | [rst  0x18] memset((HL), A=fill, B=ct)
 
 *  memset($8400,$03,$40)
-	move.w	#0x8400,a0                 	| [ld   hl,#m_color_ram] $40 bytes (code 03)
+	move.w	#0x8400,a0                 	        | [ld   hl,#m_color_ram] $40 bytes (code 03)
 	move.b	#0x40,d1                        	| [ld   b,#0x40]
 	move.b	#0x03,d0                        	| [ld   a,#0x03]
-	jbsr	rst_18_color                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	jbsr	rst_18_color                        | [rst  0x18] memset((HL), A=fill, B=ct)
 
 
-	jbsr	c_sctrl_playfld_clr_0160               	| [call c_sctrl_playfld_clr_0160] clear remainder of grid pattern from the playfield tiles (14x16)
+	jbsr	c_sctrl_playfld_clr_0160            | [call c_sctrl_playfld_clr_0160] clear remainder of grid pattern from the playfield tiles (14x16)
 * all tile ram is now wiped
 
 * Sets up "Heroes" screen
@@ -146,11 +146,11 @@ l_032A:
 	move.b	#0x01,d0                        	| [$0333: ld   a,#0x01]
 	move.b	d0,b8_game_state_9201           	| [ld   (b8_game_state_9201),a] 1 == ATTRACT_MODE
 
-	*lea	l_A005,a0                      	| [ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
+	*lea	l_A005,a0                      	    | [ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
 	*clr.b	(a0)                             	| [ld   (hl),#0]
 	*move.b	d0,(a0)                         	| [ld   (hl),a]
 
-	jbsr	c_sctrl_sprite_ram_clr_003c            	| [call c_sctrl_sprite_ram_clr_003c]
+	jbsr	c_sctrl_sprite_ram_clr_003c         | [call c_sctrl_sprite_ram_clr_003c]
 
 * display 1UP HIGH SCORE 20000 (1 time only after boot)
 	jbsr	c_textout_1uphighscore_onetime    	| [call c_textout_1uphighscore_onetime]
@@ -172,7 +172,7 @@ l_032A:
 
 * cpu0_task_activ[0x1E] = 0x20
 	move.b	#0x20,d0                        	| [ld   a,#0x20]
-	move.b	d0,ds_cpu0_task_actv_9000+0x1E       	| [ld   (ds_cpu0_task_actv_9000 + 0x1E),a] $20
+	move.b	d0,ds_cpu0_task_actv_9000+0x1E      | [ld   (ds_cpu0_task_actv_9000 + 0x1E),a] $20
 
 * credit_cnt = io_input[0]
 	move.b	ds3_io_input_99b5,d0       			| [ld   a,(ds3_io_input_99b5 + 0x00)] credit_count
@@ -180,7 +180,7 @@ l_032A:
 
 * cpu0_task_activ[0x1E] = 0
 	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x1E       	| [ld   (ds_cpu0_task_actv_9000 + 0x1E),a] 0 ... just wrote $20 here see above
+	move.b	d0,ds_cpu0_task_actv_9000+0x1E      | [ld   (ds_cpu0_task_actv_9000 + 0x1E),a] 0 ... just wrote $20 here see above
 	move.b	d0,ds_cpu1_task_actv+0x00       	| [ld   (ds_cpu1_task_actv + 0x00),a] 0 ... CPU1:f_05BE (empty task)
 
 	* JOTD: enable interrupts only now, as else there seems to exist a race condition
@@ -211,7 +211,7 @@ g_main_035a:
 
 * disable f_star_control_1d76 - star control ... why? ... should be taken care of by init_taskman_structs ...below
 * task_activ_tbl[0x12] = 0
-	move.b	d0,ds_cpu0_task_actv_9000+0x12       	| [ld   (ds_cpu0_task_actv_9000 + 0x12),a] 0 ... f_star_control_1d76
+	move.b	d0,ds_cpu0_task_actv_9000+0x12      | [ld   (ds_cpu0_task_actv_9000 + 0x12),a] 0 ... f_star_control_1d76
 
 * The object-collision notification structures are cleared
 * at every beginning of round (and demo), so I am guessing the intent here is to
@@ -219,7 +219,7 @@ g_main_035a:
 
 * memset($9200,0,$80) ... object-collision notification  and other
 	move.b	#0x80,d1                        	| [ld   b,#0x80]
-	lea	ds_9200,a0                     	| [ld   hl,#ds_9200] memset(...,0,$80)
+	lea	ds_9200,a0                     	        | [ld   hl,#ds_9200] memset(...,0,$80)
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
 * star_ctrl_param=6
@@ -228,14 +228,14 @@ g_main_035a:
 
 * array of object movement structures etc.
 	jbsr	rst_28                            	| [rst  0x28] memset(mctl_mpool,0,$$14 * 12)
-	jbsr	c_sctrl_sprite_ram_clr_003c            	| [$0370: call c_sctrl_sprite_ram_clr_003c] clear sprite mem etc.
+	jbsr	c_sctrl_sprite_ram_clr_003c         | [$0370: call c_sctrl_sprite_ram_clr_003c] clear sprite mem etc.
 	jbsr	c_init_taskman_structs_1230       	| [$0373: call c_init_taskman_structs_1230]
 * allow attract-mode festivities to be skipped if credit available
 * if ( credit_cnt == 0 )  game_state = ATTRACT_MODE
 	                               	| 
 	move.b	#1,d0                           	| [ld   a,#1] 1 == ATTRACT_MODE
-	tst.b	b8_99B8_credit_cnt           	| [ld   a,(b8_99B8_credit_cnt)]+[and  a]
-	jeq	l_0380                             	| [jr   z,l_0380]
+	tst.b	b8_99B8_credit_cnt           	    | [ld   a,(b8_99B8_credit_cnt)]+[and  a]
+	jeq	l_0380                             	    | [jr   z,l_0380]
 * else  game_state = READY_TO_PLAY_MODE
 	move.b	#2,d0                           	| [ld   a,#2] 2 == READY_TO_PLAY_MODE
 l_0380:
@@ -243,7 +243,7 @@ l_0380:
 
 * if ( credit_cnt == 0 ) ...
 	tst.b	b8_99B8_credit_cnt
-	jne	l_game_state_ready_039d                 	| [jr   nz,l_game_state_ready_039d]
+	jne	l_game_state_ready_039d                 | [jr   nz,l_game_state_ready_039d]
 
 * ... do attract mode stuff
 	clr.b	d0                               	| [xor  a]
@@ -251,7 +251,7 @@ l_0380:
 
 * task_activ_tbl[F_ATTRMODECTRL] = 1
 	addq.b	#1,d0                           	| [inc  a]
-	move.b	d0,ds_cpu0_task_actv_9000+0x02       	| [ld   (ds_cpu0_task_actv_9000 + 0x02),a] 1 ... f_manage_attract_mode_17B2 (attract-mode control)
+	move.b	d0,ds_cpu0_task_actv_9000+0x02      | [ld   (ds_cpu0_task_actv_9000 + 0x02),a] 1 ... f_manage_attract_mode_17B2 (attract-mode control)
 
 	lea		ds_cpu0_task_actv_9000,a0
 	
@@ -315,14 +315,14 @@ j_0003D8_wrdy:
 
 * /****  start button was hit ******************/
 
-	**move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] sound_mgr_reset: non-zero causes re-initialization of sound mgr process
+	**move.b	d0,b_9AA0+0x17                  | [ld   (b_9AA0 + 0x17),a] sound_mgr_reset: non-zero causes re-initialization of sound mgr process
 
 * clear sprite mem etc.
-	jbsr	c_sctrl_playfld_clr_0160               	| [call c_sctrl_playfld_clr_0160]
-	jbsr	c_sctrl_sprite_ram_clr_003c            	| [call c_sctrl_sprite_ram_clr_003c]
+	jbsr	c_sctrl_playfld_clr_0160            | [call c_sctrl_playfld_clr_0160]
+	jbsr	c_sctrl_sprite_ram_clr_003c         | [call c_sctrl_sprite_ram_clr_003c]
 
 * stars paused
-	*lea	l_A005,a0                      	| [ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
+	*lea	l_A005,a0                      	    | [ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
 	*clr.b	(a0)                             	| [ld   (hl),#0]
 	*move.b	#1,(a0)                         	| [ld   (hl),#1]
 
@@ -2470,6 +2470,7 @@ setup_motion_for_attackers_108a:
 	move.w	#0x0014,d3                      	| [ld   de,#0x0014] size of 1 data structure 20
 	move.b	#0x0C,d1                        	| [ld   b,#0x0C] number of structures in array
 	lea	ds_bug_motion_que_9100,a2           	| [ld   ix,#ds_bug_motion_que_9100]
+	move.b	#0,0x200
 l_1094:
 	btst.b	#0,(mq_state_13,a2)                 | [bit  0,0x13(ix)] check for activated state
 	jeq	l_10A0_got_one                     	    | [jr   z,l_10A0_got_one]
@@ -4090,7 +4091,7 @@ l_18BB:
 	move.b	d0,ds4_game_tmrs_92ac+2             | [ld   (ds4_game_tmrs_92ac + 2),a] 9
 	rts                                    	    | [ret]
 l_18C6:
-* tmr == 5, explosion complete ... '150' score on display, display namco copyright
+* tmr == 5, explosion complete ... '150' score on display, display namco copyright/logo
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_sprite_posn_9300+0x62         | [ld   (ds_sprite_posn_9300 + 0x62),a] 0 ... fighter (1) is removed from screen
 	move.b	#0x13,d2                        	| [ld   c,#0x13]
@@ -4672,8 +4673,8 @@ d_1B5F:
 f_manage_bomber_attacks_1b65:
 * if ( flag == zero ) skip the condition check
 	move.b	ds_9200_glbls+0x0B,d0           	| [ld   a,(ds_9200_glbls + 0x0B)] glbl_enemy_enbl
-	                               	| [and  a]
-	jeq	l_1B75                             	| [jr   z,l_1B75]
+	                               	            | [and  a]
+	jeq	check_queue_boss_wing_1b75              | [jr   z,check_queue_boss_wing_1b75]
 
 * if ((0 == ds_cpu0_task_actv_9000[0x15])    	| (0 != ds_cpu0_task_actv_9000 + 0x1D))  return
 	move.b	ds_cpu0_task_actv_9000+0x15,d0      | [ld   a,(ds_cpu0_task_actv_9000 + 0x15)] f_read_fire_button_1f04 (fire button input)
@@ -4686,7 +4687,7 @@ f_manage_bomber_attacks_1b65:
 0:
 
 * check the queue for boss+wing mission ... parameters are queue'd by case boss launcher
-l_1B75:
+check_queue_boss_wing_1b75:
 	move.b	#4,d1                           	| [ld   b,#4]
 	* structure of 3 items: state/timer + 16bit pointer on flight path
 	lea	bmbr_boss_pool_92ca,a0              	| [ld   hl,#bmbr_boss_pool_92ca] check 4 groups of 3 bytes
@@ -6932,26 +6933,26 @@ f_update_objects_23e0:
 	move.b	d0,ixl								| [$23EB: ld   ixl,a] use as "local" variable for object counter
 	move.b	#32,d1                          	| [$23ED: ld   b,#32] size of object set / 2
 l_next_object_23EF:
-	lea	object_states_8800,a1                      			| [$23EF: ld   d,#>object_states_8800]
+	lea	object_states_8800,a1                   | [$23EF: ld   d,#>object_states_8800]
 	and.w	#0xFF,d4
 	add.w	d4,a1
 	moveq	#0,d0
-	move.b	(a1),d0                             | [ld   a,(de)]
+	move.b	(a1),d0                             | [$23F1: ld   a,(de)]
 * test for $80 (inactive status)
-	tst.b	d0                            	    | [sla  a] test for bit-7
-	jmi	l_2416                             	    | [jr   c,l_2416] DE+=4
+												| [$23F2: sla  a] test for bit-7
+	jmi	l_2416                             	    | [$23F4: jr   c,l_2416] DE+=4
 
-	* there are active sprites on screen
+	* active: there are active sprites on screen
 	
-	lea	d_23FF_jp_tbl,a0        | [$23F6: ld   hl,#d_23FF_jp_tbl]
-	and.w	#0xFF,d0
-	CHECK_D0W_UPPER_BOUND	10
-	asl.b	#2,d0				| [$23F9: rst  0x10] HL += A
-	                        	| [$23FA: ld   a,(hl)]
-	                       	    | [$23FB: inc  hl]
-	                       	    | [$23FC: ld   h,(hl)]
-	move.l	(a0,d0.w),a0        | [$23FD: ld   l,a]
-	jra	(a0)                    | [$23FE: jp   (hl)]
+	lea	d_23FF_jp_tbl,a0                        | [$23F6: $23F6: ld   hl,#d_23FF_jp_tbl]
+	and.w	#0xFF,d0                            
+	CHECK_D0W_UPPER_BOUND	10                  
+	asl.b	#2,d0				                | [$23F9: rst  0x10] HL += A
+	                        	                | [$23FA: ld   a,(hl)]
+	                       	                    | [$23FB: inc  hl]
+	                       	                    | [$23FC: ld   h,(hl)]
+	move.l	(a0,d0.w),a0                        | [$23FD: ld   l,a]
+	jra	(a0)                                    | [$23FE: jp   (hl)]
 
 * each case is entered with D4 set to current object index, A1 points to object (offset 0 = state)
 
@@ -7010,7 +7011,6 @@ case_diving_attack_or_loop_2422:
 	add.b	#0x11,d0                         	| [$2430: add  a,#0x11]
 	move.b	d0,d6                           	| [$2432: ld   l,a]
 	lea	ds_bug_motion_que_9100,a0           	| [$2433: ld   h,#>ds_bug_motion_que_9100]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	exg		d0,d7                              	| [$2435: ex   af,af']
 	move.b	d0,(a0)+                         	| [$2436: ld   (hl),a] X coordinate offset
