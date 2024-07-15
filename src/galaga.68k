@@ -2427,22 +2427,22 @@ c_divmod:
 *-----------------------------------------------------------------------------
 c_1079:
 	COMPUTE_LSB_A0_D6	object_states_8800
-	move.b	d6,d0                           	| [ld   a,l]
-	and.b	#0x80,d0                         	| [and  #0x80] if set then negate rotation angle to (ix)0x0C
-	addq.b	#1,d0                           	| [inc  a] set bit-0, .b13<0> makes object slot active
-	exg		d0,d7                              	| [ex   af,af']
-	bclr.b	#7,d6                           	| [res  7,l]
+	move.b	d6,d0                           	| [$1079: ld   a,l]
+	and.b	#0x80,d0                         	| [$107A: and  #0x80] if set then negate rotation angle to (ix)0x0C
+	addq.b	#1,d0                           	| [$107C: inc  a] set bit-0, .b13<0> makes object slot active
+	exg		d0,d7                              	| [$107D: ex   af,af']
+	bclr.b	#7,d6                           	| [$107E: res  7,l]
 	lea		object_states_8800,a0
 	add.w	d6,a0
-	jra	setup_motion_for_attackers_108a         | [jp   setup_motion_for_attackers_108a]
+	jra	setup_motion_for_attackers_108a         | [$1080: jp   setup_motion_for_attackers_108a]
 
 *=============================================================================
 * c_diving_movement_1083()
 *  Description:
 *   Diving movement of red alien, yellow alien, clone-attacker, and rogue fighter.
 * IN:
-*   HL == &object_states_8800[n]
-*   DE == pointer to object data (in cpu-sub1 code space)
+*   HL (D6)   == &object_states_8800[n]
+*   DE (D3.W) == pointer to object data (in cpu-sub1 code space)
 * OUT:
 *  ...
 *-----------------------------------------------------------------------------
@@ -2474,7 +2474,6 @@ setup_motion_for_attackers_108a:
 	move.w	#0x0014,d3                      	| [ld   de,#0x0014] size of 1 data structure 20
 	move.b	#0x0C,d1                        	| [ld   b,#0x0C] number of structures in array
 	lea	ds_bug_motion_que_9100,a2           	| [ld   ix,#ds_bug_motion_que_9100]
-	move.b	#0,0x200
 l_1094:
 	btst.b	#0,(mq_state_13,a2)                 | [bit  0,0x13(ix)] check for activated state
 	jeq	l_10A0_got_one                     	    | [jr   z,l_10A0_got_one]
@@ -4643,7 +4642,7 @@ l_1B00:
 	or.b	d2,d0                             	| [$1B4B: or   c]
 	move.b	d0,ds_plyr_actv+_b_bbee_clr_a   	| [$1B4C: ld   (ds_plyr_actv +_b_bbee_clr_a),a]
 	COMPUTE_LSB_A0_D6	ds_sprite_code_8B00
-	lea	object_states_8800,a0                      			| [$1B4F: ld   h,#>object_states_8800]
+	lea	object_states_8800,a0                   | [$1B4F: ld   h,#>object_states_8800]
 	add.w	d6,a0
 	jbsr	c_diving_movement_1083              | [$1B51: call c_diving_movement_1083] bomber setup, clone-attack mgr
 l_1B54_getout:
@@ -4706,7 +4705,7 @@ l_1B7A:
        * insert a 1/4 sec delay before trying next bomber
 	move.b	ds3_frame_cts_92A0+0,d0         	| [$1B83: ld   a,(ds3_frame_cts_92A0 + 0)]
 	and.b	#0x0F,d0                         	| [$1B86: and  #0x0F]
-	jeq	check_bomber_for_ready_status_1ba8                             	    | [$1B88: jr   z,check_bomber_for_ready_status_1ba8]
+	jeq	check_bomber_for_ready_status_1ba8      | [$1B88: jr   z,check_bomber_for_ready_status_1ba8]
 	rts                                    	    | [$1B8A: ret]
 
 * launching element of boss+wing mission
@@ -4952,12 +4951,14 @@ l_1C76_while:
 	jne		l_1C76_while                        | [$1C7B: djnz l_1C76_while]
 
 * last pass: no boss available ... check for available rogue fighter (objects 00, 02, 04, 06)
-	lea	object_states_8800,a0                      	| [$1C7E: ld   hl,#object_states_8800]
-	move.w	#4-1,d1                           	| [$1C81: ld   b,#4]
+	lea	object_states_8800,a0                   | [$1C7E: ld   hl,#object_states_8800]
+	moveq	#4,d1                           	| [$1C81: ld   b,#4]
+	moveq	#0,d6
 l_1C83_while:
-	move.b	(a0),d0                         	| [$1C83: ld   a,(hl)]
+	move.b	(a0),d0                      	| [$1C83: ld   a,(hl)]
 	subq.b	#1,d0                           	| [$1C84: dec  a]
 	jeq	l_1D25                             	    | [$1C85: jp   z,l_1D25]
+	addq.w	#2,d6                           	| [$1C88: inc  l] * 2
 	addq.w	#2,a0                           	| [$1C88: inc  l] * 2
 	subq.b	#1,d1                               | we need original D1 value!! no dbf!!!
 	jne		l_1C83_while                       	| [$1C8A: djnz l_1C83_while]
@@ -5190,9 +5191,9 @@ l_1D16:
 * Movement of captured rogue ship... out of section at l_1C83
 *-----------------------------------------------------------------------------
 l_1D25:
-	move.w	#db_flv_rogefgter_0444,d3           	| [ld   de,#db_fltv_rogefgter]
-	jbsr	c_diving_movement_1083                  | [call c_diving_movement_1083] rogue fighter
-	rts                                    	        | [ret]
+	move.w	#db_flv_rogefgter_0444,d3       | [$1D25: ld   de,#db_fltv_rogefgter]
+	jra	c_diving_movement_1083              | [$1D28: call c_diving_movement_1083] rogue fighter
+	                                    	| [$1D2B: ret]
 
 *=============================================================================
 * 6 escort aliens (right to left under the 4 bosses )
@@ -6941,13 +6942,14 @@ f_update_objects_23e0:
 * frame count bit-1 provides start index/offset of obj_status[], i.e. 0,4,8,etc.
 * on frame 1 and 2,6,10,etc. on frame 3
 	and.b	#0x02,d0                         	| [$23E5: and  #0x02]
+	moveq	#0,d4
 	move.b	d0,d4                           	| [$23E7: ld   e,a] E==0 if frame 1, E==2 if frame 3
 	move.b	b_bugs_actv_cnt,d0              	| [$23E8: ld   a,(b_bugs_actv_cnt)]
 	move.b	d0,ixl								| [$23EB: ld   ixl,a] use as "local" variable for object counter
 	move.b	#32,d1                          	| [$23ED: ld   b,#32] size of object set / 2
+
 l_next_object_23EF:
 	lea	object_states_8800,a1                   | [$23EF: ld   d,#>object_states_8800]
-	and.w	#0xFF,d4
 	add.w	d4,a1
 	moveq	#0,d0
 	move.b	(a1),d0                             | [$23F1: ld   a,(de)]

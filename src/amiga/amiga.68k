@@ -1503,6 +1503,7 @@ update_bobs:
 	lsr		#2,d3
 	move.l	(a7),a0
 	move.w	#0xFF0,_custom+color
+	jbsr	osd_break
 	.endif
 	jra		22f
 12:
