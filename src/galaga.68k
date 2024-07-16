@@ -40,16 +40,23 @@
 	.global		galaga_reset
 	.global		galaga_irq
 
+update_pulsing_sound_effect:
+	tst.b	b_9AA0+0x00
+	bne.b	start_pulsing_sound_effect
 stop_pulsing_sound_effect:
+	move.b	#0,b_9AA0+0x00
 	jbsr	osd_loop_stop
 	rts
 	
 start_pulsing_sound_effect:
-	move.b	d0,b_9AA0+0x00
+	tst.b	ds_plyr_actv+_b_not_chllg_stg
+	jeq		0f		| has a tendency to trigger at the end of challenge stage!
+	move.b	#1,b_9AA0+0x00
 	move.w	d0,-(a7)
 	move.w	#SWARM_SND,d0
 	jbsr	osd_sound_start
 	move.w	(a7)+,d0
+0:
 	rts
 	
 *=============================================================================
@@ -787,8 +794,7 @@ l_05A3_while:
 	move.b	d0,ds4_game_tmrs_92ac+2             | [ld   (ds4_game_tmrs_92ac + 2),a] actv_plyr_state[0x1F]
 	move.b	ds_plyr_actv+_b_sndflag,d0      	| [ld   a,(ds_plyr_actv +_b_sndflag)] _fx[0] ... enable for pulsing_sound
 	move.b	d0,b_9AA0+0x00                  	| [ld   (b_9AA0 + 0x00),a] enable for pulsing_sound
-	*move.w	#PUSLING_SND,d0
-	*jbsr	osd_sound_start
+	jbsr	update_pulsing_sound_effect
 	jbsr	draw_resv_ships_136c                | [call draw_resv_ships_136c]
 
 * if ( _enmy_ct_actv != 0 ) ...
@@ -1489,7 +1495,7 @@ l_0865:
 	jbsr	rst_18                            	| [$0882: rst  0x18] memset((HL), A=fill, B=ct)
 	clr.b	d0                               	| [$0883: xor  a]
 	move.b	d0,b_9AA0+0x00                  	| [$0884: ld   (b_9AA0 + 0x00),a] 0 ... sound-fx count/enable registers, kill pulsing sound effect (free-fly)
-	jbsr	stop_pulsing_sound_effect
+	jbsr	update_pulsing_sound_effect
 	rts                                    	    | [$0887: ret]
 
 l_0888:

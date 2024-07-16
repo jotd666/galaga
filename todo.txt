@@ -1,9 +1,6 @@
-- swarm sound interrupting attack sounds
-- yellow flash: mutants at level 10
-- attack sound no longer playing after "perfect" challenge stage music
-- stage 14: big shield flag not refreshed
-- capture bottom beam is red because of Namco logo hack
-  should detect namco logo and act accordignly
+- capture bottom beam is red because of Namco logo hack?? reset rows doesn't work
+- we have to redraw flags/lives if some erase event occurs, not just draw event:
+  ship explosion, and objects wrapping around Y axis
 
 minor issues:
 

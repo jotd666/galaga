@@ -178,7 +178,7 @@ add_sprite_block(0x8,0x10,"boss_ship",[0,1,10],mirror=True)   # 10: yellow when 
 add_sprite_block(0,0x6,"ship",[2,5,7,9,0xA],mirror=True)
 # use hardware sprite for non-rotating ship, straight
 add_sprite_block(6,8,"ship",[2,5,7,9,0xA],mirror=True,flip=True,sprite_type=ST_HW_SPRITE)
-add_sprite_block(0x10,0x18,"moth",[2,4,0xA],mirror=True)
+add_sprite_block(0x10,0x18,"moth",[2,4,6,0xA],mirror=True)
 add_sprite_block(0x18,0x20,"bee",[3,4,6,0xA,0x5],mirror=True)
 add_sprite_block(0x50,0x57,"mutant_galaxian_boss",[4,0xA],mirror=True) # sprite_type=ST_HW_SPRITE,
 add_sprite_block(0x58,0x5F,"mutant_scorpion",[5,0xA],mirror=True)  #,sprite_type=ST_HW_SPRITE

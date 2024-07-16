@@ -854,10 +854,11 @@ _vblank:
 	.endif
 	move.w	d1,music_tick
 	bne.b	13f
-	move.b	music_track_start_number,d2
+	lea		playing_sounds(pc),a1
+	move.b	(PERFECT_SND,a1),d2
 	bsr		osd_sound_stop
-	cmp.b	#10,d2
-	jne		13f
+	tst.b	d2
+	jeq		13f
 	* special case end of "PERFECT" play attack sound
 	move.w	#ATTACK_SND,d0
 	jbsr	osd_sound_start
@@ -995,7 +996,6 @@ sprite_toggle:
 	dc.w	0
 	
 refresh_status_bar:
-	lea			hardware_sprite_flag_table,a2
 	* previous sprites are now current sprites
 	move.l		bob_previous_drawed_sprites(pc),a4
 	clr.b		d5		| done at right flag
@@ -1007,6 +1007,7 @@ refresh_status_bar:
 	
 	moveq	#NB_TARGET_SPRITES-1,d7
 1:
+	lea			hardware_sprite_flag_table,a2
 	moveq	#0,d0
 	move.w	(PREVIOUS_SPRITE_X,a4),d0
 	jeq		11f		| x=0: was inactive
@@ -1017,7 +1018,7 @@ refresh_status_bar:
 	jne		11f		| hardware sprite: don't consider
 	move.w	(PREVIOUS_SPRITE_Y,a4),d1
 	add.w	(PREVIOUS_SPRITE_HEIGHT,a4),d1	| Y bottom for sprite
-	cmp.w	#Y_MAX+1,d1
+	cmp.w	#Y_MAX+1-16,d1
 	jcs		11f
 	* conflict: sprite probably overwrote tiles: redraw
 	* redraw left part if not already done
@@ -1032,7 +1033,7 @@ refresh_status_bar:
 	bcs.b	13f
 	move.b	#6,d3		| max 6 lives displayed
 13:
-	addq.w	#2,d3		| take blitter shifting into account
+	addq.w	#2,d3		| take blitter shifting into account, bob could be shifted by 15
 	lsl.w	#4,d3		| 16 pixels per ship, max 6 ships
 	cmp.w	d3,d0
 	bcc.b	12f
@@ -1043,20 +1044,19 @@ refresh_status_bar:
 	jbsr	redraw_2_rows
 	movem.w	(a7)+,d4/d5/d7
 	st.b	d4
+	bra.b	11f			| no need to test for right part
 12:
 	* redraw right part if not already done
 	tst.b	d5
 	bne.b	11f
-	cmp.w	#NB_ROWS*8-112-16,d0
+	cmp.w	#(NB_ROWS-15)*8-32,d0	| max possible left pos for level flags
 	bcs.b	11f
 	* really redraw right part
-	exg	d5,d4
 	movem.w	d4/d5/d7,-(a7)
 	move.w	#0x2,d7
 	move.w	#12-1,d4
 	jbsr	redraw_2_rows
 	movem.w	(a7)+,d4/d5/d7
-	* d4 is aleady FF
 	st.b	d5
 
 11:
@@ -2098,6 +2098,7 @@ osd_sound_start:
 	move.w	d0,d2
 	lsl.w	#3,d0
 	lea		sound_table,a0
+	lea		playing_sounds(pc),a1
 
 	move.w	(a0,d0.w),d1	| sound type
 	beq.b	0f		| no sound
@@ -2126,27 +2127,13 @@ osd_sound_start:
 	beq.b	3f
 	* looped sound
 
-	lea		playing_sounds(pc),a1
 	tst.b	(a1,d2.w)
 	bne.b	1f				| loop already playing: skipped
-	* also make loop less priority than other sounds of
-	* the same channel
-	* (with ptplayer it is the opposite so we have to do this
-	* manually)
-	tst.b	(BEE_KILLED_SND,a1)
-	bne.b	1f				| attack sound playing: skipped
-	tst.b	(ATTACK_SND,a1)
-	bne.b	1f				| attack sound playing: skipped
+
 	st		(a1,d2.w)
 	jsr		_mt_loopfx
 	bra.b	1f
 3:
-	cmp.b	#LOOP_CHANNEL,(10,a0)
-	bne.b	30f
-	* playing on loop channel (pulsing/swarm): stop the loop first
-	move.w	#0x0F0,0xDFF180
-	jbsr	osd_loop_stop
-30:
 	jsr		_mt_playfx
 1:
 	movem.l	(a7)+,d0-d2/a0-a1/a6
@@ -2156,9 +2143,6 @@ osd_sound_start:
 	bra.b	1b
 	* music
 4:
-	lea		playing_sounds(pc),a1
-	* note that this sound is playing!
-	st.b	(a1,d2.w)
 	* play the proper module pattern
 	* load up the countdown if loop
 	move.w	(2,a0,d0.w),d1	| pattern number in .mod file
@@ -2171,6 +2155,9 @@ osd_sound_start:
 	bsr		osd_sound_stop
     lea _custom,a6
  	movem.l	d0/a0,-(a7)
+	* note that this sound is playing!
+	lea		playing_sounds(pc),a0
+	st.b	(a0,d2.w)
     lea	galaga_tunes,a0
 	move.b	d1,music_track_start_number
 	move.w	d1,d0
@@ -2207,7 +2194,7 @@ osd_loop_stop:
 	move.w	#LOOP_CHANNEL,d0		| channel used by sound loops
 	jbsr	_mt_stopfx
 	lea		playing_sounds(pc),a0
-
+	clr.b	(SWARM_SND,a0)
 	movem.l	(a7)+,d0/a0/a6
 	rts
 
@@ -2714,6 +2701,20 @@ update_bg_color:
 update_bg_tile:
 	and.w	#0xFF,d0	| mask up to 255
 
+	cmp.w	#0x1FE,d7	| namco logo position
+	jne		0f
+	cmp.b	#0x32,d0
+	jne		10f
+	* namco logo drawn: set bottom to red
+	jbsr	set_namco_rows_red
+	jra		0f
+10:
+	cmp.b	#0x24,d0
+	jne		0f
+	* space drawn: reset dynamic rows
+
+	jbsr	reset_namco_rows
+0:
 	bsr		compute_tile_xy
 	cmp.w	#MAX_ROW_X,d7
 	jcc	0f				| above 30: ignore
@@ -2859,13 +2860,67 @@ update_bg_tile:
 	**blitz
 	rts
 
-			
+
+set_namco_rows_red:
+	move.w	d0,-(a7)
+	* restore red color entries
+	lea		red_rows,a0
+	move.w	#start_color,d0
+	move.w	d0,(a0)
+	addq.w	#8,d0
+	move.w	d0,(4,a0)
+	addq.w	#8,d0
+	move.w	d0,(8,a0)
+	
+	move.w	#0x1FE,d0
+	lea		color_row_31,a0
+	* remove color entries
+	move.w	d0,(a0)
+	move.w	d0,(4,a0)
+	move.w	d0,(8,a0)
+	lea		color_row_32,a0
+	move.w	d0,(a0)
+	move.w	d0,(4,a0)
+	move.w	d0,(8,a0)
+	move.w	(a7)+,d0
+	rts
+	
+reset_namco_rows:
+	move.w	d0,-(a7)
+
+	* remove color entries
+	lea		red_rows,a0
+	move.w	#0x1FE,d0
+	move.w	d0,(a0)
+	move.w	d0,(4,a0)
+	move.w	d0,(8,a0)
+	
+	move.w	#start_color,d0
+	lea		color_row_31,a0
+	* restore color entries
+	move.w	d0,(a0)
+	addq.w	#8,d0
+	move.w	d0,(4,a0)
+	addq.w	#8,d0
+	move.w	d0,(8,a0)
+	move.w	#start_color,d0
+	lea		color_row_32,a0
+	move.w	d0,(a0)
+	addq.w	#8,d0
+	move.w	d0,(4,a0)
+	addq.w	#8,d0
+	move.w	d0,(8,a0)
+	move.w	(a7)+,d0
+
+	rts
+				
 store_sprite_pos_16:
 	move.l	a1,-(a7)
 	lea		HW_SpriteYTable_16,a1
 	bsr		store_sprite_pos
 	move.l	(a7)+,a1
 	rts
+	
 *store_sprite_pos_32:
 *	move.l	a1,-(a7)
 *	lea		HW_SpriteYTable_32,a1
@@ -3822,24 +3877,24 @@ color_row_30:
 	* works for rest of letters out of luck, but NAMCO logo
 	* is of a different color and it fails. Nevermind, I'm sick
 	* of this copperlist, as long as it works it's fine by me
+red_rows:
 	.word	start_color,0xF00
 	.word	start_color+8,0xF00
 	.word	start_color+16,0xF00
 	
-	* we have to leave 3 copperlist slots as the stars scroll
-	* expects it.
+
 color_row_31:
-	.word	0x1FE,default_color_1 
-	.word	0x1FE,default_color_2
-	.word	0x1FE,default_color_3
+	.word	start_color,default_color_1 
+	.word	start_color+8,default_color_2
+	.word	start_color+16,default_color_3
 	.rept	8
 	.set	beampos,beampos+0x100
 	STAR_COPPER_ROW
 	.endr
 color_row_32:
-	.word	0x1FE,default_color_1 
-	.word	0x1FE,default_color_2
-	.word	0x1FE,default_color_3
+	.word	start_color,default_color_1 
+	.word	start_color+8,default_color_2
+	.word	start_color+16,default_color_3
 	.rept	8
 	.set	beampos,beampos+0x100
 	STAR_COPPER_ROW
@@ -3861,7 +3916,6 @@ color_row_34:
 	.set	beampos,beampos+0x100
 	STAR_COPPER_ROW
 	.endr
-
 
     .word	 intreq,0x8010	| no bobs from now on, get more drawing time
 	
