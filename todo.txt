@@ -1,6 +1,12 @@
 - capture bottom beam is red because of Namco logo hack?? reset rows doesn't work
 - we have to redraw flags/lives if some erase event occurs, not just draw event:
   ship explosion, and objects wrapping around Y axis
+- block sfx when music is playing except ATTACK if perfect tune
+- option make scrolling stars static (independent from 50 fps)
+- check command line options
+- highscore screen: top left score completely buggy
+- shots & moth kill sounds have cracks
+
 
 minor issues:
 
