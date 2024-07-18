@@ -8466,6 +8466,7 @@ l_3073:
 
 	lea		0x8000+0x0300+0x09,a1      	            | [$3088: ld   de,#0x8000 + 0x0300 + 0x09]
 	move.l	b_8A00,a0              	                | [$308B: ld   hl,(b_8A00 + 0x00)] ptr to plyr1 score or plyr2 score on screen.
+	add.l	#bg_videoram-0x8000,a0					| point to video ram (no need to use osd_r_videoram)
  	jbsr	string_copy_3275                        | [$308E: call string_copy_3275] puts players score below "SCORE"
 
 * puts_AAA (default initials of new score entry) below NAME

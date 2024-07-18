@@ -306,7 +306,6 @@ _user:
 	
 
 	bsr	get_args_BCPL
-
 0:	
 	lea		program_args,a0
 
@@ -329,6 +328,14 @@ _user:
 	beq.b	2f
 	* cheat isn't used as long as no cheat key is used
 	or.l	#0x10,cheat_flags
+2:
+	move.l	(A0)+,D0	| STATICSTARS/S
+	beq.b	2f
+	or.l	#2,misc_options
+2:
+	move.l	(A0)+,D0	| FORCE25FPS/S
+	beq.b	2f
+	or.l	#1,misc_options
 2:
 
 
@@ -438,9 +445,10 @@ _user:
 	sne		break_at_startup_flag
 	.endif
 	btst	#0,d1
-	sne		slow_machine
 	sne		half_fps
 
+	btst	#1,d1
+	sne		static_stars
 
 	move.l	start_level_option,d0
 	move.b	d0,start_level
@@ -679,7 +687,7 @@ show_stars:
 	lsr.w	#2,d0
 	move.w	d0,stars_copper_pointers_count
 	move.l	(a7)+,a5
-	tst.b	slow_machine
+	tst.b	static_stars
 	bne.b	3f
 	st.b	enable_star_scroll
 3:
@@ -2112,8 +2120,7 @@ osd_sound_start:
 	beq.b	10f
 	cmp.w	#CREDIT_SND,d2
 	beq.b	10f
-	cmp.w	#ATTACK_SND,d2
-	beq.b	10f
+
 	
 	* don't play if already playing
 	* (music_tick value is not important for looped tunes
@@ -2281,7 +2288,7 @@ store_system:
 3:
 	* no whdload, no 68020: assume slow
 	* if running on PiStorm, well, too bad use whdload
-	st.b	slow_machine
+	st.b	static_stars
 	st.b	half_fps
 1:
 	lea	_custom,a6
@@ -3439,7 +3446,7 @@ program_args_end:
 read_args_string:
 	.byte	read_args_string_end-read_args_string
 	.ascii	"INVINCIBLE/S,INFLIVES/S,PERFECT/S,"
-	.ascii	"CHEATKEYS/S,STARTLIVES/K/N,STARTLEVEL/K/N"
+	.ascii	"CHEATKEYS/S,STATICSTARS/S,FORCE25FPS/S,STARTLIVES/K/N,STARTLEVEL/K/N"
 read_args_string_end:
 	.align	2
 
@@ -3497,7 +3504,7 @@ old_actiview:
 	.long	0
 old_stack:
 	.long	0
-slow_machine:
+static_stars:
 	.word	0
 half_fps:
 	.word	0
