@@ -1,3 +1,4 @@
+- A500 mode: doesn't detect slow machine!
 - capture bottom beam is red because of Namco logo hack?? reset rows doesn't work
 - we have to redraw flags/lives if some erase event occurs, not just draw event:
   ship explosion, and objects wrapping around Y axis

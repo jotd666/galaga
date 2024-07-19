@@ -84,16 +84,16 @@
 	.endm
 	
 	.macro CLEAR_XC_FLAGS
-	move.w	d7,-(a7)
+	exg		d7,a5
 	moveq	#0,d7
 	roxl.b	#1,d7
-	movem.w	(a7)+,d7
+	exg		d7,a5
 	.endm
 	.macro SET_XC_FLAGS
-	move.w	d7,-(a7)
+	exg		d7,a5
 	st	d7
 	roxl.b	#1,d7
-	movem.w	(a7)+,d7
+	exg		d7,a5
 	.endm
 	.macro	INVERT_XC_FLAGS
 	jcs	0f
@@ -114,10 +114,10 @@
 
 	
 	.macro	SET_C_FROM_X
-	move.w	d7,-(a7)
+	exg		d7,a5
 	roxl.b	#1,d7
 	roxr.b	#1,d7
-	movem.w	(a7)+,d7
+	exg		d7,a5
     .endm
 
 	.ifdef	RELEASE

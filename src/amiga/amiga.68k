@@ -687,18 +687,15 @@ show_stars:
 	lsr.w	#2,d0
 	move.w	d0,stars_copper_pointers_count
 	move.l	(a7)+,a5
-	tst.b	static_stars
-	bne.b	3f
-	st.b	enable_star_scroll
-3:
+
 	rts
 1:
 	clr.l	d0
 	bra.b	0b
 	
 scroll_stars:
-	tst.b	enable_star_scroll
-	bne.b	0f
+	tst.b	static_stars
+	beq.b	0f
 	rts
 0:
 	lea		stars_copper_row_pointers(pc),a5
@@ -1116,9 +1113,9 @@ update_hardware_sprites:
 	* check active sprites, we'll disable the sprites that aren't active anymore
 	lea		hardware_sprite_flag_table,a5
 	moveq	#NB_TARGET_SPRITES-1,d7
+	moveq	#0,d2
 1:
 	* code = 0 and clut = 0 => disabled
-	moveq	#0,d2
 	move.b	(TARGET_SPRITE_CODE,a0),d2
 	
 	tst.b	(a5,d2.w)		| is that a sprite
@@ -1168,6 +1165,7 @@ update_hardware_sprites:
 	* sprite active: allocate a sprite in host table
 	* it HAS to succeed (it will as we only use a few sprites at the same time)
 	bsr		alloc_sprite
+	moveq	#0,d2
 2:
 	addq.w	#CURRENT_SPRITE_SIZE,a0
 	dbf		d7,1b
@@ -1312,8 +1310,8 @@ compute_sprite_xy:
 	and.b	#3,d1		| 3 seems not possible as X would be too big
 	lsl.w	#8,d1		| times 0x100
 	add.w	d1,d0
-	beq		2f
-	bpl		3f
+	jeq		2f
+	jpl		3f
 2:
 	* one of the X,Y coord is zero: zero both and return
 	* (makes amiga-side handling much easier)
@@ -1324,18 +1322,18 @@ compute_sprite_xy:
 3:
 	moveq	#0,d1
 	move.b	(TARGET_SPRITE_Y,a0),d1  | sprite Y
-	beq		2b
+	jeq		2b
 	tst		d1
-	bmi		2b
+	jmi		2b
 
 	addq	#1,d1		| sprites are buffered and delayed by one scanline
 	exg		d0,d1		| display is rotated 90 degrees!
 	
 	.ifndef	RELEASE
 	cmp.w	#0x200,d0
-	bcs.b	0f
+	jcs		0f
 	cmp.w	#0x200,d1
-	bcs.b	0f
+	jcs		0f
 	move.l	#sfr_sprite_code_8B80,d0
 	sub.l	a0,d0
 	lea		coordinates_out_of_range_error(pc),a1
@@ -2276,6 +2274,8 @@ store_system:
 
 	jsr		_LVOSupervisor(a6)
 	move.l	d0,system_vbr
+	
+	
 1:
 	pea		2f(pc)	
 2:
@@ -3548,8 +3548,7 @@ temp_copper_buffer:
 	ds.w	3
 stars_copper_pointers_count:
 	.word	0
-enable_star_scroll:
-	.word	0
+
 stars_copper_row_pointers:
 	ds.l	NB_LINES+32
 	
@@ -3767,6 +3766,7 @@ blank_sound:
 	ds.l	4
 	
 debug_copperlist:
+	dc.w	bplcon0,0x200
 	dc.w	color
 debug_color:
 	dc.w	0
