@@ -59,6 +59,17 @@ start_pulsing_sound_effect:
 0:
 	rts
 	
+set_fight_vector_pointer_a1:
+	move.l	a1,pdb_demo_fghtrvctrs_9282
+	rts
+set_fight_vector_pointer_a0:
+	move.l	a0,pdb_demo_fghtrvctrs_9282
+	rts
+	
+get_fight_vector_pointer:
+	move.l	pdb_demo_fghtrvctrs_9282,a1
+	rts
+	
 *=============================================================================
 * por_inits()
 *  Description:
@@ -3750,7 +3761,7 @@ _l_15f1: | end area
 f_ship_demo_controls_1700:
 * labels for "case" blocks in _1713
 * switch( *_demo_fghtrvctrs >> 5) & 0x07 )
-	move.l	pdb_demo_fghtrvctrs_9282,a1      	    | [$1700: ld   de,(pdb_demo_fghtrvctrs_9282)] cases for switch
+	jbsr	get_fight_vector_pointer	      	    | [$1700: ld   de,(pdb_demo_fghtrvctrs_9282)] cases for switch
 	move.b	(a1),d0                     			| [$1704: ld   a,(de)]
 	rol.b	#3,d0                       			| [$1705: rlca] * 3
 	and.b	#0x07,d0                    			| [$1708: and  #0x07]
@@ -3788,7 +3799,7 @@ case_boss_wingmen_near_171F:  | 0x02
 * appearance of first enemy formation in Demo
 case_172D:  | 0x05
 	jbsr	c_init_rocket_sprites_1F0F      	| [$172D: call c_init_rocket_sprites_1F0F] init sprite objects for rockets
-	move.l	pdb_demo_fghtrvctrs_9282,a1         | [$1730: ld   de,(pdb_demo_fghtrvctrs_9282)] trampled DE so reload it
+	jbsr	get_fight_vector_pointer            | [$1730: ld   de,(pdb_demo_fghtrvctrs_9282)] trampled DE so reload it
 
 * drives the simulated inputs to the fighter in training mode
 case_drives_sim_inputs_1734:  | 0x04
@@ -3835,7 +3846,7 @@ l_1755:
 
 * here shoot during demo (real game demo and intro)
 case_demo_1766:  | 0x00, 0x01, 0x03
-	move.l	pdb_demo_fghtrvctrs_9282,a1    		| [$1766: ld   de,(pdb_demo_fghtrvctrs_9282)]
+	jbsr	get_fight_vector_pointer    		| [$1766: ld   de,(pdb_demo_fghtrvctrs_9282)]
 	move.b	(a1),d0                         	| [$176A: ld   a,(de)]
 	and.b	#0xC0,d0                         	| [$176B: and  #0xC0] 0x80 fires shot ... 0xC0 is end of sequence
 	cmp.b	#0x80,d0                         	| [$176D: cp   #0x80]
@@ -3844,7 +3855,7 @@ case_demo_1766:  | 0x00, 0x01, 0x03
 l_1772:
 	addq.w	#1,a1                           	| [$1772: inc  de]
 	move.b	(a1),d0                         	| [$1773: ld   a,(de)]
-	move.l	a1,pdb_demo_fghtrvctrs_9282    		| [$1774: ld   (pdb_demo_fghtrvctrs_9282),de] += 1
+	bsr		set_fight_vector_pointer_a1    		| [$1774: ld   (pdb_demo_fghtrvctrs_9282),de] += 1
 * A = (*_demo_fghtrvctrs >> 5) & 0x07|
 	rol.b	#3,d0                            	| [$1778: rlca] * 3
 	and.w	#0x07,d0                         	| [$177B: and  #0x07]
@@ -4000,8 +4011,7 @@ case_delay_before_game_over_17F5:
 case_enable_fighter_control_demo_1808:
 	jbsr	c_fighter_onscreen_133A           | [call c_fighter_onscreen_133A]
 	lea	d_181F,a0                      	      | [ld   hl,#d_181F]
-	move.l	a0,pdb_demo_fghtrvctrs_9282       | [ld   (pdb_demo_fghtrvctrs_9282),hl] &d_181F[0]
-
+	jbsr	set_fight_vector_pointer_a0       | [ld   (pdb_demo_fghtrvctrs_9282),hl] &d_181F[0]
 	move.b	#1,d0                             | [ld   a,#1]
 	move.b	d0,ds_cpu0_task_actv_9000+0x03    | [ld   (ds_cpu0_task_actv_9000 + 0x03),a] 1  (f_ship_demo_controls_1700 ... fighter control in training/demo mode)
 	move.b	d0,ds_cpu0_task_actv_9000+0x15    | [ld   (ds_cpu0_task_actv_9000 + 0x15),a] 1  (f_read_fire_button_1f04 ... fire button input))
@@ -4012,6 +4022,17 @@ case_enable_fighter_control_demo_1808:
 d_181F:
 	.byte 0x08,0x18,0x8A,0x08,0x88,0x06,0x81,0x28,0x81,0x05,0x54,0x1A,0x88,0x12,0x81,0x0F
 	.byte 0xA2,0x16,0xAA,0x14,0x88,0x18,0x88,0x10,0x43,0x82,0x10,0x88,0x06,0xA2,0x20,0x56,0xC0
+
+* demo fighter vectors demo level before capture
+d_1887:
+	.byte 0x02,0x8A,0x04,0x82,0x07,0xAA,0x28,0x88,0x10,0xAA,0x38,0x82,0x12,0xAA,0x20,0x88
+	.byte 0x14,0xAA,0x20,0x82,0x06,0xA8,0x0E,0xA2,0x17,0x88,0x12,0xA2,0x14,0x18,0x88,0x1B
+	.byte 0x81,0x2A,0x5F,0x4C,0xC0
+
+* demo fighter vectors training mode
+d_1928:
+	.byte 0x08,0x1B,0x81,0x3D,0x81,0x0A,0x42,0x19,0x81,0x28,0x81,0x08
+	.byte 0x18,0x81,0x2E,0x81,0x03,0x1A,0x81,0x11,0x81,0x05,0x42,0xC0
 	.align	2
 	
 * 12: end of Demo, fighter has been erased but remaining enemies may not have been erased yet
@@ -4039,7 +4060,7 @@ case_init_demo_1852:
 	move.b	d0,ds_cpu0_task_actv_9000+0x15      | [$1860: ld   (ds_cpu0_task_actv_9000 + 0x15),a] 1  (f_read_fire_button_1f04 ... fire button input)
 	move.b	d0,ds_plyr_actv+_b_not_chllg_stg	| [$1863: ld   (ds_plyr_actv +_b_not_chllg_stg),a] 1  (0 if challenge stage ...see new_stg_game_only)
 	lea	d_1887(pc),a0                      		| [$1866: ld   hl,#d_1887]
-	move.l	a0,pdb_demo_fghtrvctrs_9282         | [$1869: ld   (pdb_demo_fghtrvctrs_9282),hl] &d_1887[0]
+	jbsr		set_fight_vector_pointer_a0       | [$1869: ld   (pdb_demo_fghtrvctrs_9282),hl] &d_1887[0]
 	jbsr	stg_init_env_01c5                   | [$186C: call stg_init_env_01c5]
 	jbsr	c_fighter_onscreen_133A             | [$186F: call c_fighter_onscreen_133A] apparently erases some stuff from screen?
 	move.b	#1,d0                           	| [$1872: ld   a,#1]
@@ -4050,13 +4071,6 @@ case_init_demo_1852:
 	move.b	d0,ds_new_stage_parms_99c0+0x04     | [$187E: ld   (ds_new_stage_parms_99c0 + 0x04),a] 2 ... max_bombers (demo)
 	move.b	d0,ds_new_stage_parms_99c0+0x05     | [$1881: ld   (ds_new_stage_parms_99c0 + 0x05),a] 2 ... increases max bombers in certain conditions (demo)
 	jra	l_attmode_state_step_19a7               | [$1884: jp   l_attmode_state_step_19a7]
-
-* demo fighter vectors demo level before capture
-d_1887:
-	.byte 0x02,0x8A,0x04,0x82,0x07,0xAA,0x28,0x88,0x10,0xAA,0x38,0x82,0x12,0xAA,0x20,0x88
-	.byte 0x14,0xAA,0x20,0x82,0x06,0xA8,0x0E,0xA2,0x17,0x88,0x12,0xA2,0x14,0x18,0x88,0x1B
-	.byte 0x81,0x2A,0x5F,0x4C,0xC0
-	.align	2
 	
 * 05: synchronize copyright text with completion of explosion of last boss
 case_copyright_text_sync_18AC:
@@ -4130,7 +4144,7 @@ l_18DB_while:
 * now: 92C0  0D FF FF FE 0D FF FF. FE is there from system tests, and has no effect
 
 	lea	d_1928,a0                      			| [$18F9: ld   hl,#d_1928] demo fighter vectors
-	move.l	a0,pdb_demo_fghtrvctrs_9282         | [$18FC: ld   (pdb_demo_fghtrvctrs_9282),hl] &d_1928[0] ... demo fighter vectors
+	jbsr	set_fight_vector_pointer_a0            | [$18FC: ld   (pdb_demo_fghtrvctrs_9282),hl] &d_1928[0] ... demo fighter vectors
 
 * memset($92ca,$00,$10)
 	clr.b	d0                               	| [$18FF: xor  a]
@@ -4154,10 +4168,6 @@ l_18DB_while:
 
 	jra	l_attmode_state_step_19a7               	| [jp   l_attmode_state_step_19a7]
 
-* demo fighter vectors training mode
-d_1928:
-	.byte 0x08,0x1B,0x81,0x3D,0x81,0x0A,0x42,0x19,0x81,0x28,0x81,0x08
-	.byte 0x18,0x81,0x2E,0x81,0x03,0x1A,0x81,0x11,0x81,0x05,0x42,0xC0
 
 * 00, 06, 13: clear tile and sprite ram
 case_clear_video_ram_1940:
