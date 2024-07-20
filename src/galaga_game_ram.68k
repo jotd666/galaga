@@ -106,33 +106,33 @@
 	.global		ds_89E0
 	.global		b_8A00
 	.global		b_best5_score_8a20
-	.global		b_best5_score1
-	.global		b_best5_score2
-	.global		b_best5_score3
-	.global		b_best5_score4
-	.global		b_best5_score5
-	.global		b_best5_name1
-	.global		b_best5_name2
-	.global		b_best5_name3
-	.global		b_best5_name4
-	.global		b_best5_name5
+	.global		b_best5_score1_8a20
+	.global		b_best5_score2_8a26
+	.global		b_best5_score3_8a2c
+	.global		b_best5_score4_8a32
+	.global		b_best5_score5_8a38
+	.global		b_best5_name1_8a3e
+	.global		b_best5_name2_8a41
+	.global		b_best5_name3_8a44
+	.global		b_best5_name4_8a47
+	.global		b_best5_name5_8a4a
 	.global		ds_sprite_code_8B00
 	.global		mrw_sprite_code_8B00
 	.global		sfr_sprite_code_8B80
 	.global		ds_9000_RAM1
 	.global		ds_cpu0_task_actv_9000
-	.global		ds_cpu1_task_actv
+	.global		ds_cpu1_task_actv_9020
 	.global		ds_stk_cpu0_init
 	.global		ds_stk_cpu1_init
 	.global		ds_9100
-	.global		ds_9100_tmp
+	.global		ds_tmp_9100
 	.global		b_svc_test_inp_buf
 	.global		ds_atk_wav_tmp_buf_9100
 	.global		ds_bug_motion_que_9100
 	.global		ds_9200
-	.global		ds_9200_glbls
+	.global		ds_glbls_9200
 	.global		b8_game_state_9201
-	.global		b_9215_flip_screen
+	.global		b_flip_screen_9215
 	.global		b_obj_collsn_notif_9200
 	.global		b_svc_test_snd_slctn
 	.global		b_svc_eastregg_keyprs_cnt
@@ -142,61 +142,61 @@
 	.global		ds3_9288_tmp_IO_data
 	.global		p_attrmode_sptiles_9280
 	.global		pdb_demo_fghtrvctrs_9282
-	.global		b_bugs_flying_cnt
+	.global		b_bugs_flying_cnt_9286
 	.global		b_bugs_flying_nbr_9287
 	.global		b_bug_flyng_hits_p_round_9288
 	.global		b_bug_que_idx_9289
-	.global		ds5_928A_captr_status
+	.global		ds5_captr_status_928a
 	.global		ds_bug_collsn_hit_mult_9290
 	.global		b_92A0
 	.global		ds3_frame_cts_92A0
-	.global		b_bugs_actv_cnt
-	.global		b_bugs_actv_nbr
+	.global		b_bugs_actv_cnt_92a6
+	.global		b_bugs_actv_nbr_92a7
 	.global		w_bug_flying_hit_cnt_92a8
 	.global		ds4_game_tmrs_92ac
 	.global		b_92B0
 	.global		b_92C0
 	.global		bmbr_boss_pool_92ca
-	.global		b_CPU1_in_progress
-	.global		b_CPU2_in_progress
+	.global		b_CPU1_in_progress_92d6
+	.global		b_CPU2_in_progress_92d7
 	.global		pb_attk_wav_IDs_92e0
 	.global		b_92E2
 	.global		ds_sprite_posn_9300
 	.global		mrw_sprite_posn_9300
 	.global		sfr_sprite_posn_9380
-	.global		ds_9800_RAM2
+	.global		ds_RAM2_9800
 	.global		ds_hpos_spcoords_9800
 	.global		ds_plyr_data_9820
-	.global		ds_plyr_actv
-	.global		ds_plyr_susp
+	.global		ds_plyr_actv_9820
+	.global		ds_plyr_susp_9860
 	.global		ds_susp_plyr_obj_data_98b0
 	.global		ds_cpu0_task_resrv_98e0
 	.global		ds_hpos_loc_offs
 	.global		ds_hpos_loc_orig_9900
 	.global		ds10_9920
-	.global		ds_mchn_cfg
+	.global		ds_mchn_cfg_9980
 	.global		w_mchn_cfg_bonus_9980
-	.global		b_mchn_cfg_nships
-	.global		b_mchn_cfg_cab_type
+	.global		b_mchn_cfg_nships_9982
+	.global		b_mchn_cfg_cab_type_9983
 	.global		b_mchn_cfg_rank_9984
-	.global		b16_99B0_tmp
-	.global		ds3_99B0_X3attackcfg
-	.global		b8_99B0_X3attackcfg_ct
-	.global		b8_99B1_X3attackcfg_parm0
-	.global		b8_99B2_X3attackcfg_parm1
-	.global		b8_99B3_two_plyr_game
-	.global		b8_99B4_bugnest_onoff_scrn_tmr
+	.global		b16_tmp_99b0
+	.global		ds3_X3attackcfg_99b0
+	.global		b8_X3attackcfg_ct_99b0
+	.global		b8_X3attackcfg_parm0_99b1
+	.global		b8_X3attackcfg_parm1_99b2
+	.global		b8_two_plyr_game_99b3
+	.global		b8_bugnest_onoff_scrn_tmr_99b4
 	.global		ds3_io_input_99b5
-	.global		b8_99B8_credit_cnt
-	.global		ds_99B9_star_ctrl
-	.global		b8_ship_collsn_detectd_status
+	.global		b8_credit_cnt_99b8
+	.global		ds_star_ctrl_99b9
+	.global		b8_ship_collsn_detectd_status_99bf
 	.global		ds_new_stage_parms_99c0
 	.global		ds20_99E0
-	.global		ds10_99E0_mchn_data
-	.global		b16_99E0_ttl_plays_bcd
-	.global		b32_99E2_sum_score_bcd
-	.global		b32_99E6_gametime_secs_bcd
-	.global		b16_99EA_bonus_ct_bcd
+	.global		ds10_mchn_data_99e0
+	.global		b16_ttl_plays_bcd_99e0
+	.global		b32_sum_score_bcd_99e2
+	.global		b32_gametime_secs_bcd_99e6
+	.global		b16_bonus_ct_bcd_99ea
 	.global		b_9A00
 	.global		b_9A30
 	.global		b_9A60
@@ -210,7 +210,7 @@
 	.global		ds_sprite_ctrl_9B00
 	.global		mrw_sprite_ctrl_9B00
 	.global		sfr_sprite_ctrl_9B80
-	.global		ds2_stg_chllg_rnd_attrib
+	.global		ds2_stg_chllg_rnd_attrib_9284
 
 *=============================================================================
 * RAM0
@@ -268,27 +268,27 @@ b_8A00:
 * Top5 Table scores
 b_best5_score_8a20:
 
-b_best5_score1:
+b_best5_score1_8a20:
        .skip     0x06
-b_best5_score2:
+b_best5_score2_8a26:
        .skip     0x06
-b_best5_score3:
+b_best5_score3_8a2c:
        .skip     0x06
-b_best5_score4:
+b_best5_score4_8a32:
        .skip     0x06
-b_best5_score5:
+b_best5_score5_8a38:
        .skip     0x06
 
 * Top5 Table names
-b_best5_name1:
+b_best5_name1_8a3e:
        .skip     0x03       | 1st score initials
-b_best5_name2:
+b_best5_name2_8a41:
        .skip     0x03       | 2st score initials
-b_best5_name3:
+b_best5_name3_8a44:
        .skip     0x03       | 3st score initials
-b_best5_name4:
+b_best5_name4_8a47:
        .skip     0x03       | 4st score initials
-b_best5_name5:
+b_best5_name5_8a4a:
        .skip     0x03       | 5st score initials
 
        .skip     0x03       | unused (8A4D)
@@ -321,7 +321,7 @@ sfr_sprite_code_8B80:
 ds_cpu0_task_actv_9000:
        .skip     0x20
 
-ds_cpu1_task_actv:
+ds_cpu1_task_actv_9020:
        .skip     0x08
 
        .skip     0x08       | unused
@@ -339,7 +339,7 @@ ds_9100:
 * temp variables for romtest mgr
 
 
-ds_9100_tmp:
+ds_tmp_9100:
 
 
 ds_atk_wav_tmp_buf_9100:
@@ -382,7 +382,7 @@ ds_bug_motion_que_9100:
 * Object-collision notification to f_update_enemy_status_1db3 from cpu1:c_076A (even-bytes)
 *-----------------------------------------------------------------------------
 b_obj_collsn_notif_9200:
-ds_9200_glbls:
+ds_glbls_9200:
        .skip     0x01
 b8_game_state_9201:
        .skip     0x01       | game states (1, 2, 3, 4 from the manual)
@@ -421,7 +421,7 @@ b8_game_state_9201:
 *_b_9213
        .skip     0x01       | restart_stage "end of attack" (all attackers go home)
        .skip     0x01       | 07DD, 1DC1
-b_9215_flip_screen:
+b_flip_screen_9215:
        .skip     0x01
        .skip     0x01
 *_b_9217
@@ -461,10 +461,10 @@ p_attrmode_sptiles_9280:
 	.skip    2       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
 pdb_demo_fghtrvctrs_9282:
 	.skip     2       | f_ship_demo_controls_1700, tracks state of demo mode by setting an offset to the data table
-ds2_stg_chllg_rnd_attrib:   | attributes selected for hit all 8 bonus on challenge round convoy i.e. score, sprite tile
+ds2_stg_chllg_rnd_attrib_9284:   | attributes selected for hit all 8 bonus on challenge round convoy i.e. score, sprite tile
        .skip     0x01       | hit-count, add to collsn_hit_mult[0x0F]
        .skip     0x01       | sprite code and collision flag, ld to obj_collsn_notif[L]
-b_bugs_flying_cnt:
+b_bugs_flying_cnt_9286:
        .skip     0x01       | count of flying pests in flite-q (current frame)
 b_bugs_flying_nbr_9287:
        .skip     0x01       | nbr of flying pests in flite-q (previous frame)
@@ -474,7 +474,7 @@ b_bug_flyng_hits_p_round_9288:
 b_bug_que_idx_9289:
        .skip     0x01       | cpu1:f_08D3 local loop counter
 
-ds5_928A_captr_status:
+ds5_captr_status_928a:
        .skip     0x05       | [0] status of tractor beam
                             * [1] status of rescued ship (counter while ship is positioned into collective)
                             * [2] status of rescued ship
@@ -495,9 +495,9 @@ ds3_frame_cts_92A0:
        .skip     0x02       | each byte tracks a shot from the ship
 
 * this group all related to tracking number of attackers during a stage
-b_bugs_actv_cnt:
+b_bugs_actv_cnt_92a6:
        .skip     0x01       | counts number of active bugs at each frame update (c_23E0)
-b_bugs_actv_nbr:
+b_bugs_actv_nbr_92a7:
        .skip     0x01       | total number of active bugs (global)
 w_bug_flying_hit_cnt_92a8:
        .skip     0x02       | count down each flying bug hit (only relevant on challenge stg) only the lsb is used.
@@ -528,9 +528,9 @@ bmbr_boss_pool_92ca:
 * 12 bytes in 4 groups of 3 ... slots for boss+wing missions
        .skip     0x0C
 
-b_CPU1_in_progress:
+b_CPU1_in_progress_92d6:
        .skip     0x01
-b_CPU2_in_progress:
+b_CPU2_in_progress_92d7:
        .skip     0x01
 
        .skip     0x08       | unused
@@ -568,7 +568,7 @@ sfr_sprite_posn_9380:
 *.area MRW (abs,ovr)
 *.org $9800
 
-ds_9800_RAM2:
+ds_RAM2_9800:
 
 
 * Pixel coordinates for object origin positions in the cylon fleet.
@@ -582,9 +582,9 @@ ds_hpos_spcoords_9800:
 * see definitions in structs.inc
 ds_plyr_data_9820:
 
-ds_plyr_actv:
+ds_plyr_actv_9820:
        .skip     0x40
-ds_plyr_susp:
+ds_plyr_susp_9860:
        .skip     0x40
 
        .skip     0x10       | unused
@@ -613,13 +613,13 @@ ds10_9920:
 
        .skip     0x50       | unused
 
-ds_mchn_cfg:
+ds_mchn_cfg_9980:
 
 w_mchn_cfg_bonus_9980:
        .skip     0x02
-b_mchn_cfg_nships:
+b_mchn_cfg_nships_9982:
        .skip     0x01
-b_mchn_cfg_cab_type:
+b_mchn_cfg_cab_type_9983:
        .skip     0x01
 b_mchn_cfg_rank_9984:
        .skip     0x01
@@ -628,27 +628,27 @@ b_mchn_cfg_rank_9984:
                             * 9990-AF unused
 
 * 2 bytes temp in hit-miss ratio calc
-b16_99B0_tmp:
+b16_tmp_99b0:
 
-ds3_99B0_X3attackcfg:
+ds3_X3attackcfg_99b0:
 
-b8_99B0_X3attackcfg_ct:
+b8_X3attackcfg_ct_99b0:
       .skip    1          | 3 count for X3 attacker
-b8_99B1_X3attackcfg_parm0:
+b8_X3attackcfg_parm0_99b1:
       .skip    1
-b8_99B2_X3attackcfg_parm1:
+b8_X3attackcfg_parm1_99b2:
       .skip    1
-b8_99B3_two_plyr_game:
+b8_two_plyr_game_99b3:
       .skip    1          | 0 for 1P, 1 for 2P
-b8_99B4_bugnest_onoff_scrn_tmr:
+b8_bugnest_onoff_scrn_tmr_99b4:
       .skip    1
 ds3_io_input_99b5:
       .skip    3          | see info in j_Test_menu_proc
 
-b8_99B8_credit_cnt:
+b8_credit_cnt_99b8:
       .skip    1
 
-ds_99B9_star_ctrl:
+ds_star_ctrl_99b9:
 * 99B9: scroll_enable (1 when ship on screen, 0 if stop_scroll)
 *_b_99BA
 *_b_99BB
@@ -656,7 +656,7 @@ ds_99B9_star_ctrl:
 * 99BE: star_ctrl_state : value that gets passed to the h/w
       .skip    6
 
-b8_ship_collsn_detectd_status:
+b8_ship_collsn_detectd_status_99bf:
       .skip    1
 
 ds_new_stage_parms_99c0:
@@ -666,14 +666,14 @@ ds_new_stage_parms_99c0:
        .skip     0x15       | unused
 
 ds20_99E0:
-ds10_99E0_mchn_data:
-b16_99E0_ttl_plays_bcd:
+ds10_mchn_data_99e0:
+b16_ttl_plays_bcd_99e0:
        .skip     0x02       | ttl plays bcd
-b32_99E2_sum_score_bcd:
+b32_sum_score_bcd_99e2:
        .skip     0x04
-b32_99E6_gametime_secs_bcd:
+b32_gametime_secs_bcd_99e6:
        .skip     0x04
-b16_99EA_bonus_ct_bcd:
+b16_bonus_ct_bcd_99ea:
        .skip     0x02
        .skip     0x14       | unused
 

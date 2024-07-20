@@ -1032,7 +1032,7 @@ refresh_status_bar:
 	moveq	#0,d3
 	* optimize: redraw just the ships, for that we need to
 	* know how many lives are left
-	move.b	ds_plyr_actv+_b_nships,d3
+	move.b	ds_plyr_actv_9820+_b_nships,d3
 	jeq		12f			| no more lives, no need to redraw
 	cmp.b	#7,d3
 	bcs.b	13f
@@ -3264,7 +3264,7 @@ osd_read_high_scores:
 	dbf		d0,0b
 1:
 	* need to update screen 83ED-
-	lea		b_best5_score1,a0
+	lea		b_best5_score1_8a20,a0
 	move.w	#0x83F2-5,d7
 	moveq	#5,d1
 10:
@@ -3355,7 +3355,7 @@ handle_keyboard:
 	st.b	cheat_used
 	* give double shot
 	move.w	#0x0FF,_custom+color
-	move.b	#1,ds_plyr_actv+_b_2ship
+	move.b	#1,ds_plyr_actv_9820+_b_2ship
 
 	
 0:
@@ -3372,7 +3372,7 @@ handle_keyboard:
 *	st.b	cheat_used
 *	* no more enemies => goto next level
 *	move.w	#0x0FF,_custom+color
-*	clr.b	b_bugs_actv_nbr
+*	clr.b	b_bugs_actv_nbr_92a7
 *0:
 0:
 *	cmp.b	#0x54,d0	| F5 key
@@ -3386,7 +3386,7 @@ handle_keyboard:
 	* cheat but not very rewarding as it kills all lives
 	cmp.b	#0x57,d0	| F8 key
 	bne.b	0f
-	clr.b	ds_plyr_actv+_b_nships
+	clr.b	ds_plyr_actv_9820+_b_nships
 	clr.b	invincible_flag
 	move.w	#0x0FF,_custom+color
 0:
