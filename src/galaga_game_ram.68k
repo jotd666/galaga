@@ -157,7 +157,7 @@
 	.global		bmbr_boss_pool_92ca
 	.global		b_CPU1_in_progress
 	.global		b_CPU2_in_progress
-	.global		pb_attk_wav_IDs
+	.global		pb_attk_wav_IDs_92e0
 	.global		b_92E2
 	.global		ds_sprite_posn_9300
 	.global		mrw_sprite_posn_9300
@@ -456,7 +456,6 @@ b_9280:
 *-----------------------------------------------------------------------------
 p_attrmode_sptiles_9280:
 	.skip    2       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
-	ds.b	2          | TODO fix this gap
 pdb_demo_fghtrvctrs_9282:
 	.skip     2       | f_ship_demo_controls_1700, tracks state of demo mode by setting an offset to the data table
 	ds.b	2          | TODO fix this gap
@@ -535,14 +534,13 @@ b_CPU2_in_progress:
        .skip     0x08       | unused
 
 	.align	2
-pb_attk_wav_IDs:
+pb_attk_wav_IDs_92e0:
      .skip     0x02       | tmp ptr in c_25A2
-	 ds.b		2		|TODO fix this gap
 b_92E2:
        .skip     0x01       | _stg_dat[0] e.g. *(26F4) ... c_25A2
        .skip     0x01       | _stg_dat[1] e.g. *(26F5) ... c_25A2, ld to 0x0f(ix)
 
-       .skip     0x1C-6       | unused TODO remove -6 make up for pointers (if needed!!)
+       .skip     0x1C-2       | unused TODO remove -2 make up for pointers (if needed!!)
 
 
 

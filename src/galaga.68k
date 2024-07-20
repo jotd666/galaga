@@ -289,8 +289,8 @@ l_game_state_ready_039d:
 	jbsr	string_out_pe_30                    | [$03A3: rst  0x30] string_out_pe "(c) 1981 NAMCO LTD"
 	move.b	#1,d2                           	| [$03A4: ld   c,#1] C = string_out_pe_index
 	jbsr	string_out_pe_30                    | [$03A6: rst  0x30] string_out_pe "PUSH START BUTTON"
-	lea	d_attrmode_sptiles_ships,a0    	        | [$03A7: ld   hl,#d_attrmode_sptiles_ships]
-	move.l	a0,p_attrmode_sptiles_9280          | [$03AA: ld   (p_attrmode_sptiles_9280),hl] &_attrmode_sptiles[0] ... parameter to _sprite_tiles_displ()
+	move.w	#d_attrmode_sptiles_ships-d_attrmode_sptiles,d0    	        | [$03A7: ld   hl,#d_attrmode_sptiles_ships]
+	move.w	d0,p_attrmode_sptiles_9280          | [$03AA: ld   (p_attrmode_sptiles_9280),hl] &_attrmode_sptiles[0] ... parameter to _sprite_tiles_displ()
 
 * if ( 0xFF == mchn_cfg_bonus[0] ) goto l_While_Ready
 	move.b	w_mchn_cfg_bonus_9980+0,d0          | [$03AD: ld   a,(w_mchn_cfg_bonus_9980 + 0)]
@@ -426,20 +426,6 @@ c_game_bonus_info_show_line_043d:
 	jbsr	c_sprite_tiles_displ_128C     	| [$044E: call c_sprite_tiles_displ_128C]
 	rts                                    	| [$0451: ret]
 
-
-*=============================================================================
-*  attributes for ship-sprites in bonus info screen ... 4-bytes each:
-*  0: offset/index of object to use
-*  1: color/code
-*      ccode<3:6>==code
-*      ccode<0:2,7>==color
-*  2: X coordinate
-*  3: Y coordinate
-*
-d_attrmode_sptiles_ships:
-	.byte 0x00, 0x81, 0x19, 0x56
-	.byte 0x02, 0x81, 0x19, 0x62
-	.byte 0x04, 0x81, 0x19, 0x6E
 
 
 *=============================================================================
@@ -3075,13 +3061,14 @@ c_sprite_tiles_displ_128C:
 	lea	ds_sprite_code_8B00,a0              	| [$128C: ld   h,#>ds_sprite_code_8B00]
 
 * L = p_sptiles_displ[idx*4 + 0] ... index/offset of object to use
-	move.l	p_attrmode_sptiles_9280,a1       	| [$128E: ld   de,(p_attrmode_sptiles_9280)] load the persistent pointer (not always needed)
+	lea		d_attrmode_sptiles,a1
+	add.w	p_attrmode_sptiles_9280,a1       	| [$128E: ld   de,(p_attrmode_sptiles_9280)] load the persistent pointer (not always needed)
 	moveq	#0,d0
-	move.b	(a1),d0                         	| [$1292: ld   a,(de)] _attrmode_sptiles[ E + 0 ]
+	move.b	(a1)+,d0                         	| [$1292: ld   a,(de)] _attrmode_sptiles[ E + 0 ]
 	add.w	d0,a0                           	| [$1293: ld   l,a]
 
 * C = p_sptiles_displ[E+1] ... color/code
-	addq.w	#1,a1                           	| [$1294: inc  de] _attrmode_sptiles[DE].b01  ... color/code
+	                                        	| [$1294: inc  de] _attrmode_sptiles[DE].b01  ... color/code
 	move.b	(a1),d0                         	| [$1295: ld   a,(de)]
 	move.b	d0,d2                           	| [$1296: ld   c,a]
 
@@ -3137,7 +3124,8 @@ l_12A6:
 
 * advance the pointer
 	addq.w	#1,a1                           	| [inc  de] e.g., DE:=$1960
-	move.l	a1,p_attrmode_sptiles_9280           	| [ld   (p_attrmode_sptiles_9280),de] += 1
+	sub.l	#d_attrmode_sptiles,a1
+	move.w	a1,p_attrmode_sptiles_9280          | [ld   (p_attrmode_sptiles_9280),de] += 1
 
 	rts                                    	| [ret]
 
@@ -4179,8 +4167,8 @@ case_clear_video_ram_1940:
 
 * 01: setup info-screen: sprite tbl index, text index, timer[2]
 case_setup_info_screen_1948:
-	lea	d_attrmode_sptiles,a0          	| [ld   hl,#d_attrmode_sptiles] setup index into sprite data table
-	move.l	a0,p_attrmode_sptiles_9280           	| [ld   (p_attrmode_sptiles_9280),hl] parameter to _sprite_tiles_displ
+												| [ld   hl,#d_attrmode_sptiles] setup index into sprite data table
+	clr.w	p_attrmode_sptiles_9280           	| [ld   (p_attrmode_sptiles_9280),hl] parameter to _sprite_tiles_displ
 
 	clr.b	d0                               	| [xor  a]
 	move.b	d0,ds_9200_glbls+0x05           	| [ld   (ds_9200_glbls + 0x05),a] 0 ... demo_scrn_txt_indx
@@ -4189,6 +4177,7 @@ case_setup_info_screen_1948:
 	move.b	#2,d0                           	| [ld   a,#2]
 	move.b	d0,ds4_game_tmrs_92ac+2              	| [ld   (ds4_game_tmrs_92ac + 2),a] 2 (1 sec)
 	jra	l_attmode_state_step_19a7               	| [jr   l_attmode_state_step_19a7]
+
 
 * parameters for sprite tiles used in attract mode, 4-bytes each:
 *  0: offset/index of object to use
@@ -4210,6 +4199,24 @@ d_attrmode_sptiles:
 	.byte 0x36,0x08,0xC4,0x5C  | code $08
 	.byte 0x58,0x12,0xB4,0x64  | code $10
 	.byte 0x52,0x12,0xD4,0x64  | code $10
+
+* must be contiguous with previous table, as game uses a relative pointer
+* based on d_attrmode_sptiles
+*=============================================================================
+*  attributes for ship-sprites in bonus info screen ... 4-bytes each:
+*  0: offset/index of object to use
+*  1: color/code
+*      ccode<3:6>==code
+*      ccode<0:2,7>==color
+*  2: X coordinate
+*  3: Y coordinate
+*
+d_attrmode_sptiles_ships:
+	.byte 0x00, 0x81, 0x19, 0x56
+	.byte 0x02, 0x81, 0x19, 0x62
+	.byte 0x04, 0x81, 0x19, 0x6E
+
+
 
 * 02: info-screen sequencer, advance text and sprite tiles indices
 case_info_screen_sequencer_1984:
@@ -7425,8 +7432,8 @@ l_2596_even_frame:
 *  ...
 *-----------------------------------------------------------------------------
 gctl_stg_new_atk_wavs_init_25a2:
-	lea	db_attk_wav_IDs,a0                  	| [$25A2: ld   hl,#db_attk_wav_IDs]
-	move.l	a0,pb_attk_wav_IDs              	| [$25A5: ld   (pb_attk_wav_IDs),hl]
+											    | [$25A2: ld   hl,#db_attk_wav_IDs]
+	clr.w	pb_attk_wav_IDs_92e0              	| [$25A5: ld   (pb_attk_wav_IDs_92e0),hl]
 
 * calculate pointer into data table:
 *  set A as offset into table using stage count,
@@ -7577,7 +7584,8 @@ l_2631:
 
 l_2636:
 	lea	ds_atk_wav_tmp_buf_9100,a0          	| [$2636: ld   hl,#ds_atk_wav_tmp_buf_9100]
-	move.l	pb_attk_wav_IDs,a1          	    | [$2639: ld   de,(pb_attk_wav_IDs)]
+	lea	db_attk_wav_IDs,a1
+	add.w	pb_attk_wav_IDs_92e0,a1          	| [$2639: ld   de,(pb_attk_wav_IDs_92e0)]
 	move.b	#8,d1                           	| [$263D: ld   b,#8]
 
 l_263F_while_b:
@@ -7600,7 +7608,8 @@ l_2647_is_ff:
 l_2652:
 	subq.b	#1,d1                           	| [...]
 	jne	l_263F_while_b                     	    | [$2652: djnz l_263F_while_b]
-	move.l	a1,pb_attk_wav_IDs              	| [$2654: ld   (pb_attk_wav_IDs),de] &db_attk_wav_IDs[ 8 * n ]
+	sub.l	#db_attk_wav_IDs,a1
+	move.w	a1,pb_attk_wav_IDs_92e0             | [$2654: ld   (pb_attk_wav_IDs_92e0),de] &db_attk_wav_IDs[ 8 * n ]
 	move.l	(sp)+,a0                        	| [$2658: pop  hl] HL == &_stg_dat[ 2 + 3 * n + 1 ]
 	move.l	(sp)+,a1                        	| [$2659: pop  de] DE == &ds_8920[ $11 * n ]
 	movem.w	(sp)+,d3/d4                    	    | [pop  de] DE == &ds_8920[ $11 * n ]
