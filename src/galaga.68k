@@ -230,7 +230,7 @@ g_main_035a:
 
 * memset($9200,0,$80) ... object-collision notification  and other
 	move.b	#0x80,d1                        	| [ld   b,#0x80]
-	lea	ds_9200,a0                     	        | [ld   hl,#ds_9200] memset(...,0,$80)
+	lea	ds_9200_glbls,a0                     	        | [ld   hl,#ds_9200] memset(...,0,$80)
 	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
 
 * star_ctrl_param=6
@@ -320,86 +320,80 @@ l_game_state_ready_039d:
 
 * while (game_state == READY_TO_PLAY_MODE)
 j_0003D8_wrdy:
-	move.b	b8_game_state_9201,d0           	| [ld   a,(b8_game_state_9201)] while (READY)
-	cmp.b	#2,d0                            	| [cp   #2] READY_TO_PLAY_MODE
-	jeq	j_0003D8_wrdy                     	    | [jr   z,l_0003D8]
+	move.b	b8_game_state_9201,d0           	| [$03D8: ld   a,(b8_game_state_9201)] while (READY)
+	cmp.b	#2,d0                            	| [$03DB: cp   #2] READY_TO_PLAY_MODE
+	jeq	j_0003D8_wrdy                     	    | [$03DD: jr   z,l_0003D8]
 
 * /****  start button was hit ******************/
 
-	**move.b	d0,b_9AA0+0x17                  | [ld   (b_9AA0 + 0x17),a] sound_mgr_reset: non-zero causes re-initialization of sound mgr process
+	**move.b	d0,b_9AA0+0x17                  | [$03DF: ld   (b_9AA0 + 0x17),a] sound_mgr_reset: non-zero causes re-initialization of sound mgr process
 
 * clear sprite mem etc.
-	jbsr	c_sctrl_playfld_clr_0160            | [call c_sctrl_playfld_clr_0160]
-	jbsr	c_sctrl_sprite_ram_clr_003c         | [call c_sctrl_sprite_ram_clr_003c]
+	jbsr	c_sctrl_playfld_clr_0160            | [$03E2: call c_sctrl_playfld_clr_0160]
+	jbsr	c_sctrl_sprite_ram_clr_003c         | [$03E5: call c_sctrl_sprite_ram_clr_003c]
 
 * stars paused
-	*lea	l_A005,a0                      	    | [ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
-	*clr.b	(a0)                             	| [ld   (hl),#0]
-	*move.b	#1,(a0)                         	| [ld   (hl),#1]
+	*lea	l_A005,a0                      	    | [$03E8: ld   hl,#0xA005] star_ctrl_port_bit6 -> 0, then 1
+	*clr.b	(a0)                             	| [$03EB: ld   (hl),#0]
+	*move.b	#1,(a0)                         	| [$03ED: ld   (hl),#1]
 
 * Not sure about the intent of clearing $A0 bytes.. player data and resv data are only $80 bytes.
 * The structure at 98B0 is $30 bytes so it would not all be cleared (only $10 bytes)
 *  memset( player_data, 0, $a0 )
-	lea	ds_plyr_data,a0                	| [ld   hl,#ds_plyr_data] memset( ..., 0, $a0 )
-	clr.b	d0                               	| [xor  a]
-	move.b	#0xA0,d1                        	| [ld   b,#0xA0]
-	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	lea	ds_plyr_data_9820,a0                	| [$03EF: ld   hl,#ds_plyr_data] memset( ..., 0, $a0 )
+	clr.b	d0                               	| [$03F2: xor  a]
+	move.b	#0xA0,d1                        	| [$03F3: ld   b,#0xA0]
+	jbsr	rst_18                            	| [$03F5: rst  0x18] memset((HL), A=fill, B=ct)
 
 *ld hl, ds_plyr_actv +_b_stgctr   | HELP_ME_DEBUG
 *ld (hl), #6
 
-	*move.b	d0,b_9AA0+0x17                  	| [ld   (b_9AA0 + 0x17),a] 0 ... do not reset sound mgr process?
-
-	*move.b	d0,ds_99B9_star_ctrl+0x00       	| [ld   (ds_99B9_star_ctrl + 0x00),a] 0 ... star ctrl stop (1 when ship on screen)
-
-	*addq.b	#1,d0                           	| [inc  a]
-	*move.b	d0,b_9AA0+0x0B                  	| [ld   (b_9AA0 + 0x0B),a] 1 ... sound-fx count/enable registers, start of game theme
+	*move.b	d0,b_9AA0+0x17                  	| [$03F6: ld   (b_9AA0 + 0x17),a] 0 ... do not reset sound mgr process?
+	*move.b	d0,ds_99B9_star_ctrl+0x00       	| [$03F9: ld   (ds_99B9_star_ctrl + 0x00),a] 0 ... star ctrl stop (1 when ship on screen)
+	*addq.b	#1,d0                           	| [$03FC: inc  a]
+	*move.b	d0,b_9AA0+0x0B                  	| [$03FD: ld   (b_9AA0 + 0x0B),a] 1 ... sound-fx count/enable registers, start of game theme
 	move.w	#GAME_START_SND,d0
 	jbsr	osd_sound_start
 	
 	moveq	#1,d0
-	move.b	d0,ds_cpu0_task_actv_9000+0x12       	| [ld   (ds_cpu0_task_actv_9000 + 0x12),a] 1 ... f_star_control_1d76, star ctrl
-	move.b	d0,ds_cpu0_task_resrv+0x12      	| [ld   (ds_cpu0_task_resrv + 0x12),a] 1 ... f_star_control_1d76, star ctrl
+	move.b	d0,ds_cpu0_task_actv_9000+0x12      | [$0400: ld   (ds_cpu0_task_actv_9000 + 0x12),a] 1 ... f_star_control_1d76, star ctrl
+	move.b	d0,ds_cpu0_task_resrv_98e0+0x12     | [$0403: ld   (ds_cpu0_task_resrv_98e0 + 0x12),a] 1 ... f_star_control_1d76, star ctrl
 
 * do one-time inits
-	jbsr	gctl_game_init                    	| [call gctl_game_init] setup number of lives and show player score(s) '00'
-	jbsr	c_game_or_demo_init               	| [call c_game_or_demo_init]
-
-	move.b	#4,d2                           	| [ld   c,#4] C=string_out_pe_index
-	jbsr	string_out_pe_30                            	| [rst  0x30] string_out_pe "PLAYER 1" (always starts with P1 no matter what!)
+	jbsr	gctl_game_init                    	| [$0406: call gctl_game_init] setup number of lives and show player score(s) '00'
+	jbsr	c_game_or_demo_init               	| [$0409: call c_game_or_demo_init]
+	move.b	#4,d2                           	| [$040C: ld   c,#4] C=string_out_pe_index
+	jbsr	string_out_pe_30                    | [$040E: rst  0x30] string_out_pe "PLAYER 1" (always starts with P1 no matter what!)
 
 * busy loop -leaves "Player 1" text showing while some of the opening theme music plays out
 * game_tmr_3 = 8|
-	lea	ds4_game_tmrs_92ac+3,a0             	| [ld   hl,#ds4_game_tmrs_92ac + 3] = 8 ... while ! 0
-	move.b	#8,(a0)                         	| [ld   (hl),#8]
+	lea	ds4_game_tmrs_92ac+3,a0             	| [$040F: ld   hl,#ds4_game_tmrs_92ac + 3] = 8 ... while ! 0
+	move.b	#8,(a0)                         	| [$0412: ld   (hl),#8]
 l_0414_while_tmr_3:
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	            | [and  a]
-	jne	l_0414_while_tmr_3                 	    | [jr   nz,l_0414_while_tmr_3]
+	move.b	(a0),d0                         	| [$0414: ld   a,(hl)]
+	                               	            | [$0415: and  a]
+	jne	l_0414_while_tmr_3                 	    | [$0416: jr   nz,l_0414_while_tmr_3]
 
 * memset($9290,$10,0)
-	lea	ds_bug_collsn_hit_mult_9290,a0      	| [ld   hl,#ds_bug_collsn_hit_mult_9290] memset(...,$10,0)
-	move.b	#0x10,d1                        	| [ld   b,#0x10]
-	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	lea	ds_bug_collsn_hit_mult_9290,a0      	| [$0418: ld   hl,#ds_bug_collsn_hit_mult_9290] memset(...,$10,0)
+	move.b	#0x10,d1                        	| [$041B: ld   b,#0x10]
+	jbsr	rst_18                            	| [$041D: rst  0x18] memset((HL), A=fill, B=ct)
 
 * memset($98B0,$30,0)
-	move.b	#0x30,d1                        	| [ld   b,#0x30]
-	lea	ds_susp_plyr_obj_data_9b80,a0       	        | [ld   hl,#ds_susp_plyr_obj_data_9b80] memset(...,$30,0)
-	jbsr	rst_18                            	| [rst  0x18] memset((HL), A=fill, B=ct)
+	move.b	#0x30,d1                        	| [$041E: ld   b,#0x30]
+	lea	ds_susp_plyr_obj_data_98b0,a0       	| [$0420: ld   hl,#ds_susp_plyr_obj_data_98b0] memset(...,$30,0)
+	jbsr	rst_18                            	| [$0423: rst  0x18] memset((HL), A=fill, B=ct)
 
 * settext($0b, $83b0)
-	lea	0x8000+0x03B0,a0           	| [ld   hl,#0x8000 + 0x03B0]
-	move.b	#0x0B,d2                        	| [ld   c,#0x0B] index into string table
-	jbsr	c_string_out_1398                      	| [call c_string_out_1398] erase PLAYER 1 text
-
-	move.b	#1,d0                           	| [ld   a,#1]
-	move.b	d0,ds_plyr_susp+_b_plyr_nbr     	| [ld   (ds_plyr_susp +_b_plyr_nbr),a] 1==plyr2
-
-	move.b	w_mchn_cfg_bonus_9980,d0             	| [ld   a,(w_mchn_cfg_bonus_9980)]
-	move.b	d0,ds_plyr_actv+_b_mcfg_bonus   	| [ld   (ds_plyr_actv +_b_mcfg_bonus),a]
-	move.b	d0,ds_plyr_susp+_b_mcfg_bonus   	| [ld   (ds_plyr_susp +_b_mcfg_bonus),a]
-
-	jra	plyr_respawn_splsh                 	| [jp   plyr_respawn_splsh] does not return, jp's to _game_runner
+	lea	0x8000+0x03B0,a0           	            | [$0424: ld   hl,#0x8000 + 0x03B0]
+	move.b	#0x0B,d2                        	| [$0427: ld   c,#0x0B] index into string table
+	jbsr	c_string_out_1398                   | [$0429: call c_string_out_1398] erase PLAYER 1 text
+	move.b	#1,d0                           	| [$042C: ld   a,#1]
+	move.b	d0,ds_plyr_susp+_b_plyr_nbr     	| [$042E: ld   (ds_plyr_susp +_b_plyr_nbr),a] 1==plyr2
+	move.b	w_mchn_cfg_bonus_9980,d0            | [$0431: ld   a,(w_mchn_cfg_bonus_9980)]
+	move.b	d0,ds_plyr_actv+_b_mcfg_bonus   	| [$0434: ld   (ds_plyr_actv +_b_mcfg_bonus),a]
+	move.b	d0,ds_plyr_susp+_b_mcfg_bonus   	| [$0437: ld   (ds_plyr_susp +_b_mcfg_bonus),a]
+	jra	plyr_respawn_splsh                 	    | [$043A: jp   plyr_respawn_splsh] does not return, jp's to _game_runner
 
 * end
 
@@ -2588,7 +2582,7 @@ c_player_active_switch_110c:
 *  active_plyr_task_tbl[0] = reserve_plyr_task_tbl[0] = $1F
 	move.b	#0x1F,d0                             | [$110C: ld   a,#0x1F]
 	move.b	d0,ds_cpu0_task_actv_9000+0          | [$110E: ld   (ds_cpu0_task_actv_9000 + 0),a] $1F
-	move.b	d0,ds_cpu0_task_resrv+0              | [$1111: ld   (ds_cpu0_task_resrv + 0),a] $1F
+	move.b	d0,ds_cpu0_task_resrv_98e0+0         | [$1111: ld   (ds_cpu0_task_resrv + 0),a] $1F
 
 * swap active player and waiting player state data structures
 	lea	ds_plyr_actv,a0                	         | [$1114: ld   hl,#ds_plyr_actv] $40 bytes
@@ -2607,7 +2601,7 @@ l_111C:
 
 * swap active player and waiting player game object data
 	lea	object_states_8800,a0                      	         | [$1125: ld   hl,#object_states_8800] $30 bytes to 98B0
-	lea	ds_susp_plyr_obj_data_9b80,a1       | [$1128: ld   de,#ds_susp_plyr_obj_data_9b80]
+	lea	ds_susp_plyr_obj_data_98b0,a1       | [$1128: ld   de,#ds_susp_plyr_obj_data_98b0]
 	move.b	#0x30,d1                             | [$112B: ld   b,#0x30]
 l_112D:
 	* compute d6 offset from 8800 base (applied on ds_sprite_code_8B00 too)
@@ -2665,7 +2659,7 @@ l_1161:
 	jne	l_112D                             	     | [djnz l_112D]
 												 
 	lea	ds_cpu0_task_actv_9000,a0           	 | [ld   hl,#ds_cpu0_task_actv_9000] cp $20 bytes to reserve task tbl
-	lea	ds_cpu0_task_resrv,a1          	         | [ld   de,#ds_cpu0_task_resrv] cp $20 bytes from active task tbl
+	lea	ds_cpu0_task_resrv_98e0,a1          	 | [ld   de,#ds_cpu0_task_resrv_98e0] cp $20 bytes from active task tbl
 	move.b	#0x20,d1                        	 | [ld   b,#0x20]
 l_1171:                                          
 	move.b	(a0),d2                         	 | [ld   c,(hl)]
@@ -2970,7 +2964,7 @@ c_init_taskman_structs_1230:
 *  for ( de = 98e0, hl = 1249| bc++ | bc < 0$20 ) de[bc] = hl[bc]|
 	move.l	(sp)+,a0                        	| [$123D: pop  hl]
 	movem.w	(sp)+,d1/d2                      	| [$123E: pop  bc]
-	lea	ds_cpu0_task_resrv,a1          	        | [$123F: ld   de,#ds_cpu0_task_resrv] $20 bytes copied from task_enable_tbl_def
+	lea	ds_cpu0_task_resrv_98e0,a1          	| [$123F: ld   de,#ds_cpu0_task_resrv] $20 bytes copied from task_enable_tbl_def
 	jbsr	ldir                              	| [$1242: ldir]
 
 * kill the idle task at [0]
@@ -9595,10 +9589,10 @@ c_svc_updt_dsply:
 * load default IO params (sets up credit-mode and joystick remapping - see _372D)
 * 4 arguments to "set coinage" command (9281-4) will be updated below to capture
 * dip switch changes for credit-mode.
-	lea	d_3AC4,a0                      	        | [$384B: ld   hl,#d_3AC4]
-	lea	ds8_9280_tmp_IO_parms,a1       	        | [$384E: ld   de,#ds8_9280_tmp_IO_parms] default IO params for credit-mode (8 bytes)
-	move.w	#0x08,d1                        	| [$3851: ld   bc,#0x0008] 8
-	jbsr	ldir                              	| [$3854: ldir]
+*	lea	d_3AC4,a0                      	        | [$384B: ld   hl,#d_3AC4]
+*	lea	ds8_9280_tmp_IO_parms,a1       	        | [$384E: ld   de,#ds8_9280_tmp_IO_parms] default IO params for credit-mode (8 bytes)
+*	move.w	#0x08,d1                        	| [$3851: ld   bc,#0x0008] 8
+*	jbsr	ldir                              	| [$3854: ldir]
  
 * COINS PER CREDIT (DSWB)
 *  Mask   SW#1 SW#2 SW#3
@@ -9636,9 +9630,10 @@ c_svc_updt_dsply:
 * Update 4 arguments to "set coinage" command from the table.
 	lea	str_3A6C,a0                    	| [ld   hl,#str_3A6C]
 	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
-	lea	ds8_9280_tmp_IO_parms+1,a1     	| [ld   de,#ds8_9280_tmp_IO_parms + 1]
-	move.w	#0x04,d1                        	| [ld   bc,#0x0004] 4
-	jbsr	ldir                              	| [ldir]
+*	lea	ds8_9280_tmp_IO_parms+1,a1     	| [ld   de,#ds8_9280_tmp_IO_parms + 1]
+*	move.w	#0x04,d1                        	| [ld   bc,#0x0004] 4
+*	jbsr	ldir                              	| [ldir]
+	addq	#4,a0
 * the next four bytes are the text characters
 	lea	0x8000+0x02E0+0x08,a1      	| [ld   de,#0x8000 + 0x02E0 + 0x08]
 	move.b	(a0)+,d0                               	| [ldi] show digit for number of coins
@@ -9663,13 +9658,13 @@ c_svc_updt_dsply:
 
 * Update 4 arguments to "set coinage" command from the table for free-play mode
 l_389B:
-	lea	ds8_9280_tmp_IO_parms+1,a0     	| [ld   hl,#ds8_9280_tmp_IO_parms + 1] 4 bytes (arguments to "set coinage" command)
-	move.b	#4,d1                           	| [ld   b,#4]
+*	lea	ds8_9280_tmp_IO_parms+1,a0     	| [ld   hl,#ds8_9280_tmp_IO_parms + 1] 4 bytes (arguments to "set coinage" command)
+*	move.b	#4,d1                           	| [ld   b,#4]
 l_38A0:
-	clr.b	(a0)+                             	| [ld   (hl),#0]
+*	clr.b	(a0)+                             	| [ld   (hl),#0]
 												| [inc  hl]
-	subq.b	#1,d1                           	| [...]
-	jne	l_38A0                             	| [djnz l_38A0]
+*	subq.b	#1,d1                           	| [...]
+*	jne	l_38A0                             	| [djnz l_38A0]
 
 	lea	str_3B04,a0                    	| [ld   hl,#str_3B04]
 	jbsr	c_text_out_331b             | [call c_text_out_331b] "FREE PLAY"

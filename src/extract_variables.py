@@ -1,4 +1,5 @@
 import re,sys,os
+import simpleeval
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 addr_re = "\$[0-9A-F]{4}"
@@ -11,23 +12,30 @@ var_re = "\w+_[0-9A-F]{4}"
 missing = 0
 anon = set()
 
-with open(os.path.join(this_dir,"galaga_game_ram.68k"),"w") as f:
-    prev_address = None
+current_ram = min_ram
 
-    for address,name in sorted(var_dict.items()):
-        f.write(f"\t.global\t{name}\n")
-    f.write("\n")
-    for address,name in sorted(var_dict.items()):
-        if prev_address is not None:
-            size = address-prev_address
-            f.write(f"\tds.b\t0x{size:02x}\n")
-        # write label
-        f.write(f"{name}:\n")
+label_re = re.compile("(\w+):")
+skip_re = re.compile("\s+\.skip\s+(\S[^\|]+)")
+with open(os.path.join(this_dir,"galaga_game_ram.68k"),"r") as f:
+    for i,line in enumerate(f,1):
+        m = label_re.match(line)
+        if m:
+            # extract offset from name if possible
+            label = m.group(1)
+            m = re.match("\w+_([0-9a-fA-F]{4})",label)
+            if m:
+                offset = m.group(1)
+                label_address = int(offset,16)
+                if current_ram != label_address:
+                    print(f"*** Label {label} not at address {current_ram:04x} : {label_address:04x}")
+                    break
+                else:
+                    print(f"Label {label} at address {current_ram:04x} : {label_address:04x}")
 
-        prev_address = address
-
-    size = max_ram-prev_address
-    f.write(f"\tds.b\t0x{size:02x}\n")
-
-print(f"{len(anon)} anonymous vars")
-print([f"${x:04x}" for x in sorted(anon)])
+        else:
+            m = skip_re.match(line)
+            if m:
+                skip_value = m.group(1)
+                size = simpleeval.simple_eval(skip_value)
+                #print(f"line: {i}, RAM: {current_ram:04x}, size: {size:04x}")
+                current_ram += size

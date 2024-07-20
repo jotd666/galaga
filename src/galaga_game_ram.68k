@@ -164,13 +164,12 @@
 	.global		sfr_sprite_posn_9380
 	.global		ds_9800_RAM2
 	.global		ds_hpos_spcoords_9800
-	.global		ds_plyr_data
+	.global		ds_plyr_data_9820
 	.global		ds_plyr_actv
 	.global		ds_plyr_susp
-	.global		ds_susp_plyr_obj_data_9b80
-	.global		ds_cpu0_task_resrv
+	.global		ds_susp_plyr_obj_data_98b0
+	.global		ds_cpu0_task_resrv_98e0
 	.global		ds_hpos_loc_offs
-	.global		ds_hpos_loc_orig_9900
 	.global		ds_hpos_loc_orig_9900
 	.global		ds10_9920
 	.global		ds_mchn_cfg
@@ -246,8 +245,8 @@ ds_8920:
 
 ds_89E0:
        .skip     0x20       | data for CPU sub-1 f_0ECA (the unused mystery task)
-* moved a pointer here
-	.skip		0x4
+* moved a pointer here TODO: check this out!!!
+***	.skip		0x4
 
 * Temp vars for _top5_dlg_proc ... gg1-4
 b_8A00:
@@ -290,8 +289,19 @@ b_best5_name5:
        .skip     0x03       | unused (8A4D)
        .skip     0xB0       | unused (8A50)
 
+* origin base of sprite data block
+* mrw and sfr blocks NEED to be contiguous because sometimes the game adds 0x80
+* to peek in sfr registers (which have write but also read capability)
+ds_sprite_code_8B00:
 
+mrw_sprite_code_8B00:
+       .skip     0x0040     | sprite code/color l (buffer)
+       .skip     0x0040     | sprite code/color h (buffer)
+sfr_sprite_code_8B80:
+     .skip     0x0040     | sprite code/color l ("video" registers) 0x8B80
+     .skip     0x0040     | sprite code/color h ("video" registers) 0x8BC0
 
+	.skip	0x400		| TODO fix this gap
 
 *=============================================================================
 * RAM1
@@ -314,10 +324,10 @@ ds_cpu1_task_actv:
        .skip     0x08       | unused
 
 	.align	2
-       .skip     0x70*4       | stack_cpu_0 (about $30 bytes max)
-ds_stk_cpu0_init:
-       .skip     0x60*4       | stack_cpu_1 (about %18 bytes max)
-ds_stk_cpu1_init:
+       .skip     0x70       | stack_cpu_0 (about $30 bytes max) not used
+*ds_stk_cpu0_init:
+       .skip     0x60       | stack_cpu_1 (about $18 bytes max) not used in the amiga version
+*ds_stk_cpu1_init:
 
 
 * temp variables that are generally outside the scope of the game proper.
@@ -330,7 +340,7 @@ ds_9100_tmp:
 
 
 ds_atk_wav_tmp_buf_9100:
-       .skip     0x10       | temp array for c_25A2 ($0100 boundary)
+*       .skip     0x10       | temp array for c_25A2 ($0100 boundary)
 
 * temp array for Test_menu_proc
 
@@ -353,9 +363,9 @@ ds_bug_motion_que_9100:
 * generic symbol is appropriate for a few references, and unused space clearly
 * shown
 *-----------------------------------------------------------------------------
-ds_9200:
-       .skip     0x60
-       .skip     0x10       | unused
+*ds_9200:
+*      .skip     0x60
+*      .skip     0x10       | unused
 
 
 *-----------------------------------------------------------------------------
@@ -365,6 +375,10 @@ ds_9200:
 * counter will be rollled-back and a new label created to define the array of
 * $30 bytes and allow it to be treated as a separate structure.
 *-----------------------------------------------------------------------------
+*-----------------------------------------------------------------------------
+* Object-collision notification to f_update_enemy_status_1db3 from cpu1:c_076A (even-bytes)
+*-----------------------------------------------------------------------------
+b_obj_collsn_notif_9200:
 ds_9200_glbls:
        .skip     0x01
 b8_game_state_9201:
@@ -411,23 +425,19 @@ b_9215_flip_screen:
        .skip     0x01
 
 
-*-----------------------------------------------------------------------------
-* Object-collision notification to f_update_enemy_status_1db3 from cpu1:c_076A (even-bytes)
-*-----------------------------------------------------------------------------
-b_obj_collsn_notif_9200:
        .skip     0x60       | even bytes ($30 elements)
+       .skip     0x8       | unused
 
-       .skip     0x10       | unused
 
 
-b_svc_test_snd_slctn:
-       .skip     0x01
-b_svc_eastregg_keyprs_cnt:
-       .skip     0x01
-w_svc_15sec_tmr:
-       .skip     0x02
-
-       .skip     0x0C       | unused
+*b_svc_test_snd_slctn:
+*       .skip     0x01
+*b_svc_eastregg_keyprs_cnt:
+*       .skip     0x01
+*w_svc_15sec_tmr:
+*       .skip     0x02
+*
+*       .skip     0x0C       | unused
 
 
 b_9280:
@@ -435,19 +445,21 @@ b_9280:
 *-----------------------------------------------------------------------------
 * first take care of temp variables
 
-ds8_9280_tmp_IO_parms:
-       .skip     0x08       | unused
-ds3_9288_tmp_IO_data:
-       .skip     0x01
+*ds8_9280_tmp_IO_parms:
+*       .skip     0x08       | unused
+*ds3_9288_tmp_IO_data:
+*       .skip     0x01
 
 *-----------------------------------------------------------------------------
 
 	.align	2
 *-----------------------------------------------------------------------------
 p_attrmode_sptiles_9280:
-	.skip    4       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
+	.skip    2       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
+	ds.b	2          | TODO fix this gap
 pdb_demo_fghtrvctrs_9282:
-	.skip     4       | f_ship_demo_controls_1700, tracks state of demo mode by setting an offset to the data table
+	.skip     2       | f_ship_demo_controls_1700, tracks state of demo mode by setting an offset to the data table
+	ds.b	2          | TODO fix this gap
 ds2_stg_chllg_rnd_attrib:   | attributes selected for hit all 8 bonus on challenge round convoy i.e. score, sprite tile
        .skip     0x01       | hit-count, add to collsn_hit_mult[0x0F]
        .skip     0x01       | sprite code and collision flag, ld to obj_collsn_notif[L]
@@ -524,28 +536,17 @@ b_CPU2_in_progress:
 
 	.align	2
 pb_attk_wav_IDs:
-     .skip     0x04       | tmp ptr in c_25A2
+     .skip     0x02       | tmp ptr in c_25A2
+	 ds.b		2		|TODO fix this gap
 b_92E2:
        .skip     0x01       | _stg_dat[0] e.g. *(26F4) ... c_25A2
        .skip     0x01       | _stg_dat[1] e.g. *(26F5) ... c_25A2, ld to 0x0f(ix)
 
-       .skip     0x1C       | unused
+       .skip     0x1C-6       | unused TODO remove -6 make up for pointers (if needed!!)
 
-* origin base of sprite data block
-* mrw and sfr blocks NEED to be contiguous because sometimes the game adds 0x80
-* to peek in sfr registers (which have write but also read capability)
-* now this is also VERY important for the amiga version that all blocks are contiguous
-* because in the amiga version we only use one pointer and 3 offsets for the 3 blocks
-* the base pointer being sfr_sprite_code_8B80
-ds_sprite_code_8B00:
 
-mrw_sprite_code_8B00:
-       .skip     0x0040     | sprite code/color l (buffer)
-       .skip     0x0040     | sprite code/color h (buffer)
-sfr_sprite_code_8B80:
-     .skip     0x0040     | sprite code/color l ("video" registers) 0x8B80
-     .skip     0x0040     | sprite code/color h ("video" registers) 0x8BC0
 
+		
 * sprite position buffer and SFRs
 ds_sprite_posn_9300:
 mrw_sprite_posn_9300:
@@ -555,19 +556,7 @@ sfr_sprite_posn_9380:
      .skip     0x40       | sprite position l ("video" registers)
      .skip     0x40       | sprite position h ("video" registers)
 
-* sprite control buffer and SFRs (9B00)
-* mrw & sfr HAVE to be contiguous even in the 68k version
-* as game sometimes reads into sfr (to get previous value?) by adding
-* 0x80 to the offset
-ds_sprite_ctrl_9B00:
-
-mrw_sprite_ctrl_9B00:
-       .skip     0x40       | sprite control l (buffer)
-       .skip     0x40       | sprite control h (buffer)
-sfr_sprite_ctrl_9B80:
-     .skip     0x40       | sprite control l ("video" registers)
-     .skip     0x40       | sprite control h ("video" registers)
-
+		.skip	0x400   | TODO fix this gap
 
 
 *=============================================================================
@@ -591,7 +580,7 @@ ds_hpos_spcoords_9800:
 
 
 * see definitions in structs.inc
-ds_plyr_data:
+ds_plyr_data_9820:
 
 ds_plyr_actv:
        .skip     0x40
@@ -600,10 +589,9 @@ ds_plyr_susp:
 
        .skip     0x10       | unused
 
-ds_susp_plyr_obj_data_9b80:
-       .skip     0x30       | resv player game object status tokens (copied from 8800)
-
-ds_cpu0_task_resrv:
+ds_susp_plyr_obj_data_98b0:
+	.skip	0x30      | resv player game object status tokens (copied from 8800)
+ds_cpu0_task_resrv_98e0:
        .skip     0x20
 
 
@@ -768,6 +756,23 @@ b_9AC0:
        .skip     0x20       | Active flags of each sound effect
 
 
+       .skip     0x20       | unused
 
 
 
+
+* sprite control buffer and SFRs (9B00)
+* mrw & sfr HAVE to be contiguous even in the 68k version
+* as game sometimes reads into sfr (to get previous value?) by adding
+* 0x80 to the offset
+ds_sprite_ctrl_9B00:
+
+mrw_sprite_ctrl_9B00:
+       .skip     0x40       | sprite control l (buffer)
+       .skip     0x40       | sprite control h (buffer)
+
+sfr_sprite_ctrl_9B80:
+     .skip     0x40       | sprite control l ("video" registers)
+     .skip     0x40       | sprite control h ("video" registers)
+
+     
