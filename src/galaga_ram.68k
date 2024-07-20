@@ -7,21 +7,11 @@
 	.global log_ptr
 	.global highscore_needs_saving_flag
 	.global capture_up_sound_playing
+	.global ram_start_8000
 	
 	.ifdef   __amiga__
 	.ascii	"RAM_STRT"
 	.ifndef	RELEASE
-	* easier to debug game to have memory aligned on 0x10000 plus 0x8000
-	* so addresses MSB match real game
-	* (alignment is done on "amiga.68k" end of text section else it doesn't work)
-	* wastes up to 80k but worth it when developping the game
-	* for instance
-	* lea	lives_counter_p1_8814,a0       	| [ld   hl,lives_counter_p1_8814]
-    * disassembles in raw WinUAE disassembler to
-	* 0011b6ee 41fa d124                lea.l (pc,$d124) == $00118814,a0 ($8814 LSW matches!)
-	*
-
-	ds.b	0x8000-2		| for some reason, there's a 2 byte shift, let's make up for it
 	.endif
 	.else
 	* Neogeo: needs different writable section from ROM code
@@ -32,17 +22,10 @@
 
 	
 *VARIABLES_START:
-	.include	"galaga_game_ram.68k"
+ram_start_8000:
+	.skip	0x2000
 *VARIABLES_END:
 
-
-	ds.b	2
-sprite_ram_8FF2:
-	ds.b	6*2
-
-	ds.b	2
-sprite_ram_9022:
-	ds.b	6*2
 vbl_sync_counter_start_screen:
 	.word	0
 high_score_beaten:

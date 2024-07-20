@@ -6,6 +6,7 @@
 
 .include "../src/galaga.inc"
 .include "../src/structs.inc"
+.include "../src/variables.inc"
 .include "custom.i"
 .include "exec_lvos.i"
 .include "dos_lvos.i"
@@ -805,15 +806,20 @@ demo_game:
 		move		#0x7FFF,_custom+intreq						| ack all interrupts
 		bsr			platform_init					| amiga-specific init
 		
+	
 0:
+	lea		ram_start_8000,a6
+
+
 	* init video & color ram with improbable crap so attributes & video are forced
 	* to refresh even when "0" is written into them
 	move.w	#0x1FF,d1
 	move.l	#-1,d0
-	lea		bg_videoram_8000,a0
+	lea		o_bg_videoram_8000(a6),a0
 0:
 	move.l	d0,(a0)+
 	dbf		d1,0b
+
 
 	* resets both CPUs
 	jbra		galaga_reset	| pass control to the galaga core
@@ -904,6 +910,10 @@ _vblank:
 	* declare that we're in interrupt mode so osd_disable_interrupts/osd_enable_interrupts
 	* also set SR accordingly
 	st.b	interrupt_mode
+	
+	* set base for RAM
+	lea		ram_start_8000,a6
+	
 	jbsr		galaga_irq
 	cmp.b	#ONE_TICK*2,vb_ticks_count
 	bne.b	0f
@@ -1032,7 +1042,7 @@ refresh_status_bar:
 	moveq	#0,d3
 	* optimize: redraw just the ships, for that we need to
 	* know how many lives are left
-	move.b	ds_plyr_actv_9820+_b_nships,d3
+	move.b	o_ds_plyr_actv_9820+_b_nships(a6),d3
 	jeq		12f			| no more lives, no need to redraw
 	cmp.b	#7,d3
 	bcs.b	13f
@@ -1077,7 +1087,7 @@ refresh_status_bar:
 redraw_2_rows:	
 	lea		_custom,a5
 	WAIT_BLIT
-	lea		bg_videoram_8000,a5
+	lea		ram_start_8000,a5
 0:
 	move.b	(a5,d7.w),d0		| read video
 	cmp.b	#0x24,d0
@@ -1097,7 +1107,8 @@ redraw_2_rows:
 	rts
 	
 update_hardware_sprites:
-	lea		sfr_sprite_code_8B80,a0
+	move.l	A6,-(a7)
+	lea		o_sfr_sprite_code_8B80(a6),a0
 
 	* clear host sprites
 	moveq	#NB_HOST_SPRITES-1,d0
@@ -1296,7 +1307,8 @@ update_hardware_sprites:
 	lea		(SPRITE_SIZEOF,a2),a2
 	addq	#1,d6
 	cmp.w	#NB_HOST_SPRITES,d6
-	jne	10b	
+	jne	10b
+	move.l	(a7)+,a6
 	rts
 	
 * < A0: sprite table
@@ -1334,8 +1346,9 @@ compute_sprite_xy:
 	jcs		0f
 	cmp.w	#0x200,d1
 	jcs		0f
-	move.l	#sfr_sprite_code_8B80,d0
+	move.l	#o_sfr_sprite_code_8B80,d0
 	sub.l	a0,d0
+	sub.l	a6,d0
 	lea		coordinates_out_of_range_error(pc),a1
 	jbsr	osd_break
 	illegal
@@ -1356,7 +1369,7 @@ update_bobs:
 	lea			hardware_sprite_flag_table,a2
 	
 	move.l		bob_previous_drawed_sprites(pc),a4
-	lea		sfr_sprite_code_8B80,a3
+	lea		o_sfr_sprite_code_8B80(a6),a3
 	move.l	a3,a0
 	
 	**********************
@@ -2087,7 +2100,7 @@ alloc_sprite:
 	* if we reach that point there's a big problem, break if dev mode
 	* hopefully if we save buffer in A1 we can reproduce the issue at will!
 	.ifndef	RELEASE
-	lea		sfr_sprite_code_8B80,a1
+	lea		o_sfr_sprite_code_8B80(a6),a1
 	lea			sprite_allocation_error,a0
 	jbsr	osd_break
 	.endif
@@ -2581,7 +2594,7 @@ osd_w_videoram:
 	bra.b	0f
 	
 1:
-	lea		bg_videoram_8000,a1
+	lea		ram_start_8000,a1
 	add.w	d7,a1
 	
 	cmp.b	(a1),d0
@@ -2621,7 +2634,7 @@ osd_w_colorram:
 	bra.b	0f
 	
 1:
-	lea		bg_colorram_8400,a1
+	lea		o_bg_colorram_8400(a6),a1
 	add.w	d7,a1
 *   we have to force the rewrite
 *	cmp.b	(a1),d0
@@ -3068,7 +3081,7 @@ osd_r_videoram:
 	.endif
 	bra.b	2f
 1:
-	lea		bg_videoram_8000,a0
+	lea		ram_start_8000,a0
 	move.b	(a0,d7.w),d0
 2:
 	movem.l	(a7)+,a0/d7
@@ -3103,7 +3116,7 @@ osd_update_inputs:
 0:	
 
 
-	cmp.b	#3,b8_game_state_9201
+	cmp.b	#3,o_b8_game_state_9201(a6)
 	beq.b	2f
 	btst	#JPB_BTN_RED,d1
 	beq.b	2f
@@ -3250,7 +3263,7 @@ osd_read_high_scores:
 	tst.l	d0
 	beq.b	2f
 	bsr		get_hiscore_name
-	lea	b_best5_score_8a20,a1
+	lea	o_b_best5_score_8a20(a6),a1
 	jsr		resload_LoadFile(a2)		
 	bra.b	1f
 0:
@@ -3264,7 +3277,7 @@ osd_read_high_scores:
 	dbf		d0,0b
 1:
 	* need to update screen 83ED-
-	lea		b_best5_score1_8a20,a0
+	lea		o_b_best5_score1_8a20(a6),a0
 	move.w	#0x83F2-5,d7
 	moveq	#5,d1
 10:
@@ -3287,7 +3300,7 @@ osd_write_high_scores:
 	beq.b	0f
 	move.l	d0,a2
 	move.l	#SCORE_FILE_SIZE,d0
-	lea		b_best5_score_8a20,a1
+	lea		o_b_best5_score_8a20(a6),a1
 	bsr		get_hiscore_name
 	jsr		resload_SaveFile(a2)
 	bra.b	1f
@@ -3311,7 +3324,8 @@ level2_interrupt:
 	rte
 	
 handle_keyboard:
-	movem.l	D0/A0/A5,-(a7)
+	movem.l	D0/A0/A5/A6,-(a7)
+	lea		ram_start_8000,a6
 	LEA	0x00BFD000,A5
 	MOVEQ	#0x08,D0
 	AND.B	0x1D01(A5),D0
@@ -3355,7 +3369,7 @@ handle_keyboard:
 	st.b	cheat_used
 	* give double shot
 	move.w	#0x0FF,_custom+color
-	move.b	#1,ds_plyr_actv_9820+_b_2ship
+	move.b	#1,o_ds_plyr_actv_9820+_b_2ship(a6)
 
 	
 0:
@@ -3364,7 +3378,7 @@ handle_keyboard:
 	st.b	cheat_used
 	* add 10000+ points
 	movem.w	d0/d1,-(a7)
-	move.b	#0x90,ds_bug_collsn_hit_mult_9290+1
+	move.b	#0x90,o_ds_bug_collsn_hit_mult_9290+1(a6)
 	movem.w	(a7)+,d0/d1
 0:
 *	cmp.b	#0x53,d0	| F4 key
@@ -3386,7 +3400,7 @@ handle_keyboard:
 	* cheat but not very rewarding as it kills all lives
 	cmp.b	#0x57,d0	| F8 key
 	bne.b	0f
-	clr.b	ds_plyr_actv_9820+_b_nships
+	clr.b	o_ds_plyr_actv_9820+_b_nships(a6)
 	clr.b	invincible_flag
 	move.w	#0x0FF,_custom+color
 0:
@@ -3410,12 +3424,12 @@ handle_keyboard:
 	BCLR	#0x06,0x1E01(A5)	| acknowledge key
 
 1:
-	movem.l	(a7)+,d0/a0/a5
+	movem.l	(a7)+,d0/a0/a5/a6
 	rts
 	
 toggle_pause:
 	* pause only within game
-	cmp.b	#3,b8_game_state_9201
+	cmp.b	#3,o_b8_game_state_9201(a6)
 	bne.b	0f
 	eor.b   #1,pause_flag
 0:

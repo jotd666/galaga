@@ -2,6 +2,7 @@
 	* to other bases (when only h is loaded)
 	.macro	COMPUTE_LSB_A0_D6	base
 	move.l	a0,d6
+	sub.l   a6,d6
 	sub.l	#\base,d6
 	.ifndef		RELEASE
 	jpl		0f
@@ -24,6 +25,7 @@
 
 	.macro	COMPUTE_LSB_A1_D4	base
 	move.l	a1,d4
+	sub.l   a6,d4
 	sub.l	#\base,d4
 	.ifndef		RELEASE
 	jpl		0f
@@ -50,6 +52,7 @@
 	
 	.macro	COMPUTE_LSB_A3_D0	base
 	move.l	a3,d0
+	sub.l	a6,d0
 	sub.l	#\base,d0
 	.ifndef		RELEASE
 	jpl		0f
@@ -72,13 +75,13 @@
 	.macro	MOVE_TO_VAR	reg,var
 	move.b	\reg,\var
 	ror.w	#8,\reg
-	move.b	\reg,\var+1
+	move.b	\reg,1+\var
 	ror.w	#8,\reg	
 	.endm
 	
 	* read var to register, little endian
 	.macro	MOVE_TO_REG	var,reg
-	move.b	\var+1,\reg	
+	move.b	1+\var,\reg	
 	ror.w	#8,\reg
 	move.b	\var,\reg
 	.endm

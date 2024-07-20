@@ -1,5 +1,6 @@
 import re,sys,os
 import simpleeval
+import csv
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 addr_re = "\$[0-9A-F]{4}"
@@ -15,15 +16,18 @@ anon = set()
 current_ram = min_ram
 
 missing_offset = []
+variables = []
 
 label_re = re.compile("(\w+):")
 skip_re = re.compile("\s+\.skip\s+(\S[^\|]+)")
-with open(os.path.join(this_dir,"galaga_game_ram.68k"),"r") as f:
+with open(os.path.join(this_dir,os.pardir,"src","galaga_game_ram.68k"),"r") as f:
     for i,line in enumerate(f,1):
         m = label_re.match(line)
         if m:
             # extract offset from name if possible
             label = m.group(1)
+            variables.append(label)
+
             m = re.match("\w+_([0-9a-fA-F]{4})$",label)
             if m:
                 offset = m.group(1)
@@ -45,6 +49,10 @@ with open(os.path.join(this_dir,"galaga_game_ram.68k"),"r") as f:
                 #print(f"line: {i}, RAM: {current_ram:04x}, size: {size:04x}")
                 current_ram += size
 
-import csv
-with open("replacer.csv","w",newline="") as f:
-    csv.writer(f,delimiter=";").writerows(missing_offset)
+if missing_offset:
+    print("dumping variables with missing offsets...")
+    with open("replacer.csv","w",newline="") as f:
+        csv.writer(f,delimiter=";").writerows(missing_offset)
+else:
+    with open("variables.csv","w",newline="") as f:
+        csv.writer(f,delimiter=";").writerows([v] for v in variables)
