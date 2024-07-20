@@ -243,10 +243,9 @@ object_states_8800:
 ds_8920:
        .skip     0xC0       | $56 bytes used
 
-ds_89E0:
+*ds_89E0:
        .skip     0x20       | data for CPU sub-1 f_0ECA (the unused mystery task)
-* moved a pointer here TODO: check this out!!!
-***	.skip		0x4
+
 
 * Temp vars for _top5_dlg_proc ... gg1-4
 b_8A00:
@@ -458,7 +457,6 @@ p_attrmode_sptiles_9280:
 	.skip    2       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
 pdb_demo_fghtrvctrs_9282:
 	.skip     2       | f_ship_demo_controls_1700, tracks state of demo mode by setting an offset to the data table
-	ds.b	2          | TODO fix this gap
 ds2_stg_chllg_rnd_attrib:   | attributes selected for hit all 8 bonus on challenge round convoy i.e. score, sprite tile
        .skip     0x01       | hit-count, add to collsn_hit_mult[0x0F]
        .skip     0x01       | sprite code and collision flag, ld to obj_collsn_notif[L]
@@ -540,7 +538,7 @@ b_92E2:
        .skip     0x01       | _stg_dat[0] e.g. *(26F4) ... c_25A2
        .skip     0x01       | _stg_dat[1] e.g. *(26F5) ... c_25A2, ld to 0x0f(ix)
 
-       .skip     0x1C-2       | unused TODO remove -2 make up for pointers (if needed!!)
+       .skip     0x1C       | unused
 
 
 
@@ -554,7 +552,7 @@ sfr_sprite_posn_9380:
      .skip     0x40       | sprite position l ("video" registers)
      .skip     0x40       | sprite position h ("video" registers)
 
-		.skip	0x400   | TODO fix this gap
+		.skip	0x400
 
 
 *=============================================================================

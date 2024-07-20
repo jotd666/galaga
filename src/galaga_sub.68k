@@ -565,8 +565,8 @@ galaga1_reset:
 
 	*im   1
 
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,ds_89E0                      	| [ld   (ds_89E0),a] 0
+	*clr.b	d0                               	| [xor  a]
+	*move.b	d0,ds_89E0                      	| [ld   (ds_89E0),a] 0
 
 * set task-enable defaults
 	lea	d_05B7,a0                      	| [ld   hl,#d_05B7]

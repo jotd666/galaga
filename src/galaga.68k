@@ -60,14 +60,22 @@ start_pulsing_sound_effect:
 	rts
 	
 set_fight_vector_pointer_a1:
-	move.l	a1,pdb_demo_fghtrvctrs_9282
+	move.l	a1,-(a7)
+	sub.l	#d_181F,a1
+	move.w	a1,pdb_demo_fghtrvctrs_9282
+	move.l	(a7)+,a1
 	rts
+
 set_fight_vector_pointer_a0:
-	move.l	a0,pdb_demo_fghtrvctrs_9282
+	move.l	a0,-(a7)
+	sub.l	#d_181F,a0
+	move.w	a0,pdb_demo_fghtrvctrs_9282
+	move.l	(a7)+,a0
 	rts
 	
 get_fight_vector_pointer:
-	move.l	pdb_demo_fghtrvctrs_9282,a1
+	lea		d_181F,a1
+	add.w	pdb_demo_fghtrvctrs_9282,a1
 	rts
 	
 *=============================================================================
@@ -4018,7 +4026,8 @@ case_enable_fighter_control_demo_1808:
 	move.b	d0,ds_cpu1_task_actv+0x05         | [ld   (ds_cpu1_task_actv + 0x05),a] 1  (cpu1:f_05EE ... fighter collision detection)
 	jra	l_attmode_state_step_19a7             | [jp   l_attmode_state_step_19a7]
 
-* demo fighter vectors demo level after capture
+* demo fighter vectors demo level after capture. This is also the base
+* for fighter vectors relative pointer
 d_181F:
 	.byte 0x08,0x18,0x8A,0x08,0x88,0x06,0x81,0x28,0x81,0x05,0x54,0x1A,0x88,0x12,0x81,0x0F
 	.byte 0xA2,0x16,0xAA,0x14,0x88,0x18,0x88,0x10,0x43,0x82,0x10,0x88,0x06,0xA2,0x20,0x56,0xC0
