@@ -228,11 +228,11 @@ ds_8800_RAM0:
 *  [ 1 + n ] : byte-offset (index) into bug_motion_que[]
 
 object_states_8800:
-       ds.b     0x40 * 2   | $40 elements
+       .skip     0x40 * 2   | $40 elements
 
-       ds.b     0x80       | unused
+       .skip     0x80       | unused
 * 8900
-       ds.b     0x20       | unused
+       .skip     0x20       | unused
 
 * Space for 5 attack wave setup tables. Each table can vary in size, because
 * in each wave there are a varying number of "transients" bug (have no home
@@ -242,53 +242,53 @@ object_states_8800:
 * beginning of each new stage ... actv_plyr_state[0x02]
 * Since the table size can vary, the end-of-table is indicated  by $7F.
 ds_8920:
-       ds.b     0xC0       | $56 bytes used
+       .skip     0xC0       | $56 bytes used
 
 ds_89E0:
-       ds.b     0x20       | data for CPU sub-1 f_0ECA (the unused mystery task)
+       .skip     0x20       | data for CPU sub-1 f_0ECA (the unused mystery task)
 * moved a pointer here
-	ds.b		0x4
+	.skip		0x4
 
 * Temp vars for _top5_dlg_proc ... gg1-4
 b_8A00:
-	ds.b     0x04       | ptr to plyr1 score or plyr2 score on screen.
-       ds.b     0x01       | L==2, R==8 X=A   previous controller state
-       ds.b     0x01       | character selection counter/timer
-       ds.b     0x04       | pointer to new name in table
-	ds.b     0x06       | unused (jotd: removed 4 bytes so rest is not shifted)
+	.skip     0x04       | ptr to plyr1 score or plyr2 score on screen.
+       .skip     0x01       | L==2, R==8 X=A   previous controller state
+       .skip     0x01       | character selection counter/timer
+       .skip     0x04       | pointer to new name in table
+	.skip     0x06       | unused (jotd: removed 4 bytes so rest is not shifted)
 *b_8A10:
-       ds.b     0x01       | lower byte of current input character's address in v-ram
-       ds.b     0x01       | 1==1ST place etc.
-       ds.b     0x0E       | unused
+       .skip     0x01       | lower byte of current input character's address in v-ram
+       .skip     0x01       | 1==1ST place etc.
+       .skip     0x0E       | unused
 
 * Top5 Table scores
 b_best5_score_8a20:
 
 b_best5_score1:
-       ds.b     0x06
+       .skip     0x06
 b_best5_score2:
-       ds.b     0x06
+       .skip     0x06
 b_best5_score3:
-       ds.b     0x06
+       .skip     0x06
 b_best5_score4:
-       ds.b     0x06
+       .skip     0x06
 b_best5_score5:
-       ds.b     0x06
+       .skip     0x06
 
 * Top5 Table names
 b_best5_name1:
-       ds.b     0x03       | 1st score initials
+       .skip     0x03       | 1st score initials
 b_best5_name2:
-       ds.b     0x03       | 2st score initials
+       .skip     0x03       | 2st score initials
 b_best5_name3:
-       ds.b     0x03       | 3st score initials
+       .skip     0x03       | 3st score initials
 b_best5_name4:
-       ds.b     0x03       | 4st score initials
+       .skip     0x03       | 4st score initials
 b_best5_name5:
-       ds.b     0x03       | 5st score initials
+       .skip     0x03       | 5st score initials
 
-       ds.b     0x03       | unused (8A4D)
-       ds.b     0xB0       | unused (8A50)
+       .skip     0x03       | unused (8A4D)
+       .skip     0xB0       | unused (8A50)
 
 
 
@@ -309,14 +309,14 @@ ds_cpu0_task_actv_9000:
        .skip     0x20
 
 ds_cpu1_task_actv:
-       ds.b     0x08
+       .skip     0x08
 
-       ds.b     0x08       | unused
+       .skip     0x08       | unused
 
 	.align	2
-       ds.b     0x70*4       | stack_cpu_0 (about $30 bytes max)
+       .skip     0x70*4       | stack_cpu_0 (about $30 bytes max)
 ds_stk_cpu0_init:
-       ds.b     0x60*4       | stack_cpu_1 (about %18 bytes max)
+       .skip     0x60*4       | stack_cpu_1 (about %18 bytes max)
 ds_stk_cpu1_init:
 
 
@@ -330,7 +330,7 @@ ds_9100_tmp:
 
 
 ds_atk_wav_tmp_buf_9100:
-       ds.b     0x10       | temp array for c_25A2 ($0100 boundary)
+       .skip     0x10       | temp array for c_25A2 ($0100 boundary)
 
 * temp array for Test_menu_proc
 
@@ -344,9 +344,9 @@ ds_atk_wav_tmp_buf_9100:
 *  11
 *  13
 ds_bug_motion_que_9100:
-       ds.b     0x14*12  | 12 object data structures (total size $F0)
+       .skip     0x14*12  | 12 object data structures (total size $F0)
 
-       ds.b     0x10       | 91F0 unused
+       .skip     0x10       | 91F0 unused
 
 
 *-----------------------------------------------------------------------------
@@ -354,8 +354,8 @@ ds_bug_motion_que_9100:
 * shown
 *-----------------------------------------------------------------------------
 ds_9200:
-       ds.b     0x60
-       ds.b     0x10       | unused
+       .skip     0x60
+       .skip     0x10       | unused
 
 
 *-----------------------------------------------------------------------------
@@ -366,68 +366,68 @@ ds_9200:
 * $30 bytes and allow it to be treated as a separate structure.
 *-----------------------------------------------------------------------------
 ds_9200_glbls:
-       ds.b     0x01
+       .skip     0x01
 b8_game_state_9201:
-       ds.b     0x01       | game states (1, 2, 3, 4 from the manual)
+       .skip     0x01       | game states (1, 2, 3, 4 from the manual)
                             * 0==Game Ended   (not described in manual)
                             * 1==ATTRACT_MODE, 2==READY_TO_PLAY_MODE, 3==PLAY_MODE
                             * ?==SELF_TEST_MODE  (doesn't have a corresponding enumeration value)
-       ds.b     0x01
+       .skip     0x01
 *_b_9203
-       ds.b     0x01       | jp table index demo mode
-       ds.b     0x01
+       .skip     0x01       | jp table index demo mode
+       .skip     0x01
 *_b_9205
-       ds.b     0x01       | index for text strings, demo
-       ds.b     0x01
+       .skip     0x01       | index for text strings, demo
+       .skip     0x01
 *_b_9207
-       ds.b     0x01       | counter, demo
-       ds.b     0x01
+       .skip     0x01       | counter, demo
+       .skip     0x01
 *                           | state, once near beginning of round (demo or play) $81->$1
 
 *_b_9209                    | demo only
 *                           | 07DD(sub-1)
-       ds.b     0x01
-       ds.b     0x01
+       .skip     0x01
+       .skip     0x01
 *_b_920B
-       ds.b     0x01       | conditions for doing flying bug attack
-       ds.b     0x01       | 1 at demo mode, 3 at game start (after intro),
+       .skip     0x01       | conditions for doing flying bug attack
+       .skip     0x01       | 1 at demo mode, 3 at game start (after intro),
                             * 0 at HEROES screen, 0 when ship appear on training mode, 0 when coin-in,
 *_b_920D
-       ds.b     0x01
-       ds.b     0x01
+       .skip     0x01
+       .skip     0x01
 *_b_920F
-       ds.b     0x01       | flag, bug nest movement left/right
-       ds.b     0x01       | 07DD, 1DC1 in game
+       .skip     0x01       | flag, bug nest movement left/right
+       .skip     0x01       | 07DD, 1DC1 in game
 *_b_9211
-       ds.b     0x01       | cp with (b_9A80 + 0x00) in cpu2
-       ds.b     0x01
+       .skip     0x01       | cp with (b_9A80 + 0x00) in cpu2
+       .skip     0x01
 *_b_9213
-       ds.b     0x01       | restart_stage "end of attack" (all attackers go home)
-       ds.b     0x01       | 07DD, 1DC1
+       .skip     0x01       | restart_stage "end of attack" (all attackers go home)
+       .skip     0x01       | 07DD, 1DC1
 b_9215_flip_screen:
-       ds.b     0x01
-       ds.b     0x01
+       .skip     0x01
+       .skip     0x01
 *_b_9217
-       ds.b     0x01
+       .skip     0x01
 
 
 *-----------------------------------------------------------------------------
 * Object-collision notification to f_update_enemy_status_1db3 from cpu1:c_076A (even-bytes)
 *-----------------------------------------------------------------------------
 b_obj_collsn_notif_9200:
-       ds.b     0x60       | even bytes ($30 elements)
+       .skip     0x60       | even bytes ($30 elements)
 
-       ds.b     0x10       | unused
+       .skip     0x10       | unused
 
 
 b_svc_test_snd_slctn:
-       ds.b     0x01
+       .skip     0x01
 b_svc_eastregg_keyprs_cnt:
-       ds.b     0x01
+       .skip     0x01
 w_svc_15sec_tmr:
-       ds.b     0x02
+       .skip     0x02
 
-       ds.b     0x0C       | unused
+       .skip     0x0C       | unused
 
 
 b_9280:
@@ -436,100 +436,100 @@ b_9280:
 * first take care of temp variables
 
 ds8_9280_tmp_IO_parms:
-       ds.b     0x08       | unused
+       .skip     0x08       | unused
 ds3_9288_tmp_IO_data:
-       ds.b     0x01
+       .skip     0x01
 
 *-----------------------------------------------------------------------------
 
 	.align	2
 *-----------------------------------------------------------------------------
 p_attrmode_sptiles_9280:
-	ds.l    1       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
+	.skip    4       | persistent pointer to static sprite tile data for demo (parameter to _sprite_tiles_displ)
 pdb_demo_fghtrvctrs_9282:
-	ds.l     1       | f_ship_demo_controls_1700, tracks state of demo mode by setting an offset to the data table
+	.skip     4       | f_ship_demo_controls_1700, tracks state of demo mode by setting an offset to the data table
 ds2_stg_chllg_rnd_attrib:   | attributes selected for hit all 8 bonus on challenge round convoy i.e. score, sprite tile
-       ds.b     0x01       | hit-count, add to collsn_hit_mult[0x0F]
-       ds.b     0x01       | sprite code and collision flag, ld to obj_collsn_notif[L]
+       .skip     0x01       | hit-count, add to collsn_hit_mult[0x0F]
+       .skip     0x01       | sprite code and collision flag, ld to obj_collsn_notif[L]
 b_bugs_flying_cnt:
-       ds.b     0x01       | count of flying pests in flite-q (current frame)
+       .skip     0x01       | count of flying pests in flite-q (current frame)
 b_bugs_flying_nbr_9287:
-       ds.b     0x01       | nbr of flying pests in flite-q (previous frame)
+       .skip     0x01       | nbr of flying pests in flite-q (previous frame)
 
 b_bug_flyng_hits_p_round_9288:
-       ds.b     0x01
+       .skip     0x01
 b_bug_que_idx_9289:
-       ds.b     0x01       | cpu1:f_08D3 local loop counter
+       .skip     0x01       | cpu1:f_08D3 local loop counter
 
 ds5_928A_captr_status:
-       ds.b     0x05       | [0] status of tractor beam
+       .skip     0x05       | [0] status of tractor beam
                             * [1] status of rescued ship (counter while ship is positioned into collective)
                             * [2] status of rescued ship
                             * [3] status of boss that captured ship
                             * [4] if 1 fighter is captured (show fighter captured text)
-       ds.b     0x01       | unused
+       .skip     0x01       | unused
 
 ds_bug_collsn_hit_mult_9290:
-       ds.b     0x10       | hit-count/multiplier from collision manager, see d_scoreman_inc_lut
+       .skip     0x10       | hit-count/multiplier from collision manager, see d_scoreman_inc_lut
 
 b_92A0:
 
 ds3_frame_cts_92A0:
-       ds.b     0x03       | 3 bytes .... sub1:l_0537
+       .skip     0x03       | 3 bytes .... sub1:l_0537
 * b8_92A3:
-       ds.b     0x01       | ship.dX_flag
+       .skip     0x01       | ship.dX_flag
 * b16_92A4
-       ds.b     0x02       | each byte tracks a shot from the ship
+       .skip     0x02       | each byte tracks a shot from the ship
 
 * this group all related to tracking number of attackers during a stage
 b_bugs_actv_cnt:
-       ds.b     0x01       | counts number of active bugs at each frame update (c_23E0)
+       .skip     0x01       | counts number of active bugs at each frame update (c_23E0)
 b_bugs_actv_nbr:
-       ds.b     0x01       | total number of active bugs (global)
+       .skip     0x01       | total number of active bugs (global)
 w_bug_flying_hit_cnt_92a8:
-       ds.b     0x02       | count down each flying bug hit (only relevant on challenge stg) only the lsb is used.
+       .skip     0x02       | count down each flying bug hit (only relevant on challenge stg) only the lsb is used.
 * b16_92AA
-       ds.b     0x01       | flag determines continuous bombing
+       .skip     0x01       | flag determines continuous bombing
 
-       ds.b     0x01       | unnused
+       .skip     0x01       | unnused
 
 
 * global game timer array
 ds4_game_tmrs_92ac:
-       ds.b     0x04
+       .skip     0x04
 
 b_92B0:
-       ds.b     0x02 * 8   | bomb X-rate
+       .skip     0x02 * 8   | bomb X-rate
                             * accumulator for division remainder (f_bomb_position_updater_1ea4)
 
 b_92C0:
 * bomber activation timers (3 bytes) and init values (3 bytes)
-       ds.b     0x03
-       ds.b     0x01  | unused (force even alignment of following member)
-       ds.b     0x03
-       ds.b     0x01  | unused
-       ds.b     0x01
-       ds.b     0x01  | ?
+       .skip     0x03
+       .skip     0x01  | unused (force even alignment of following member)
+       .skip     0x03
+       .skip     0x01  | unused
+       .skip     0x01
+       .skip     0x01  | ?
 
 bmbr_boss_pool_92ca:
 * 12 bytes in 4 groups of 3 ... slots for boss+wing missions
-       ds.b     0x0C
+       .skip     0x0C
 
 b_CPU1_in_progress:
-       ds.b     0x01
+       .skip     0x01
 b_CPU2_in_progress:
-       ds.b     0x01
+       .skip     0x01
 
-       ds.b     0x08       | unused
+       .skip     0x08       | unused
 
 	.align	2
 pb_attk_wav_IDs:
-     ds.b     0x04       | tmp ptr in c_25A2
+     .skip     0x04       | tmp ptr in c_25A2
 b_92E2:
-       ds.b     0x01       | _stg_dat[0] e.g. *(26F4) ... c_25A2
-       ds.b     0x01       | _stg_dat[1] e.g. *(26F5) ... c_25A2, ld to 0x0f(ix)
+       .skip     0x01       | _stg_dat[0] e.g. *(26F4) ... c_25A2
+       .skip     0x01       | _stg_dat[1] e.g. *(26F5) ... c_25A2, ld to 0x0f(ix)
 
-       ds.b     0x1C       | unused
+       .skip     0x1C       | unused
 
 * origin base of sprite data block
 * mrw and sfr blocks NEED to be contiguous because sometimes the game adds 0x80
@@ -540,20 +540,20 @@ b_92E2:
 ds_sprite_code_8B00:
 
 mrw_sprite_code_8B00:
-       ds.b     0x0040     | sprite code/color l (buffer)
-       ds.b     0x0040     | sprite code/color h (buffer)
+       .skip     0x0040     | sprite code/color l (buffer)
+       .skip     0x0040     | sprite code/color h (buffer)
 sfr_sprite_code_8B80:
-     ds.b     0x0040     | sprite code/color l ("video" registers) 0x8B80
-     ds.b     0x0040     | sprite code/color h ("video" registers) 0x8BC0
+     .skip     0x0040     | sprite code/color l ("video" registers) 0x8B80
+     .skip     0x0040     | sprite code/color h ("video" registers) 0x8BC0
 
 * sprite position buffer and SFRs
 ds_sprite_posn_9300:
 mrw_sprite_posn_9300:
-     ds.b     0x40       | sprite position l (buffer)
-     ds.b     0x40       | sprite position h (buffer)
+     .skip     0x40       | sprite position l (buffer)
+     .skip     0x40       | sprite position h (buffer)
 sfr_sprite_posn_9380:
-     ds.b     0x40       | sprite position l ("video" registers)
-     ds.b     0x40       | sprite position h ("video" registers)
+     .skip     0x40       | sprite position l ("video" registers)
+     .skip     0x40       | sprite position h ("video" registers)
 
 * sprite control buffer and SFRs (9B00)
 * mrw & sfr HAVE to be contiguous even in the 68k version
@@ -562,11 +562,11 @@ sfr_sprite_posn_9380:
 ds_sprite_ctrl_9B00:
 
 mrw_sprite_ctrl_9B00:
-       ds.b     0x40       | sprite control l (buffer)
-       ds.b     0x40       | sprite control h (buffer)
+       .skip     0x40       | sprite control l (buffer)
+       .skip     0x40       | sprite control h (buffer)
 sfr_sprite_ctrl_9B80:
-     ds.b     0x40       | sprite control l ("video" registers)
-     ds.b     0x40       | sprite control h ("video" registers)
+     .skip     0x40       | sprite control l ("video" registers)
+     .skip     0x40       | sprite control h ("video" registers)
 
 
 
@@ -587,24 +587,24 @@ ds_9800_RAM2:
 ds_hpos_spcoords_9800:
 
 * 10 column coordinates, 6 row coordinates, 16-bits per coordinate.
-       ds.b     0x20
+       .skip     0x20
 
 
 * see definitions in structs.inc
 ds_plyr_data:
 
 ds_plyr_actv:
-       ds.b     0x40
+       .skip     0x40
 ds_plyr_susp:
-       ds.b     0x40
+       .skip     0x40
 
-       ds.b     0x10       | unused
+       .skip     0x10       | unused
 
 ds_susp_plyr_obj_data_9b80:
-       ds.b     0x30       | resv player game object status tokens (copied from 8800)
+       .skip     0x30       | resv player game object status tokens (copied from 8800)
 
 ds_cpu0_task_resrv:
-       ds.b     0x20
+       .skip     0x20
 
 
 * home position locations for objects in the cylon fleet.
@@ -616,27 +616,27 @@ ds_hpos_loc_offs_9900:
 * odd-bytes: copy of origin data for access in CPU1 address space (i.e. bits <8:1> of precision coordinate)
 ds_hpos_loc_orig_9900:
 * struct for home position locations
-       ds.b     0x20
+       .skip     0x20
 
 
 * bitmaps for setting up expand/contract motion of group (from defaults at 1E64)
 ds10_9920:
-       ds.b     0x10
+       .skip     0x10
 
-       ds.b     0x50       | unused
+       .skip     0x50       | unused
 
 ds_mchn_cfg:
 
 w_mchn_cfg_bonus_9980:
-       ds.b     0x02
+       .skip     0x02
 b_mchn_cfg_nships:
-       ds.b     0x01
+       .skip     0x01
 b_mchn_cfg_cab_type:
-       ds.b     0x01
+       .skip     0x01
 b_mchn_cfg_rank_9984:
-       ds.b     0x01
+       .skip     0x01
 
-       ds.b     0x2B       | 9985-8F unused
+       .skip     0x2B       | 9985-8F unused
                             * 9990-AF unused
 
 * 2 bytes temp in hit-miss ratio calc
@@ -645,20 +645,20 @@ b16_99B0_tmp:
 ds3_99B0_X3attackcfg:
 
 b8_99B0_X3attackcfg_ct:
-      ds.b    1          | 3 count for X3 attacker
+      .skip    1          | 3 count for X3 attacker
 b8_99B1_X3attackcfg_parm0:
-      ds.b    1
+      .skip    1
 b8_99B2_X3attackcfg_parm1:
-      ds.b    1
+      .skip    1
 b8_99B3_two_plyr_game:
-      ds.b    1          | 0 for 1P, 1 for 2P
+      .skip    1          | 0 for 1P, 1 for 2P
 b8_99B4_bugnest_onoff_scrn_tmr:
-      ds.b    1
+      .skip    1
 ds3_io_input_99b5:
-      ds.b    3          | see info in j_Test_menu_proc
+      .skip    3          | see info in j_Test_menu_proc
 
 b8_99B8_credit_cnt:
-      ds.b    1
+      .skip    1
 
 ds_99B9_star_ctrl:
 * 99B9: scroll_enable (1 when ship on screen, 0 if stop_scroll)
@@ -666,106 +666,106 @@ ds_99B9_star_ctrl:
 *_b_99BB
 
 * 99BE: star_ctrl_state : value that gets passed to the h/w
-      ds.b    6
+      .skip    6
 
 b8_ship_collsn_detectd_status:
-      ds.b    1
+      .skip    1
 
 ds_new_stage_parms_99c0:
-       ds.b     0x0A       | each byte stores 1 nibble of bytes $0 thru $A of table dw_2C65[] (new stage)
-       ds.b     0x01       | bonus-bee when bug count reaches $0A (0 for challenge stage)
+       .skip     0x0A       | each byte stores 1 nibble of bytes $0 thru $A of table dw_2C65[] (new stage)
+       .skip     0x01       | bonus-bee when bug count reaches $0A (0 for challenge stage)
 
-       ds.b     0x15       | unused
+       .skip     0x15       | unused
 
 ds20_99E0:
 ds10_99E0_mchn_data:
 b16_99E0_ttl_plays_bcd:
-       ds.b     0x02       | ttl plays bcd
+       .skip     0x02       | ttl plays bcd
 b32_99E2_sum_score_bcd:
-       ds.b     0x04
+       .skip     0x04
 b32_99E6_gametime_secs_bcd:
-       ds.b     0x04
+       .skip     0x04
 b16_99EA_bonus_ct_bcd:
-       ds.b     0x02
-       ds.b     0x14       | unused
+       .skip     0x02
+       .skip     0x14       | unused
 
 
 * cpu sub2 memory block ($100 bytes)
 
 * one byte for every sound-effect structure ... sound_fx_status or count?
 b_9A00:
-       ds.b     0x30
+       .skip     0x30
 * one byte for every sound-effect structure... saves the current data index: sound_fx_idx
 b_9A30:
-       ds.b     0x30
+       .skip     0x30
 * tmp buffer for copy out values to sound hardware SFRs, frequency and volume SFRs
 b_9A60:
-       ds.b     0x10       | $10 bytes copied to 6810 (frequency & volume SFRs)
+       .skip     0x10       | $10 bytes copied to 6810 (frequency & volume SFRs)
 b_9A70:
-       ds.b     0x03       | 00: voice 0 wave select
+       .skip     0x03       | 00: voice 0 wave select
                             * 01: voice 1 wave select
                             * 02: voice 2 wave select
-       ds.b     0x01
-       ds.b     0x01       | 04: actv_snd_idx... index of sound currently being processed
+       .skip     0x01
+       .skip     0x01       | 04: actv_snd_idx... index of sound currently being processed
 
-       ds.b     0x03       | 05: snd_parms_set[] ... current set of sound parameters copied from snd_parms_dat
+       .skip     0x03       | 05: snd_parms_set[] ... current set of sound parameters copied from snd_parms_dat
                             *     [0] idx: sound effect index i.e. b_9A00[], b_9A00[$30] and selects pointer to p_snd_fx[] etc
                             *     [1] count: number of data pairs used by the sound effect data group in this time slice
                             *     [2] voice_select:
-       ds.b     0x01       | 08:
-       ds.b     0x01       | 09: global copy of count of additional credits-in since last update for triggering coiin-in sound
-       ds.b     0x02       | 0A: tmp pointer to sound-effect data in c_0550
-       ds.b     0x01       | 0C: voice 2 volume for capture beam
-       ds.b     0x01       | 0D: counter for wave-select (tractor beam)
-       ds.b     0x01       | 0E: counter, tracks voice 2 volume change ... capture beam
-       ds.b     0x01       | 0F: counter for wave-select (tractor beam)
+       .skip     0x01       | 08:
+       .skip     0x01       | 09: global copy of count of additional credits-in since last update for triggering coiin-in sound
+       .skip     0x02       | 0A: tmp pointer to sound-effect data in c_0550
+       .skip     0x01       | 0C: voice 2 volume for capture beam
+       .skip     0x01       | 0D: counter for wave-select (tractor beam)
+       .skip     0x01       | 0E: counter, tracks voice 2 volume change ... capture beam
+       .skip     0x01       | 0F: counter for wave-select (tractor beam)
 b_9A80:
-       ds.b     0x01       | 00:
-       ds.b     0x01       | 01:
-       ds.b     0x02       | 02:
-       ds.b     0x02       | 04:
-       ds.b     0x02       | 06:
-       ds.b     0x03       | 08: sound_effect_parms ... 3 bytes from p_snd_fx[ 2 * snd_parms_set.idx ]
+       .skip     0x01       | 00:
+       .skip     0x01       | 01:
+       .skip     0x02       | 02:
+       .skip     0x02       | 04:
+       .skip     0x02       | 06:
+       .skip     0x03       | 08: sound_effect_parms ... 3 bytes from p_snd_fx[ 2 * snd_parms_set.idx ]
                             *  [0]:
                             *  [1]:
                             *  [2]: wave
-       ds.b     0x05       | unused
-       ds.b     0x10       | unused
+       .skip     0x05       | unused
+       .skip     0x10       | unused
 
 ds_9AA0: | label for pointer+index operations
 b_9AA0:
 * Most of these registers function as a count/enable for individual sound effects
-       ds.b     0x01       | 00:  diving-attacks sound effects
-       ds.b     0x01       | 01:  blue-boss hit sound
-       ds.b     0x01       | 02:
-       ds.b     0x01       | 03:
-       ds.b     0x01       | 04:
-       ds.b     0x01       | 05:  capture beam sound active uno
-       ds.b     0x01       | 06:  capture beam sound active deux
-       ds.b     0x01       | 07:
-       ds.b     0x01       | 08:  count/enable register ... coin sound
-       ds.b     0x01       | 09:  ?
-       ds.b     0x01       | 0A:
-       ds.b     0x01       | 0B:
-       ds.b     0x01       | 0C:
-       ds.b     0x01       | 0D:
-       ds.b     0x01       | 0R:
-       ds.b     0x01       | 0F:
-       ds.b     0x01       | 10:
-       ds.b     0x01       | 11:  count/enable register ... rescued ship theme
-       ds.b     0x01       | 12:
-       ds.b     0x01       | 13:
-       ds.b     0x01       | 14:
-       ds.b     0x01       | 15: clicks for stage tokens
-       ds.b     0x01       | 16: sound mgr, hi-score dialog
-       ds.b     0x01       | 17: 0 ... enable CPU-sub2 process
-       ds.b     0x01       | 18: 1 ... skips CPUsub2 NMI if set (test variable?)
-       ds.b     0x01       | 19: !0 ... trigger "bang" sound
-       ds.b     0x06       | unused
+       .skip     0x01       | 00:  diving-attacks sound effects
+       .skip     0x01       | 01:  blue-boss hit sound
+       .skip     0x01       | 02:
+       .skip     0x01       | 03:
+       .skip     0x01       | 04:
+       .skip     0x01       | 05:  capture beam sound active uno
+       .skip     0x01       | 06:  capture beam sound active deux
+       .skip     0x01       | 07:
+       .skip     0x01       | 08:  count/enable register ... coin sound
+       .skip     0x01       | 09:  ?
+       .skip     0x01       | 0A:
+       .skip     0x01       | 0B:
+       .skip     0x01       | 0C:
+       .skip     0x01       | 0D:
+       .skip     0x01       | 0R:
+       .skip     0x01       | 0F:
+       .skip     0x01       | 10:
+       .skip     0x01       | 11:  count/enable register ... rescued ship theme
+       .skip     0x01       | 12:
+       .skip     0x01       | 13:
+       .skip     0x01       | 14:
+       .skip     0x01       | 15: clicks for stage tokens
+       .skip     0x01       | 16: sound mgr, hi-score dialog
+       .skip     0x01       | 17: 0 ... enable CPU-sub2 process
+       .skip     0x01       | 18: 1 ... skips CPUsub2 NMI if set (test variable?)
+       .skip     0x01       | 19: !0 ... trigger "bang" sound
+       .skip     0x06       | unused
 
 * Many of these will correspond to _9AA0[] ... indicating if a particular sound is in process.
 b_9AC0:
-       ds.b     0x20       | Active flags of each sound effect
+       .skip     0x20       | Active flags of each sound effect
 
 
 

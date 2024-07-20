@@ -5,6 +5,7 @@
 *: note regscopy must be defined somewhere in RAM
 *: with a size of 56
 exx:
+	move.l	a6,-(a7)
     lea     regscopy+28,a6
     * save current regs in region 1
     movem.l d1-d4/a0/a1/a4,-(a6)
@@ -17,6 +18,7 @@ exx:
     movem.l (a6)+,d1-d4/a0/a1/a4
     movem.l d1-d4/a0/a1/a4,(a6)
     movem.l (a7)+,d1-d4/a0/a1/a4
+	move.l	(a7)+,a6
     rts
 
 * ixl is used as an extra register most of the time

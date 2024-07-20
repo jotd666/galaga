@@ -11,26 +11,6 @@ var_re = "\w+_[0-9A-F]{4}"
 missing = 0
 anon = set()
 
-with open(os.path.join(this_dir,"galaga_z80.asm"),"rb") as f:
-    for line in f:
-        line = line.decode(errors="ignore")
-        line = re.sub(comment_re,"",line)
-        occs = re.findall(addr_re,line)
-        for o in occs:
-            oval = int(o[1:],16)
-            if min_ram <= oval < max_ram:
-                # ram
-                if oval not in anon:
-                    anon.add(oval)
-        occs = re.findall(var_re,line)
-        for o in occs:
-            oval = int(o[-4:],16)
-            if min_ram <= oval < max_ram:
-                var_dict[oval] = o
-
-
-
-
 with open(os.path.join(this_dir,"galaga_game_ram.68k"),"w") as f:
     prev_address = None
 
