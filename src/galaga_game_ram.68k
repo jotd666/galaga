@@ -98,6 +98,8 @@
 *  but relocatable symbols and absolute symbols can't be used in expressions together.
 *-----------------------------------------------------------------------------
 
+	.global	bg_videoram_8000
+	.global	bg_colorram_8400
 	.global		ds_8800_RAM0
 	.global		object_states_8800
 	.global		ds_8920
@@ -219,8 +221,12 @@
 *.area MRW (abs,ovr)
 *.org $8800
 
+bg_videoram_8000:					| $8000
+	.skip	0x400
+bg_colorram_8400:						| $8400
+	.skip	0x400
 
-ds_8800_RAM0:
+
 
 * Object status structure... 2 bytes per element (indexed same as sprite registers).
 *  [ 0 + n ] : object state
@@ -311,8 +317,6 @@ sfr_sprite_code_8B80:
 *.area MRW (abs,ovr)
 *.org $9000
 
-
-ds_9000_RAM1:
 
 ds_cpu0_task_actv_9000:
        .skip     0x20

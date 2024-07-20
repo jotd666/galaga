@@ -1,5 +1,3 @@
-	.global	bg_videoram
-	.global	bg_colorram
 	.global infinite_lives_flag
 	.global perfect_challenge_stage_flag
 	.global invincible_flag
@@ -32,13 +30,6 @@
 
 	.align	2
 
-
-bg_videoram:
-CHARACTER_RAM:						| $8000
-	ds.b	0x400
-bg_colorram:
-ATTRIBUTE_RAM:						| $8400
-	ds.b	0x400
 	
 *VARIABLES_START:
 	.include	"galaga_game_ram.68k"
