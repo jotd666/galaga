@@ -1958,11 +1958,16 @@ blit_planes_any_internal_cookie_cut:
 	beq.b	7f
 	subq	#1,d3
 6:
+	move.l (a0)+,d0
+	jeq	61f    | do nothing
 	jbsr	process_1_plane
+61:
 	lea		(BG_SCREEN_PLANE_SIZE,a1),a1
 	WAIT_BLIT
 	dbf		d3,6b
 7:
+	move.l (a0)+,d0
+	jeq	8f    | do nothing
 	jbsr	process_1_plane
 8:   
     movem.l (a7)+,d0-d7/a2/a4
@@ -1970,8 +1975,6 @@ blit_planes_any_internal_cookie_cut:
 	
 process_1_plane:
 	move.l a3,bltapt(a5)	|  source graphic top left corner (mask)
-	move.l (a0)+,d0
-	jeq	63f    | do nothing ATM see if it works
 	move.l	d0,a4
 	add.w	d5,a4
 	bra.b	61f
@@ -1989,7 +1992,6 @@ process_1_plane:
  	move.l	a1,bltcpt(a5)	|pristine background top (bottom) left corner
 	move.l	a1,bltdpt(a5)	|destination top (bottom) left corner
 	move.w  d4,bltsize(a5)	|rectangle size, starts blit
-63:	
 	rts
 
 	
