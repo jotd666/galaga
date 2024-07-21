@@ -1177,16 +1177,13 @@ l_0762:
 	jne	l_0739_while_B                     	    | [$0763: djnz l_0739_while_B]
 	jbsr	read_ixl_into_d0                    | [$0765: ld   a,ixl]
 	addq.b	#4,d0                           	| [$0767: add  a,#4]						
-	lea	0x8000+0x03E0+0x12,a0      	            | [$0769: ld   hl,#0x8000 + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2)
-	lea	0x8000+0x0300,a1        	            | [$076A: ld   d,#>(0x8000 + 0x0300)]
+	lea	0x03E0+0x12,a0      	                | [$0769: ld   hl,#0x8000 + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2)
+	lea	0x0300,a1        	                    | [$076A: ld   d,#>(0x8000 + 0x0300)]
 	add.w	d0,a1					            | [$076D: ld   e,a]
 	move.b	#6,d1                           	| [$076F: ld   b,#6]
 l_0771:
-	jbsr	read_videoram_from_a1               | [$0771: ld   a,(de)]
-	exg		d0,d7
-	jbsr	read_videoram_from_a0
-	exg		d0,d7
-	sub.b	d7,d0                          	    | [$0772: sub  (hl)]
+	move.b	(o_bg_videoram_8000,a1.W,a6),d0     | [$0771: ld   a,(de)]
+	sub.b	(o_bg_videoram_8000,a0.W,a6),d0     | [$0772: sub  (hl)]
 	add.b	#9,d0                            	| [$0773: add  a,#9]
 	cmp.b	#0xE5,d0                         	| [$0775: cp   #0xE5]
 	jcc	l_0788                             	    | [$0777: jr   nc,l_0788]
@@ -1202,9 +1199,12 @@ l_0771:
 * else ... break
 	jra	l_078E                             	    | [$0786: jr   l_078E]
 
+	move.w	a0,d7                				| [$0789: ld   (hl),a]
+	bset	#15,d7
 l_0788:
-	jbsr	read_videoram_from_a1               | [$0788: ld   a,(de)] hi score
-	jbsr	write_videoram_to_a0                | [$0789: ld   (hl),a]
+	move.b	(o_bg_videoram_8000,a1.W,a6),d0     | [$0788: ld   a,(de)] hi score
+	jbsr	osd_w_videoram
+	subq.w	#1,d7                           	| [$078A: dec  l]
 	subq.w	#1,a0                           	| [$078A: dec  l]
 	subq.w	#1,a1                           	| [$078B: dec  e]
 	subq.b	#1,d1                           	| [...]
@@ -1218,7 +1218,7 @@ l_078E:
 	move.b	d0,d6                           	| [$0792: ld   l,a] 
 	move.w	d6,a0
 	
-	jbsr	read_videoram_from_a0               | [$0793: ld   a,(hl)]
+	move.b	(o_bg_videoram_8000,a0.W,a6),d0     | [$0793: ld   a,(hl)]
 	cmp.b	#0x24,d0                         	| [$0794: cp   #0x24]
 	jne	l_0799                             	    | [$0796: jr   nz,l_0799]
 	clr.b	d0                               	| [$0798: xor  a]
@@ -1230,7 +1230,7 @@ l_0799:
 	add.b	d2,d0                            	| [$079F: add  a,c]
 	move.b	d0,d2                           	| [$07A0: ld   c,a]
 	subq.w	#1,a0                           	| [$07A1: dec  l]
-	jbsr	read_videoram_from_a0               | [$07A2: ld   a,(hl)]
+	move.b	(o_bg_videoram_8000,a0.W,a6),d0     | [$07A2: ld   a,(hl)]
 	cmp.b	#0x24,d0                         	| [$07A3: cp   #0x24]
 	jne	l_07A8                             	    | [$07A5: jr   nz,l_07A8]
 	clr.b	d0                               	| [$07A7: xor  a]
@@ -1299,7 +1299,8 @@ c_scoreman_incr_add_07d8:
 0:
 	exg		a0,d7
 	move.b	d0,d1
-	jbsr	osd_r_videoram
+	bclr	#15,d7
+	move.b	(o_bg_videoram_8000,a6,d7.W),d0
 	add.b	d1,d0                           	| [$07DA: add  a,(hl)] a += _tile_ram[hl]
 	cmp.b	#0x24,d0                         	| [$07DB: cp   #0x24] $23=='Z', $24==' '
 	jcs	l_07E1                             	    | [$07DD: jr   c,l_07E1]
@@ -1308,6 +1309,7 @@ c_scoreman_incr_add_07d8:
 l_07E1:
 	cmp.b	#0x0A,d0                         	| [$07E1: cp   #0x0A] $0A='A'
 	jcc	l_07E7                             	    | [$07E3: jr   nc,l_07E7]
+	bset	#15,d7
 	jbsr	osd_w_videoram                      | [$07E5: ld   (hl),a]
 	exg		a0,d7
 	rts                                    	    | [$07E6: ret]
@@ -1316,9 +1318,11 @@ l_07E7:
 	sub.b	#0x0A,d0                         	| [$07E7: sub  #0x0A]
 
 l_07E9_while_1:
+	bset	#15,d7
 	jbsr	osd_w_videoram                     	| [$07E9: ld   (hl),a] 0x8000[hl] = a
 	addq.w	#1,d7              	                | [$07EA: inc  l]
-	jbsr	osd_r_videoram                    	| [$07EB: ld   a,(hl)] a = 0x8000[hl + 1]
+	bclr	#15,d7
+	move.b	(o_bg_videoram_8000,a6,d7.W),d0    	| [$07EB: ld   a,(hl)] a = 0x8000[hl + 1]
 	cmp.b	#0x24,d0                         	| [$07EC: cp   #0x24] $24==' '
 	jne	l_07F1                             	    | [$07EE: jr   nz,l_07F1]
 	clr.b	d0                               	| [$07F0: xor  a]
@@ -1326,6 +1330,7 @@ l_07F1:
 	cmp.b	#0x09,d0                         	| [$07F1: cp   #0x09]
 	jeq	l_07F8_while                       	    | [$07F3: jr   z,l_07F8_while]
 	addq.b	#1,d0                           	| [$07F5: inc  a]
+	bset	#15,d7
 	jbsr	osd_w_videoram                      | [$07F6: ld   (hl),a] 0x8000[hl] = a
 	exg		a0,d7                                   
 	rts                                    	    | [$07F7: ret] end call 07d8
@@ -3296,8 +3301,7 @@ c_player_respawn:
 
 * check if "STAGE X" text shown and if so skip showing "READY"
 *  if ( *(8270) ) == ' ' ) ...
-	move.w	#0x8000+0x0260+0x10,d7
-	jbsr	osd_r_videoram	  	                | [ld   a,(0x8000 + 0x0260 + 0x10)]
+	move.b	(0x0260+0x10+o_bg_videoram_8000,a6),d0              | [ld   a,(0x8000 + 0x0260 + 0x10)]
 	cmp.b	#0x24,d0                         	| [cp   #0x24]
 	jne	l_133A                             	    | [jr   nz,l_133A]
 * ... else
@@ -4383,8 +4387,7 @@ l_19D2_fighter_captured:
 l_1A01_erase_text:
 * check if text has been cleared yet?
 *  if ( *82d1 == $24 ) goto $1a10
-	move.w	#0x8000+0x02C0+0x11,d7
-	jbsr	osd_r_videoram					| [ld   a,(0x8000 + 0x02C0 + 0x11)] 'I' of fighter captured
+	move.b	(o_bg_videoram_8000+0x02C0+0x11,a6),d0		| [ld   a,(0x8000 + 0x02C0 + 0x11)] 'I' of fighter captured
 	cmp.b	#0x24,d0                         	| [cp   #0x24]
 	jeq	l_1A10                             	| [jr   z,l_1A10]
 *  clear "fighter captured" text
@@ -8488,8 +8491,8 @@ l_3073:
 	jbsr	c_text_out_ce_3328                     	| [$3085: call c_text_out_ce_3328] "TOP 5"                HL==32AB
 
 	lea		0x8000+0x0300+0x09,a1      	            | [$3088: ld   de,#0x8000 + 0x0300 + 0x09]
-	move.l	o_b_8A00(a6),a0              	                | [$308B: ld   hl,(o_b_8A00(a6) + 0x00)] ptr to plyr1 score or plyr2 score on screen.
-	add.l	a6,a0					| point to video ram (no need to use osd_r_videoram)
+	move.l	o_b_8A00(a6),a0              	        | [$308B: ld   hl,(o_b_8A00(a6) + 0x00)] ptr to plyr1 score or plyr2 score on screen.
+	add.l	a6,a0					                | point to video ram
  	jbsr	string_copy_3275                        | [$308E: call string_copy_3275] puts players score below "SCORE"
 
 * puts_AAA (default initials of new score entry) below NAME
@@ -8576,10 +8579,10 @@ l_30ED:
 	move.b	#40,d0                          	| [ld   a,#40] 20 seconds
 	* stick_left stick left
 	move.b	d0,o_ds4_game_tmrs_92ac+2(a6)             | [ld   (o_ds4_game_tmrs_92ac(a6) + 2),a] reset timer
-	move.w	#0x8100,d7          	            | [ld   h,#>0x8000 + >0x0100]
-	move.b	o_b_8A00+0x10(a6),d7                  	| [ld   a,(o_b_8A00(a6) + 0x10)] lower byte of first character's address in v-ram
+	move.w	#0x0100,d7          	            | [ld   h,#>0x8000 + >0x0100]
+	move.b	o_b_8A00+0x10(a6),d7                | [ld   a,(o_b_8A00(a6) + 0x10)] lower byte of first character's address in v-ram
 												| [ld   l,a]
-	jbsr	osd_r_videoram                      | [ld   a,(hl)]
+	move.b	(o_bg_videoram_8000,a6,d7.w),d0     | [ld   a,(hl)]
 	subq.b	#1,d0                           	| [dec  a]
 	cmp.b	#9,d0                            	| [cp   #9] check for if wrap around bottom-to-top
 	bne.b	0f                               	| [...]
@@ -8589,7 +8592,9 @@ l_30ED:
 	bne.b	0f                               	| [...]
 	move.b	#0x24,d0                        	| [call z,c_313B_lda24] A:=$24  (24 is "space", 23 is 'Z')
 0:
+	bset	#15,d7
 	jbsr	osd_w_videoram                      | [ld   (hl),a]
+	bclr	#15,d7
 	jra	l_30BF_dlg_proc                    	    | [jp   l_30BF_dlg_proc]
 
 *=============================================================================
@@ -8627,12 +8632,12 @@ c_3118_insert_top5_score:
 *-----------------------------------------------------------------------------
 l_311D_stick_right:
 * get lower byte of current character's address in v-ram
-	move.w	#0x8100,d7          	            | [ld   h,#>0x8000 + >0x0100]
+	move.w	#0x0100,d7          	            | [ld   h,#>0x8000 + >0x0100]
 	move.b	o_b_8A00+0x10(a6),d7                  	| [ld   a,(o_b_8A00(a6) + 0x10)] HL = $8000 + $0100 + o_b_8A00(a6)[ 0x10 ]
 												| [ld   l,a]
 	move.b	#40,d0                          	| [ld   a,#40] 20 seconds
 	move.b	d0,o_ds4_game_tmrs_92ac+2(a6)             | [ld   (o_ds4_game_tmrs_92ac(a6) + 2),a] reset timer
-	jbsr	osd_r_videoram                      | [ld   a,(hl)]
+	move.b	(o_bg_videoram_8000,a6,d7.w),d0     | [ld   a,(hl)]
 	addq.b	#1,d0                           	| [inc  a]
 	cmp.b	#0x2B,d0                         	| [cp   #0x2B] 2A is '.' character which is allowed
 	bne.b	0f                               	| [...]
@@ -8642,6 +8647,7 @@ l_311D_stick_right:
 	bne.b	0f                               	| [...]
 	move.b	#0x2A,d0	                      	| [call z,c_3138_lda2A]
 0:
+	bset	#15,d7
 	jbsr	osd_w_videoram                      | [ld   (hl),a]
 	jra	l_30BF_dlg_proc                    	    | [jp   l_30BF_dlg_proc]
 
@@ -8726,10 +8732,9 @@ j_314C_select_char:
 	add.w	d6,d7
 	moveq	#0,d0
 	jbsr	osd_w_colorram                             	| [ld   (hl),#0] set color to Cyan
-	move.w	#0x8100,d7          	| [ld   h,#>0x8000 + >0x0100]
+	move.w	#0x0100,d7          	| [ld   h,#>0x8000 + >0x0100]
 	add.w	d6,d7
-	jbsr	osd_r_videoram
-	move.b	d0,d2                         	| [ld   c,(hl)] copy the character from the input entry position in tile-ram
+	move.b	(o_bg_videoram_8000,a6,d7.w),d2       	| [ld   c,(hl)] copy the character from the input entry position in tile-ram
 	move.b	#40,d0                          	| [ld   a,#40] 20 seconds
 	move.b	d0,o_ds4_game_tmrs_92ac+2(a6)              	| [ld   (o_ds4_game_tmrs_92ac(a6) + 2),a] :=$28
 
@@ -8883,6 +8888,7 @@ d_31ED_hi_score_tbl:
 *-----------------------------------------------------------------------------
 c_31F7_chk_score_rank:
 	move.l	o_b_8A00(a6),d7              	            | [ld   hl,(o_b_8A00(a6) + 0x00)] ptr to plyr1 score or plyr2 score on screen.
+	bclr	#15,d7
 	move.b	#6,d1                           	| [ld   b,#6]
 l_31FC:
 	move.b	(a1),d0                         	| [ld   a,(de)] score digit
@@ -8892,7 +8898,7 @@ l_31FC:
 	jeq	l_320E                             	    | [jr   z,l_320E]
 
 * ... and since table entries are all at least 20000, then any space in the player score will not place.
-	jbsr	osd_r_videoram                    	| [ld   a,(hl)] ptr to plyr1 score or plyr2 score on screen
+	move.b	(o_bg_videoram_8000,a6,d7.w),d0   	| [ld   a,(hl)] ptr to plyr1 score or plyr2 score on screen
 	cmp.b	#0x24,d0                         	| [cp   #0x24]
 	bne.b	0f                               	| [...]
 	rts                                    	    | [ret  z] [...]
@@ -8900,10 +8906,7 @@ l_31FC:
 	move.b	(a1),d0                         	| [ld   a,(de)]
 l_3206:
 * sets Cy if score digit > table digit
-	exg		d0,d2
-	jbsr	osd_r_videoram                      
-	exg		d0,d2
-	cmp.b	d2,d0								| [cp   (hl)] ptr to plyr1 score or plyr2 score on screen
+	cmp.b	(o_bg_videoram_8000,a6,d7.w),d0		| [cp   (hl)] ptr to plyr1 score or plyr2 score on screen
 	beq.b	0f                               	| [...]
 	rts                                    	    | [ret  nz] [...]
 0:
@@ -8917,10 +8920,7 @@ l_3208:
 
 l_320E:
 * table digit == $24
-	exg		d0,d2
-	jbsr	osd_r_videoram
-	exg		d0,d2
-	cmp.b	d2,d0         	                 	| [cp   (hl)] ptr to plyr1 score or plyr2 score on screen
+	cmp.b	(o_bg_videoram_8000,a6,d7.w),d0   	| [cp   (hl)] ptr to plyr1 score or plyr2 score on screen
 	jeq	l_3208                             		| [jr   z,l_3208] if both spaces, jp to next
 * score digit != $24 ...
 	clr.b	d0                               	| [xor  a] "table digit"

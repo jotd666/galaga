@@ -1,4 +1,5 @@
-- A500 mode: doesn't detect slow machine!
+- invincible!! (relative a6 code issue to debug)
+- report comments of galaga_game_ram.68k to offsets and kill file
 - capture bottom beam is red because of Namco logo hack?? reset rows doesn't work
 - we have to redraw flags/lives if some erase event occurs, not just draw event:
   ship explosion, and objects wrapping around Y axis

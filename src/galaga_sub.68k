@@ -684,7 +684,7 @@ f_05EE:
 
 l_0613:
 * if ( ship position == 0 ) return
-	lea	o_ds_sprite_posn_9300(a6),a0         	| [$0613: ld   hl,#o_ds_sprite_posn_9300 + 0x62] fighter1 position
+	lea	o_ds_sprite_posn_9300+0x62(a6),a0         	| [$0613: ld   hl,#o_ds_sprite_posn_9300 + 0x62] fighter1 position
 	move.b	(a0),d0                         	| [$0616: ld   a,(hl)]
 	                               	            | [$0617: and  a]
 	bne.b	0f                               	| [...]
@@ -804,15 +804,14 @@ l_064F:
 *-----------------------------------------------------------------------------
 hitd_fghtr_notif_0681:
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
-	clr.b	d0                               	| [$0681: xor  a]
-	move.b	d0,o_b8_ship_collsn_detectd_status_99bf(a6)	| [$0682: ld   (o_b8_ship_collsn_detectd_status_99bf),a] 0 ... fighter hit notif
+	                               	| [$0681: xor  a]
+	clr.b	o_b8_ship_collsn_detectd_status_99bf(a6)	| [$0682: ld   (o_b8_ship_collsn_detectd_status_99bf),a] 0 ... fighter hit notif
 
 	lea	o_object_states_8800(a6),a0                      	        | [$0685: ld   h,#>o_object_states_8800]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$0687: ld   a,(hl)]
 	lea	o_ds_sprite_posn_9300(a6),a0              	| [$0688: ld   h,#>o_ds_sprite_posn_9300]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	cmp.b	#8,d0                            	| [$068A: cp   #8] fighter disposition 08 if already dooomed ...
 	bne.b	0f                               	| [...]
@@ -825,7 +824,6 @@ hitd_fghtr_notif_0681:
 	move.b	(a0),d1                         	| [$0691: ld   b,(hl)] get row bits 0:7
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
 	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$0692: ld   h,#>o_ds_sprite_ctrl_9B00] get row bit-8
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$0694: ld   a,(hl)]
 	ror.b	#1,d0                            	| [$0695: rrca] y<8> -> Cy
@@ -852,15 +850,15 @@ l_06A8:
 	move.b	#0x30,d1                        	| [$06AA: ld   b,#0x30]
 
 l_06AC_:
-	jbsr	hitd_det_fghtr                    	| [$06AC: call hitd_det_fghtr]
+	jbsr	hitd_det_fghtr_06b7                    	| [$06AC: call hitd_det_fghtr_06b7]
 
 	move.b	#0x68,d6                        	| [$06AF: ld   l,#0x68] bombs
 	move.b	#0x08,d1                        	| [$06B1: ld   b,#0x08]
-	jbsr	hitd_det_fghtr                    	| [$06B3: call hitd_det_fghtr]
-	rts                                    	    | [$06B6: ret]
+	jbra	hitd_det_fghtr_06b7                    	| [$06B3: call hitd_det_fghtr_06b7]
+	                                    	    | [$06B6: ret]
 
 *=============================================================================
-* hitd_det_fghtr()
+* hitd_det_fghtr_06b7()
 *  Description:
 *   Do ship collision detection.
 * IN:
@@ -871,13 +869,13 @@ l_06AC_:
 * OUT:
 *  o_b8_ship_collsn_detectd_status_99bf(a6)
 *-----------------------------------------------------------------------------
-hitd_det_fghtr:
+hitd_det_fghtr_06b7:
 while_06B7:
 	lea	o_b_obj_collsn_notif_9200(a6),a0     	        | [$06B7: ld   h,#>o_b_obj_collsn_notif_9200] sprt_hit_notif
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$06B9: ld   a,(hl)]
-	lea	o_object_states_8800(a6),a0                      	        | [$06BA: ld   h,#>o_object_states_8800]
+	lea	o_object_states_8800(a6),a0             | [$06BA: ld   h,#>o_object_states_8800]
 	add.w	d6,a0
 	or.b	(a0),d0                           	| [$06BC: or   (hl)]
 	rol.b	#1,d0                            	| [$06BD: rlca]
@@ -886,7 +884,7 @@ while_06B7:
 	and.b	#0xFE,d0                         	| [$06C1: and  #0xFE]
 	cmp.b	#4,d0                            	| [$06C3: cp   #4]
 	jeq	l_06F0                             	    | [$06C5: jr   z,l_06F0]
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$06C7: ld   h,#>o_ds_sprite_posn_9300]
+	lea	o_ds_sprite_posn_9300(a6),a0            | [$06C7: ld   h,#>o_ds_sprite_posn_9300]
 	add.w	d6,a0
 	move.b	(a0),d0                         	| [$06C9: ld   a,(hl)]
 	                               	            | [$06CA: and  a]
@@ -898,7 +896,7 @@ while_06B7:
 	addq.w	#1,a0                           	| [$06D5: inc  l]
 	addq.w	#1,d6                           	| [inc  l]
 	move.b	(a0),d0                         	| [$06D6: ld   a,(hl)]
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$06D7: ld   h,#>o_ds_sprite_ctrl_9B00]
+	lea	o_ds_sprite_ctrl_9B00(a6),a0            | [$06D7: ld   h,#>o_ds_sprite_ctrl_9B00]
 	add.w	d6,a0
 	move.b	(a0),d2                         	| [$06D9: ld   c,(hl)]
 	subq.w	#1,a0                           	| [$06DA: dec  l]
@@ -906,9 +904,8 @@ while_06B7:
 	ror.b	#1,d2                            	| [$06DB: rrc  c]
 	SET_X_FROM_C
 	roxr.b	#1,d0                           	| [$06DD: rra]
-	cmp.b	#3,o_b8_game_state_9201(a6)
+	cmp.b	#3,o_b8_game_state_9201(a6)			| only when game is really running, not in demo
 	bne.b	0f
-	* only when game is really running, not in demo
 	tst.b	invincible_flag
 	bne.b	l_06F0
 0:
@@ -920,7 +917,7 @@ while_06B7:
 	move.b	d0,o_b8_ship_collsn_detectd_status_99bf(a6)	| [$06E8: ld   (o_b8_ship_collsn_detectd_status_99bf),a] 1 ... fighter hit notif
 	tst.b	d0                               	| [$06EB: or   a] nz if fighter hit
 	sne	d7                              	    | [$06EC: ex   af,af']
-	jra	hitd_dspchr_07c1                        | [$06ED: jp   hitd_dspchr_07c1] return to 'call hitd_det_fghtr'
+	jra	hitd_dspchr_07c1                        | [$06ED: jp   hitd_dspchr_07c1] return to 'call hitd_det_fghtr_06b7'
 l_06F0:
 	addq.w	#2,a0
 	addq.b	#2,d6                           	| [$06F0: inc  l] * 2  [a0 coherence]

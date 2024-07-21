@@ -104,7 +104,8 @@ NB_PLAYFIELD_LINES = NB_LINES
 BG_SCREEN_PLANE_SIZE = NB_BYTES_PER_ROW*(NB_PLAYFIELD_LINES+32)
 BG_SCREEN_SIZE =  BG_SCREEN_PLANE_SIZE*NB_PLAYFIELD_PLANES
 
-NB_HOST_SPRITES = 6
+* only 4 hardware sprites used
+NB_HOST_SPRITES = 4
 
 * hardware can take 64 sprites max like Xevious. What a beast for 1981!
 
@@ -235,7 +236,6 @@ start:
 		.global osd_w_videoram_no_update
 		.global osd_w_videoram
 		.global osd_w_colorram
-		.global osd_r_videoram
 		.global osd_update_inputs
 		.global osd_get_random
 		.global osd_read_dsw_1
@@ -1004,8 +1004,7 @@ really_update_sprites:
 	
 	bsr		update_hardware_sprites
 	bsr		update_bobs
-	bsr		refresh_status_bar
-	rts
+	bra		refresh_status_bar
 	
 sprite_toggle:
 	dc.w	0
@@ -3063,30 +3062,6 @@ seed:
 	dc.l	0x12345678
 
 	
-* d7=screen address
-osd_r_videoram:
-	movem.l	a0/d7,-(a7)
-	sub.w	#SCREEN_ADDRESS,d7
-	bmi.b	0f
-	cmp.w	#0x400,d7
-	bcs.b	1f
-0:
-	.ifndef		RELEASE
-	* should not happen
-	lea		read_videoram_out_of_range_error(pc),a0
-	jbsr	osd_break
-	clr.b	d0
-	move.b	D1,d1
-	nop
-	.endif
-	bra.b	2f
-1:
-	lea		ram_start_8000,a0
-	move.b	(a0,d7.w),d0
-2:
-	movem.l	(a7)+,a0/d7
-	rts
-
 BIT_LEFT = 3
 BIT_RIGHT = 1
 BIT_FIRE = 4

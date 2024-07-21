@@ -1,9 +1,6 @@
 	.global		read_ixl_into_d0
 	.global		read_ixh_into_d0
 	.global		write_videoram_to_a1
-	.global		read_videoram_from_a1
-	.global		write_videoram_to_a0
-	.global		read_videoram_from_a0
 
 	.global		rst_08_d5d6
 	.global		rst_18
@@ -27,6 +24,7 @@
 	.global		rld
 
 	.include	"m68k_macros.inc"
+	.include	"variables.inc"
 	
 *
 * < A0 (HL)
@@ -177,8 +175,9 @@ lddr_from_video:
 	move.w	d0,-(a7)
     subq.w    #1,d1
 	exg		d7,a0
+	bclr	#15,d7
 0:
-	jbsr	osd_r_videoram
+	move.b	(o_bg_videoram_8000,a6,d7.w),d0
 	move.b	d0,(a1)
     subq.w  #1,a1
     subq.w  #1,d7
@@ -204,25 +203,6 @@ write_videoram_to_a1:
 	jbsr	osd_w_videoram
 	exg	d7,a1
 	rts
-	
-read_videoram_from_a1:
-	exg	d7,a1
-	jbsr	osd_r_videoram
-	exg	d7,a1
-	rts
-
-write_videoram_to_a0:
-	exg	d7,a0
-	jbsr	osd_w_videoram
-	exg	d7,a0
-	rts
-	
-read_videoram_from_a0:
-	exg	d7,a0
-	jbsr	osd_r_videoram
-	exg	d7,a0
-	rts
-
 
 
 *=============================================================================
