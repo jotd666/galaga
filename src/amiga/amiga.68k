@@ -336,7 +336,11 @@ _user:
 2:
 	move.l	(A0)+,D0	| FORCE25FPS/S
 	beq.b	2f
-	or.l	#1,misc_options
+	move.l	#1,frameskip
+2:
+	move.l	(A0)+,D0	| FORCE17FPS/S
+	beq.b	2f
+	move.l	#2,frameskip
 2:
 
 
@@ -445,8 +449,9 @@ _user:
 	btst	#31,d1
 	sne		break_at_startup_flag
 	.endif
-	btst	#0,d1
-	sne		half_fps
+	move.l	frameskip,d0
+	addq	#1,D0
+	move.b	d0,fps_divider
 
 	btst	#1,d1
 	sne		static_stars
@@ -838,9 +843,8 @@ _vblank:
 	btst	#5,d0
 	beq.b		1f
 
-	bsr		scroll_stars
+	**bsr		scroll_stars
 
-	clr.b	skip_screen_update
 	move.l	_joypad_state(pc),d1
 	moveq	#1,d0
 	jsr	_read_joystick
@@ -883,42 +887,49 @@ _vblank:
 1:
 	***************************************
 	* has to be copper
-	* we're going to ack copper interrupt now
+	* we're going to ack copper & software interrupt now
 	* do it twice (040/pistorm bug)
-	move.w	#0x10,(intreq,a5)
-	move.w	#0x10,(intreq,a5)
-	
-	moveq	#ONE_TICK,d1
-    move.w  vbl_counter(pc),d0
-    addq.w  #1,d0
-    cmp.w   #5,d0
-    bne.b   22f
-    * update a second time, simulate 60Hz
-	moveq	#ONE_TICK*2,d1
-	clr.w d0    
-22:
-	move.b	d1,vb_ticks_count
-    move.w  d0,vbl_counter
+	move.w	#0x14,(intreq,a5)
+	move.w	#0x14,(intreq,a5)
+
+	* set base for RAM
+	lea		ram_start_8000,a6
+	btst	#2,d0
+	beq.b	2f
+	* mid-screen copper interrupt, must occur once every 5 times
+	* to simulate ~60 Hz on 50 Hz display
+	move.b	mid_screen_interrupt_count,d0
+	addq.b	#1,d0
+	cmp.b	#5,d0
+	bne.b	1f
+	* declare that we're in interrupt mode so osd_disable_interrupts/osd_enable_interrupts
+	* also set SR accordingly
+	st.b	interrupt_mode
+	jbsr		galaga_irq	
+	move.w	#0x2300,SR
+	clr.b	interrupt_mode	
+	clr.b	d0
+1:
+	move.b	d0,mid_screen_interrupt_count
+	jra		3f
+2:
+
 	
 	tst.b	pause_flag
 	bne.b	23f
 
 	sub.w	d1,delay_timer
 	
-
 	
 	* declare that we're in interrupt mode so osd_disable_interrupts/osd_enable_interrupts
 	* also set SR accordingly
 	st.b	interrupt_mode
 	
-	* set base for RAM
-	lea		ram_start_8000,a6
-	
 	jbsr		galaga_irq
-	cmp.b	#ONE_TICK*2,vb_ticks_count
-	bne.b	0f
-	jbsr		galaga_irq	
-0:
+
+	* always update hardware sprites to get max fps
+	bsr		update_hardware_sprites
+
 	* forbid interrupts as galaga_irq could have enabled them within the IRQ
 	* (this is strange but if we disable this interrupt enabling, then the game
 	* freezes...). Now disable again, else on slow machines , the sprite update
@@ -927,12 +938,15 @@ _vblank:
 	clr.b	interrupt_mode
 	tst.b	skip_screen_update
 	bne.b	1f
-	tst.b	half_fps
-	beq.b	0f			| 50Hz update!
-	eor.b	#1,flip_flop
+	move.b	flip_flop,d0
+	add.b	#1,d0
+	move.b	d0,flip_flop
+	cmp.b	fps_divider,d0
 	bne.b	1f
 0:
-	jbsr	really_update_sprites
+	clr.b	flip_flop
+	bsr		scroll_stars
+	jbsr	update_software_sprites
 
 	.ifne  OPT_ENABLE_DOUBLE_BUFFERING
 	bsr		switch_screen_buffers
@@ -944,8 +958,6 @@ _vblank:
 	move.w	_custom+intreqr,d0
 	btst	#4,d0
 	beq.b	3f		| clear: ok
-	tst.b	half_fps
-	beq.b	24f		| cannot cope with 50 fps
 	tst.b	flip_flop
 	beq.b	25f
 24:
@@ -998,29 +1010,51 @@ osd_break:
 
 	
 	
-really_update_sprites:
+update_software_sprites:
 
 	* first, make sure we have the proper palette (TODO challenging stages)
-	
-	bsr		update_hardware_sprites
-	bsr		update_bobs
-	bra		refresh_status_bar
+	clr.b	must_refresh_left_part
+	clr.b	must_refresh_right_part
+	bra		update_bobs
 	
 sprite_toggle:
 	dc.w	0
 	
 refresh_status_bar:
+	* really redraw left part with the ships
+	tst.b	must_refresh_left_part
+	jeq		4f
+	moveq	#0x0014,d7
+	move.w	#12-1,d4
+	jbsr	redraw_2_rows
+4:
+	tst.b	must_refresh_right_part
+	jeq		5f
+	* really redraw right part
+	move.w	#0x2,d7
+	move.w	#12-1,d4
+	jbsr	redraw_2_rows
+5:
+	rts
+	
+	
+refresh_status_bar_test:
+	lea		ram_start_8000,a6
 	* previous sprites are now current sprites
 	move.l		bob_previous_drawed_sprites(pc),a4
-	clr.b		d5		| done at right flag
-	clr.b		d4		| done at left flag
-	clr.b		d6		| on current buffer
+	move.b		must_refresh_right_part,d5		| done at right flag
+	move.b		must_refresh_left_part,d4		| done at left flag
+	clr.b		d6								| on current buffer
 	****************************************
 	* CHECK IF LOW SPRITE ON LEFT OR RIGHT *
 	****************************************
 	
 	moveq	#NB_TARGET_SPRITES-1,d7
 1:
+	move.b	d4,d0
+	and.b	d5,d0
+	bne.b	0f		| both sides need redrawing: quit loop
+
 	lea			hardware_sprite_flag_table,a2
 	moveq	#0,d0
 	move.w	(PREVIOUS_SPRITE_X,a4),d0
@@ -1037,7 +1071,7 @@ refresh_status_bar:
 	* conflict: sprite probably overwrote tiles: redraw
 	* redraw left part if not already done
 	tst.b	d4
-	jne		11f
+	jne		12f
 	moveq	#0,d3
 	* optimize: redraw just the ships, for that we need to
 	* know how many lives are left
@@ -1051,12 +1085,6 @@ refresh_status_bar:
 	lsl.w	#4,d3		| 16 pixels per ship, max 6 ships
 	cmp.w	d3,d0
 	bcc.b	12f
-	* really redraw left part with the ships
-	movem.w	d4/d5/d7,-(a7)
-	moveq	#0x0014,d7
-	move.w	#12-1,d4
-	jbsr	redraw_2_rows
-	movem.w	(a7)+,d4/d5/d7
 	st.b	d4
 	bra.b	11f			| no need to test for right part
 12:
@@ -1065,22 +1093,14 @@ refresh_status_bar:
 	bne.b	11f
 	cmp.w	#(NB_ROWS-15)*8-32,d0	| max possible left pos for level flags
 	bcs.b	11f
-	* really redraw right part
-	movem.w	d4/d5/d7,-(a7)
-	move.w	#0x2,d7
-	move.w	#12-1,d4
-	jbsr	redraw_2_rows
-	movem.w	(a7)+,d4/d5/d7
 	st.b	d5
-
 11:
-	move.b	d4,d0
-	and.b	d5,d0
-	bne.b	0f		| both sides redrawn: quit loop
 	lea		(PREVIOUS_SPRITE_SIZE,a4),a4
 	addq	#CURRENT_SPRITE_SIZE,a0
 	dbf		d7,1b
 0:
+	move.b	d4,must_refresh_left_part
+	move.b	d5,must_refresh_right_part
 	rts
 	
 redraw_2_rows:	
@@ -1444,6 +1464,13 @@ update_bobs:
 	addq	#CURRENT_SPRITE_SIZE,a0
 	dbf		d7,1b
 	
+	
+	************************************************
+	* CHECK IF ERASING REQUIRES STATUS BAR REFRESH *
+	************************************************
+	
+	bsr		refresh_status_bar_test
+	
 	*********************
 	* DRAW THE NEW BOBS *
 	*********************
@@ -1621,7 +1648,12 @@ update_bobs:
 	move.l	objects_blitted,0xF4
 	.endif
 
-	rts
+	*****************************************
+	* CHECK IF BLITS DAMAGED THE STATUS BAR *
+	*****************************************
+	bsr		refresh_status_bar_test
+	bra		refresh_status_bar
+	
 	* rarer case: blit upside down
 14:
 	sub.w	(2,a0),d1	| sub Y offset that had been added
@@ -1900,9 +1932,7 @@ blit_planes_any_internal_cookie_cut:
 	.endif
 2:
 	move.w	d5,-(a7)
-	moveq	#0,d5
-    move.w  #0x0fca,d5    | B+C-A->D cookie cut   
-	swap	d5
+    move.l  #0x0fca0000,d5    | B+C-A->D cookie cut   
 	moveq	#0,d6		| make sure D6.L is zero!!
     move.w  d0,d6
     beq.b   4f
@@ -2301,7 +2331,7 @@ store_system:
 	* no whdload, no 68020: assume slow
 	* if running on PiStorm, well, too bad use whdload
 	st.b	static_stars
-	st.b	half_fps
+	move.b	#2,fps_divider
 1:
 	lea	_custom,a6
 	move.w	intenar(a6),old_intena
@@ -3435,7 +3465,7 @@ program_args_end:
 read_args_string:
 	.byte	read_args_string_end-read_args_string
 	.ascii	"INVINCIBLE/S,INFLIVES/S,PERFECT/S,"
-	.ascii	"CHEATKEYS/S,STATICSTARS/S,FORCE25FPS/S,STARTLIVES/K/N,STARTLEVEL/K/N"
+	.ascii	"CHEATKEYS/S,STATICSTARS/S,FORCE25FPS/S,FORCE17FPS/S,STARTLIVES/K/N,STARTLEVEL/K/N"
 read_args_string_end:
 	.align	2
 
@@ -3495,7 +3525,7 @@ old_stack:
 	.long	0
 static_stars:
 	.word	0
-half_fps:
+fps_divider:
 	.word	0
 palette_number:
 	.word	0
@@ -3514,6 +3544,7 @@ _tag:
 cheat_flags:
 		.long	0
 		.long	WHDLTAG_CUSTOM2_GET
+frameskip:
 		.long	0
 		.long	WHDLTAG_CUSTOM3_GET
 misc_options:
@@ -3528,7 +3559,11 @@ dip_switch_start_lives:
 dip_switches:
 		.byte	0x0
 		.byte	0
-
+mid_screen_interrupt:
+	.byte	0
+mid_screen_interrupt_count:
+	.byte	0
+	.align	2
 system_vbr:
 	.long	0
 
@@ -3576,6 +3611,10 @@ intro_music_counter:
 	.word	0
 vbl_counter:
 	.word	0
+must_refresh_left_part:
+	.byte	0
+must_refresh_right_part:
+	.byte	0
 _resload:
 	.long	0
 _joypad_state:
@@ -3844,6 +3883,11 @@ color_row_28:
 	.set	beampos,beampos+0x100
 	STAR_COPPER_ROW
 	.endr
+
+	* extra mid-frame interrupt to avoid double irq without non-irq code running
+	*.word	 intreq,0x8004  | call copper interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
+	.word	 intreq,0x8014  | call copper interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
+	
 
 	* pal limit
     .word  0xFFCF,0xFFFE       | PAL wait (should be 0xFFDF but probably fmode=3 changes it)

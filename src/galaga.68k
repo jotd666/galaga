@@ -1198,17 +1198,18 @@ l_0771:
 	jne	l_0771                             	    | [$0784: djnz l_0771]
 * else ... break
 	jra	l_078E                             	    | [$0786: jr   l_078E]
-
-	move.w	a0,d7                				| [$0789: ld   (hl),a]
-	bset	#15,d7
+                				
 l_0788:
+	move.w	a0,d7
+	bset	#15,d7
+0:
 	move.b	(o_bg_videoram_8000,a1.W,a6),d0     | [$0788: ld   a,(de)] hi score
-	jbsr	osd_w_videoram
+	jbsr	osd_w_videoram						| [$0789: ld   (hl),a]
 	subq.w	#1,d7                           	| [$078A: dec  l]
 	subq.w	#1,a0                           	| [$078A: dec  l]
 	subq.w	#1,a1                           	| [$078B: dec  e]
 	subq.b	#1,d1                           	| [...]
-	jne	l_0788                             	    | [$078C: djnz l_0788]
+	jne	0b                               	    | [$078C: djnz l_0788]
 
 l_078E:
 	jbsr	read_ixl_into_d0                    | [$078E: ld   a,ixl]
@@ -2864,14 +2865,14 @@ c_build_token_1:
 * put it back
 	exg	d0,d7                              	    | [$1204: ex   af,af']
 * set the delay count 8 ... preserve frame count
-	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$1205: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)]
+	move.b	o_ds3_frame_cts_92A0(a6),d0         	| [$1205: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)]
 	addq.b	#8,d0                            	| [$1208: add  a,#8]
 	move.b	d0,d4                           	| [$120A: ld   e,a]
 l_120B:
-	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$120B: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)]
-	sub.b	d4,d0                            	| [$120E: sub  e]
+	move.b	o_ds3_frame_cts_92A0(a6),d0       | [$120B: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)]
+	cmp.b	d4,d0                            	| [$120E: sub  e]
 	jne	l_120B                             	    | [$120F: jr   nz,l_120B]
-
+0:
 * actv_plyr_state[0x05]==0 for challenge stage ... 0 count/enable for stage tokens clicks
 	exg	d7,d0                              	    | [$1211: ex   af,af']
 	tst.b	o_ds_plyr_actv_9820+_b_not_chllg_stg(a6)		| JOTD: couldn't make the original code work properly
@@ -8493,6 +8494,7 @@ l_3073:
 	lea		0x8000+0x0300+0x09,a1      	            | [$3088: ld   de,#0x8000 + 0x0300 + 0x09]
 	move.l	o_b_8A00(a6),a0              	        | [$308B: ld   hl,(o_b_8A00(a6) + 0x00)] ptr to plyr1 score or plyr2 score on screen.
 	add.l	a6,a0					                | point to video ram
+	sub.l	#0x8000,a0
  	jbsr	string_copy_3275                        | [$308E: call string_copy_3275] puts players score below "SCORE"
 
 * puts_AAA (default initials of new score entry) below NAME
@@ -8633,7 +8635,7 @@ c_3118_insert_top5_score:
 l_311D_stick_right:
 * get lower byte of current character's address in v-ram
 	move.w	#0x0100,d7          	            | [ld   h,#>0x8000 + >0x0100]
-	move.b	o_b_8A00+0x10(a6),d7                  	| [ld   a,(o_b_8A00(a6) + 0x10)] HL = $8000 + $0100 + o_b_8A00(a6)[ 0x10 ]
+	move.b	o_b_8A00+0x10(a6),d7                | [ld   a,(o_b_8A00(a6) + 0x10)] HL = $8000 + $0100 + o_b_8A00(a6)[ 0x10 ]
 												| [ld   l,a]
 	move.b	#40,d0                          	| [ld   a,#40] 20 seconds
 	move.b	d0,o_ds4_game_tmrs_92ac+2(a6)             | [ld   (o_ds4_game_tmrs_92ac(a6) + 2),a] reset timer

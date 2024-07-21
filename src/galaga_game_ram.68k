@@ -1,103 +1,4 @@
 
-*
-* input file mrw.s
-*
-*
-* mrw.s:
-*  defines variables in "read-write" memory.
-*
-*  This project provides information about the design of the software
-*  programming of the original Galaga arcade game, (c) 1981 NAMCO LTD.
-*  All files associated with this project are an original documentation
-*  work, copyright 2012 by Glenn A. Neidermeier.
-*
-* Permission is granted to anyone to use the information provided here for
-* any non-commerial purpose with the following restrictions:
-*
-* 1) You are responsible for any legal issues arising from your use of this
-*    information.
-* 2) If any changes are made to any files in this project, they should be
-*    identified as having been modified and by whom.
-*
-*
-*  The build requires the axXXXX assembler (asez80 variant which includes
-*  support for some undocumented opcodes). Code for all 3 Z80 CPUs is
-*  generated from one build by making use of the bank-switching capability of
-*  asXXXX. The linker also allows most of the .org directives to be
-*  eliminated, and instead module placement is controlled by .area directive
-*  and located at link time.
-*
-*  The ROM checksums are also left as commented .db directives, but are
-*  actually generated completely at link time by the remarkable srec_cat tool.
-*
-*
-*  What follows is a catch-all for any additional information...
-*
-*
-*  Sprite hardware SFRs ... I got this information a long long time ago from
-*  MAME version 21.5 or something like that which had the first Galaga driver:
-*
-*   SPRCODE: sprite code/color
-*   8b00-8b7f buffer  8b80-8bff
-*    offset[0]: tile code
-*    offset[1]: color map code
-*
-*   SPRPOSN: sprite position
-*   9300-937f buffer  9380-93ff
-*    offset[0]: sx
-*    offset[1]: sy<0:7>
-*
-*   SPRCTRL: sprite control
-*   9b00-9b7f buffer  9b80-9bff
-*    offset[0]
-*     0: flipx - flip about the X axis, i.e. "up/down"
-*     1: flipy - flip about the Y axis, i.e. "left/right"
-*     2: dblh - MAME may not do dblh unless dblw is also set... (this may not be true)
-*     3: dblw
-*    offset[1]
-*     0: sy<8>
-*     1: enable
-*
-*     Doubling effects seem to copy/mirror the sprite image .. but not always?
-*
-*
-
-*
-* Tile RAM & color RAM layout.
-*    Tile rows  0-1:   $8300 - 803F
-*    Playfield area:   $8040 - 83BF
-*    Tile rows 32-35:  $83C0 - 83FF
-*
-*    In Tile rows 0,1,32,35, the length is $20 bytes, but 2 bytes at each end
-*    are not visible, but it simplifies the math!
-*
-*    2 bytes                            	|| 2 bytes (not visible)
-*   ----------------------------------------------------
-*   .3DF     .3DD                              .3C2  .3C0     <- Row 2
-*   .3FF     .3FD                              .3E2  .3E0     <- Row 3
-*            .3A0-------------------------.060 .040
-*                                       	|||
-*            .3BF-------------------------.07F .05F
-*   .01F     .01D                              .002  .000     <- Row 0
-*   .03F     .03D                              .022  .020     <- Row 1
-*
-
-*=============================================================================
-*  This module implements all the memory read-write blocks, which exist in
-*  a single data address space common to all 3 Z80 CPUs.
-*  The approach taken is that anything here could be moved if the code were
-*  ported to a different platform.
-*  There is a separate file "sfrs.inc" which provides equates for the
-*  addresses of speqcial function registers which are specific to the hardware.
-*  It could be argued that the sprite register blocks should be
-*  handled as simple equates as well.
-*
-*  3 separate .areas are defined here for each of the shared RAM banks located at
-*  $8800, $9000, and $9800 ($0400 bytes each).
-*  Those areas could be located at link time by '-b' arguments to the linker
-*  but relocatable symbols and absolute symbols can't be used in expressions together.
-*-----------------------------------------------------------------------------
-
 	.global	bg_videoram_8000
 	.global	bg_colorram_8400
 	.global		ds_8800_RAM0
@@ -212,11 +113,6 @@
 	.global		sfr_sprite_ctrl_9B80
 	.global		ds2_stg_chllg_rnd_attrib_9284
 
-*=============================================================================
-* RAM0
-* Description:
-*   $0400 bytes, $8800
-*-----------------------------------------------------------------------------
 
 *.area MRW (abs,ovr)
 *.org $8800
@@ -228,10 +124,6 @@ bg_colorram_8400:						| $8400
 
 
 
-* Object status structure... 2 bytes per element (indexed same as sprite registers).
-*  [ 0 + n ] : object state
-*  [ 1 + n ] : byte-offset (index) into bug_motion_que[]
-
 object_states_8800:
        .skip     0x40 * 2   | $40 elements
 
@@ -239,13 +131,6 @@ object_states_8800:
 * 8900
        .skip     0x20       | unused
 
-* Space for 5 attack wave setup tables. Each table can vary in size, because
-* in each wave there are a varying number of "transients" bug (have no home
-* and simply fly off the screen) so each wave has slots for up to 16
-* bugs. There are always 8 bugs in each wave that fly "home".
-* Each player has a private pointer initialized to offset 0 of this table at
-* beginning of each new stage ... actv_plyr_state[0x02]
-* Since the table size can vary, the end-of-table is indicated  by $7F.
 ds_8920:
        .skip     0xC0       | $56 bytes used
 
@@ -253,19 +138,8 @@ ds_8920:
        .skip     0x20       | data for CPU sub-1 f_0ECA (the unused mystery task)
 
 
-* Temp vars for _top5_dlg_proc ... gg1-4
 b_8A00:
-	.skip     0x04       | ptr to plyr1 score or plyr2 score on screen.
-       .skip     0x01       | L==2, R==8 X=A   previous controller state
-       .skip     0x01       | character selection counter/timer
-       .skip     0x04       | pointer to new name in table
-	.skip     0x06       | unused (jotd: removed 4 bytes so rest is not shifted)
-*b_8A10:
-       .skip     0x01       | lower byte of current input character's address in v-ram
-       .skip     0x01       | 1==1ST place etc.
-       .skip     0x0E       | unused
 
-* Top5 Table scores
 b_best5_score_8a20:
 
 b_best5_score1_8a20:
@@ -293,10 +167,6 @@ b_best5_name5_8a4a:
 
        .skip     0x03       | unused (8A4D)
        .skip     0xB0       | unused (8A50)
-
-* origin base of sprite data block
-* mrw and sfr blocks NEED to be contiguous because sometimes the game adds 0x80
-* to peek in sfr registers (which have write but also read capability)
 ds_sprite_code_8B00:
 
 mrw_sprite_code_8B00:
@@ -370,59 +240,8 @@ ds_bug_motion_que_9100:
 *      .skip     0x60
 *      .skip     0x10       | unused
 
-
-*-----------------------------------------------------------------------------
-* The following motley collection of global variables are situated at
-* odd addresses, apparently because the clever designers didn't want to
-* waste the odd-bytes at 0x9200. At the end of these globals, the instruction
-* counter will be rollled-back and a new label created to define the array of
-* $30 bytes and allow it to be treated as a separate structure.
-*-----------------------------------------------------------------------------
-*-----------------------------------------------------------------------------
-* Object-collision notification to f_update_enemy_status_1db3 from cpu1:c_076A (even-bytes)
-*-----------------------------------------------------------------------------
 b_obj_collsn_notif_9200:
 ds_glbls_9200:
-       .skip     0x01
-b8_game_state_9201:
-       .skip     0x01       | game states (1, 2, 3, 4 from the manual)
-                            * 0==Game Ended   (not described in manual)
-                            * 1==ATTRACT_MODE, 2==READY_TO_PLAY_MODE, 3==PLAY_MODE
-                            * ?==SELF_TEST_MODE  (doesn't have a corresponding enumeration value)
-       .skip     0x01
-*_b_9203
-       .skip     0x01       | jp table index demo mode
-       .skip     0x01
-*_b_9205
-       .skip     0x01       | index for text strings, demo
-       .skip     0x01
-*_b_9207
-       .skip     0x01       | counter, demo
-       .skip     0x01
-*                           | state, once near beginning of round (demo or play) $81->$1
-
-*_b_9209                    | demo only
-*                           | 07DD(sub-1)
-       .skip     0x01
-       .skip     0x01
-*_b_920B
-       .skip     0x01       | conditions for doing flying bug attack
-       .skip     0x01       | 1 at demo mode, 3 at game start (after intro),
-                            * 0 at HEROES screen, 0 when ship appear on training mode, 0 when coin-in,
-*_b_920D
-       .skip     0x01
-       .skip     0x01
-*_b_920F
-       .skip     0x01       | flag, bug nest movement left/right
-       .skip     0x01       | 07DD, 1DC1 in game
-*_b_9211
-       .skip     0x01       | cp with (b_9A80 + 0x00) in cpu2
-       .skip     0x01
-*_b_9213
-       .skip     0x01       | restart_stage "end of attack" (all attackers go home)
-       .skip     0x01       | 07DD, 1DC1
-b_flip_screen_9215:
-       .skip     0x01
        .skip     0x01
 *_b_9217
        .skip     0x01

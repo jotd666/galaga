@@ -19,6 +19,6 @@ def f_add_offset(m):
 ##        f.write(contents)
 
 with open(os.path.join("../src","variables.inc"),"w") as f:
-    for v in variables:
+    for v in sorted(variables,key=lambda x:x[-4:]):
         offset = int(re.match("\w+_(\w{4})",v).group(1),16)
         f.write(f"o_{v} = 0x{offset-0x8000:04x}\n")

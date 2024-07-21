@@ -1,16 +1,9 @@
 - report comments of galaga_game_ram.68k to offsets and kill file
 - capture bottom beam is red because of Namco logo hack?? reset rows doesn't work
-- we have to redraw flags/lives if some erase event occurs, not just draw event:
-  ship explosion, and objects wrapping around Y axis
 - shots & moth kill sounds have cracks on real hardware (but maybe just need recap...)
-
 
 minor issues:
 
-- flag tick timer sometimes super slow: loops at l_120B
-- red flashes (frame drop) even with very few sprites with cycle exact!!
-  (why are we flashing red when only ship and double shot (single shot?) are displayed!
-  doesn't matter!!!
 - (c) namco part of letters are cyan
 - 5th score entry letters are partially yellow
 - DSW skill level?
