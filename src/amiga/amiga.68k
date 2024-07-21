@@ -1285,7 +1285,8 @@ update_hardware_sprites:
 	* d6 is the sprite index: compute/set proper color
 	move.w	d6,d5
 	bclr	#0,d5
-	lsl.w	#2,d5	| times 4*2
+	add.w	d5,d5
+	add.w	d5,d5	| times 4
 	move.w	d5,d2
 	add.w	d2,d2
 	lea		sprite_cols+6,a5	| sprite palette + 2 (first color skipped)
@@ -1755,8 +1756,7 @@ clear_planes_any_blitter_internal:
     and.w   #0x1F0,d0
     lsr.w   #3,d0
     add.w   d0,d1
-    LSL.W #8,D6
-    LSL.W #4,D6
+    ROR.W #4,D6
 
     swap    d6
     or.l    d6,d5            | add shift
@@ -1910,11 +1910,9 @@ blit_planes_any_internal_cookie_cut:
 	bclr	#0,d0
     and.w   #0xF,d6
 	beq.b	3f				| if 0 shift, optimize a few instructions
-    lsl.l   #8,d6
-    lsl.l   #4,d6
+    ror.w   #4,d6
     or.w    d6,d5            | add shift to mask (bltcon1)
     swap    d6
-    clr.w   d6
     or.l    d6,d5            | add shift
 3:   
     add.w   d0,d1
@@ -1946,9 +1944,9 @@ blit_planes_any_internal_cookie_cut:
 	WAIT_BLIT
     
     * blitter registers set
-
-	clr.w bltamod(a5)		|A modulo=bytes to skip between lines
-	clr.w bltbmod(a5)		|B modulo=bytes to skip between lines
+	moveq	#0,d7
+	move.w	d7,bltamod(a5)		|A modulo=bytes to skip between lines
+	move.w	d7,bltbmod(a5)		|B modulo=bytes to skip between lines
 	move.l	d5,d7			| save cookie cut bltcon
 	move.w	(a7)+,d5
 	
