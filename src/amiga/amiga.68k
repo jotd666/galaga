@@ -2388,7 +2388,7 @@ store_system:
 	* no whdload, no 68020: assume slow
 	* if running on PiStorm, well, too bad use whdload
 	st.b	static_stars
-	move.b	#2,fps_divider
+	move.b	#1,fps_divider		| 1 frameskip, will still be slow
 1:
 	lea	_custom,a6
 	move.w	intenar(a6),old_intena
