@@ -1,13 +1,14 @@
+- despite a lot of optimizations, the game is just too slow on plain 68000
 - report comments of galaga_game_ram.68k to offsets and kill file
 - capture bottom beam is red because of Namco logo hack?? reset rows doesn't work
 - shots & moth kill sounds have cracks on real hardware (but maybe just need recap...)
 
 minor issues:
 
+- demo: continues after ship is killed, but with wrong actions
 - (c) namco part of letters are cyan
 - 5th score entry letters are partially yellow
 - DSW skill level?
-- demo: continues after ship is killed, but with wrong actions
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
 - autoframeskip: if too many slowdowns, game should switch to fixed stars/30 fps

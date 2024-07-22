@@ -17,6 +17,13 @@ AFB_68010 = 0
 AFB_68020 = 1
 NO68020 = 1
 
+OPT_SWARM_BLOCK_ERASE = 0
+
+SWARM_X = 48
+SWARM_Y = 28
+SWARM_HEIGHT = 90
+SWARM_WIDTH = 200
+
 SPRITE_Y_CORRECTION = -8
 SPRITE_X_CORRECTION = 8
 HW_SPRITE_X_CORRECTION = 0
@@ -1378,6 +1385,34 @@ compute_sprite_xy:
 	
 	rts
 	
+
+	* systematically erase swarm area
+erase_swarm_area:
+	move.l	bg_drawed_screen_ptr(pc),a1
+	* compute blit start
+	add.w	#(SWARM_X/8)+(SWARM_Y*NB_BYTES_PER_ROW),a1
+	st.b	d3
+	moveq	#0,d2
+	lea		_custom,a5
+0:
+	btst	d2,d3
+	beq.b	1f
+	movem.l	d2-d6/a1,-(a7)
+	moveq	#0,d0
+	moveq	#0,d1
+	move.w	#SWARM_WIDTH/8+2,d2			| 32 bits blit
+	move.w	#SWARM_HEIGHT,d4
+	jbsr	clear_plane_any_blitter_internal
+	movem.l	(a7)+,d2-d6/a1
+1:
+	addq.w	#1,d2
+	lea		(BG_SCREEN_PLANE_SIZE,a1),a1
+	cmp.w	#NB_BOBS_PLANES,d2
+	bne.b	0b
+2:
+
+	rts
+	
 update_bobs:
 	.ifndef	RELEASE
 	clr.w	lines_blitted
@@ -1386,9 +1421,12 @@ update_bobs:
 	clr.w	objects_erased
 	.endif
 	
-	lea			hardware_sprite_flag_table,a2
+	.ifne	OPT_SWARM_BLOCK_ERASE
+	bsr		erase_swarm_area
+	.endif
 	
 	move.l		bob_previous_drawed_sprites(pc),a4
+	lea			hardware_sprite_flag_table,a2
 	lea		o_sfr_sprite_code_8B80(a6),a3
 	move.l	a3,a0
 	
@@ -1400,7 +1438,7 @@ update_bobs:
 1:
 	moveq	#0,d2
 	move.w	(PREVIOUS_SPRITE_X,a4),d2
-	beq.b	11f		| x=0: was inactive
+	jeq		11f		| x=0: was inactive
 
 	* we have to compute current sprite x & y
 	bsr		compute_sprite_xy
@@ -1409,6 +1447,24 @@ update_bobs:
 	bne.b	12f		| prev x != x: perform erase
 	cmp.w	(PREVIOUS_SPRITE_Y,a4),d1
 	bne.b	12f		| prev y != y: perform erase
+	
+	
+	.ifne	OPT_SWARM_BLOCK_ERASE
+	* galaga specific
+	* swarm area is already erased
+	cmp.b	#SWARM_X,d0
+	jcs		222f
+	cmp.b	#SWARM_X+SWARM_WIDTH-32,d0
+	jcc		222f
+	cmp.b	#SWARM_Y,d1
+	jcs		222f
+	cmp.b	#SWARM_Y+SWARM_HEIGHT-32,d1
+	jcs		11f			| skip erase
+	
+	* end galaga specific
+222:	
+	.endif
+	
 	* previous X and Y and current X Y are the same: compare code
 	* (we can ditch d0,d1 from now on)
 	moveq	#0,d2
@@ -1796,6 +1852,7 @@ clear_planes_any_blitter_internal:
     add.w   d1,a1       | plane position (always even)
 
 	move.w #NB_BYTES_PER_ROW,d0
+	bclr	#0,d2		| make sure D2 is even (else strange things occur!)
     sub.w   d2,d0       | blit width
 
     lsl.w   #6,d4
@@ -3885,8 +3942,8 @@ color_row_28:
 	.endr
 
 	* extra mid-frame interrupt to avoid double irq without non-irq code running
-	*.word	 intreq,0x8004  | call copper interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
-	.word	 intreq,0x8014  | call copper interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
+	.word	 intreq,0x8004  | call copper interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
+	.word	 intreq,0x8010  | call copper interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
 	
 
 	* pal limit
