@@ -422,13 +422,13 @@ sprt_fmtn_hpos:
 galaga1_irq:
 jp_0513_rst38:
 	*clr.b	d0                               	| [xor  a]
-	*jbsr	osd_interrupt_control                    	| [ld   (_sfr_6821),a] 0 ...CPU-sub1 IRQ acknowledge/enable
+	*jbsr	osd_interrupt_control               | [ld   (_sfr_6821),a] 0 ...CPU-sub1 IRQ acknowledge/enable
 	*move.b	_sfr_dsw5,d0                    	| [ld   a,(_sfr_dsw5)] DSWA: freeze video
 	*and.b	#0x02,d0                         	| [and  #0x02] freeze_ctrl_dsw (6j)
 	*jeq	l_0575                             	| [jp   z,l_0575] if paused, goto 0575 // done
 
 * frame_cntr++
-	move.b	o_ds3_frame_cts_92A0(a6),d0         	| [ld   a,(o_ds3_frame_cts_92A0 + 0)]
+	move.b	o_ds3_frame_cts_92A0(a6),d0         | [ld   a,(o_ds3_frame_cts_92A0 + 0)]
 	addq.b	#1,d0                           	| [inc  a]
 	move.b	d0,o_ds3_frame_cts_92A0(a6)         	| [ld   (o_ds3_frame_cts_92A0 + 0),a] +=1
 
@@ -440,7 +440,7 @@ jp_0513_rst38:
 * if ( cnt % 20 == 1 ) ... update 4Hz (H) only
 	and.b	#0x1F,d0                         	| [and  #0x1F] MOD $20
 	subq.b	#1,d0                           	| [dec  a]
-	jeq	l_0536                             	| [jr   z,l_0536]
+	jeq	l_0536                             	    | [jr   z,l_0536]
 
 * else  if ( cnt % 20 == 0 ) ...
 	addq.b	#1,d0                           	| [inc  a] restores original value and allows test for 0
@@ -476,49 +476,50 @@ l_0537:
 	move.b	d0,o_b_92A0+0x0A(a6)               	| [ld   (o_b_92A0 + 0x0A),a] continuous bombing flag (set here by tasking kernel)
 
 * find the first ready task.. may run more than one.
-	clr.w	d2                               	| [ld   c,#0]
+	moveq	#0,d2                               	| [ld   c,#0]
 l_054F_while:
-	lea	o_ds_cpu1_task_actv_9020(a6),a0           	        | [ld   hl,#o_ds_cpu1_task_actv_9020]
-	add.w	d2,a0								| [ld   a,c]
-												| [add  a,l]
-											    | [ld   l,a]
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	                               	            | [and  a]
-	jne	l_055C                             	    | [jr   nz,l_055C]
-	addq.b	#1,d2                           	| [inc  c]
-	jra	l_054F_while                       	    | [jr   l_054F_while]
+	lea	o_ds_cpu1_task_actv_9020(a6),a0								| [$0552: ld   a,c]
+	add.w	d2,a0							| [$0553: add  a,l]
+			 		                        | [$0554: ld   l,a]
+	* find a running task
+l_0555_while:
+	move.b	(a0)+,d0                        | [$0555: ld   a,(hl)]
+	                               	        | [$0556: and  a]
+	jeq	l_0555_while                           | [$0557: jr   nz,l_055C]
+											| [$0559: inc  c]
+		                       	        | [$055A: jr   l_054F_while]
 
-l_055C:
-	move.b	d0,d1                           	| [ld   b,a] A == task status
-	lea	d_003B_task_table,a0           	| [ld   hl,#d_003B_task_table]
-	moveq	#0,d0
-	
-	move.b	d2,d0                           	| [ld   a,c] C == task index
-	add.w	d0,d0                            	| [sla  a] *=2 ... (sizeof pointer)
-	add.w	d0,d0                            	| [sla  a] *=2 ... (sizeof pointer)
-	                         	| [add  a,l]
-	                        	| [ld   l,a]
-	                        	| [ld   e,(hl)]
-	                        	| [inc  hl]
-	                        	| [ld   d,(hl)]
-	                       	| [ex   de,hl]
+	subq	#1,a0                       | one less
+	lea	o_ds_cpu1_task_actv_9020(a6),a3
+	sub.l	a3,a0				        | [$0552: ld   a,c]
+	move.w	a0,d2                       | recompute task index
+	move.b	d0,d1                           	| [$055C: ld   b,a] A == task status
+	lea	d_003B_task_table,a0           	        | [$055D: ld   hl,#d_003B_task_table]
+	move.w	d2,d0                           	| [$0560: ld   a,c] C == task index
+	add.w	d0,d0                            	| [$0561: sla  a] *=2 ... (sizeof pointer)
+	add.w	d0,d0                            	| [$0563: sla  a] *=2 ... (sizeof pointer)
+	                         	                | [$0563: add  a,l]
+	                        	                | [$0564: ld   l,a]
+	                        	                | [$0565: ld   e,(hl)]
+	                        	                | [$0566: inc  hl]
+	                        	                | [$0567: ld   d,(hl)]
+	                       	                    | [$0568: ex   de,hl]
 	move.l	(a0,d0.w),a0
-	movem.w	d1/d2,-(sp)                    	| [push bc]
-
-	jbsr	c_0034                            	| [call c_0034] (jumps to (a0) from task table)
-
-	movem.w	(sp)+,d1/d2                    		| [pop  bc]
-	move.b	d1,d0                           	| [ld   a,b] "status" actually adds to index
-	add.b	d2,d0                            	| [add  a,c]
-	move.b	d0,d2                           	| [ld   c,a]
-	and.b	#0xF8,d0                         	| [and  #0xF8] if index < 8 then repeat loop
-	jeq	l_054F_while                       	| [jr   z,l_054F_while]
+	movem.w	d1/d2,-(sp)                    	    | [$0569: push bc]
+	jbsr	(a0)                            	| [call c_0034] (jumps to (a0) from task table)
+	movem.w	(sp)+,d1/d2                    		| [$056D: pop  bc]
+	move.b	d1,d0                           	| [$056E: ld   a,b] "status" actually adds to index
+	add.b	d2,d0                            	| [$056F: add  a,c]
+	moveq	#0,d2
+	move.b	d0,d2                           	| [$0570: ld   c,a]
+	and.b	#0xF8,d0                         	| [$0571: and  #0xF8] if index < 8 then repeat loop
+	jeq	l_054F_while                       	| [$0573: jr   z,l_054F_while]
 
 l_0575:
-	*move.b	#1,d0                           	| [ld   a,#1]
-	*move.b	d0,_sfr_6821                    	| [ld   (_sfr_6821),a] 1 ...CPU-sub1 IRQ acknowledge/enable
+	*move.b	#1,d0                           	| [$0575: ld   a,#1]
+	*move.b	d0,_sfr_6821                    	| [$0577: ld   (_sfr_6821),a] 1 ...CPU-sub1 IRQ acknowledge/enable
 	*jbsr	osd_interrupt_control
-	rts                                    	| [ret]
+	rts                                    	        | [$057B: ret]
 
 *=============================================================================
 * RESET()
@@ -670,7 +671,7 @@ f_05EE:
 	jeq	l_0613                             	    | [$05FA: jr   z,l_0613]
 
 * ... handle 2-ship configuration
-	lea	o_ds_sprite_posn_9300+0x60(a6),a0         	| [$05FC: ld   hl,#o_ds_sprite_posn_9300 + 0x60] fighter2 position
+	lea	o_ds_sprite_posn_9300+0x60(a6),a0       | [$05FC: ld   hl,#o_ds_sprite_posn_9300 + 0x60] fighter2 position
 	move.b	(a0),d0                         	| [$05FF: ld   a,(hl)]
 	                               	            | [$0600: and  a]
 	jeq	l_0613                             	    | [$0601: jr   z,l_0613]
@@ -2538,7 +2539,7 @@ l_0D8D_got_a_bullet:
 
 	COMPUTE_LSB_A0_D6	o_object_states_8800
 	move.w	d6,-(sp)                        	| [push hl] &_objs[BOMB0 + n]
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [ld   h,#>o_ds_sprite_posn_9300]
+	lea	o_ds_sprite_posn_9300(a6),a0            | [ld   h,#>o_ds_sprite_posn_9300]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 

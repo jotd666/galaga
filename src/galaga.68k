@@ -1128,6 +1128,7 @@ d_0725:
 *  ...
 *-----------------------------------------------------------------------------
 gctl_supv_score_0728:
+
 *  if ( activ_plyr_state.plyr_1or2 == plyr1 )
 	                            	            | [$072B: and  a]
 *    tmp = $f9
@@ -1139,12 +1140,13 @@ gctl_supv_score_0728:
 l_0732:
 	move.b	d0,ixl							    | [$0732: ld   ixl,a]   parameter to c_scoreman_incr_add_07d8 (tile ram offset)
 	move.b	#0x10,d1                        	| [$0734: ld   b,#0x10] sizeof scoreman_inc_lut[]
-	lea	o_ds_bug_collsn_hit_mult_9290(a6),a0 	            | [$0736: ld   hl,#o_ds_bug_collsn_hit_mult_9290(a6) + 0x00] 9290
+	lea	o_ds_bug_collsn_hit_mult_9290(a6),a0 	| [$0736: ld   hl,#o_ds_bug_collsn_hit_mult_9290(a6) + 0x00] 9290
 l_0739_while_B:
 	exg	a1,a0                              	    | [$0739: ex   de,hl] DE := &bug_collsn[hl]
 	lea	d_scoreman_inc_lut-1,a0        	        | [$073A: ld   hl,#d_scoreman_inc_lut - 1] effective start index is $10 - 1
+	moveq	#0,d0
 	move.b	d1,d0                           	| [$073D: ld   a,b]
-	jbsr	add_d0_to_a0_0010                   | [$073E: rst  0x10] HL += A
+	add.w	d0,a0                   | [$073E: rst  0x10] HL += A
 	move.b	(a0),d2                         	| [$073F: ld   c,(hl)] scoreman_inc_lut[B-1]
 * bug_collsn[hl] * scoreman_inc_lut[B-1]
 l_0740:
@@ -1536,8 +1538,8 @@ c_08AD:
 	move.b	d0,d4                           	| [ld   e,a]
 	asl.b	#1,d0                            	| [sla  a]
 	add.b	d4,d0                            	| [add  a,e]
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
-
+	and.w	#0xFF,d0                          	| [rst  0x10] HL += A
+	add.w	d0,a0
 	move.b	d1,d0                           	| [ld   a,b] o_ds4_game_tmrs_92ac(a6)[2] from f_misc_gameplay_events_0857
 	cmp.b	#0x28,d0                         	| [cp   #0x28]
 	jcc	l_08B8                             	| [jr   nc,l_08B8]
@@ -1577,8 +1579,9 @@ c_08BE:
 	jbsr	c_divmod                          	| [call c_divmod] HL=HL/10
 	move.b	d5,d3
 	movem.w	(a7)+,d5/d6                         | [ex   de,hl] 8-bit quotient into d ...
+	moveq	#0,d0
 	move.b	d3,d0                           	| [ld   a,d] ... quotient into a
-	jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A
+	add.w	d0,a0			                   | [rst  0x10] HL += A
 
 	move.b	(a0),d0                         	| [ld   a,(hl)]
 	rts                                    	    | [ret]
@@ -2133,7 +2136,8 @@ l_0AAD:
 	bsr		exg_sp_d5d6                         | [ex   (sp),hl] 2nd product to HL, 1st product to (SP)
 	jbsr	c_0B06                            	| [call c_0B06] HL *= 10 ... MSB->A
 	bsr		exg_sp_d5d6                         | [ex   (sp),hl] 1st product to HL, 2nd product to (SP)
-	jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A ... 1st product + 2nd product (msb)
+	and.w	#0xFF,d0
+	add.w	d0,a0			                    | [rst  0x10] HL += A ... 1st product + 2nd product (msb)
 	exg		d0,d7                              	| [ex   af,af'] 1st product msb -> A, stash sum lsb
 	add.b	d5,d0                            	| [add  a,h] 1st product msb + sum msb
 	clr.b	d5                               	| [ld   h,#0] done with this byte
@@ -2762,7 +2766,8 @@ l_11B1_add_total:
 	move.b	#2,d0                           	| [$11B7: ld   a,#2]
 l_11B9:
 	add.b	d2,d0                            	| [$11B9: add  a,c] nbr of additional tile columns
-	jbsr	add_d0_to_a0_0010                   | [$11BA: rst  0x10] HL += A
+	and.w	#0xFF,d0
+	add.w	d0,a0			                   | [$11BA: rst  0x10] HL += A
 
 * B == count of 50's markers, if any
 	addq.b	#1,d1                           	| [$11BB: inc  b] pre-increment for djnz ... B is at least 1
@@ -5070,9 +5075,9 @@ j_1CAE:
 
 * plyr_actv.bmbr_boss_scode[]
 	move.b	d4,d0                           	| [ld   a,e] object/index of bomber
-	and.b	#0x07,d0                         	| [and  #0x07]
+	and.w	#0x07,d0                         	| [and  #0x07]
 	lea	o_ds_plyr_actv_9820+_ds_bmbr_boss_scode(a6),a0	    | [ld   hl,#o_ds_plyr_actv_9820(a6) +_ds_bmbr_boss_scode]
-	jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A
+	add.w	d0,a0			                   | [rst  0x10] HL += A
 * d_1CFD[ixl]
 	jbsr	read_ixl_into_d0                    | [ld   a,ixl]
 	exg	a1,a0                              	    | [ex   de,hl] stash hl (&plyr_actv.code)
@@ -5170,10 +5175,11 @@ c_1D03:
 	jcs	l_1D0D                             		| [$1D0A: jr   c,l_1D0D]
 	subq.b	#1,d1                           	| [$1D0C: dec  b]
 l_1D0D:
+	moveq	#0,d0
 	move.b	d1,d0                           	| [$1D0D: ld   a,b]
 	subq.b	#1,d1                           	| [$1D0E: dec  b]
 	lea	d_1D2C_wingmen,a0              			| [$1D0F: ld   hl,#d_1D2C_wingmen]
-	jbsr	add_d0_to_a0_0010                   | [$1D12: rst  0x10] HL += A
+	add.w	d0,a0			                    | [$1D12: rst  0x10] HL += A
 
 * setup parameters (IY, pointer to flight vector data, already loaded)
 												| [$1D13: ex   af,af'] unstash rotation flag
@@ -7489,7 +7495,8 @@ l_25B4:
 	jbsr	c_104E_mul_16_8                   	| [$25BF: call c_104E_mul_16_8] L = rank * 17
 	move.b	d6,d0                           	| [$25C2: ld   a,l]
 	lea	d_combat_stg_dat_idx,a0        	        | [$25C3: ld   hl,#d_combat_stg_dat_idx]
-	jbsr	add_d0_to_a0_0010                   | [$25C6: rst  0x10] HL += A
+	and.w	#0xFF,d0
+	add.w	d0,a0                   | [$25C6: rst  0x10] HL += A
 	lea	d_combat_stg_dat,a1            	        | [$25C7: ld   de,#d_combat_stg_dat] base data ptr
 
 * set offset into index table @row ... index = level - ( level % 4 ) - 1
@@ -7516,10 +7523,11 @@ l_25E0_set_data_ptr:
 * DE == &_stg_dat[0]
 
 * p_data_tabl_row = &data_tbl[ data_row_offset ]
-	jbsr	add_d0_to_a0_0010                   | [$25E0: rst  0x10] HL += A
+	and.w	#0xFF,d0
+	add.w	d0,a0                               | [$25E0: rst  0x10] HL += A
 	move.b	(a0),d0                         	| [$25E1: ld   a,(hl)] A = data_row_offset = idx_tbl[ A ]
 	exg	a1,a0                              	    | [$25E2: ex   de,hl] HL = _stg_dat[0]
-	jbsr	add_d0_to_a0_0010                   | [$25E3: rst  0x10] HL += A
+	add.w	d0,a0			                    | [$25E3: rst  0x10] HL += A
 
 * First, load bomb-control params from the 2 byte header (once per stage).
 
@@ -7846,8 +7854,8 @@ l_28B5:
 	jbsr	ldi                               	| [$28C1: ldi]
 
 	lea	d_290E,a0                      	        | [$28C3: ld   hl,#d_290E] 8 entries
-	and.b	#0x07,d0                         	| [$28C6: and  #0x07]
-	jbsr	add_d0_to_a0_0010                   | [$28C8: rst  0x10] HL += A
+	and.w	#0x07,d0                         	| [$28C6: and  #0x07]
+	add.w	d0,A0			                   | [$28C8: rst  0x10] HL += A
 	move.b	(a0),d3                         	| [$28C9: ld   d,(hl)]
 	move.b	d3,d4                           	| [$28CA: ld   e,d]
 	jra	l_28D0                             	    | [$28CB: jr   l_28D0]
@@ -8171,12 +8179,12 @@ l_29DC:
 * ... get upper 4-bits of word at db_word_address_table_2a3c[w] which were rld'd into A: these
 * are $2 thru $A even, and this is multiplied by 3 by the expression A*2+A
 	move.b	d1,d0                           	| [$29F4: ld   a,b]
-	and.b	#0x0E,d0                         	| [$29F5: and  #0x0E] bits 5:7 of db_word_address_table_2a3c[].b1
+	and.w	#0x0E,d0                         	| [$29F5: and  #0x0E] bits 5:7 of db_word_address_table_2a3c[].b1
 	move.b	d0,d1                           	| [$29F7: ld   b,a]
 	rol.b	#1,d0                            	| [$29F8: rlca]
 	add.b	d1,d0                            	| [$29F9: add  a,b]
 	lea	db_2A6C,a0                     	        | [$29FA: ld   hl,#db_2A6C]
-	jbsr	add_d0_to_a0_0010                   | [$29FD: rst  0x10] HL += A
+	add.w	d0,a0			                   | [$29FD: rst  0x10] HL += A
 
 * D is b0 of byte-pair (left shifted 1, so in _stg_dat it is 0x40)
 * if ( D & 0x80 )
@@ -8464,7 +8472,8 @@ l_304A:
 	move.b	o_b_8A00+0x11(a6),d0                  	    | [$3055: ld   a,(o_b_8A00(a6) + 0x11)] 1==1ST place etc. ... d_31A1 [ A - 1 ]
 	lea	d_31A1,a0                      	            | [$3058: ld   hl,#d_31A1] ld the table address
 	subq.b	#1,d0                           	    | [$305B: dec  a]
-	jbsr	add_d0_to_a0_0010                       | [$305C: rst  0x10] HL += A
+	and.w	#0xFF,d0
+	add.w	d0,a0                       | [$305C: rst  0x10] HL += A
 	move.b	(a0),d0                         	    | [$305D: ld   a,(hl)]
 	lea	o_b_best5_name4_8a47+0x02(a6),a0          	            | [$305E: ld   hl,#o_b_best5_name4_8a47(a6) + 0x02] 3rd letter of 4th place name
 	lea	o_b_best5_name5_8a4a+0x02(a6),a1          	            | [$3061: ld   de,#o_b_best5_name5_8a4a(a6) + 0x02] 3rd letter of 5th place name
@@ -9576,11 +9585,11 @@ c_svc_updt_dsply:
 	move.b	d0,d2                           	| [$381A: ld   c,a]
 	                           	                | [$381B: inc  hl]
 	jbsr	osd_read_dsw_2                      | [$381C: ld   a,(hl)]
-	and.b	#0x02,d0                         	| [$381D: and  #0x02] get DSWA#2 (sfr_dsw2:1)
+	and.w	#0x02,d0                         	| [$381D: and  #0x02] get DSWA#2 (sfr_dsw2:1)
 	or.b	d2,d0                             	| [$381F: or   c] lo-bit in C
 	move.b	d0,o_b_mchn_cfg_rank_9984(a6)             | [$3820: ld   (o_b_mchn_cfg_rank_9984(a6)),a]
 	lea	str_3A68,a0                    	        | [$3823: ld   hl,#str_3A68] base_address of rank-characters (B/C/D/A)
-	jbsr	add_d0_to_a0_0010                   | [$3826: rst  0x10] HL += A
+	add.w	d0,A0			                    | [$3826: rst  0x10] HL += A
 	lea	0x8000+0x0220+0x0C,a1      	            | [$3827: ld   de,#0x8000 + 0x0220 + 0x0C] rank-character ("B", "C", "D", or "A")
 	move.b	(a0),d0                             | [$382A: ldi] (DE)<-(HL) ..."X" of "RANK X" displayed
 	jbsr	write_videoram_to_a1
@@ -9660,8 +9669,9 @@ c_svc_updt_dsply:
 	                            	| [add  a,a]
 
 * Update 4 arguments to "set coinage" command from the table.
+	and.w	#0xFF,d0
 	lea	str_3A6C,a0                    	| [ld   hl,#str_3A6C]
-	jbsr	add_d0_to_a0_0010                            	| [rst  0x10] HL += A
+	add.w	d0,a0                            	| [rst  0x10] HL += A
 *	lea	ds8_9280_tmp_IO_parms+1,a1     	| [ld   de,#ds8_9280_tmp_IO_parms + 1]
 *	move.w	#0x04,d1                        	| [ld   bc,#0x0004] 4
 *	jbsr	ldir                              	| [ldir]
@@ -9742,12 +9752,12 @@ l_38B1:
 	move.b	d0,d2                           	| [$38BD: ld   c,a]
 	moveq	#2,d2
 	move.b	o_b_mchn_cfg_nships_9982(a6),d0            	| [$38BE: ld   a,(o_b_mchn_cfg_nships_9982(a6))] Bonus levels depend upon number of fighters starting.
-	and.b	#0x04,d0                         	| [$38C1: and  #0x04] note: num_ships = mchn_cfg_nships + 1
+	and.w	#0x04,d0                         	| [$38C1: and  #0x04] note: num_ships = mchn_cfg_nships + 1
 	add.b	d0,d0                            	| [$38C3: add  a,a]
 	add.b	d2,d0                            	| [$38C4: add  a,c] add dsw value
 	add.b	d0,d0                            	| [$38C5: add  a,a] a:=a*2 ... use as offset into table
 	lea	str_3AA4,a0                    	        | [$38C6: ld   hl,#str_3AA4] bonus config data
-	jbsr	add_d0_to_a0_0010                   | [$38C9: rst  0x10] HL += A...A==2,C,4,6,E,8,A
+	add.w	d0,a0			                   | [$38C9: rst  0x10] HL += A...A==2,C,4,6,E,8,A
 	lea	o_w_mchn_cfg_bonus_9980(a6),a1            	| [$38CA: ld   de,#o_w_mchn_cfg_bonus_9980(a6)] ld two-bytes (str_3AA4)
 	jbsr	ldi                               	| [$38CD: ldi]
 	jbsr	ldi                               	| [$38CF: ldi]
@@ -10544,8 +10554,9 @@ l_2C0B:
 	                       	                    | [$2C1B: ld   l,a]
 
 * pTbl[E]|
+	moveq	#0,d0
 	move.b	d4,d0                           	| [$2C1C: ld   a,e] adj_stg_cnt * 5
-	jbsr	add_d0_to_a0_0010                   | [$2C1D: rst  0x10] HL += A ... offset into lut
+	add.w	d0,a0                   | [$2C1D: rst  0x10] HL += A ... offset into lut
 
 	lea	o_ds_new_stage_parms_99c0(a6),a1          	| [$2C1E: ld   de,#o_ds_new_stage_parms_99c0(a6)]
 	move.b	#5,d1                           	| [$2C21: ld   b,#5]
