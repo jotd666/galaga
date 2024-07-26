@@ -1425,16 +1425,26 @@ f_update_sprites_0828:
 		
 	lea	o_mrw_sprite_code_8B00(a6),a0             	| [$082D: ld   hl,#o_mrw_sprite_code_8B00(a6)]
 	lea	o_sfr_sprite_code_8B80(a6),a1             	| [$0830: ld   de,#o_sfr_sprite_code_8B80(a6)]
-	move.w	#0x80,d1                        	| [$0833: ld   bc,#0x0040] 64
-	jbsr	ldir                              	| [$0836: ldir]
+	move.w	#0x10-1,d1                        	| [$0833: ld   bc,#0x0040] 64
+0:
+	move.l	(a0)+,(a1)+							| [$0836: ldir]
+	move.l	(a0)+,(a1)+							| [$0836: ldir]
+	dbf		d1,0b
+	
 	lea	o_mrw_sprite_posn_9300(a6),a0             	| [$0838: ld   hl,#o_mrw_sprite_posn_9300(a6)]
 	lea	o_sfr_sprite_posn_9380(a6),a1             	| [$083B: ld   de,#o_sfr_sprite_posn_9380(a6)]
-	move.w	#0x80,d1                        	| [$083E: ld   c,#0x40]
-	jbsr	ldir                              	| [$0840: ldir]
+	move.w	#0x10-1,d1                        	| [$083E: ld   c,#0x40]
+0:
+	move.l	(a0)+,(a1)+           	| [$0840: ldir]
+	move.l	(a0)+,(a1)+           	| [$0840: ldir]
+	dbf		d1,0b
 	lea	o_mrw_sprite_ctrl_9B00(a6),a0             	| [$0842: ld   hl,#o_mrw_sprite_ctrl_9B00(a6)]
 	lea	o_sfr_sprite_ctrl_9B80(a6),a1             	| [$0845: ld   de,#o_sfr_sprite_ctrl_9B80(a6)]
-	move.w	#0x80,d1                        	| [$0848: ld   c,#0x40]
-	jbsr	ldir                              	| [$084A: ldir]
+	move.w	#0x10-1,d1                        	| [$0848: ld   c,#0x40]
+0:
+	move.l	(a0)+,(a1)+                              	| [$084A: ldir]
+	move.l	(a0)+,(a1)+                              	| [$084A: ldir]
+	dbf		d1,0b
 
 	* host side uses the o_sfr_sprite_code_8B80(a6) address directly, no need to
 	* call any OSD shit
@@ -1572,7 +1582,7 @@ c_08BE:
 * of creatures is 40, the selected byte would be at $0929, so d_0909 and
 * d_0929 should be one contiguous table.
 	asl.b	#1,d0                            	| [sla  a]
-	jbsr	add_2_times_d0_to_a0_0008           | [rst  0x08] HL += 2A
+	ADD_2_TIMES_D0_TO_A0           | [rst  0x08] HL += 2A
 	movem.w	d5/d6,-(a7)                         | [ex   de,hl]
 	move.b	d2,d5                           	| [ld   h,c]
 	move.b	#0x0A,d0                        	| [ld   a,#0x0A]
@@ -3472,7 +3482,7 @@ j_string_out_pe_139a:
 * p_sptr = ( ptr_tbl - sizeof(ptr) ) + sizeof(ptr) * index
 	move.b	d2,d0                           	| [ld   a,c] C = index into table string pointers (d_cstring_tbl)
 	lea	d_cstring_tbl-4,a0             			| [ld   hl,#d_cstring_tbl - 2] index is ordered from 1 !!
-	jbsr	add_4_times_d0_to_a0_0008           | [rst  0x08] HL += 2A
+	ADD_4_TIMES_D0_TO_A0           | [rst  0x08] HL += 2A
 
 * De-reference the string pointer
 * sptr = *(p_sptr)
@@ -3786,7 +3796,7 @@ f_ship_demo_controls_1700:
 	and.b	#0x07,d0                    			| [$1708: and  #0x07]
 	CHECK_D0W_UPPER_BOUND	6
 	lea	d_1713,a0                      				| [$170A: ld   hl,#d_1713] &table
-	jbsr	add_4_times_d0_to_a0_0008   			| [$170D: rst  0x08] HL += 2A
+	ADD_4_TIMES_D0_TO_A0   			| [$170D: rst  0x08] HL += 2A
 													| [$170E: ld   a,(hl)]
 													| [$170F: inc  hl]
 													| [$1710: ld   h,(hl)]
@@ -3881,7 +3891,7 @@ l_1772:
 * switch(...)
 	CHECK_D0W_UPPER_BOUND	7
 	lea	d_1786,a0                      			| [$177D: ld   hl,#d_1786]
-	jbsr	add_4_times_d0_to_a0_0008           | [$1780: rst  0x08] HL += 2A (pointer from index)
+	ADD_4_TIMES_D0_TO_A0           | [$1780: rst  0x08] HL += 2A (pointer from index)
 	move.l	(a0),a0                       		| [$1781: ld   a,(hl)]
 												| [$1782: inc  hl]
 												| [$1783: ld   h,(hl)]
@@ -3960,7 +3970,7 @@ f_manage_attract_mode_17B2:
 	move.b	o_ds_glbls_9200+0x03(a6),d0           	| [ld   a,(o_ds_glbls_9200(a6) + 0x03)] demo state variable (jp to "switch-case")
 	lea	d_demo_jump_table_17C3,a0                	| [ld   hl,#d_demo_jump_table_17C3] table_base
 	CHECK_D0W_UPPER_BOUND	0xF
-	jbsr	add_4_times_d0_to_a0_0008                            	| [rst  0x08] HL += 2A
+	ADD_4_TIMES_D0_TO_A0                            	| [rst  0x08] HL += 2A
 	move.l	(a0),a0                        	| [ld   e,(hl)]
 	                        	| [inc  hl]
 	                        	| [ld   d,(hl)]
@@ -4640,7 +4650,7 @@ l_1B00:
 	move.b	o_ds_plyr_actv_9820+_b_bbee_clr_b(a6),d0   	| [$1B11: ld   a,(o_ds_plyr_actv_9820(a6) +_b_bbee_clr_b)]
 	subq.b	#4,d0                           	| [$1B14: sub  #4] convert color 4,5,or 6 to index from 0
 	lea	d_1B59,a0                      	        | [$1B16: ld   hl,#d_1B59]
-	jbsr	add_2_times_d0_to_a0_0008           | [$1B19: rst  0x08] HL += 2A
+	ADD_2_TIMES_D0_TO_A0           | [$1B19: rst  0x08] HL += 2A
 	lea	o_ds3_X3attackcfg_99b0(a6),a1        	        | [$1B1A: ld   de,#o_ds3_X3attackcfg_99b0(a6)] setup X3 attacker, write 3 bytes...
                                                   * [0]:=3
                                                   * [1] [2] word loaded from 1B59[ 2 * ( actv_plyr_state + 0x0F ) ]
@@ -4655,7 +4665,7 @@ l_1B00:
 	and.b	#0x0F,d0                         	| [$1B2A: and  #0x0F] hmmmm.... we didn't do this before.. oh well
 	move.b	d0,d2                           	| [$1B2C: ld   c,a]
 	lea	d_1B5F,a0                      			| [$1B2D: ld   hl,#d_1B5F] setup to load pointers into DE
-	jbsr	add_2_times_d0_to_a0_0008          	| [$1B30: rst  0x08] HL += 2A
+	ADD_2_TIMES_D0_TO_A0          	| [$1B30: rst  0x08] HL += 2A
 	move.b	(a0)+,d3                        	| [$1B31: ld   e,(hl)]  big endian!!
 												| [$1B32: inc  hl]
 	move.b	(a0),d4								| [$1B33: ld   d,(hl)]
@@ -4826,7 +4836,7 @@ l_1BC0:
 * switch(A)
 	lea	d_1BD1,a0                      	        | [$1BC8: ld   hl,#d_1BD1]
 	CHECK_D0W_UPPER_BOUND	3
-	jbsr	add_4_times_d0_to_a0_0008           | [$1BCB: rst  0x08] HL += 2A
+	ADD_4_TIMES_D0_TO_A0           | [$1BCB: rst  0x08] HL += 2A
 	                       	                    | [$1BCC: ld   a,(hl)]
 	                       	                    | [$1BCD: inc  hl]
 	                       	                    | [$1BCE: ld   h,(hl)]
@@ -5082,7 +5092,7 @@ j_1CAE:
 	jbsr	read_ixl_into_d0                    | [ld   a,ixl]
 	exg	a1,a0                              	    | [ex   de,hl] stash hl (&plyr_actv.code)
 	lea	d_1CFD,a0                      	        | [ld   hl,#d_1CFD]
-	jbsr	add_2_times_d0_to_a0_0008           | [rst  0x08] HL += 2A
+	ADD_2_TIMES_D0_TO_A0           | [rst  0x08] HL += 2A
 	move.b	(a0)+,(a1)+                         | [ld   a,(hl)]
 	                         	                | [ld   (de),a] plyr_actv._bonus_codescore[E] = d_1CFD[2*A]
 	                           	                | [inc  hl]
@@ -5526,7 +5536,7 @@ l_1E09:
 * count * 2 i.e. count / 8 * 16 ... index into table row
 	move.b	d2,d0                           	| [ld   a,c] A = updated_counter
 	and.b	#0x18,d0                         	| [and  #0x18] make it even multiple of 8
-	jbsr	add_2_times_d0_to_a0_0008           | [rst  0x08] HL += 2A   .... table entries are $10 bytes long
+	ADD_2_TIMES_D0_TO_A0                        | [rst  0x08] HL += 2A   .... table entries are $10 bytes long
 	move.b	d4,d0                           	| [ld   a,e] reload previous_nest_direction counter
 	lea	o_ds10_9920(a6),a1                   	        | [ld   de,#o_ds10_9920(a6)] $10 bytes copied from 1E64+2*A
 	move.w	#0x10,d1                        	| [ld   bc,#0x0010] 16
@@ -6727,7 +6737,7 @@ l_226A:
 	rol.b	#1,d0                            	| [$2298: rlca]
 	add.b	d2,d0                            	| [$2299: add  a,c]
 	lea	d_23A1-6,a0                    	        | [$229A: ld   hl,#d_23A1 - 6] get data src, getting ready to shoot the tractor beam
-	jbsr	add_2_times_d0_to_a0_0008           | [$229D: rst  0x08] HL += 2A
+	ADD_2_TIMES_D0_TO_A0           | [$229D: rst  0x08] HL += 2A
 	move.w	(sp)+,d0                        	| [$229E: pop  af]
 	jbsr	compute_beam_tile_address_238A    	| [$229F: call compute_beam_tile_address_238A]
 	move.w	#6-1,d1                           	| [$22A2: ld   b,#6]
@@ -7847,7 +7857,7 @@ l_28B5:
 0:
 	and.b	#0x03,d0                         	| [$28B5: and  #0x03] 4 entries in data (every 8 challenge stages the selection index is stepped)
 	lea	d_stage_chllg_rnd_attrib,a0    	        | [$28B7: ld   hl,#d_stage_chllg_rnd_attrib]
-	jbsr	add_2_times_d0_to_a0_0008           | [$28BA: rst  0x08] HL += 2A
+	ADD_2_TIMES_D0_TO_A0           | [$28BA: rst  0x08] HL += 2A
 	lea	o_ds2_stg_chllg_rnd_attrib_9284(a6),a1    	        | [$28BB: ld   de,#o_ds2_stg_chllg_rnd_attrib_9284(a6)] challenge bonus attributes (2 bytes from 2900[])
 	move.b	d2,d0                           	| [$28BE: ld   a,c]
 	jbsr	ldi                               	| [$28BF: ldi] "LD (DE),(HL)", DE++, HL++, BC--
@@ -8463,7 +8473,7 @@ l_304A:
 	move.b	d0,o_b_8A00+0x11(a6)                          | [$304A: ld   (o_b_8A00(a6) + 0x11),a] 1==1ST place etc.
 	lea	d_31A6,a0                      	            | [$304D: ld   hl,#d_31A6] jp table address
 	subq.b	#1,d0                                   | [$3050: dec  a]
-	jbsr	add_4_times_d0_to_a0_0008               | [$3051: rst  0x08] HL += 2A
+	ADD_4_TIMES_D0_TO_A0               | [$3051: rst  0x08] HL += 2A
 	jbsr	c_3118_insert_top5_score                | [$3052: call c_3118_insert_top5_score]
 
 * insert new player name in table.
@@ -8865,7 +8875,7 @@ case_31D9:
 	move.b	o_b_8A00+0x11(a6),d0                  	| [$31D9: ld   a,(o_b_8A00(a6) + 0x11)] 1==1ST place etc. ... index into hi-score table ... d_31ED[ 2 * (A - 1) ]
 	subq.b	#1,d0                           	| [$31DC: dec  a]
 	lea	d_31ED_hi_score_tbl,a0         	        | [$31DD: ld   hl,#d_31ED_hi_score_tbl] array of addresses of score table elements
-	jbsr	add_2_times_d0_to_a0_0008           | [$31E0: rst  0x08] HL += 2A
+	ADD_2_TIMES_D0_TO_A0           | [$31E0: rst  0x08] HL += 2A
 	move.L	a6,a1
 	add.w	(a0),a1                        	    | [$31E1: ld   e,(hl)]
 	                        	                | [$31E2: inc  hl]
@@ -9555,7 +9565,7 @@ c_svc_updt_dsply:
 	move.b	d0,o_b_mchn_cfg_cab_type_9983(a6)          	| [ld   (o_b_mchn_cfg_cab_type_9983(a6)),a]
 *  svc_cab_type( a )
 	lea	str_3ACC,a0                    	| [ld   hl,#str_3ACC] 0-"UPRIGHT", 1-"TABLE"
-	jbsr	add_4_times_d0_to_a0_0008             	| [rst  0x08] HL += 2A
+	ADD_4_TIMES_D0_TO_A0             	| [rst  0x08] HL += 2A
 	jbsr	c_svc_cab_type                    	| [call c_svc_cab_type]
 
 * By pushing the "1 PLAYER" and the "2 PLAYER" buttons at the same time, the
@@ -10547,7 +10557,7 @@ l_2C0B:
 * pTbl = bmbr_stg_cfg_lut[mchn_cfg.rank]
 	move.b	o_b_mchn_cfg_rank_9984(a6),d0             | [$2C11: ld   a,(o_b_mchn_cfg_rank_9984(a6))]
 	lea	bmbr_stg_cfg_lut,a0            	        | [$2C14: ld   hl,#bmbr_stg_cfg_lut] ld the table of ptrs
-	jbsr	add_4_times_d0_to_a0_0008           | [$2C17: rst  0x08] HL += 2A get pointer
+	ADD_4_TIMES_D0_TO_A0           | [$2C17: rst  0x08] HL += 2A get pointer
 	move.l	(a0),a0                       	    | [$2C18: ld   a,(hl)]
 	                       	                    | [$2C19: inc  hl]
 	                       	                    | [$2C1A: ld   h,(hl)]

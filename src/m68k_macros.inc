@@ -168,6 +168,19 @@
 	lsr.w	#8,d3
 	.endm
 
+	.macro	ADD_2_TIMES_D0_TO_A0
+	and.w	#0xFF,d0
+	add.w	d0,d0
+	add.w	d0,a0		
+	.endm
+	
+	.macro	ADD_4_TIMES_D0_TO_A0
+	and.w	#0xFF,d0
+	add.w	d0,d0
+	add.w	d0,d0
+	add.w	d0,a0	
+	.endm
+	
 
 	* to trace at some virtual PCs, insert this macro
 	
