@@ -182,12 +182,14 @@ SPRITE_SIZEOF = 4
 	.endif
 .endm
 
+* blitter high priority or "nasty" doesn't fare well with
+* other DMA like copperlist-driven sprites
 .macro	WAIT_BLIT
-	move.w	#0x8400,(dmacon,a5)		| blitter high priority
+	*move.w	#0x8400,(dmacon,a5)		| blitter high priority
 wait\@:
 	BTST	#6,(dmaconr,a5)
 	BNE.S	wait\@
-	move.w	#0x0400,(dmacon,a5)		| blitter normal priority
+	*move.w	#0x0400,(dmacon,a5)		| blitter normal priority
 .endm
 
 .macro MUL_TABLE value,len
@@ -3091,7 +3093,7 @@ HW_SpriteYTable_\height:
 	DEF_HW_SPRITE_Y_TABLE	0
 	DEF_HW_SPRITE_Y_TABLE	8
 	DEF_HW_SPRITE_Y_TABLE	16
-	DEF_HW_SPRITE_Y_TABLE	32
+
 
 
 set_4_first_bitplanes:
