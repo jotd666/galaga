@@ -182,14 +182,13 @@ SPRITE_SIZEOF = 4
 	.endif
 .endm
 
-* blitter high priority or "nasty" doesn't fare well with
-* other DMA like copperlist-driven sprites
+* blitter high priority or "nasty"
 .macro	WAIT_BLIT
-	*move.w	#0x8400,(dmacon,a5)		| blitter high priority
+	move.w	#0x8400,(dmacon,a5)		| blitter high priority
 wait\@:
 	BTST	#6,(dmaconr,a5)
 	BNE.S	wait\@
-	*move.w	#0x0400,(dmacon,a5)		| blitter normal priority
+	move.w	#0x0400,(dmacon,a5)		| blitter normal priority
 .endm
 
 .macro MUL_TABLE value,len
@@ -1741,6 +1740,7 @@ objects_erased:
 * < D4: height
 
 restore_16x_background:
+
 	movem.l	d2/a1/a5,-(a7)
 	.ifndef	RELEASE
 	add.w	d4,lines_erased
@@ -1838,18 +1838,12 @@ clear_planes_any_blitter_internal:
     add.w   d1,d1
     move.w  (a2,d1.w),d1
 1:
-    move.l  #0x01000000,d5   | minterm useD & rect clear (0xA) 
-    move    d0,d6
-    beq.b   2f
-    MOVEQ #15,D6
-    AND.W D0,D6
+	moveq	#1,d5
+	ror.l	#8,d5     | AKA move.l  #0x01000000,d5   | minterm useD & rect clear (0xA) 
     and.w   #0x1F0,d0
+    beq.b   2f				| zero X optimization
     lsr.w   #3,d0
     add.w   d0,d1
-    ROR.W #4,D6
-
-    swap    d6
-    or.l    d6,d5            | add shift
 2:   
     add.w   d1,a1       | plane position (always even)
 
@@ -1991,16 +1985,17 @@ blit_planes_any_internal_cookie_cut:
 	.endif
 2:
 	move.w	d5,-(a7)
-    move.l  #0x0fca0000,d5    | B+C-A->D cookie cut   
+    move.w  #0x0fca,d5    | B+C-A->D cookie cut
+	swap	d5			  | doesn't matter is LSW is not zero
 	moveq	#0,d6		| make sure D6.L is zero!!
     move.w  d0,d6
     beq.b   4f
-    lsr.w   #3,d0
-	bclr	#0,d0
+    lsr.w   #3,d0			| X displacement in bytes
+	*bclr	#0,d0			| no need, it will be even
     and.w   #0xF,d6
 	beq.b	3f				| if 0 shift, optimize a few instructions
     ror.w   #4,d6
-    or.w    d6,d5            | add shift to mask (bltcon1)
+    move.w    d6,d5            | add shift to mask (bltcon1)
     swap    d6
     or.l    d6,d5            | add shift
 3:   
@@ -2008,7 +2003,8 @@ blit_planes_any_internal_cookie_cut:
 4:
     * make offset even. Blitter will ignore odd address
     * but a 68000 CPU doesn't and since we RETURN A1...
-    bclr    #0,d1
+	* not really useful here, save some cycles
+    *bclr    #0,d1
     add.w   d1,a1       | plane position (D1 < 0x7FFF, 288*40=0x2D00)
 	move.w	#NB_BYTES_PER_ROW,d0
 	tst.w	d4
@@ -2024,9 +2020,7 @@ blit_planes_any_internal_cookie_cut:
     * always the same settings (ATM)
 
 	* prepare d1
-	moveq	#0,d1
-	move.w	#0x0BCA,d1
-	swap	d1
+	move.l	#0x0BCA0000,d1
 	or.l	d6,d1
 
     * now just wait for blitter ready to write all registers
@@ -2511,7 +2505,6 @@ platform_init:
 	cmp.b	#0xF8,d0		|  AGA (Lisa) is $f8.
 	bne.b	0f
 
-	* AGA version
     move.w #3,fmode(a5)			
 	move.w	#-8,d0
     move.w d0,bpl1mod(a5)
