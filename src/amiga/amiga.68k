@@ -1984,7 +1984,8 @@ blit_planes_any_internal_cookie_cut:
     move.w  (a4,d1.w*2),d1	| y times 40
 	.endif
 2:
-	move.w	d5,-(a7)
+	*move.w	d5,-(a7)
+	exg		d5,d7
     move.w  #0x0fca,d5    | B+C-A->D cookie cut
 	swap	d5			  | doesn't matter is LSW is not zero
 	moveq	#0,d6		| make sure D6.L is zero!!
@@ -2023,15 +2024,16 @@ blit_planes_any_internal_cookie_cut:
 	move.l	#0x0BCA0000,d1
 	or.l	d6,d1
 
-    * now just wait for blitter ready to write all registers
+ 	moveq	#0,d6
+	exg	d5,d7			| save cookie cut bltcon
+
+   * now just wait for blitter ready to write all registers
 	WAIT_BLIT
     
     * blitter registers set
-	moveq	#0,d7
-	move.w	d7,bltamod(a5)		|A modulo=bytes to skip between lines
-	move.w	d7,bltbmod(a5)		|B modulo=bytes to skip between lines
-	move.l	d5,d7			| save cookie cut bltcon
-	move.w	(a7)+,d5
+	move.w	d6,bltamod(a5)		|A modulo=bytes to skip between lines
+	move.w	d6,bltbmod(a5)		|B modulo=bytes to skip between lines
+	*move.w	(a7)+,d5
 	
     move.w  d0,bltcmod(a5)	|C modulo
     move.w  d0,bltdmod(a5)	|D modulo
