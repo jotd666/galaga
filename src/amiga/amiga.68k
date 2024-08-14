@@ -1984,19 +1984,19 @@ blit_planes_any_internal_cookie_cut:
     move.w  (a4,d1.w*2),d1	| y times 40
 	.endif
 2:
-    move.w  #0x0fca,d7    | B+C-A->D cookie cut
-	swap	d7			  | doesn't matter is LSW is not zero
-	moveq	#0,d6		| make sure D6.L is zero!!
+	lea		cookie_cut_blit_table(pc),a4
+	
     move.w  d0,d6
-    beq.b   4f
     lsr.w   #3,d0			| X displacement in bytes
 	*bclr	#0,d0			| no need, it will be even
     and.w   #0xF,d6
-	beq.b	3f				| if 0 shift, optimize a few instructions
-    ror.w   #4,d6
-    move.w    d6,d7            | add shift to mask (bltcon1)
-    swap    d6
-    or.l    d6,d7            | add shift, final bltcon value
+	.ifdef	NO68020
+	add.w	d6,d6
+	add.w	d6,d6
+	move.l	(a4,d6.w),d7
+	.else
+	move.l	(a4,d6.w*4),d7
+	.endif
 3:   
     add.w   d0,d1
 4:
@@ -2017,10 +2017,6 @@ blit_planes_any_internal_cookie_cut:
     lsr.w   #1,d2
     add.w   d2,d4       | blit height
     * always the same settings (ATM)
-
-	* prepare d1
-	move.l	#0x0BCA0000,d1
-	or.l	d6,d1
 
  	moveq	#0,d6
 
@@ -2071,6 +2067,17 @@ process_1_plane:
 
 	END_PROCESS_PLANE
 	rts
+	
+	.macro	GEN_MINTERM_TABLE	name,value
+\name\()_table:
+	.set	shift,0
+	.rept	16
+	.long	(shift<<28)+(shift<<12)+\value
+	.set	shift,shift+1
+	.endr
+	.endm
+	
+	GEN_MINTERM_TABLE	cookie_cut_blit,0x0FCA0000
 	
 * in that game we never zero planes, for a minimal visual effect but big speed increase!
 *60:
