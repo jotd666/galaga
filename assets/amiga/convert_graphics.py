@@ -373,10 +373,11 @@ with open(os.path.join(src_dir,"sprite_cluts.68k"),"w") as f:
 
 
 extended_palette = palette + (32-len(palette)) * [dummy_color]
-# add missing colors in some unused slots > index 16
+# add missing colors in some unused slots > index 16: palette for sprites 6-7
+# only used for stars
 extended_palette[30] = (222, 0, 0)
 extended_palette[31] = (0, 0, 255)
-extended_palette[25] =  (222, 104, 0)
+extended_palette[28] =  (222, 104, 0)
 
 with open(os.path.join(src_dir,"palette.68k"),"w") as f:
     f.write("palette:\n")

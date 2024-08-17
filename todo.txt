@@ -1,4 +1,7 @@
-- despite a lot of optimizations, the game is just too slow on plain 68000
+- try to use sprites simple multiplex: ship + swarm
+- 6 sprites to multiplex: determine swarm Y limits, 1 copy of each swarm moth/bee per sprite slot
+- add sprite multiplex possibility in stars sprite entries
+
 - report comments of galaga_game_ram.68k to offsets and kill file
 - capture bottom beam is red because of Namco logo hack?? reset rows doesn't work
 - shots & moth kill sounds have cracks on real hardware (but maybe just need recap...)

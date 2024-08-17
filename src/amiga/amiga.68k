@@ -2524,10 +2524,10 @@ platform_init:
 
 
 
-	* set other sprites to blank
+	* set other sprites to blank, even the one used for stars
 	move.l		#blank_sprite,d0
 
-	moveq	#NB_HOST_SPRITES-1+1,d1   | only 6 sprites are in the list
+	moveq	#7,d1
 	lea		sprites,a1
 0:
     move.w	d0,(6,a1)
@@ -2541,7 +2541,7 @@ platform_init:
 	
 	
 	* set copperlist
-	move.l	#copperlist,cop1lc(a5)
+	move.l	#main_copperlist,cop1lc(a5)
 
 	* wait 300 lines
 	move.w	#100,d0
@@ -3745,8 +3745,15 @@ _end_of_ng_code:
 * table of the colors for fg tiles in the copperlist
 	.set	row_offset,0
 bg_color_table:
-	.rept	28
+	.rept	14
 	.long	color_row_0+row_offset
+	* warning: this offset increase depends on what's in color_row_0
+	* 16=4 colors to change, 32 bytes per star pattern * 8 patterns per row
+	.set	row_offset,row_offset+copper_8x8_row_size
+	.endr
+	.set	row_offset,0
+	.rept	14
+	.long	color_row_14+row_offset
 	* warning: this offset increase depends on what's in color_row_0
 	* 16=4 colors to change, 32 bytes per star pattern * 8 patterns per row
 	.set	row_offset,row_offset+copper_8x8_row_size
@@ -3889,7 +3896,7 @@ default_color_3 = 0x0F
 	* ATM sprite colors are out of copperlist
 	
 	* main copperlist
-copperlist:
+main_copperlist:
     *.word   0x1801,0xFFFE
 
 
@@ -3921,12 +3928,15 @@ sprites:
     * #6
     .word    sprpt+24,0
     .word    sprpt+26,0
+    * #7
+    .word    sprpt+28,0
+    .word    sprpt+30,0
 	* 2 last sprites cannot be used
 	
  	.set    beampos,(HFIRSTROW<<8) + 0x01	| first displayed row
 	.word	beampos,0xFFFE
 color_row_0:
-	.rept	28
+	.rept	14
 	* set 4 colors for that 8-high row: 16 bytes
 	.word	start_color,default_color_1
 	.word	start_color+8,default_color_2
@@ -3937,6 +3947,23 @@ color_row_0:
 	STAR_COPPER_ROW
 	.endr
 	.endr
+
+	* extra mid-frame interrupt to avoid double irq without non-irq code running
+	.word	 intreq,0x8004  | call copper interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
+	.word	 intreq,0x8010  | call copper interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
+color_row_14:
+	.rept	14
+	* set 4 colors for that 8-high row: 16 bytes
+	.word	start_color,default_color_1
+	.word	start_color+8,default_color_2
+	.word	start_color+16,default_color_3   
+	* set sprite slots for stars: 32*8 bytes
+	.rept	8
+	.set	beampos,beampos+0x100
+	STAR_COPPER_ROW
+	.endr
+	.endr
+
 color_row_28:
 	.word	start_color,default_color_1 
 	.word	start_color+8,default_color_2 
@@ -3946,9 +3973,6 @@ color_row_28:
 	STAR_COPPER_ROW
 	.endr
 
-	* extra mid-frame interrupt to avoid double irq without non-irq code running
-	.word	 intreq,0x8004  | call copper interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
-	.word	 intreq,0x8010  | call copper interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
 	
 
 	* pal limit
