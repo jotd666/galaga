@@ -1,20 +1,31 @@
-- try to use sprites simple multiplex: ship + swarm
-- 6 sprites to multiplex: determine swarm Y limits, 1 copy of each swarm moth/bee per sprite slot
-- add sprite multiplex possibility in stars sprite entries
+- remove usage of sprite for red ship, use sprites for bosses when possible,
+plus we could define 3 static multiplex zones:
+  - bosses (very low expansion)
+  - first row of red moths
+  - last enemy row (must compute approx enemy row Y
+    bee enemies with given sprite codes (2 possible) Y < threshold 
+  - player ship(s) as before
+  - manage to delimit fine static ranges with colors, use macros
+  - if enemy code moth in swarm and Y in range: try sprite
+  - if enemy code bee in swarm and Y in range: try sprite
+  - if enemy code boss in swarm and Y in range: try sprite
+
+=> could save 16 sprite draws in swarm!! but sprite palette must be dynamic...
 
 - report comments of galaga_game_ram.68k to offsets and kill file
-- capture bottom beam is red because of Namco logo hack?? reset rows doesn't work
-- shots & moth kill sounds have cracks on real hardware (but maybe just need recap...)
 
 minor issues:
 
 - demo: continues after ship is killed, but with wrong actions
+- demo: the attract mode still freezes up the machine once the enemy deploys its tractor beam. 
 - (c) namco part of letters are cyan
 - 5th score entry letters are partially yellow
 - DSW skill level?
 - double buffering: don't double buffer last plane for tiles
 - double shot should optimize height
 - autoframeskip: if too many slowdowns, game should switch to fixed stars/30 fps
+- capture bottom beam is red because of Namco logo hack?? reset rows doesn't work
+- shots & moth kill sounds have cracks on real hardware (but maybe just need recap...)
 - c_plyr_initials_entry_hilite_line: one letter is yellow, rest is white/cyan??
 - char grid & sprites too high by 8 pixels
   (top status bar is OK, bottom & field chars are not, a mistake at first
