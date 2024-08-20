@@ -17,7 +17,6 @@ AFB_68010 = 0
 AFB_68020 = 1
 NO68020 = 1
 
-OPT_SWARM_BLOCK_ERASE = 0
 
 SWARM_X = 48
 SWARM_Y = 28
@@ -1422,9 +1421,6 @@ update_bobs:
 	clr.w	objects_erased
 	.endif
 	
-	.ifne	OPT_SWARM_BLOCK_ERASE
-	bsr		erase_swarm_area
-	.endif
 	
 	move.l		bob_previous_drawed_sprites(pc),a4
 	lea			hardware_sprite_flag_table,a2
@@ -1450,19 +1446,6 @@ update_bobs:
 	bne.b	12f		| prev y != y: perform erase
 	
 	
-	.ifne	OPT_SWARM_BLOCK_ERASE
-	* galaga specific
-	* swarm area is already erased
-	cmp.b	#SWARM_X,d0
-	jcs		222f
-	cmp.b	#SWARM_X+SWARM_WIDTH-32,d0
-	jcc		222f
-	cmp.b	#SWARM_Y,d1
-	jcs		222f
-	cmp.b	#SWARM_Y+SWARM_HEIGHT-32,d1
-	jcs		11f			| skip erase
-	
-	* end galaga specific
 222:	
 	.endif
 	
@@ -2036,7 +2019,7 @@ blit_planes_any_internal_cookie_cut:
 	subq	#1,d3
 6:
 	move.l (a0)+,d0
-	jeq	61f    | do nothing
+	jeq	61f    | do nothing, never mind if we see a bitplane effect
 	jbsr	process_1_plane
 61:
 	lea		(BG_SCREEN_PLANE_SIZE,a1),a1
