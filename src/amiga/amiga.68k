@@ -1446,8 +1446,6 @@ update_bobs:
 	bne.b	12f		| prev y != y: perform erase
 	
 	
-222:	
-	.endif
 	
 	* previous X and Y and current X Y are the same: compare code
 	* (we can ditch d0,d1 from now on)
