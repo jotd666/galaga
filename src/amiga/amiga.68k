@@ -2003,6 +2003,9 @@ blit_planes_any_internal_cookie_cut:
 
    * now just wait for blitter ready to write all registers
 	WAIT_BLIT
+
+	* non-zero: set data source & bltcon
+	move.l	d7,bltcon0(a5)	| sets con0 and con1: C-A+B->D cookie cut full
     
     * blitter registers set
 	move.w	d6,bltamod(a5)		|A modulo=bytes to skip between lines
@@ -2042,8 +2045,6 @@ process_1_plane:
 	add.w	d5,a4
 	WAIT_BLIT				| first plane wait is useless but for others it's the optimal place
 	move.l a3,bltapt(a5)	|  source graphic top left corner (mask)
-	* non-zero: set data source & bltcon
-	move.l	d7,bltcon0(a5)	| sets con0 and con1: C-A+B->D cookie cut full
 	move.l	a4,bltbpt(a5)	|source graphic top left corner
 
 	END_PROCESS_PLANE
