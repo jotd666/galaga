@@ -48,6 +48,20 @@ MAX_ROW_X = 31
 BORDERBLANK = 0
 SCORE_FILE_SIZE = 9*5
 
+* blit structure:
+* clear:
+
+* cookie blit:
+* 2 bltcon0
+* 2 amod/bmod
+* 2 cmod/dmod
+* 4 apt (< 0: out)
+* 4 bpt
+* 4 cpt
+* 4 dpt
+* 2 bltsize
+* ... until apt < 0
+
 * if the alloc_sprite & update_sprite routines
 * are reused, changing those offsets can make
 * a quick reuse from game to game as most sprite
@@ -1722,7 +1736,7 @@ objects_erased:
 
 restore_16x_background:
 
-	movem.l	d2/a1/a5,-(a7)
+	movem.l	d2/a0/a2/a4/a5,-(a7)
 	.ifndef	RELEASE
 	add.w	d4,lines_erased
 	addq.w	#1,objects_erased
@@ -1730,17 +1744,17 @@ restore_16x_background:
 	.endif
 	tst.w	d1
 	bmi.b	2f
+	lea		_custom,a5
 	moveq	#0,d2
 	move.l	bg_drawed_screen_ptr(pc),a1
-	lea		_custom,a5
 0:
 	btst	d2,d3
 	beq.b	1f
-	movem.l	d0-d6/a0-a5,-(a7)
+	movem.l	d0-d4/a1,-(a7)
 	moveq	#4,d2			| 32 bits blit
 
 	bsr.b	clear_plane_any_blitter_internal
-	movem.l	(a7)+,d0-d6/a0-a5
+	movem.l	(a7)+,d0-d4/a1
 1:
 	addq.w	#1,d2
 	lea		(BG_SCREEN_PLANE_SIZE,a1),a1
@@ -1750,7 +1764,7 @@ restore_16x_background:
 	.ifndef	RELEASE
 	movem.w	(a7)+,d0/d1
 	.endif
-	movem.l	(a7)+,d2/a1/a5
+	movem.l	(a7)+,d2/a0/a2/a4/a5
 	rts
 
 	
