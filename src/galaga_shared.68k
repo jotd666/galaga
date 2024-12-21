@@ -1,5 +1,3 @@
-	.global		read_ixl_into_d0
-	.global		read_ixh_into_d0
 	.global		write_videoram_to_a1
 
 	.global		rst_08_d5d6

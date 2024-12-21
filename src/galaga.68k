@@ -1,6 +1,7 @@
 	.include	"m68k_macros.inc"
 	.include	"galaga.inc"
 	.include	"variables.inc"
+	.include	"register_op.inc"
 	
 * input file game_ctrl.s
 *
@@ -1158,13 +1159,13 @@ l_0740:
 	exg	a1,a0                              	    | [$0746: ex   de,hl] DE := &bug_collsn[0x00]
 
 	lea		0x8300,a0        	                | [$0747: ld   h,#>(0x8000 + 0x0300)] tile rows 32-35:  $83C0 - 83FF	
-	jbsr	read_ixl_into_d0                    | [$0749: ld   a,ixl] offset to 10's place in tile ram
+	READ_IXL_INTO_D0                            | [$0749: ld   a,ixl] offset to 10's place in tile ram
 	add.w	d0,a0                           	| [$074B: ld   l,a]
 	move.b	d2,d0                           	| [$074C: ld   a,c] scoreman_inc_lut[B-1]
 	and.b	#0x0F,d0                         	| [$074D: and  #0x0F]
 	jbsr	c_scoreman_incr_add_07d8            | [$074F: call c_scoreman_incr_add_07d8] add to 10's
 	lea		0x8300,a0
-	jbsr	read_ixl_into_d0                    | [$0752: ld   a,ixl] increment offset to 10's place in tile ram
+	READ_IXL_INTO_D0                            | [$0752: ld   a,ixl] increment offset to 10's place in tile ram
 	addq.b	#1,d0                           	| [$0754: inc  a]
 	add.w	d0,a0                           	| [$0755: ld   l,a]
 	move.b	d2,d0                           	| [$0756: ld   a,c] scoreman_inc_lut[B-1]
@@ -1177,7 +1178,7 @@ l_0762:
 	addq.w	#1,a0                           	| [$0762: inc  l] index of bug_collsn[]
 	subq.b	#1,d1                           	| [...]
 	jne	l_0739_while_B                     	    | [$0763: djnz l_0739_while_B]
-	jbsr	read_ixl_into_d0                    | [$0765: ld   a,ixl]
+	READ_IXL_INTO_D0                            | [$0765: ld   a,ixl]
 	addq.b	#4,d0                           	| [$0767: add  a,#4]						
 	lea	0x03E0+0x12,a0      	                | [$0769: ld   hl,#0x8000 + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2)
 	lea	0x0300,a1        	                    | [$076A: ld   d,#>(0x8000 + 0x0300)]
@@ -1214,7 +1215,7 @@ l_0788:
 	jne	0b                               	    | [$078C: djnz l_0788]
 
 l_078E:
-	jbsr	read_ixl_into_d0                    | [$078E: ld   a,ixl]
+	READ_IXL_INTO_D0                    | [$078E: ld   a,ixl]
 	addq.b	#4,d0                           	| [$0790: add  a,#4]
 	* replace a0 lower nibble
 	move.w	a0,d6
@@ -1425,23 +1426,29 @@ f_update_sprites_0828:
 		
 	lea	o_mrw_sprite_code_8B00(a6),a0             	| [$082D: ld   hl,#o_mrw_sprite_code_8B00(a6)]
 	lea	o_sfr_sprite_code_8B80(a6),a1             	| [$0830: ld   de,#o_sfr_sprite_code_8B80(a6)]
-	move.w	#0x10-1,d1                        	| [$0833: ld   bc,#0x0040] 64
+	move.w	#0x8-1,d1                        	| [$0833: ld   bc,#0x0040] 64
 0:
+	move.l	(a0)+,(a1)+							| [$0836: ldir]
+	move.l	(a0)+,(a1)+							| [$0836: ldir]
 	move.l	(a0)+,(a1)+							| [$0836: ldir]
 	move.l	(a0)+,(a1)+							| [$0836: ldir]
 	dbf		d1,0b
 	
 	lea	o_mrw_sprite_posn_9300(a6),a0             	| [$0838: ld   hl,#o_mrw_sprite_posn_9300(a6)]
 	lea	o_sfr_sprite_posn_9380(a6),a1             	| [$083B: ld   de,#o_sfr_sprite_posn_9380(a6)]
-	move.w	#0x10-1,d1                        	| [$083E: ld   c,#0x40]
+	move.w	#0x8-1,d1                        	| [$083E: ld   c,#0x40]
 0:
+	move.l	(a0)+,(a1)+           	| [$0840: ldir]
+	move.l	(a0)+,(a1)+           	| [$0840: ldir]
 	move.l	(a0)+,(a1)+           	| [$0840: ldir]
 	move.l	(a0)+,(a1)+           	| [$0840: ldir]
 	dbf		d1,0b
 	lea	o_mrw_sprite_ctrl_9B00(a6),a0             	| [$0842: ld   hl,#o_mrw_sprite_ctrl_9B00(a6)]
 	lea	o_sfr_sprite_ctrl_9B80(a6),a1             	| [$0845: ld   de,#o_sfr_sprite_ctrl_9B80(a6)]
-	move.w	#0x10-1,d1                        	| [$0848: ld   c,#0x40]
+	move.w	#0x8-1,d1                        	| [$0848: ld   c,#0x40]
 0:
+	move.l	(a0)+,(a1)+                              	| [$084A: ldir]
+	move.l	(a0)+,(a1)+                              	| [$084A: ldir]
 	move.l	(a0)+,(a1)+                              	| [$084A: ldir]
 	move.l	(a0)+,(a1)+                              	| [$084A: ldir]
 	dbf		d1,0b
@@ -5089,7 +5096,7 @@ j_1CAE:
 	lea	o_ds_plyr_actv_9820+_ds_bmbr_boss_scode(a6),a0	    | [ld   hl,#o_ds_plyr_actv_9820(a6) +_ds_bmbr_boss_scode]
 	add.w	d0,a0			                   | [rst  0x10] HL += A
 * d_1CFD[ixl]
-	jbsr	read_ixl_into_d0                    | [ld   a,ixl]
+	READ_IXL_INTO_D0                    | [ld   a,ixl]
 	exg	a1,a0                              	    | [ex   de,hl] stash hl (&plyr_actv.code)
 	lea	d_1CFD,a0                      	        | [ld   hl,#d_1CFD]
 	ADD_2_TIMES_D0_TO_A0           | [rst  0x08] HL += 2A
@@ -5101,7 +5108,7 @@ j_1CAE:
 	                         	                | [ld   (de),a]
 
 * if (2 == ixl) then skip launching wingmen ... capture-boss situation
-	jbsr	read_ixl_into_d0                         	| [ld   a,ixl]
+	READ_IXL_INTO_D0                         	| [ld   a,ixl]
 	cmp.b	#2,d0                            	| [cp   #2]
 	jeq	l_1CE3                             	| [jr   z,l_1CE3]
 
@@ -7043,7 +7050,7 @@ l_2416:
 	addq.b	#4,d4                           	| [ld   e,a] index += 4
 	subq.b	#1,d1                           	| [...]
 	jne	l_next_object_23EF                      | [djnz l_next_object_23EF] next object
-	jbsr	read_ixl_into_d0                    | [ld  a,ixl] o_b_bugs_actv_cnt_92a6(a6)
+	READ_IXL_INTO_D0                    | [ld  a,ixl] o_b_bugs_actv_cnt_92a6(a6)
 	move.b	d0,o_b_bugs_actv_cnt_92a6(a6)              	| [ld  (o_b_bugs_actv_cnt_92a6(a6)),a]
 	rts                                    	    | [ret]
 
@@ -11325,6 +11332,4 @@ l_02CC:
 	jra	jp_RAM_test                        	| [jp   jp_RAM_test]
 
 
-
-	.include	"register_op.inc"
 	

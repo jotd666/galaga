@@ -25,14 +25,15 @@ exx:
 * (unrelated to setting lower byte of ix)
 * this routine makes sure word value can be safely added
 
-read_ixl_into_d0:
+	.macro	READ_IXL_INTO_D0
 	moveq	#0,d0
 	move.b	ixl,d0
-	rts
-read_ixh_into_d0:
+	.endm
+	
+	.macro	READ_IXH_INTO_D0
 	moveq	#0,d0
 	move.b	ixh,d0
-	rts
+	.endm
 	
 	.ifndef   __amiga__
 	.bss

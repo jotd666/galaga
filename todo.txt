@@ -1,3 +1,7 @@
+make game faster:
+
+if going the "sprite multiplex" route:
+
 - remove usage of sprite for red ship, use sprites for bosses when possible,
 plus we could define 3 static multiplex zones:
   - bosses (very low expansion)
@@ -10,7 +14,15 @@ plus we could define 3 static multiplex zones:
   - if enemy code bee in swarm and Y in range: try sprite
   - if enemy code boss in swarm and Y in range: try sprite
 
+if going the "reduce cpu usage" route (cpu seems to be the limiting factor, can crawl at times even on 
+68060/050 with full fps & stars but specially crawls without fastmem due to heavy blitting & dma usage while
+code runs in chipmem):
+
+- try to get rid of copy to sprite ram or make it faster
+- enable profiler
+
 => could save 16 sprite draws in swarm!! but sprite palette must be dynamic...
+
 
 - report comments of galaga_game_ram.68k to offsets and kill file
 

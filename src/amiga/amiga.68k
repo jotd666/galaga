@@ -1543,6 +1543,15 @@ update_bobs:
 	* DRAW THE NEW BOBS *
 	*********************
 	
+	lea		_custom,a5
+	moveq	#0,d6
+	WAIT_BLIT
+	* the place where we cookie cut blit the objects
+	* set some blitter shared configuration once and for all for all objects
+	* this is probably slightly faster
+	move.w	d6,bltamod(a5)		|A modulo=bytes to skip between lines
+	move.w	d6,bltbmod(a5)		|B modulo=bytes to skip between lines
+
 	* game takes its source from 3 different tables, indexed the same way!
 	* we gathered the tables so they can be accessed with only one address register
 	* each table is 128 bytes long (64*2)
@@ -2025,8 +2034,8 @@ blit_planes_any_internal_cookie_cut:
 
     sub.w   d2,d0       | blit width
     lsl.w   #6,d4
-    lsr.w   #1,d2
-    add.w   d2,d4       | blit height
+    lsr.b   #1,d2
+    or.b   d2,d4       | blit height
     * always the same settings (ATM)
 
  	moveq	#0,d6
@@ -2037,9 +2046,9 @@ blit_planes_any_internal_cookie_cut:
 	* non-zero: set data source & bltcon
 	move.l	d7,bltcon0(a5)	| sets con0 and con1: C-A+B->D cookie cut full
     
-    * blitter registers set
-	move.w	d6,bltamod(a5)		|A modulo=bytes to skip between lines
-	move.w	d6,bltbmod(a5)		|B modulo=bytes to skip between lines
+    * blitter registers set (set above in the blit all loop to avoid doing that each time)
+	*move.w	d6,bltamod(a5)		|A modulo=bytes to skip between lines
+	*move.w	d6,bltbmod(a5)		|B modulo=bytes to skip between lines
 	
     move.w  d0,bltcmod(a5)	|C modulo
     move.w  d0,bltdmod(a5)	|D modulo
@@ -2050,7 +2059,7 @@ blit_planes_any_internal_cookie_cut:
 	subq	#1,d3
 6:
 	move.l (a0)+,d0
-	jeq	61f    | do nothing, never mind if we see a bitplane effect
+	jeq	61f    | do nothing, never mind if we see a bitplane effect (this is hardly noticeable and saves a lot of blitting)
 	jbsr	process_1_plane
 61:
 	lea		(BG_SCREEN_PLANE_SIZE,a1),a1
