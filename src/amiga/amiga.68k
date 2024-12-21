@@ -196,12 +196,28 @@ SPRITE_SIZEOF = 4
 .endm
 
 * blitter high priority or "nasty"
+
 .macro	WAIT_BLIT
 	move.w	#0x8400,(dmacon,a5)		| blitter high priority
 wait\@:
 	BTST	#6,(dmaconr,a5)
 	BNE.S	wait\@
 	move.w	#0x0400,(dmacon,a5)		| blitter normal priority
+.endm
+
+* rename that macro to WAIT_BLIT to count the ratio the macro has to wait/not wait
+* the ratio is currently pretty small, means that blitwaits don't occur so often (1/5)
+.macro	WAIT_BLIT_COUNT
+	add.l	#1,0x100
+	BTST	#6,(dmaconr,a5)
+	jeq		nowait\@
+	move.w	#0x8400,(dmacon,a5)		| blitter high priority
+	add.l	#1,0x104
+wait\@:
+	BTST	#6,(dmaconr,a5)
+	BNE.S	wait\@
+	move.w	#0x0400,(dmacon,a5)		| blitter normal priority
+nowait\@:
 .endm
 
 .macro MUL_TABLE value,len
@@ -1548,11 +1564,11 @@ update_bobs:
 	
 	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d4
 
-	btst	#1,d4		| clear & test X mirror mode (flipx, but screen is rotated)
-	sne		d6			| d6 nonzero means we'll use mirrored bob data
+	ror.b	#1,d4		| test bit 0
+	scs		d5			| d5 nonzero means we'll reverse blit
+	ror.b	#1,d4		| test bit 1: test X mirror mode (flipx, but screen is rotated)
+	scs		d6			| d6 nonzero means we'll use mirrored bob data
 
-	btst	#0,d4
-	sne		d5			| d5 nonzero means we'll reverse blit
 	
 	moveq	#0,d3
 	move.b	(TARGET_SPRITE_COLOR,a0),d3
@@ -1565,8 +1581,8 @@ update_bobs:
 
 	cmp.b	#0x30,d2
 	jne		0f
-	btst	#3,d4
-	jeq		0f
+	ror.b	#2,d4		| test bit 3
+	jcc		0f
 	move.b	#DOUBLE_SHOT_CODE,d2	| change sprite code (special case)
 0:
 	move.b	d2,(PREVIOUS_SPRITE_CODE,a6)
