@@ -4074,6 +4074,8 @@ color_row_34:
 	.align	8
 	
 		.section .bsschip
+
+	
 bg_screen_buffer_1:
 	ds.b	8
 	ds.b	BG_SCREEN_SIZE

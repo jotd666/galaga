@@ -871,6 +871,8 @@ l_06AC_:
 *  o_b8_ship_collsn_detectd_status_99bf(a6)
 *-----------------------------------------------------------------------------
 hitd_det_fghtr_06b7:
+	and.w	#0xFF,d1
+	subq	#1,d1
 while_06B7:
 	lea	o_b_obj_collsn_notif_9200(a6),a0     	        | [$06B7: ld   h,#>o_b_obj_collsn_notif_9200] sprt_hit_notif
 	and.w	#0xFF,d6
@@ -894,9 +896,9 @@ while_06B7:
 	subq.b	#7,d0                           	| [$06CF: sub  #7]
 	add.b	#13,d0                           	| [$06D1: add  a,#13]
 	jcc	l_06F0                             	    | [$06D3: jr   nc,l_06F0]
-	addq.w	#1,a0                           	| [$06D5: inc  l]
+												| [$06D5: inc  l]
 	addq.w	#1,d6                           	| [inc  l]
-	move.b	(a0),d0                         	| [$06D6: ld   a,(hl)]
+	move.b	(1,a0),d0                         	| [$06D6: ld   a,(hl)]
 	lea	o_ds_sprite_ctrl_9B00(a6),a0            | [$06D7: ld   h,#>o_ds_sprite_ctrl_9B00]
 	add.w	d6,a0
 	move.b	(a0),d2                         	| [$06D9: ld   c,(hl)]
@@ -916,14 +918,13 @@ while_06B7:
 	jcc	l_06F0                             	    | [$06E4: jr   nc,l_06F0]
 	move.b	#1,d0                           	| [$06E6: ld   a,#1]
 	move.b	d0,o_b8_ship_collsn_detectd_status_99bf(a6)	| [$06E8: ld   (o_b8_ship_collsn_detectd_status_99bf),a] 1 ... fighter hit notif
-	tst.b	d0                               	| [$06EB: or   a] nz if fighter hit
+												| [$06EB: or   a] nz if fighter hit
 	sne	d7                              	    | [$06EC: ex   af,af']
 	jra	hitd_dspchr_07c1                        | [$06ED: jp   hitd_dspchr_07c1] return to 'call hitd_det_fghtr_06b7'
 l_06F0:
 	addq.w	#2,a0
 	addq.b	#2,d6                           	| [$06F0: inc  l] * 2  [a0 coherence]
-	subq.b	#1,d1                           	| [...]
-	jne	while_06B7                         	    | [$06F2: djnz while_06B7]
+	dbf		d1,while_06B7                         	    | [$06F2: djnz while_06B7]
 	rts                                    	    | [$06F4: ret]
 
 *=============================================================================
@@ -1110,7 +1111,8 @@ l_0763_disable_rocket:
 *-----------------------------------------------------------------------------
 hitd_det_rckt_076a:
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
-
+	and.w	#0xFF,d1
+	subq	#1,d1
 	* now d6 drives A0 lsb
 l_076A_while_object:
 
@@ -1181,8 +1183,8 @@ l_07A4:
 
 l_07B4_next_object:
 	addq.b	#2,d6                           	| [$07B4: inc  l] * 2
-	subq.b	#1,d1                           	| [...]
-	jne	l_076A_while_object                		| [$07B6: djnz l_076A_while_object]
+	                           	| [...]
+	dbf	d1,l_076A_while_object                		| [$07B6: djnz l_076A_while_object]
 	rts                                    		| [$07B8: ret]
 
 *=============================================================================
@@ -1900,9 +1902,9 @@ l_0A6C:
 * attack wave element hits turning point and heads to home
 case_heads_to_home_0aa0:  | 0x04
 	move.l	a0,-(sp)                        	| [$0AA0: $0AA0: push hl] ptr to data table
+	moveq	#0,d6
 	move.b	(mq_object_id_10,a2),d6             | [$0AA1: $0AA1: ld   l,0x10(ix)] update object disposition ... i.e. 8800[L]
 	lea	o_object_states_8800(a6),a0                      	        | [$0AA4: $0AA4: ld   h,#>o_object_states_8800]
-	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#9,(a0)                         	| [$0AA6: ld   (hl),#9] disposition = 9: diving/homing (currently 3)
 	lea	sprt_fmtn_hpos,a0              	        | [$0AA8: ld   h,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
@@ -1959,9 +1961,9 @@ case_heads_to_home_0aa0:  | 0x04
 	move.b	(mq_fine_x_02,a2),d6                | [$0AE2: ld   l,0x02(ix)] .b00
 	move.b	(mq_x_03,a2),d5                    	| [$0AE5: ld   h,0x03(ix)] .b01
 	clr.b	d2                               	| [$0AE8: ld   c,#0]
-	asr.b	#1,d1                            	| [$0AEA: sra  b] step x coord, x offset
-	roxr.b	#1,d2                           	| [$0AEC: rr   c] 0 or 0x80
 	LOAD_D1_16_FROM_D1D2
+	asr.w	#1,d1                            	| [$0AEA: sra  b] step x coord, x offset
+												| [$0AEC: rr   c] 0 or 0x80
 	LOAD_D5_16_FROM_D5D6
 	sub.w	d1,d5                            	| [$0AEE: sbc  hl,bc] should be sub
 	LOAD_D5D6_FROM_D5_16
@@ -2599,20 +2601,19 @@ l_0DBC:
 	neg.b	d0                               	| [neg]
 l_0DC1:
 	jbsr	c_divide_d5d6_by_d0_0EAA            | [call c_divide_d5d6_by_d0_0EAA] HL = HL / A
-	move.b	d5,d1                           	| [ld   b,h]
-	move.b	d6,d2                           	| [ld   c,l]
-	lsr.b	#1,d5                            	| [srl  h]
-	roxr.b	#1,d6                           	| [rr   l]
-	lsr.b	#1,d5                            	| [srl  h]
-	roxr.b	#1,d6                           	| [rr   l]
-	LOAD_D1_16_FROM_D1D2
 	LOAD_D5_16_FROM_D5D6
+	move.w	d5,d1                           	| [ld   b,h]
+	                           	| [ld   c,l]
+	lsr.w	#2,d5                            	| [srl  h]
+												| [rr   l]
+													| [srl  h]
+												| [rr   l]
 	add.w	d1,d5                            	| [add  hl,bc]
+	lsr.w	#2,d5                            	| [srl  h]
+	                           	| [rr   l]
+	                            	| [srl  h]
+	                           	| [rr   l]
 	LOAD_D5D6_FROM_D5_16
-	lsr.b	#1,d5                            	| [srl  h]
-	roxr.b	#1,d6                           	| [rr   l]
-	lsr.b	#1,d5                            	| [srl  h]
-	roxr.b	#1,d6                           	| [rr   l]
 	move.b	d5,d0                           	| [ld   a,h]
 												| [and  a]
 	jne	l_0DE0                             		| [jr   nz,l_0DE0]

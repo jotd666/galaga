@@ -1147,12 +1147,12 @@ l_0739_while_B:
 	lea	d_scoreman_inc_lut-1,a0        	        | [$073A: ld   hl,#d_scoreman_inc_lut - 1] effective start index is $10 - 1
 	moveq	#0,d0
 	move.b	d1,d0                           	| [$073D: ld   a,b]
-	add.w	d0,a0                   | [$073E: rst  0x10] HL += A
+	add.w	d0,a0                   			| [$073E: rst  0x10] HL += A
 	move.b	(a0),d2                         	| [$073F: ld   c,(hl)] scoreman_inc_lut[B-1]
 * bug_collsn[hl] * scoreman_inc_lut[B-1]
 l_0740:
 	exg	a1,a0                              	    | [$0740: ex   de,hl]
-	move.b	(a0),d0                         	| [$0741: ld   a,(hl)] bug_collsn[hl]
+	tst.b	(a0)	                        	| [$0741: ld   a,(hl)] bug_collsn[hl]
 	                               	            | [$0742: and  a]
 	jeq	l_0762                             	    | [$0743: jr   z,l_0762] while ( 0 != bug_collsn[HL] )
 	subq.b	#1,(a0)                         	| [$0745: dec  (hl)] bug_collsn[HL] decrement accumulated hit count
@@ -5417,15 +5417,14 @@ l_1DA8:
 *-----------------------------------------------------------------------------
 f_update_enemy_status_1db3:
 	lea	o_b_obj_collsn_notif_9200(a6),a0     			| [ld   hl,#o_b_obj_collsn_notif_9200(a6)] $30 bytes ... test bit-7
-	move.b	#0x30,d1                        	| [ld   b,#0x30]
+	move.w	#0x30-1,d1                        	| [ld   b,#0x30]
 l_1DB8:
 	btst.b	#7,(a0)                         	| [bit  7,(hl)] bit-7 set ($81) by cpu1 (l_07DB) if the orc has been hit
 	jne	l_1DC1_make_him_dead               		| [jr   nz,l_1DC1_make_him_dead]
 	addq.w	#1,a0                           	| [inc  l]
 l_1DBD:
 	addq.w	#1,a0                           	| [inc  l]
-	subq.b	#1,d1                           	| [...]
-	jne	l_1DB8                             	| [djnz l_1DB8]
+	dbf		d1,l_1DB8                             	| [djnz l_1DB8]
 
 	rts                                    	| [ret]
 
@@ -5628,11 +5627,11 @@ j_1E43:   | aka 1E49
 	rol.b	#1,d0                            	| [rlca]
 	jcc	l_1E5A                             	    | [jr   nc,l_1E5A]
 * handle carry
-	addq.w	#1,a1                           	| [inc  e]
-	move.b	(a1),d0                         	| [ld   a,(de)] MSB
+	                           	| [inc  e]
+	move.b	(1,a1),d0                         	| [ld   a,(de)] MSB
 	eor.b	#0x01,d0                         	| [xor  #0x01]
-	move.b	d0,(a1)                         	| [ld   (de),a]
-	subq.w	#1,a1                           	| [dec  e] LSB again
+	move.b	d0,(1,a1)                         	| [ld   (de),a]
+	                           	| [dec  e] LSB again
  
 l_1E5A:
 	COMPUTE_LSB_A1_D4	o_ds_hpos_spcoords_9800

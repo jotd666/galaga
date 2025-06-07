@@ -1,29 +1,11 @@
 make game faster:
 
-if going the "sprite multiplex" route:
-
-- remove usage of sprite for red ship, use sprites for bosses when possible,
-plus we could define 3 static multiplex zones:
-  - bosses (very low expansion)
-  - first row of red moths
-  - last enemy row (must compute approx enemy row Y
-    bee enemies with given sprite codes (2 possible) Y < threshold 
-  - player ship(s) as before
-  - manage to delimit fine static ranges with colors, use macros
-  - if enemy code moth in swarm and Y in range: try sprite
-  - if enemy code bee in swarm and Y in range: try sprite
-  - if enemy code boss in swarm and Y in range: try sprite
-
-if going the "reduce cpu usage" route (cpu seems to be the limiting factor, can crawl at times even on 
-68060/050 with full fps & stars but specially crawls without fastmem due to heavy blitting & dma usage while
-code runs in chipmem):
-
 - try to get rid of copy to sprite ram or make it faster
-- enable profiler
-
-=> could save 16 sprite draws in swarm!! but sprite palette must be dynamic...
-
-
+- try profiler in MAME again without loops
+- clear bobs: if blitter busy, proceed with CPU
+- previous bob code = 0: stop trying to clear
+- AGA: try fmode=3
+- auto-fps adjustment depending on the number of sprites on screen
 - report comments of galaga_game_ram.68k to offsets and kill file
 
 minor issues:
