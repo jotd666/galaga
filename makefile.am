@@ -1,9 +1,12 @@
 PROGNAME = galaga
 MAIN = ..\$(PROGNAME)
 
-
 ifdef RELEASE_BUILD
 OPT_RELEASE = --defsym RELEASE=1
+OPT_RELEASE_LINK = -s
+else
+OPT_RELEASE = 
+OPT_RELEASE_LINK = 
 endif
 
 # Bebbo's package usually installs itself there
@@ -43,7 +46,7 @@ $(AMIGASRC)/sounds.68k: $(ASSETS)/convert_sounds.py $(ASSETS)/../sounds/$(PROGNA
 	cmd /c $(ASSETS)\convert_sounds.py
 	
 $(MAIN): $(OBJS)
-	$(GCC_BIN)/m68k-amigaos-ld -o $(MAIN) $(OBJS)
+	$(GCC_BIN)/m68k-amigaos-ld $(OPT_RELEASE_LINK) -o $(MAIN) $(OBJS)
 
 $(PROGNAME)_ram.o: $(PROGNAME)_ram.68k
 	$(ASM) $(PROGNAME)_ram.68k -o $(PROGNAME)_ram.o
