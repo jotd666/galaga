@@ -84,6 +84,11 @@ start:
 	MOVE.L	A0,(A1)
 	move.l	a0,a2
     
+	;setup cache: max cache everywhere
+	move.l	#WCPUF_Base_NC|WCPUF_Exp_CB|WCPUF_Slave_CB|WCPUF_IC|WCPUF_DC|WCPUF_BC|WCPUF_SS|WCPUF_SB,d0
+	move.l	#WCPUF_All,d1
+	jsr	(resload_SetCPU,a2)
+
     IFD CHIP_ONLY
     lea  _expmem(pc),a0
     move.l  #$70000,(a0)
