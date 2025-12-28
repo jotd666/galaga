@@ -4505,9 +4505,9 @@ l_1A58:
 	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$1A63: ld   h,#>o_ds_sprite_ctrl_9B00(a6)]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$1A65: ld   a,(hl)]
-	eor.b	#0x01,d0                         	| [$1A66: xor  #0x01]
-	move.b	d0,(a0)                         	| [$1A68: ld   (hl),a]
+	                         	| [$1A65: ld   a,(hl)]
+	bchg	#0,(a0)                         	| [$1A66: xor  #0x01]
+	                         	| [$1A68: ld   (hl),a]
 	rts                                    	    | [$1A69: ret]
 
 l_1A6A_ship_in_position:
@@ -5045,7 +5045,7 @@ bmbr_boss_activate_1c8d:
 	eor.b	#0x01,d0                         	| [xor  #0x01]
 l_1C94:
 	and.b	#0x03,d0                         	| [and  #0x03]
-	asl.b	#1,d0                            	| [sla  a]
+	add.b	d0,d0                            	| [sla  a]
 	add.b	#0x30,d0                         	| [add  a,#0x30] boss objects are 30 34 36 32
 	moveq	#0,d4
 	move.b	d0,d4                           	| [ld   e,a] object/index of bomber to _1CAE
@@ -5296,9 +5296,9 @@ l_1D51:
 	                           	                | [$1D56: inc  l]											
 	rol.b	#1,d0                            	| [$1D57: rlca]
 	jcc	l_1D5E                             	    | [$1D58: jr   nc,l_1D5E]
-	move.b	(a0),d0                         	| [$1D5A: ld   a,(hl)]
-	eor.b	#0x01,d0                         	| [$1D5B: xor  #0x01]
-	move.b	d0,(a0)                         	| [$1D5D: ld   (hl),a] add carry (if any) into MSB
+	                         	| [$1D5A: ld   a,(hl)]
+	bchg	#0,(a0)                         	| [$1D5B: xor  #0x01]
+	                         	| [$1D5D: ld   (hl),a] add carry (if any) into MSB
 l_1D5E:
 	addq.w	#1,a0                           	| [$1D5E: inc  l]
 	subq.b	#1,d1                           	| [...]
@@ -5375,12 +5375,12 @@ l_1DA4:
 	rts                                    	| [ret]
 
 l_1DA8:
-	clr.b	d0                               	| [xor  a]
-	move.b	d0,(a0)                         	| [ld   (hl),a] 0 ... 99BA?
+	                               	| [xor  a]
+	clr.b	(a0)                         	| [ld   (hl),a] 0 ... 99BA?
 	addq.w	#2,a0                           	| [inc  l]
- 	move.b	d0,(a0)+                         	| [ld   (hl),a] 0 ... 99BC?
+ 	clr.b	(a0)+                         	| [ld   (hl),a] 0 ... 99BC?
 	                           	| [inc  l]
-	move.b	d0,(a0)                         	| [ld   (hl),a] 0 ... 99BD?
+	clr.b	(a0)                         	| [ld   (hl),a] 0 ... 99BD?
 	move.b	#7,d0                           	| [ld   a,#7] stops stars
 	jra	l_1DA4                             	| [jr   l_1DA4] set star ctrl state
 	.endif
@@ -5467,18 +5467,17 @@ f_update_timers_1dd2:
 0:
 
 	lea	o_ds4_game_tmrs_92ac(a6),a0             	| [$1DD8: ld   hl,#o_ds4_game_tmrs_92ac(a6) + 0] decrement each of the 4 game timers
-	move.b	#4,d1                           | [$1DDB: ld   b,#4]
+	move.w	#4-1,d1                           | [$1DDB: ld   b,#4]
 *  for ( b = 0 | b < 4 | b++ ) {
 *    if ( game_tmrs[b] > 0 )   game_tmrs[b]--
 l_1DDD:
-	move.b	(a0),d0                         	| [$1DDD: ld   a,(hl)]
+	tst.b	(a0)+                         		| [$1DDD: ld   a,(hl)]
 												| [$1DDE: and  a]
 	jeq	l_1DE2                             		| [$1DDF: jr   z,l_1DE2]
-	subq.b	#1,(a0)                         	| [$1DE1: dec  (hl)]
+	subq.b	#1,(-1,a0)                         	| [$1DE1: dec  (hl)]
 l_1DE2:
-	addq.w	#1,a0                           	| [$1DE2: inc  l]
-	subq.b	#1,d1                           	| [...]
-	jne	l_1DDD                             		| [$1DE3: djnz l_1DDD]
+												| [$1DE2: inc  l]
+	dbf	d1,l_1DDD                             		| [$1DE3: djnz l_1DDD]
 *  }
 	rts                                    	| [ret]
 
@@ -5628,9 +5627,9 @@ j_1E43:   | aka 1E49
 	jcc	l_1E5A                             	    | [jr   nc,l_1E5A]
 * handle carry
 	                           	| [inc  e]
-	move.b	(1,a1),d0                         	| [ld   a,(de)] MSB
-	eor.b	#0x01,d0                         	| [xor  #0x01]
-	move.b	d0,(1,a1)                         	| [ld   (de),a]
+	                         	| [ld   a,(de)] MSB
+	bchg	#0,(1,a1)                         	| [xor  #0x01]
+	                         	| [ld   (de),a]
 	                           	| [dec  e] LSB again
  
 l_1E5A:
@@ -5835,18 +5834,18 @@ c_init_rocket_sprites_1F0F:
 
 shot_slot_free_1f1e:
 * save pointer to attribute, and stash 'offsetof( RCKT_X )' in E
-	movem.w	d3/d4,-(sp)                    		| [$1F1E: push de] &rockt_attribute[n].posn.b0
+	move.w	d4,-(sp)                    		| [$1F1E: push de] &rockt_attribute[n].posn.b0
 	move.l	a1,-(sp)                        	| [$1F1E: push de] &rockt_attribute[n].posn.b0
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
 	exg	d6,d4                              		| [$1F1F: ex   de,hl]
 	lea	o_ds_sprite_ctrl_9B00+0x62+1(a6),a0       	| [$1F20: ld   hl,#o_ds_sprite_ctrl_9B00(a6) + 0x62 + 1] sprite.ctrl[FIGHTR].b1
 	lea	o_ds_sprite_ctrl_9B00(a6),a1              	| [$1F23: ld   d,h]
 	addq.b	#1,d4                           	| [$1F24: inc  e] sprite[RCKT_X].ctrl.b1 [a1 coherence]
-    add.w	d4,a1	
+    	add.w	d4,a1	
 	btst.b	#2,(a0)                         	| [$1F25: bit  2,(hl)] sprite.ctrl[FIGHTR].b1<2> ... ?
 	jeq	l_1F2B                             		| [$1F27: jr   z,l_1F2B]
 	move.l	(sp)+,a1                        	| [$1F29: pop  de]
-	movem.w	(sp)+,d3/d4                    		| [$1F29: pop  de]
+	move.w	(sp)+,d4                    		| [$1F29: pop  de]
 	rts                                    		| [$1F2A: ret]
 
 
@@ -5857,9 +5856,8 @@ l_1F2B:
 	subq.b	#1,d4								| [a1 coherence]
 	COMPUTE_LSB_A0_D6	o_ds_sprite_ctrl_9B00
 	lea	o_ds_sprite_posn_9300(a6),a0              	| [$1F2D: ld   h,#>o_ds_sprite_posn_9300(a6)]
+	lea		(a0,d4.w),a1                  | [$1F2F: ld   d,h] stash it
 	add.w	d6,a0
-	lea	o_ds_sprite_posn_9300(a6),a1                  | [$1F2F: ld   d,h] stash it
-	add.w	d4,a1
 * sprite.posn[RCKT+n].b0 = sprite.posn[SPR_IDX_SHIP].b0  ... ship.sX
 	jbsr	ldi                               	| [$1F30: ldi] e.g. *(9B64++) = *(9B62++)
 * sprite.posn[RCKT+n].b1 = sprite.posn[SPR_IDX_SHIP].b1  ... ship.sY, bit 0-7
@@ -5868,10 +5866,10 @@ l_1F2B:
 
 * B = sprite.ctrl[SHIP].b0
 	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$1F34: ld   h,#>o_ds_sprite_ctrl_9B00(a6)]
+	lea		(a0,d4.w),a1
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	lea	o_ds_sprite_ctrl_9B00(a6),a1                  | [$1F36: ld   d,h]
-	add.w	d4,a1
+	                  | [$1F36: ld   d,h]
 	move.b	(a0),d1                         	| [$1F37: ld   b,(hl)] sprite.ctrl[FGHTR].b0: normally 0 (not doubled or flipped)
                                                   * stash in B ... see l_1F5E below
 	exg	a1,a0                              		| [$1F38: ex   de,hl] HL := sprite.ctrl[RCKT].b0
@@ -5958,15 +5956,15 @@ l_1F5E:
 l_1F71:
 	or.b	d2,d0                             	| [1F71: or   c] bit7=orientation, bit6=flipY, bit5=flipX, 1:2=displacement
 	move.l	(sp)+,a1                        	| [1F72: pop  de] pointer to rocket attribute
-	movem.w	(sp)+,d3/d4                    		| [1F72: pop  de] pointer to rocket attribute
+	move.w	(sp)+,d4                    		| [1F72: pop  de] pointer to rocket attribute
 	move.b	d0,(a1)                         	| [1F73: ld   (de),a]
 	COMPUTE_LSB_A0_D6	o_ds_sprite_code_8B00
 	lea	o_object_states_8800(a6),a0                      			| [1F74: $1F74: ld   h,#>o_object_states_8800(a6)] disposition = 6 ... active rocket object
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	#6,(a0)                         	| [$1F76: ld   (hl),#6] L == offsetof(rocket)
-	move.b	#1,d0                           	| [$1F78: ld   a,#1]
-	move.b	d0,o_b_9AA0+0x0F(a6)                  	| [$1F7A: ld   (o_b_9AA0(a6) + 0x0F),a] 1 ... sound-fx count/enable registers, shot-sound
+	                           	| [$1F78: ld   a,#1]
+	move.b	#1,o_b_9AA0+0x0F(a6)                  	| [$1F7A: ld   (o_b_9AA0(a6) + 0x0F),a] 1 ... sound-fx count/enable registers, shot-sound
 	move.w	#SHOT_SND,d0
 	jbsr	osd_sound_start
 	* count how many shots fired overall
@@ -6041,7 +6039,7 @@ l_1FA1_set_ship_dx:
 	move.b	#1,d2                           	| [$1FA5: ld   c,#1] ship_dX = 1
 * toggle ship_dX_flag
 	move.b	(a0),d0                         	| [$1FA7: ld   a,(hl)]
-	eor.b	#0x01,d0                         	| [$1FA8: xor  #0x01]
+	bchg	#0,d0                         	| [$1FA8: xor  #0x01]
 	move.b	d0,(a0)                         	| [$1FAA: ld   (hl),a] dX.flag ^= 1
 * if (0 == ship_dX_flag) ship_dX++
 	jne	l_1FAE_handle_input_bits           	    | [$1FAB: jr   nz,l_1FAE_handle_input_bits]
@@ -6211,9 +6209,9 @@ l_2044:
 	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [ld   h,#>o_ds_sprite_ctrl_9B00(a6)] rescued ship is "landing"
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [ld   a,(hl)]
-	eor.b	#0x01,d0                         	| [xor  #0x01]
-	move.b	d0,(a0)                         	| [ld   (hl),a]
+	                         	| [ld   a,(hl)]
+	bchg.b	#0x0,(a0)                         	| [xor  #0x01]
+	                         	| [ld   (hl),a]
 	jra	l_205E                             	    | [jr   l_205E]
 l_204C:
 	move.b	(a0),d0                         	| [ld   a,(hl)] when?
@@ -6327,8 +6325,8 @@ l_20BF:
 l_20C7:                                         | *( o_ds5_captr_status_928a(a6) + 0x01 ) == 0
 	addq.b	#1,d0                           	| [$20C7: inc  a]
 	move.b	d0,o_ds5_captr_status_928a+0x01(a6)   	| [$20C8: ld   (o_ds5_captr_status_928a(a6) + 0x01),a] 1
-	move.b	#2,d0                           	| [$20CB: ld   a,#2]
-	move.b	d0,o_ds4_game_tmrs_92ac+1(a6)             | [$20CD: ld   (o_ds4_game_tmrs_92ac(a6) + 1),a] 2
+	                           	| [$20CB: ld   a,#2]
+	move.b	#2,o_ds4_game_tmrs_92ac+1(a6)             | [$20CD: ld   (o_ds4_game_tmrs_92ac(a6) + 1),a] 2
 	rts                                    	    | [$20D0: ret]
 
 l_20D1_update_ship_spin:
@@ -6414,9 +6412,9 @@ l_211A_move_ship_row:
 * handle overflow by toggling bit-0 (off)
 	* jotd: adding +0x63 as previous value was ship vertical pos where L=0x63
 	lea	o_ds_sprite_ctrl_9B00+0x63(a6),a0             | [$2131: ld   h,#>o_ds_sprite_ctrl_9B00(a6)]
-	move.b	(a0),d0                         	| [$2133: ld   a,(hl)]
-	eor.b	#0x01,d0                         	| [$2134: xor  #0x01]
-	move.b	d0,(a0)                         	| [$2136: ld   (hl),a]
+	                         	| [$2133: ld   a,(hl)]
+	bchg.b	#0,(a0)                         	| [$2134: xor  #0x01]
+	                         	| [$2136: ld   (hl),a]
 	lea	o_ds_sprite_posn_9300+0x63(a6),a0             | [$2137: ld   h,#>o_ds_sprite_posn_9300(a6)]
 l_2139:
 	move.b	(a0),d0                         	| [$2139: ld   a,(hl)]
@@ -6477,9 +6475,9 @@ l_216D:                                           | when?
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
 	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$2174: ld   h,#>o_ds_sprite_ctrl_9B00(a6)]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$2176: ld   a,(hl)]
-	eor.b	#0x01,d0                         	| [$2177: xor  #0x01]
-	move.b	d0,(a0)                         	| [$2179: ld   (hl),a]
+	                         	| [$2176: ld   a,(hl)]
+	bchg	#0,(a0)                         	| [$2177: xor  #0x01]
+	                         	| [$2179: ld   (hl),a]
 	lea	o_ds_sprite_posn_9300(a6),a0              	| [$217A: ld   h,#>o_ds_sprite_posn_9300(a6)]
 	add.w	d6,a0
 	rts                                    	    | [$217C: ret]
@@ -7247,9 +7245,9 @@ l_24C2:
 	jcc	l_24DA                             		| [$24D2: jr   nc,l_24DA]
 	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$24D4: ld   h,#>o_ds_sprite_ctrl_9B00(a6)] killed boss that had the ship in the demo (not in game?)
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$24D6: ld   a,(hl)]
-	eor.b	#0x01,d0                         	| [$24D7: xor  #0x01]
-	move.b	d0,(a0)                         	| [$24D9: ld   (hl),a]
+	                         	| [$24D6: ld   a,(hl)]
+	bchg.b	#0,(a0)                         	| [$24D7: xor  #0x01]
+	                         	| [$24D9: ld   (hl),a]
 l_24DA:
 	subq.b	#1,d6                           	| [$24DA: dec  l] .b0 [a0 coherence]
 	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$24DB: ld   h,#>o_ds_sprite_ctrl_9B00(a6)]
@@ -7333,9 +7331,9 @@ l_251C:
 * mrw_sprite.cclr[ L ].b1 ^= (0 != AF.pair.b1)|
 	tst.b	d7
 	jeq	l_2529                             	    | [$2523: jr   nc,l_2529]
-	move.b	(a0),d0                         	| [$2525: ld   a,(hl)]
-	eor.b	#0x01,d0                         	| [$2526: xor  #0x01]
-	move.b	d0,(a0)                         	| [$2528: ld   (hl),a]
+	                         	| [$2525: ld   a,(hl)]
+	bchg.b	#0,(a0)                         	| [$2526: xor  #0x01]
+	                         	| [$2528: ld   (hl),a]
 l_2529:
 	subq.b	#1,d6                           	| [$2529: dec  l] [a0 coherence]
 	move.b	d2,-(a0)                         	| [$252A: ld   (hl),c]

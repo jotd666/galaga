@@ -1,10 +1,10 @@
 make game faster:
 
+- keep on optimizing 68k code
 - try to get rid of copy to sprite ram or make it faster
 - try profiler in MAME again without loops
 - clear bobs: if blitter busy, proceed with CPU
 - previous bob code = 0: stop trying to clear
-- AGA: try fmode=3
 - auto-fps adjustment depending on the number of sprites on screen
 - report comments of galaga_game_ram.68k to offsets and kill file
 
