@@ -508,8 +508,6 @@ _user:
 	sne		cheat_used
 
 	jsr	 _detect_controller_types 
-	clr.b	controller_joypad_0
-	clr.b	controller_joypad_1
 
 	bsr		load_palette_in_copperlist
 	bsr		show_stars
