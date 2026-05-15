@@ -1638,9 +1638,8 @@ case_0942:  | 0x0A
 	moveq	#0,d4
 	move.b	(mq_object_id_10,a2),d4             | [ld   e,0x10(ix)] offset of object ...8800[E]
 	lea	o_object_states_8800(a6),a1                      			| [ld   d,#>o_object_states_8800]
-	add.w	d4,a1
-											| [ld   a,#0x03] set to state 3
-	move.b	#0x03,(a1)                         	| [ld   (de),a]
+												| [ld   a,#0x03] set to state 3
+	move.b	#0x03,(a1,d4.w)                     | [ld   (de),a]
 	addq.w	#1,a0                           	| [inc  hl] ptr to data table
 	jra	j_090E_flite_path_init             		| [jp   j_090E_flite_path_init]
 
@@ -1676,12 +1675,11 @@ case_0968:  | 0x0E
 	moveq	#0,d4
 	move.b	(mq_object_id_10,a2),d4             | [$0968: ld   e,0x10(ix)] home_posn_rc[ obj_id ]
 	lea	sprt_fmtn_hpos,a1              	        | [$096B: ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
-	move.b	(a1,d4.w),d0                         	| [$096D: ld   a,(de)] row position index
-	move.b	d0,d4                           	| [$096E: ld   e,a]
+	move.b	(a1,d4.w),d4                         	| [$096D: ld   a,(de)] row position index
+											| [$096E: ld   e,a]
 	lea	o_ds_hpos_loc_orig_9900(a6),a1            	| [$096F: ld   d,#>o_ds_hpos_loc_orig_9900] b1: copy of origin data
-	add.w	d4,a1
-	addq.w	#1,a1                           	| [inc  e]
-	move.b	(a1),d0                         	| [ld   a,(de)] copy of origin data
+												| [inc  e]
+	move.b	(1,a1,d4.w),d0                         	| [ld   a,(de)] copy of origin data
 	add.b	#0x20,d0                         	| [add  a,#0x20]
 	move.b	d0,(mq_y_01,a2)                    	| [ld   0x01(ix),a] sY<8:1>
 	jra	l_0B8B                             	    | [jp   l_0B8B] inc hl and finalize
@@ -1716,8 +1714,8 @@ l_098F_do_split_off_bonus_bee:
 	                         	                | [$0993: ld   (hl),a]
 	                           	                | [$0994: inc  l] .b1
 	                           	                | [$0995: inc  e] .b1
-	move.b	(a1),d0                         	| [$0996: ld   a,(de)] _sprite_cclr[index attack leader]
-	move.b	d0,(a0)                         	| [$0997: ld   (hl),a]
+	move.b	(a1),(a0)                         	| [$0996: ld   a,(de)] _sprite_cclr[index attack leader]
+												| [$0997: ld   (hl),a]
 	subq.w	#1,a0                           	| [$0998: dec  l] .b0
 	COMPUTE_LSB_A0_D6		o_ds_sprite_code_8B00
 	move.b	d6,d0                           	| [$0998: ld   a,l]
@@ -1745,14 +1743,14 @@ l_09AE_doit:
 	exg	a1,a0                              	    | [$09B7: ex   de,hl]
 	move.l	a1,a3							    | [$09B8: ld   iyl,e]
 											    | [$09BA: ld   iyh,d]
-	move.w	#0x06,d1                            | [$09BC: ld   bc,#0x0006] 6
+	moveq	#0x06,d1                            | [$09BC: ld   bc,#0x0006] 6
 	jbsr	ldir                                | [$09BF: ldir]
-	move.w	#6,d1                               | [$09C1: ld   c,#6]
+	moveq	#6,d1                               | [$09C1: ld   c,#6]
 	add.w	d1,a0                               | [$09C3: add  hl,bc]
-	exg	a1,a0                              	    | [$09C4: ex   de,hl]
-	add.w	d3,a0                               | [$09C5: add  hl,de]
-	exg	a1,a0                              	    | [$09C6: ex   de,hl]
-	move.w	#4,d1                               | [$09C7: ld   c,#4]
+												| [$09C4: ex   de,hl]
+	add.w	d3,a1                               | [$09C5: add  hl,de]
+												| [$09C6: ex   de,hl]
+	moveq	#4,d1                               | [$09C7: ld   c,#4]
 	jbsr	ldir                                | [$09C9: ldir]
 	move.b	(mq_state_13,a2),d0                 | [$09CB: $0E54: ld   a,0x13(ix)] 0x13(iy)
 	move.b	d0,(mq_state_13,a3)                 | [$09CE: ld   0x13(iy),a]
@@ -1886,10 +1884,10 @@ l_0A6C:
 	roxr.b	#1,d6                           	| [$0A86: rr   l]
 	move.b	d6,(mq_angle_lsb_04,a2)             | [$0A88: ld   0x04(ix),l]
 	move.b	d5,(mq_angle_msb_05,a2)             | [$0A8B: ld   0x05(ix),h]
-	clr.b	d0                               	| [$0A8E: xor  a]
-	move.b	d0,o_ds5_captr_status_928a+0x01(a6)   	| [$0A8F: ld   (o_ds5_captr_status_928a + 0x01),a] 0
-	addq.b	#1,d0                           	| [$0A92: inc  a]
-	move.b	d0,o_ds_cpu0_task_actv_9000+0x19(a6)      | [$0A93: ld   (o_ds_cpu0_task_actv_9000 + 0x19),a] 1: f_21CB ... boss diving to capture position
+												| [$0A8E: xor  a]
+	clr.b	o_ds5_captr_status_928a+0x01(a6)   	| [$0A8F: ld   (o_ds5_captr_status_928a + 0x01),a] 0
+												| [$0A92: inc  a]
+	move.b	#1,o_ds_cpu0_task_actv_9000+0x19(a6)      | [$0A93: ld   (o_ds_cpu0_task_actv_9000 + 0x19),a] 1: f_21CB ... boss diving to capture position
 	COMPUTE_LSB_A2_D0	o_ds_bug_motion_que_9100  | [$0A96: ld   a,ixl]
 	move.b	d0,o_ds_plyr_actv_9820+_b_cboss_slot(a6)   	| [$0A98: ld   (o_ds_plyr_actv_9820 +_b_cboss_slot),a] ixl ... offset of slot used by capture boss, referenced by cpu0:f_21CB
 	move.l	(sp)+,a0                        	| [$0A9B: pop  hl] ptr to data table
@@ -1902,8 +1900,7 @@ case_heads_to_home_0aa0:  | 0x04
 	moveq	#0,d6
 	move.b	(mq_object_id_10,a2),d6             | [$0AA1: $0AA1: ld   l,0x10(ix)] update object disposition ... i.e. 8800[L]
 	lea	o_object_states_8800(a6),a0                      	        | [$0AA4: $0AA4: ld   h,#>o_object_states_8800]
-	add.w	d6,a0
-	move.b	#9,(a0)                         	| [$0AA6: ld   (hl),#9] disposition = 9: diving/homing (currently 3)
+	move.b	#9,(a0,d6.w)                         	| [$0AA6: ld   (hl),#9] disposition = 9: diving/homing (currently 3)
 	lea	sprt_fmtn_hpos,a0              	        | [$0AA8: ld   h,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
 	add.w	d6,a0
 	move.b	(a0)+,d2                         	| [$0AAA: ld   c,(hl)] row index
@@ -2053,15 +2050,11 @@ case_0B5F:  | 0x06
 	addq.b	#1,d4                           	| [$0B66: inc  e]
 	lea	sprt_fmtn_hpos,a1              	        | [$0B67: ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) + 1 ] ... column position index
 	and.w	#0xFF,d4
-	add.w	d4,a1
-
-	move.b	(a1),d0                         	| [$0B69: ld   a,(de)]
+	move.b	(a1,d4.w),d0                         	| [$0B69: ld   a,(de)]
 	move.b	d0,d4                           	| [$0B6A: ld   e,a]
 	lea	o_ds_hpos_spcoords_9800(a6),a1            	| [$0B6B: ld   d,#>o_ds_hpos_spcoords_9800] col pix coordinate, lsb only
-	and.w	#0xFF,d4
-	add.w	d4,a1
 
-	move.b	(a1),d0                         	| [$0B6D: ld   a,(de)]
+	move.b	(a1,d4.w),d0                         	| [$0B6D: ld   a,(de)]
 	btst.b	#0,d2                           	| [$0B6E: bit  0,c] check if flip-screen
 	jeq	l_0B76                             	    | [$0B70: jr   z,l_0B76]
 	add.b	#0x0E,d0                         	| [$0B72: add  a,#0x0E]
@@ -2830,33 +2823,6 @@ c_divide_d5d6_by_d0_0EAA:
 	LOAD_D5D6_FROM_D5_16
 	rts                                    	| [$0EBC: ret]
 	
-*	LOAD_D5_16_FROM_D5D6
-*	movem.w	d1/d2,-(sp)                    	| [$0EAA: push bc]
-*	move.b	d0,d2                           | [$0EAB: ld   c,a]
-*	clr.b	d0                              | [$0EAC: xor  a] clears Cy
-*	CLEAR_XC_FLAGS
-*	move.w	#0x11-1,d1                      | [$0EAD: ld   b,#0x11]
-*l_0EAF:
-*	addx.b	d0,d0					        | [$0EAF: adc  a,a]
-*	jcs	l_0EBD                             	| [$0EB0: jr   c,l_0EBD]
-*	cmp.b	d2,d0                           | [$0EB2: cp   c]
-*	jcs	l_0EB6                             	| [$0EB3: jr   c,l_0EB6]
-*	sub.b	d2,d0                           | [$0EB5: sub  c]
-*l_0EB6:
-** flip the Cy: i.e. set it if the "sub c" was done, otherwise clear it.
-*	INVERT_XC_FLAGS                         | [$0EB6: ccf]
-*l_0EB7:
-*	addx.w	d5,d5			                | [$0EB7: adc  hl,hl]
-*	dbf		d1,l_0EAF                       | [$0EB9: djnz l_0EAF] using dbf and not sub preserves X
-*
-*	movem.w	(sp)+,d1/d2                    	| [$0EBB: pop  bc]
-*	LOAD_D5D6_FROM_D5_16
-*	rts                                    	| [$0EBC: ret]
-*
-*l_0EBD:
-*	sub.b	d2,d0                           | [$0EBD: sub  c]
-*	SET_XC_FLAGS                           	| [$0EBE: scf]
-*	jra	l_0EB7                             	| [$0EBF: jp   l_0EB7]
 
 
 *=============================================================================
