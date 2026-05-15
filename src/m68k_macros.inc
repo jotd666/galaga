@@ -139,19 +139,26 @@
 	.endm
 	.endif
 	
+	.macro	CLR_REG_MSW		reg
+	swap	\reg
+	clr.w	\reg
+	swap	\reg
+	.endm
+	
 	.macro	LOAD_D1_16_FROM_D1D2
-	and.l	#0xFFFF,d1
+	CLR_REG_MSW	d1
 	lsl.w	#8,d1
 	move.b	d2,d1
 	.endm
 	
 	.macro	LOAD_D3_16_FROM_D3D4
-	and.l	#0xFFFF,d3
+	CLR_REG_MSW	d3
 	lsl.w	#8,d3
 	move.b	d4,d3
 	.endm
+	
 	.macro	LOAD_D5_16_FROM_D5D6
-	and.l	#0xFFFF,d5
+	CLR_REG_MSW	d5
 	lsl.w	#8,d5
 	move.b	d6,d5
 	.endm
