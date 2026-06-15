@@ -1180,10 +1180,10 @@ l_0762:
 	jne	l_0739_while_B                     	    | [$0763: djnz l_0739_while_B]
 	READ_IXL_INTO_D0                            | [$0765: ld   a,ixl]
 	addq.b	#4,d0                           	| [$0767: add  a,#4]						
-	lea	0x03E0+0x12,a0      	                | [$0769: ld   hl,#0x8000 + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2)
 	lea	0x0300,a1        	                    | [$076A: ld   d,#>(0x8000 + 0x0300)]
+	lea	(a1,0xE0+0x12),a0      	                | [$0769: ld   hl,#0x8000 + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2)
 	add.w	d0,a1					            | [$076D: ld   e,a]
-	moveq	#6,d1                           	| [$076F: ld   b,#6]
+	moveq	#6-1,d1                           	| [$076F: ld   b,#6]
 l_0771:
 	move.b	(o_bg_videoram_8000,a1.W,a6),d0     | [$0771: ld   a,(de)]
 	sub.b	(o_bg_videoram_8000,a0.W,a6),d0     | [$0772: sub  (hl)]
@@ -1197,8 +1197,7 @@ l_0771:
 	jne	l_078E                             	    | [$0780: jr   nz,l_078E]
 	subq.w	#1,a0                           	| [$0782: dec  l]
 	subq.w	#1,a1                           	| [$0783: dec  e]
-	subq.b	#1,d1                           	| [...]
-	jne	l_0771                             	    | [$0784: djnz l_0771]
+	dbf	d1,l_0771                          	    | [$0784: djnz l_0771]
 * else ... break
 	jra	l_078E                             	    | [$0786: jr   l_078E]
                 				
@@ -1211,8 +1210,7 @@ l_0788:
 	subq.w	#1,d7                           	| [$078A: dec  l]
 	subq.w	#1,a0                           	| [$078A: dec  l]
 	subq.w	#1,a1                           	| [$078B: dec  e]
-	subq.b	#1,d1                           	| [...]
-	jne	0b                               	    | [$078C: djnz l_0788]
+	dbf	d1,0b                               	    | [$078C: djnz l_0788]
 
 l_078E:
 	READ_IXL_INTO_D0                    | [$078E: ld   a,ixl]
