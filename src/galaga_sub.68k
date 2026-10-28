@@ -893,8 +893,8 @@ while_06B7:
 	                               	            | [$06CA: and  a]
 	jeq	l_06F0                             	    | [$06CB: jr   z,l_06F0]
 	sub.b	ixl,d0                           	| [$06CD: sub  ixl] x<7:0>
-												| [$06CF: sub  #7]
-	add.b	#13-7,d0                           	| [$06D1: add  a,#13]
+	subq.b	#7,d0                           	| [$06CF: sub  #7]  LEAVE SUB+ADD separated!!
+	add.b	#13,d0                           	| [$06D1: add  a,#13]  else jcc tests differently
 	jcc	l_06F0                             	    | [$06D3: jr   nc,l_06F0]
 												| [$06D5: inc  l]
 	addq.w	#1,d6                           	| [inc  l]
@@ -1166,8 +1166,8 @@ l_076A_while_object:
 	sub.b	ixl,d0                           	| [$079A: sub  ixl] sprite.sX -= rocket.sX
 	tst.b	o_ds_plyr_actv_9820+_b_2ship(a6)				| [$0796: and  a] flags from this value, but d0 loaded with sX
 	jne	l_07A4                             		| [$0798: jr   nz,l_07A4] and  a
-	                           	| [$079C: sub  #6]
-	add.b	#11-6,d0                           	| [$079E: add  a,#11]
+	subq.b	#6,d0                           	| [$079C: sub  #6] LEAVE SUB+ADD separated!!
+	add.b	#11,d0                           	| [$079E: add  a,#11] else jcc tests differently (collision)
 	jcs	hitd_dspchr_07c1_rckt_07b9              | [$07A0: jr   c,hitd_dspchr_07c1_rckt_07b9]
 	jra	l_07B4_next_object                 		| [$07A2: jr   l_07B4_next_object]
 l_07A4:
