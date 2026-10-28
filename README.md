@@ -1,21 +1,12 @@
 # Galaga (68K)
 
-This is a transcode from the original arcade game Z80 to 68K assembly.
+This is a transcode from the original arcade game Z80 to 68K assembly for OCS amigas.
 
-
-### PROGRESS:
-
-#### TRANSCODE
-
-
-#### AMIGA
 
 - fully playable with sound
 - minor graphical & sound bugs
 - missing 2P mode
-- 50 fps/scrolling stars on accelerated amigas, 25 fps on bare amigas
-
-#### NEO GEO
+- mostly 50 fps on any amiga, sometimes dropping on slow machines. Optional scrolling stars.
 
 ### FEATURES:
 
@@ -24,10 +15,10 @@ This is a transcode from the original arcade game Z80 to 68K assembly.
 - Jean-Francois Fabre (aka jotd): Z80 to 68k transcode, Amiga code, sound and assets
 - Glenn Neidermeier: Z80 reverse-engineering (https://github.com/neiderm/arcade)
 - no9: remade amiga tunes
+- Claude A.I: rewrite of graphical rendering for lightning speed. 50 fps even on OCS
 - Mark McDougall (aka tcdev): graphical assets (ROM extract)
 - DanyPPC: amiga icon
 - phx: ptplayer sound/music replay Amiga code
-- blastar: NGFX SoundBuilder (Neo Geo sound tool)
 - Namco: original game :)
 
 #### SPECIAL THANKS:
@@ -65,29 +56,3 @@ This is a transcode from the original arcade game Z80 to 68K assembly.
 - To update sounds, use "convert_sounds.py"
   python script (audio) to create sound*.68k files.
 
-### NEO GEO:
-
-#### Prerequesites:
-
-- Windows
-- NeoDev kit (Fabrice Martinez, Jeff Kurtz, et al)  
-  https://wiki.neogeodev.org/index.php?title=Development_tools
-
-#### Build process:
-
-- install NeoDev and set path accordingly
-- clone repository
-- make -f makefile.ng OUTPUT={cart|cd}
-  - (OUTPUT defaults to cart)
-  
-#### Install process (MAME):
-
-- make -f makefile.ng OUTPUT={cart|cd} MAMEDIR={mamedir} install
-  - (mamedir defaults to '.')
-- paste galaga.xml into MAME's hash/galaga.xml file
-
-#### To run in MAME:
-
-- cart : 'mame neogeo galaga'
-- cd : 'mame neocdz -cdrom roms/neocdz/pengo.iso'
-  
