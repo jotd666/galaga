@@ -112,9 +112,13 @@ CHAR_PLANE_SIZE = ILV_STRIDE*CHAR_PLANE_LINES
 BPL_MODULO = ILV_STRIDE-NB_BYTES_PER_ROW		| 120
 
 * 3 and 4-plane bobs converted to interleaved format at startup
-* (61776 bytes needed with current graphics, if it doesn't fit,
-* the remaining bobs are just drawn plane by plane)
-ILV_POOL_SIZE = 64000
+* (61776 bytes needed with current graphics). Items are first placed in the
+* unused part of the char plane lines (bytes 40-159, ~30KB), the rest goes
+* in this pool (31360 bytes needed). If it doesn't fit, the remaining bobs
+* are just drawn plane by plane
+ILV_POOL_SIZE = 32768
+CHAR_GAP_OFFSET = NB_BYTES_PER_ROW			| 40 (AGA overfetch reads 40-47: harmless)
+CHAR_GAP_SIZE = ILV_STRIDE-NB_BYTES_PER_ROW	| 120
 ILV_MIN_PLANES = 3			| bobs with less planes are blitted plane by plane
 MAX_BOB_RECORDS = 512		| 472 needed with current graphics
 MASK_CACHE_SIZE = 256
@@ -2103,17 +2107,15 @@ make_bob_record:
 	cmp.w	#ILV_MIN_PLANES,d2
 	jcs		90f					| few planes: blitted plane by plane (and empty ones skipped)
 
-	* room check (data + mask, worst case): h * 4 planes * srcw * 2
 	move.w	(a3),d3				| D3: height
 	move.w	d6,d4
-	subq.w	#2,d4				| D4: compact source bytes per line
+	subq.w	#2,d4				| compact source bytes per line
+	mulu	d3,d4
+	lsl.w	#2,d4				| D4: item size = h * 4 planes * srcw
 	move.w	d4,d0
-	mulu	d3,d0
-	lsl.l	#3,d0
-	move.l	ilv_alloc_ptr(pc),a4
-	add.l	a4,d0
-	cmp.l	#ilv_pool_end,d0
-	jhi		90f					| no room left: plane by plane
+	jbsr	ilv_alloc
+	move.l	a4,d0
+	jeq		90f					| no room left: plane by plane
 
 	* interleaved data
 	move.l	a4,(BR_ILVDATA,a5)
@@ -2155,38 +2157,92 @@ make_bob_record:
 	addq.w	#4,a0
 11:
 	dbf		d2,10b
-	* not found: build it
+	* not found: allocate & build it
+	move.l	d0,a1				| mask source
+	move.w	d4,d0
+	jbsr	ilv_alloc
+	move.l	a4,d0
+	jne		13f
+	clr.l	(BR_ILVDATA,a5)		| no room for the mask: plane by plane
+	jra		90f					| (data space is lost, harmless)
+13:
 	cmp.w	#MASK_CACHE_SIZE,mask_cache_count
-	jcc		13f
-	move.l	d0,(a0)+
+	jcc		14f
+	move.l	a1,(a0)+
 	move.l	a4,(a0)
 	addq.w	#1,mask_cache_count
-13:
+14:
 	move.l	a4,(BR_ILVMASK,a5)
-	move.l	d0,a0
+	move.l	a1,a0
 	move.w	d3,d5
 	subq.w	#1,d5
-14:
-	moveq	#NB_BOBS_PLANES-1,d2
 15:
+	moveq	#NB_BOBS_PLANES-1,d2
+16:
 	move.w	(a0),(a4)+
 	cmp.w	#6,d6
-	jne		16f
+	jne		17f
 	move.w	(2,a0),(a4)+
-16:
-	dbf		d2,15b
+17:
+	dbf		d2,16b
 	add.w	d6,a0
-	dbf		d5,14b
-	jra		17f
+	dbf		d5,15b
+	jra		18f
 12:
 	move.l	(a0),(BR_ILVMASK,a5)
-17:
-	move.l	a4,ilv_alloc_ptr
+18:
 	bset	#BRF_ILV,(BR_FLAGS,a5)
 90:
 	move.l	a5,d0
 99:
 	movem.l	(a7)+,d1-d5/a0-a2/a4-a5
+	rts
+
+* chip memory for converted bobs: first fit in the unused part of
+* the char plane lines, then the regular pool
+* < D0.W: size in bytes (even)
+* > A4: chip address, 0 if no room
+ilv_alloc:
+	movem.l	d1-d2/a0,-(a7)
+	cmp.w	#CHAR_GAP_SIZE,d0
+	jhi		2f					| too big for a gap (32x32 explosions)
+	lea		char_gap_fill,a0
+	moveq	#0,d1				| char plane line
+0:
+	moveq	#0,d2
+	move.b	(a0,d1.w),d2
+	add.w	d0,d2
+	cmp.w	#CHAR_GAP_SIZE,d2
+	jls		1f
+	addq.w	#1,d1
+	cmp.w	#CHAR_PLANE_LINES,d1
+	jne		0b
+	jra		2f					| all gaps full
+1:
+	moveq	#0,d2
+	move.b	(a0,d1.w),d2		| offset in gap
+	add.b	d0,(a0,d1.w)
+	lea		mul_ilv_table,a0
+	add.w	d1,d1
+	add.w	d1,d1
+	move.l	(a0,d1.w),a4
+	add.l	char_plane_ptr(pc),a4
+	add.w	#CHAR_GAP_OFFSET,d2
+	add.w	d2,a4
+	jra		9f
+2:
+	move.l	ilv_alloc_ptr(pc),a4
+	moveq	#0,d1
+	move.w	d0,d1
+	add.l	a4,d1
+	cmp.l	#ilv_pool_end,d1
+	jhi		3f
+	move.l	d1,ilv_alloc_ptr
+	jra		9f
+3:
+	sub.l	a4,a4
+9:
+	movem.l	(a7)+,d1-d2/a0
 	rts
 	
 * < D0: sprite X
@@ -4029,6 +4085,9 @@ deferred_tiles:
 	ds.w	MAX_DEFERRED_TILES
 cell_bob_flags:
 	ds.b	0x400
+char_gap_fill:
+	* bytes used in the unused part of each char plane line
+	ds.b	CHAR_PLANE_LINES
 	.align	4
 	.section	.datachip
 	
