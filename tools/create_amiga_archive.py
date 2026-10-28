@@ -15,12 +15,16 @@ for s in ["convert_sounds.py","convert_graphics.py"]:
 subprocess.check_call(cmd_prefix+["RELEASE_BUILD=1"],cwd=os.path.join(progdir,"src"))
 # create archive
 
-outdir = progdir/"dist"/f"{gamename}_HD"
+distdir = progdir / "dist"
+outdir = distdir / f"{gamename}_HD"
+flopdir = distdir / f"{gamename}_floppy"
 
 if os.path.isdir(outdir):
     shutil.rmtree(outdir)
-
 outdir.mkdir(exist_ok=True,parents=True)
+if os.path.isdir(flopdir):
+    shutil.rmtree(flopdir)
+flopdir.mkdir(exist_ok=True,parents=True)
 
 for file in ["readme.md",gamename,f"{gamename}.slave"]:
     shutil.copy(os.path.join(progdir,file),outdir)
@@ -42,9 +46,20 @@ exename = gamename
 shutil.move(progdir/f"{exename}.rnc",progdir/exename)
 assets = progdir /"assets"/"amiga"
 
-shutil.copy(assets/"disk.info",progdir)
+
+xtra_dir = flopdir/"xtra"
+xtra_dir.mkdir(exist_ok=True)
+shutil.copy(assets/f"disk.info",xtra_dir)
+
+with (xtra_dir/"floppy").open("w"):
+    pass
+
+shutil.copy(progdir / "readme.md",xtra_dir)
+
+
 adf_name = "Galaga.adf"
-cmd = ["gadf","-i","galaga","-a",adf_name,"-l","galaga","readme.md","disk.info"]
+#cmd = ["gadf","-i","galaga","-a",adf_name,"-l","galaga","readme.md","disk.info"]
+cmd = ["exe2adf","--add21k","-i",exename,"-a",adf_name,"-l",gamename.title(),"-d",xtra_dir]
 subprocess.run(cmd,cwd=progdir)
 
 # create a .zip for the floppy

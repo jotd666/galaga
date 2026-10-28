@@ -478,26 +478,26 @@ l_0537:
 * find the first ready task.. may run more than one.
 	moveq	#0,d2                               	| [ld   c,#0]
 l_054F_while:
-	lea	o_ds_cpu1_task_actv_9020(a6),a0								| [$0552: ld   a,c]
-	add.w	d2,a0							| [$0553: add  a,l]
+	lea	o_ds_cpu1_task_actv_9020(a6),a0								| [$0552: ld   a,c] [freq=high, count=100%]
+	add.w	d2,a0							| [$0553: add  a,l] [freq=high, count=100%]
 			 		                        | [$0554: ld   l,a]
 	* find a running task
 l_0555_while:
-	move.b	(a0)+,d0                        | [$0555: ld   a,(hl)]
+	move.b	(a0)+,d0                        | [$0555: ld   a,(hl)] [freq=high, count=100%]
 	                               	        | [$0556: and  a]
-	jeq	l_0555_while                           | [$0557: jr   nz,l_055C]
+	jeq	l_0555_while                           | [$0557: jr   nz,l_055C] [freq=high, count=100%]
 											| [$0559: inc  c]
 		                       	        | [$055A: jr   l_054F_while]
 
 	subq	#1,a0                       | one less
 	lea	o_ds_cpu1_task_actv_9020(a6),a3
-	sub.l	a3,a0				        | [$0552: ld   a,c]
+	sub.l	a3,a0				        | [$0552: ld   a,c] [freq=high, count=100%]
 	move.w	a0,d2                       | recompute task index
-	move.b	d0,d1                           	| [$055C: ld   b,a] A == task status
-	lea	d_003B_task_table,a0           	        | [$055D: ld   hl,#d_003B_task_table]
-	move.w	d2,d0                           	| [$0560: ld   a,c] C == task index
-	add.w	d0,d0                            	| [$0561: sla  a] *=2 ... (sizeof pointer)
-	add.w	d0,d0                            	| [$0563: sla  a] *=2 ... (sizeof pointer)
+	move.b	d0,d1                           	| [$055C: ld   b,a] A == task status [freq=high, count=76%]
+	lea	d_003B_task_table,a0           	        | [$055D: ld   hl,#d_003B_task_table] [freq=high, count=76%]
+	move.w	d2,d0                           	| [$0560: ld   a,c] C == task index [freq=high, count=76%]
+	add.w	d0,d0                            	| [$0561: sla  a] *=2 ... (sizeof pointer) [freq=high, count=76%]
+	add.w	d0,d0                            	| [$0563: sla  a] *=2 ... (sizeof pointer) [freq=high, count=76%]
 	                         	                | [$0563: add  a,l]
 	                        	                | [$0564: ld   l,a]
 	                        	                | [$0565: ld   e,(hl)]
@@ -505,21 +505,21 @@ l_0555_while:
 	                        	                | [$0567: ld   d,(hl)]
 	                       	                    | [$0568: ex   de,hl]
 	move.l	(a0,d0.w),a0
-	movem.w	d1/d2,-(sp)                    	    | [$0569: push bc]
+	movem.w	d1/d2,-(sp)                    	    | [$0569: push bc] [freq=high, count=76%]
 	jbsr	(a0)                            	| [call c_0034] (jumps to (a0) from task table)
-	movem.w	(sp)+,d1/d2                    		| [$056D: pop  bc]
-	move.b	d1,d0                           	| [$056E: ld   a,b] "status" actually adds to index
-	add.b	d2,d0                            	| [$056F: add  a,c]
+	movem.w	(sp)+,d1/d2                    		| [$056D: pop  bc] [freq=high, count=76%]
+	move.b	d1,d0                           	| [$056E: ld   a,b] "status" actually adds to index [freq=high, count=76%]
+	add.b	d2,d0                            	| [$056F: add  a,c] [freq=high, count=76%]
 	moveq	#0,d2
-	move.b	d0,d2                           	| [$0570: ld   c,a]
-	and.b	#0xF8,d0                         	| [$0571: and  #0xF8] if index < 8 then repeat loop
-	jeq	l_054F_while                       	| [$0573: jr   z,l_054F_while]
+	move.b	d0,d2                           	| [$0570: ld   c,a] [freq=high, count=76%]
+	and.b	#0xF8,d0                         	| [$0571: and  #0xF8] if index < 8 then repeat loop [freq=high, count=76%]
+	jeq	l_054F_while                       	| [$0573: jr   z,l_054F_while] [freq=high, count=76%]
 
 l_0575:
 	*move.b	#1,d0                           	| [$0575: ld   a,#1]
 	*move.b	d0,_sfr_6821                    	| [$0577: ld   (_sfr_6821),a] 1 ...CPU-sub1 IRQ acknowledge/enable
 	*jbsr	osd_interrupt_control
-	rts                                    	        | [$057B: ret]
+	rts                                    	        | [$057B: ret] [freq=low, count=15%]
 
 *=============================================================================
 * RESET()
@@ -657,18 +657,18 @@ f_05BF:
 *-----------------------------------------------------------------------------
 f_05EE:
 * if ( task_state == inactive ) return
-	move.b	o_ds_cpu0_task_actv_9000+0x14(a6),d0      | [$05EE: ld   a,(o_ds_cpu0_task_actv_9000 + 0x14)] f_1F85 (input and ship movement)
+	move.b	o_ds_cpu0_task_actv_9000+0x14(a6),d0      | [$05EE: ld   a,(o_ds_cpu0_task_actv_9000 + 0x14)] f_1F85 (input and ship movement) [freq=low, count=13%]
 	                               	            | [$05F1: and  a]
 	jne	0f                               	| [...]
-	rts                                    	    | [$05F2: ret  z] [...]
+	rts                                    	    | [$05F2: ret  z] [...] [freq=low, count=13%]
 0:
 
-	move.b	d0,o_ds_glbls_9200+0x17(a6)           	| [$05F3: ld   (o_ds_glbls_9200 + 0x17),a] 1 ... no_restart_stg
+	move.b	d0,o_ds_glbls_9200+0x17(a6)           	| [$05F3: ld   (o_ds_glbls_9200 + 0x17),a] 1 ... no_restart_stg [freq=low, count=13%]
 
 * if ( plyr_is_two_ship ) ...
-	move.b	o_ds_plyr_actv_9820+_b_2ship(a6),d0        	| [$05F6: ld   a,(o_ds_plyr_actv_9820 +_b_2ship)]
+	move.b	o_ds_plyr_actv_9820+_b_2ship(a6),d0        	| [$05F6: ld   a,(o_ds_plyr_actv_9820 +_b_2ship)] [freq=low, count=13%]
 	                               	            | [$05F9: and  a]
-	jeq	l_0613                             	    | [$05FA: jr   z,l_0613]
+	jeq	l_0613                             	    | [$05FA: jr   z,l_0613] [freq=low, count=13%]
 
 * ... handle 2-ship configuration
 	lea	o_ds_sprite_posn_9300+0x60(a6),a0       | [$05FC: ld   hl,#o_ds_sprite_posn_9300 + 0x60] fighter2 position
@@ -685,25 +685,25 @@ f_05EE:
 
 l_0613:
 * if ( ship position == 0 ) return
-	lea	o_ds_sprite_posn_9300+0x62(a6),a0         	| [$0613: ld   hl,#o_ds_sprite_posn_9300 + 0x62] fighter1 position
-	move.b	(a0),d0                         	| [$0616: ld   a,(hl)]
+	lea	o_ds_sprite_posn_9300+0x62(a6),a0         	| [$0613: ld   hl,#o_ds_sprite_posn_9300 + 0x62] fighter1 position [freq=low, count=13%]
+	move.b	(a0),d0                         	| [$0616: ld   a,(hl)] [freq=low, count=13%]
 	                               	            | [$0617: and  a]
 	jne	0f                               	| [...]
-	rts                                    	    | [$0618: ret  z] [...]
+	rts                                    	    | [$0618: ret  z] [...] [freq=low, count=13%]
 0:
 
-	jbsr	hitd_fghtr_notif_0681               | [$0619: call hitd_fghtr_notif_0681] HL == sprite_posn_base + 0x62 ... fighter (1) position (only L significant)
+	jbsr	hitd_fghtr_notif_0681               | [$0619: call hitd_fghtr_notif_0681] HL == sprite_posn_base + 0x62 ... fighter (1) position (only L significant) [freq=low, count=13%]
        * L passed to c_0681_ship_collisn_detect preserved in E
-	move.b	o_b8_ship_collsn_detectd_status_99bf(a6),d0	| [$061C: ld   a,(o_b8_ship_collsn_detectd_status_99bf)] fighter hit notif (1)
+	move.b	o_b8_ship_collsn_detectd_status_99bf(a6),d0	| [$061C: ld   a,(o_b8_ship_collsn_detectd_status_99bf)] fighter hit notif (1) [freq=low, count=13%]
 	                               	            | [$061F: and  a]
 	jne	0f                               	| [...]
-	rts                                    	    | [$0620: ret  z] [...]
+	rts                                    	    | [$0620: ret  z] [...] [freq=low, count=13%]
 0:
 
 * 621 bug or bomb collided with ship
-	move.b	o_ds_plyr_actv_9820+_b_2ship(a6),d0        	| [$0621: ld   a,(o_ds_plyr_actv_9820 +_b_2ship)]
+	move.b	o_ds_plyr_actv_9820+_b_2ship(a6),d0        	| [$0621: ld   a,(o_ds_plyr_actv_9820 +_b_2ship)] [freq=low, count=00%]
 	                               	            | [$0624: and  a]
-	jeq	l_0639_not_two_ship                	    | [$0625: jr   z,l_0639_not_two_ship]
+	jeq	l_0639_not_two_ship                	    | [$0625: jr   z,l_0639_not_two_ship] [freq=low, count=00%]
 
 	clr.b	d0                               	| [$0627: xor  a]
 	move.b	d0,o_ds_plyr_actv_9820+_b_bmbr_boss_cflag(a6)	| [$0628: ld   (o_ds_plyr_actv_9820 +_b_bmbr_boss_cflag),a] 0 ... enable capture-mode selection
@@ -714,12 +714,12 @@ l_0613:
 	jra	l_064F                             	    | [$0637: jr   l_064F] handle ship collision
 
 l_0639_not_two_ship:
-	clr.b	d0                               	| [$0639: xor  a]
-	move.b	d0,o_ds_cpu0_task_actv_9000+0x14(a6)      | [$063A: ld   (o_ds_cpu0_task_actv_9000 + 0x14),a] 0 ... f_1F85 (input and fighter movement)
-	move.b	d0,o_ds_cpu0_task_actv_9000+0x15(a6)      | [$063D: ld   (o_ds_cpu0_task_actv_9000 + 0x15),a] 0 ... f_1F04 (fire button input)
-	move.b	d0,o_ds_cpu1_task_actv_9020+0x05(a6)       	| [$0640: ld   (o_ds_cpu1_task_actv_9020 + 0x05),a] 0 ... f_05EE (this task, fighter hit-detection)
-	move.b	d0,o_ds_star_ctrl_99b9(a6)      	| [$0643: ld   (o_ds_star_ctrl_99b9 + 0x00),a] 0 ... 1 when fighter on screen
-	move.b	d0,o_ds_glbls_9200+0x17(a6)           	| [$0646: ld   (o_ds_glbls_9200 + 0x17),a] 0 ... no_restart_stg (not docked fighters)
+	clr.b	d0                               	| [$0639: xor  a] [freq=low, count=00%]
+	move.b	d0,o_ds_cpu0_task_actv_9000+0x14(a6)      | [$063A: ld   (o_ds_cpu0_task_actv_9000 + 0x14),a] 0 ... f_1F85 (input and fighter movement) [freq=low, count=00%]
+	move.b	d0,o_ds_cpu0_task_actv_9000+0x15(a6)      | [$063D: ld   (o_ds_cpu0_task_actv_9000 + 0x15),a] 0 ... f_1F04 (fire button input) [freq=low, count=00%]
+	move.b	d0,o_ds_cpu1_task_actv_9020+0x05(a6)       	| [$0640: ld   (o_ds_cpu1_task_actv_9020 + 0x05),a] 0 ... f_05EE (this task, fighter hit-detection) [freq=low, count=00%]
+	move.b	d0,o_ds_star_ctrl_99b9(a6)      	| [$0643: ld   (o_ds_star_ctrl_99b9 + 0x00),a] 0 ... 1 when fighter on screen [freq=low, count=00%]
+	move.b	d0,o_ds_glbls_9200+0x17(a6)           	| [$0646: ld   (o_ds_glbls_9200 + 0x17),a] 0 ... no_restart_stg (not docked fighters) [freq=low, count=00%]
 
 * hitd_fghtr_hit_0649(tmpSx, SPR_IDX_SHIP + 0, 0)
 
@@ -736,47 +736,47 @@ l_0639_not_two_ship:
 *  ...
 *-----------------------------------------------------------------------------
 hitd_fghtr_hit_0649:
-	exg	a1,a0                              	    | [$0649: ex   de,hl] useful?
-	exg	d4,d6                              	    | [$0649: ex   de,hl]
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$064A: ld   h,#>o_ds_sprite_posn_9300] read directly from SFRs (not buffer RAM) ... already 0'd by hitd_dspchr_07c1
+	exg	a1,a0                              	    | [$0649: ex   de,hl] useful? [freq=low, count=00%]
+	exg	d4,d6                              	    | [$0649: ex   de,hl] [freq=low, count=00%]
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$064A: ld   h,#>o_ds_sprite_posn_9300] read directly from SFRs (not buffer RAM) ... already 0'd by hitd_dspchr_07c1 [freq=low, count=00%]
 	and.w	#0xFF,d6
-	bset.b	#7,d6                           	| [$064C: set  7,l]
+	bset.b	#7,d6                           	| [$064C: set  7,l] [freq=low, count=00%]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$064E: ld   a,(hl)]
+	move.b	(a0),d0                         	| [$064E: ld   a,(hl)] [freq=low, count=00%]
 
 l_064F:
-	sub.b	#8,d0                            	| [$064F: sub  #8]
-	sub.w	#0x80,A0                           	| [$0651: res  7,l]
-	move.b	d0,(a0)+                         	| [$0653: ld   (hl),a]
+	sub.b	#8,d0                            	| [$064F: sub  #8] [freq=low, count=00%]
+	sub.w	#0x80,A0                           	| [$0651: res  7,l] [freq=low, count=00%]
+	move.b	d0,(a0)+                         	| [$0653: ld   (hl),a] [freq=low, count=00%]
 	                           	                | [$0654: inc  l]
-	move.b	(a0),d0                         	| [$0655: ld   a,(hl)]
-	sub.b	#8,d0                            	| [$0656: sub  #8]
-	move.b	d0,(a0)                         	| [$0658: ld   (hl),a]
+	move.b	(a0),d0                         	| [$0655: ld   a,(hl)] [freq=low, count=00%]
+	sub.b	#8,d0                            	| [$0656: sub  #8] [freq=low, count=00%]
+	move.b	d0,(a0)                         	| [$0658: ld   (hl),a] [freq=low, count=00%]
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
-	lea	o_ds_sprite_code_8B00(a6),a0              	| [$0659: ld   h,#>o_ds_sprite_code_8B00]
+	lea	o_ds_sprite_code_8B00(a6),a0              	| [$0659: ld   h,#>o_ds_sprite_code_8B00] [freq=low, count=00%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#0x0B,(a0)                      	| [$065B: ld   (hl),#0x0B] color
+	move.b	#0x0B,(a0)                      	| [$065B: ld   (hl),#0x0B] color [freq=low, count=00%]
 	                           	                | [$065D: dec  l]
-	move.b	#0x20,-(a0)                      	| [$065E: ld   (hl),#0x20] explosion tile
+	move.b	#0x20,-(a0)                      	| [$065E: ld   (hl),#0x20] explosion tile [freq=low, count=00%]
 	COMPUTE_LSB_A0_D6	o_ds_sprite_code_8B00
-	lea	o_object_states_8800(a6),a0                            	| [$0660: ld   h,#>o_object_states_8800]
+	lea	o_object_states_8800(a6),a0                            	| [$0660: ld   h,#>o_object_states_8800] [freq=low, count=00%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#8,(a0)                         	| [$0662: ld   (hl),#8] .state, disposition from $80 to "exploding"
+	move.b	#8,(a0)                         	| [$0662: ld   (hl),#8] .state, disposition from $80 to "exploding" [freq=low, count=00%]
 	                           	                | [$0664: inc  l]
-	move.b	#0x0F,(1,a0)                      	| [$0665: ld   (hl),#0x0F] mctrl_q index used for explosion counter
+	move.b	#0x0F,(1,a0)                      	| [$0665: ld   (hl),#0x0F] mctrl_q index used for explosion counter [freq=low, count=00%]
 	                                         	| [$0667: dec  l]
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$0668: ld   h,#>o_ds_sprite_ctrl_9B00]
+	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$0668: ld   h,#>o_ds_sprite_ctrl_9B00] [freq=low, count=00%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#0x08+0x04,(a0)                     | [$066A: ld   (hl),#0x08+0x04] dblh, dblw
-	clr.b	d0                               	| [$066C: xor  a]
-	move.b	d0,o_ds_plyr_actv_9820+_b_2ship(a6)        	| [$066D: ld   (o_ds_plyr_actv_9820 +_b_2ship),a] 0
-	move.b	o_b8_game_state_9201(a6),d0           	| [$0670: ld   a,(o_b8_game_state_9201)]
-	subq.b	#1,d0                           	| [$0673: dec  a]
+	move.b	#0x08+0x04,(a0)                     | [$066A: ld   (hl),#0x08+0x04] dblh, dblw [freq=low, count=00%]
+	clr.b	d0                               	| [$066C: xor  a] [freq=low, count=00%]
+	move.b	d0,o_ds_plyr_actv_9820+_b_2ship(a6)        	| [$066D: ld   (o_ds_plyr_actv_9820 +_b_2ship),a] 0 [freq=low, count=00%]
+	move.b	o_b8_game_state_9201(a6),d0           	| [$0670: ld   a,(o_b8_game_state_9201)] [freq=low, count=00%]
+	subq.b	#1,d0                           	| [$0673: dec  a] [freq=low, count=00%]
 	*jne	0f
-	move.b	d0,o_b_9AA0+0x19(a6)                  	| [$0674: ld   (o_b_9AA0 + 0x19),a] sound-fx count/enable registers, "bang" sound (not in Attract Mode)
+	move.b	d0,o_b_9AA0+0x19(a6)                  	| [$0674: ld   (o_b_9AA0 + 0x19),a] sound-fx count/enable registers, "bang" sound (not in Attract Mode) [freq=low, count=00%]
 	* stop any loop or shit going on, ship is hit
 	jbsr	osd_sound_stop
 	move.w	#EXPLOSION_SND,D0
@@ -784,15 +784,15 @@ l_064F:
 0:
 	
 * if no_restart_stg  ret ...
-	move.b	o_ds_glbls_9200+0x17(a6),d0           	| [$0677: ld   a,(o_ds_glbls_9200 + 0x17)] no_restart_stg is set if docked fighters
+	move.b	o_ds_glbls_9200+0x17(a6),d0           	| [$0677: ld   a,(o_ds_glbls_9200 + 0x17)] no_restart_stg is set if docked fighters [freq=low, count=00%]
 	                               	            | [$067A: and  a]
 	jeq	0f                               	| [...]
-	rts                                    	    | [$067B: ret  nz] [...]
+	rts                                    	    | [$067B: ret  nz] [...] [freq=low, count=00%]
 0:
 * ... else  set restart_stg_flag
-	addq.b	#1,d0                           	| [$067C: inc  a]
-	move.b	d0,o_ds_glbls_9200+0x13(a6)           	| [$067D: ld   (o_ds_glbls_9200 + 0x13),a] 1  ... restart stage flag (ship-input-movement flag not active )
-	rts                                    	    | [$0680: ret]
+	addq.b	#1,d0                           	| [$067C: inc  a] [freq=low, count=00%]
+	move.b	d0,o_ds_glbls_9200+0x13(a6)           	| [$067D: ld   (o_ds_glbls_9200 + 0x13),a] 1  ... restart stage flag (ship-input-movement flag not active ) [freq=low, count=00%]
+	rts                                    	    | [$0680: ret] [freq=low, count=00%]
 
 *=============================================================================
 * hitd_fghtr_notif_0681()
@@ -806,56 +806,56 @@ l_064F:
 hitd_fghtr_notif_0681:
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
 	                               	| [$0681: xor  a]
-	clr.b	o_b8_ship_collsn_detectd_status_99bf(a6)	| [$0682: ld   (o_b8_ship_collsn_detectd_status_99bf),a] 0 ... fighter hit notif
+	clr.b	o_b8_ship_collsn_detectd_status_99bf(a6)	| [$0682: ld   (o_b8_ship_collsn_detectd_status_99bf),a] 0 ... fighter hit notif [freq=low, count=13%]
 
-	lea	o_object_states_8800(a6),a0                      	        | [$0685: ld   h,#>o_object_states_8800]
+	lea	o_object_states_8800(a6),a0                      	        | [$0685: ld   h,#>o_object_states_8800] [freq=low, count=13%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$0687: ld   a,(hl)]
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$0688: ld   h,#>o_ds_sprite_posn_9300]
+	move.b	(a0),d0                         	| [$0687: ld   a,(hl)] [freq=low, count=13%]
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$0688: ld   h,#>o_ds_sprite_posn_9300] [freq=low, count=13%]
 	add.w	d6,a0
-	cmp.b	#8,d0                            	| [$068A: cp   #8] fighter disposition 08 if already dooomed ...
+	cmp.b	#8,d0                            	| [$068A: cp   #8] fighter disposition 08 if already dooomed ... [freq=low, count=13%]
 	jne	0f                               	| [...]
-	rts                                    	    | [$068C: ret  z] ... so gtf out! [...]
+	rts                                    	    | [$068C: ret  z] ... so gtf out! [...] [freq=low, count=13%]
 0:
 
-	move.b	(a0)+,d0                         	| [$068D: ld   a,(hl)] sprite.pos.x
-	move.b	d0,ixl                              | [$068E: ld   ixl,a]
+	move.b	(a0)+,d0                         	| [$068D: ld   a,(hl)] sprite.pos.x [freq=low, count=13%]
+	move.b	d0,ixl                              | [$068E: ld   ixl,a] [freq=low, count=13%]
 	                           	                | [$0690: inc  l]
-	move.b	(a0),d1                         	| [$0691: ld   b,(hl)] get row bits 0:7
+	move.b	(a0),d1                         	| [$0691: ld   b,(hl)] get row bits 0:7 [freq=low, count=13%]
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$0692: ld   h,#>o_ds_sprite_ctrl_9B00] get row bit-8
+	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$0692: ld   h,#>o_ds_sprite_ctrl_9B00] get row bit-8 [freq=low, count=13%]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$0694: ld   a,(hl)]
-	ror.b	#1,d0                            	| [$0695: rrca] y<8> -> Cy
+	move.b	(a0),d0                         	| [$0694: ld   a,(hl)] [freq=low, count=13%]
+	ror.b	#1,d0                            	| [$0695: rrca] y<8> -> Cy [freq=low, count=13%]
 	SET_X_FROM_C
-	roxr.b	#1,d1                           	| [$0696: rr   b] Cy -> b<7>
-	move.b	d1,ixh			                    | [$0698: ld   ixh,b]         ; y<15:8> of fixed-point
-	subq.w	#1,a0                           	| [$069A: dec  l]
+	roxr.b	#1,d1                           	| [$0696: rr   b] Cy -> b<7> [freq=low, count=13%]
+	move.b	d1,ixh			                    | [$0698: ld   ixh,b]         ; y<15:8> of fixed-point [freq=low, count=13%]
+	subq.w	#1,a0                           	| [$069A: dec  l] [freq=low, count=13%]
 	COMPUTE_LSB_A0_D6	o_ds_sprite_ctrl_9B00
-	move.b	d6,d4                           	| [$069B: ld   e,l] preserved object/index of fighter passed as argument in L
+	move.b	d6,d4                           	| [$069B: ld   e,l] preserved object/index of fighter passed as argument in L [freq=low, count=13%]
 
 * if ( cpu0:f_2916  active ) ...
-	move.b	o_ds_cpu0_task_actv_9000+0x08(a6),d0      | [$069C: ld   a,(o_ds_cpu0_task_actv_9000 + 0x08)] cpu0:f_2916 ...supervises attack waves
+	move.b	o_ds_cpu0_task_actv_9000+0x08(a6),d0      | [$069C: ld   a,(o_ds_cpu0_task_actv_9000 + 0x08)] cpu0:f_2916 ...supervises attack waves [freq=low, count=13%]
 	                               	            | [$069F: and  a]
-	jeq	l_06A8                             	    | [$06A0: jr   z,l_06A8]
+	jeq	l_06A8                             	    | [$06A0: jr   z,l_06A8] [freq=low, count=13%]
 * ... then ...
        * only transients can do collision in attack wave
-	move.b	#0x38,d6                        	| [$06A2: ld   l,#0x38] transients
-	move.b	#0x04,d1                        	| [$06A4: ld   b,#0x04]
-	jra	l_06AC_                            	    | [$06A6: jr   l_06AC_]
+	move.b	#0x38,d6                        	| [$06A2: ld   l,#0x38] transients [freq=low, count=05%]
+	move.b	#0x04,d1                        	| [$06A4: ld   b,#0x04] [freq=low, count=05%]
+	jra	l_06AC_                            	    | [$06A6: jr   l_06AC_] [freq=low, count=05%]
 
 * ... else ...not attack wave, set parameters to check all
 l_06A8:
-	clr.b	d6                               	| [$06A8: ld   l,#0x00] check objects $00 - $5E
-	move.b	#0x30,d1                        	| [$06AA: ld   b,#0x30]
+	clr.b	d6                               	| [$06A8: ld   l,#0x00] check objects $00 - $5E [freq=low, count=08%]
+	move.b	#0x30,d1                        	| [$06AA: ld   b,#0x30] [freq=low, count=08%]
 
 l_06AC_:
-	jbsr	hitd_det_fghtr_06b7                    	| [$06AC: call hitd_det_fghtr_06b7]
+	jbsr	hitd_det_fghtr_06b7                    	| [$06AC: call hitd_det_fghtr_06b7] [freq=low, count=13%]
 
-	move.b	#0x68,d6                        	| [$06AF: ld   l,#0x68] bombs
-	move.b	#0x08,d1                        	| [$06B1: ld   b,#0x08]
-	jbra	hitd_det_fghtr_06b7                    	| [$06B3: call hitd_det_fghtr_06b7]
+	move.b	#0x68,d6                        	| [$06AF: ld   l,#0x68] bombs [freq=low, count=13%]
+	move.b	#0x08,d1                        	| [$06B1: ld   b,#0x08] [freq=low, count=13%]
+	jbra	hitd_det_fghtr_06b7                    	| [$06B3: call hitd_det_fghtr_06b7] [freq=low, count=13%]
 	                                    	    | [$06B6: ret]
 
 *=============================================================================
@@ -874,58 +874,58 @@ hitd_det_fghtr_06b7:
 	and.w	#0xFF,d1
 	subq	#1,d1
 while_06B7:
-	lea	o_b_obj_collsn_notif_9200(a6),a0     	        | [$06B7: ld   h,#>o_b_obj_collsn_notif_9200] sprt_hit_notif
+	lea	o_b_obj_collsn_notif_9200(a6),a0     	        | [$06B7: ld   h,#>o_b_obj_collsn_notif_9200] sprt_hit_notif [freq=low, count=32%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$06B9: ld   a,(hl)]
-	lea	o_object_states_8800(a6),a0             | [$06BA: ld   h,#>o_object_states_8800]
+	move.b	(a0),d0                         	| [$06B9: ld   a,(hl)] [freq=low, count=32%]
+	lea	o_object_states_8800(a6),a0             | [$06BA: ld   h,#>o_object_states_8800] [freq=low, count=32%]
 	add.w	d6,a0
-	or.b	(a0),d0                           	| [$06BC: or   (hl)]
-	rol.b	#1,d0                            	| [$06BD: rlca]
-	jcs	l_06F0                             	    | [$06BE: jr   c,l_06F0]
-	move.b	(a0),d0                         	| [$06C0: ld   a,(hl)]
-	and.b	#0xFE,d0                         	| [$06C1: and  #0xFE]
-	cmp.b	#4,d0                            	| [$06C3: cp   #4]
-	jeq	l_06F0                             	    | [$06C5: jr   z,l_06F0]
-	lea	o_ds_sprite_posn_9300(a6),a0            | [$06C7: ld   h,#>o_ds_sprite_posn_9300]
+	or.b	(a0),d0                           	| [$06BC: or   (hl)] [freq=low, count=32%]
+	rol.b	#1,d0                            	| [$06BD: rlca] [freq=low, count=32%]
+	jcs	l_06F0                             	    | [$06BE: jr   c,l_06F0] [freq=low, count=32%]
+	move.b	(a0),d0                         	| [$06C0: ld   a,(hl)] [freq=low, count=18%]
+	and.b	#0xFE,d0                         	| [$06C1: and  #0xFE] [freq=low, count=18%]
+	cmp.b	#4,d0                            	| [$06C3: cp   #4] [freq=low, count=18%]
+	jeq	l_06F0                             	    | [$06C5: jr   z,l_06F0] [freq=low, count=18%]
+	lea	o_ds_sprite_posn_9300(a6),a0            | [$06C7: ld   h,#>o_ds_sprite_posn_9300] [freq=low, count=18%]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$06C9: ld   a,(hl)]
+	move.b	(a0),d0                         	| [$06C9: ld   a,(hl)] [freq=low, count=18%]
 	                               	            | [$06CA: and  a]
-	jeq	l_06F0                             	    | [$06CB: jr   z,l_06F0]
-	sub.b	ixl,d0                           	| [$06CD: sub  ixl] x<7:0>
-	subq.b	#7,d0                           	| [$06CF: sub  #7]
-	add.b	#13,d0                           	| [$06D1: add  a,#13]
-	jcc	l_06F0                             	    | [$06D3: jr   nc,l_06F0]
+	jeq	l_06F0                             	    | [$06CB: jr   z,l_06F0] [freq=low, count=18%]
+	sub.b	ixl,d0                           	| [$06CD: sub  ixl] x<7:0> [freq=low, count=18%]
+												| [$06CF: sub  #7] [freq=low, count=18%]
+	add.b	#13-7,d0                           	| [$06D1: add  a,#13] [freq=low, count=18%]
+	jcc	l_06F0                             	    | [$06D3: jr   nc,l_06F0] [freq=low, count=18%]
 												| [$06D5: inc  l]
 	addq.w	#1,d6                           	| [inc  l]
-	move.b	(1,a0),d0                         	| [$06D6: ld   a,(hl)]
-	lea	o_ds_sprite_ctrl_9B00(a6),a0            | [$06D7: ld   h,#>o_ds_sprite_ctrl_9B00]
+	move.b	(1,a0),d0                         	| [$06D6: ld   a,(hl)] [freq=low, count=07%]
+	lea	o_ds_sprite_ctrl_9B00(a6),a0            | [$06D7: ld   h,#>o_ds_sprite_ctrl_9B00] [freq=low, count=07%]
 	add.w	d6,a0
-	move.b	(a0),d2                         	| [$06D9: ld   c,(hl)]
-	subq.w	#1,a0                           	| [$06DA: dec  l]
+	move.b	(a0),d2                         	| [$06D9: ld   c,(hl)] [freq=low, count=07%]
+	subq.w	#1,a0                           	| [$06DA: dec  l] [freq=low, count=07%]
 	subq.b	#1,d6                           	| [dec  l] [a0 coherence]
-	ror.b	#1,d2                            	| [$06DB: rrc  c]
+	ror.b	#1,d2                            	| [$06DB: rrc  c] [freq=low, count=07%]
 	SET_X_FROM_C
-	roxr.b	#1,d0                           	| [$06DD: rra]
+	roxr.b	#1,d0                           	| [$06DD: rra] [freq=low, count=07%]
 	cmp.b	#3,o_b8_game_state_9201(a6)			| only when game is really running, not in demo
 	jne	0f
 	tst.b	invincible_flag
 	jne	l_06F0
 0:
-	sub.b	ixh,d0                           	| [$06DE: sub  ixh]
-	subq.b	#4,d0                           	| [$06E0: sub  #4]
-	addq.b	#7,d0                           	| [$06E2: add  a,#7]
-	jcc	l_06F0                             	    | [$06E4: jr   nc,l_06F0]
-	move.b	#1,d0                           	| [$06E6: ld   a,#1]
-	move.b	d0,o_b8_ship_collsn_detectd_status_99bf(a6)	| [$06E8: ld   (o_b8_ship_collsn_detectd_status_99bf),a] 1 ... fighter hit notif
+	sub.b	ixh,d0                           	| [$06DE: sub  ixh] [freq=low, count=07%]
+	subq.b	#4,d0                           	| [$06E0: sub  #4] [freq=low, count=07%]
+	addq.b	#7,d0                           	| [$06E2: add  a,#7] [freq=low, count=07%]
+	jcc	l_06F0                             	    | [$06E4: jr   nc,l_06F0] [freq=low, count=07%]
+	move.b	#1,d0                           	| [$06E6: ld   a,#1] [freq=low, count=00%]
+	move.b	d0,o_b8_ship_collsn_detectd_status_99bf(a6)	| [$06E8: ld   (o_b8_ship_collsn_detectd_status_99bf),a] 1 ... fighter hit notif [freq=low, count=00%]
 												| [$06EB: or   a] nz if fighter hit
-	sne	d7                              	    | [$06EC: ex   af,af']
-	jra	hitd_dspchr_07c1                        | [$06ED: jp   hitd_dspchr_07c1] return to 'call hitd_det_fghtr_06b7'
+	sne	d7                              	    | [$06EC: ex   af,af'] [freq=low, count=00%]
+	jra	hitd_dspchr_07c1                        | [$06ED: jp   hitd_dspchr_07c1] return to 'call hitd_det_fghtr_06b7' [freq=low, count=00%]
 l_06F0:
 	addq.w	#2,a0
-	addq.b	#2,d6                           	| [$06F0: inc  l] * 2  [a0 coherence]
-	dbf		d1,while_06B7                         	    | [$06F2: djnz while_06B7]
-	rts                                    	    | [$06F4: ret]
+	addq.b	#2,d6                           	| [$06F0: inc  l] * 2  [a0 coherence] [freq=low, count=32%]
+	dbf		d1,while_06B7                         	    | [$06F2: djnz while_06B7] [freq=low, count=32%]
+	rts                                    	    | [$06F4: ret] [freq=low, count=27%]
 
 *=============================================================================
 * f_rocket_hit_detection_06f5()
@@ -937,11 +937,11 @@ l_06F0:
 *  ...
 *-----------------------------------------------------------------------------
 f_rocket_hit_detection_06f5:
-	lea	o_b_92A0+0x04+0(a6),a1               			| [$06F5: ld   de,#o_b_92A0 + 0x04 + 0] rocket "attribute"
-	lea	o_ds_sprite_posn_9300+0x64(a6),a0         	| [$06F8: ld   hl,#o_ds_sprite_posn_9300 + 0x64] rocket
-	jbsr	rckt_man_0704                       | [$06FB: call rckt_man_0704]
-	lea	o_b_92A0+0x04+1(a6),a1               			| [$06FE: ld   de,#o_b_92A0 + 0x04 + 1] rocket "attribute"
-	lea	o_ds_sprite_posn_9300+0x66(a6),a0         	| [$0701: ld   hl,#o_ds_sprite_posn_9300 + 0x66] rocket
+	lea	o_b_92A0+0x04+0(a6),a1               			| [$06F5: ld   de,#o_b_92A0 + 0x04 + 0] rocket "attribute" [freq=low, count=15%]
+	lea	o_ds_sprite_posn_9300+0x64(a6),a0         	| [$06F8: ld   hl,#o_ds_sprite_posn_9300 + 0x64] rocket [freq=low, count=15%]
+	jbsr	rckt_man_0704                       | [$06FB: call rckt_man_0704] [freq=low, count=15%]
+	lea	o_b_92A0+0x04+1(a6),a1               			| [$06FE: ld   de,#o_b_92A0 + 0x04 + 1] rocket "attribute" [freq=low, count=15%]
+	lea	o_ds_sprite_posn_9300+0x66(a6),a0         	| [$0701: ld   hl,#o_ds_sprite_posn_9300 + 0x66] rocket [freq=low, count=15%]
        * call rckt_man_0704
 
 *=============================================================================
@@ -958,105 +958,105 @@ f_rocket_hit_detection_06f5:
 *-----------------------------------------------------------------------------
 rckt_man_0704:
 * if (0 == rocket.posn[hl].x<7:0>) return
-	move.b	(a0),d0                         	| [$0704: ld   a,(hl)]
+	move.b	(a0),d0                         	| [$0704: ld   a,(hl)] [freq=low, count=31%]
 												| [$0705: and  a]
 	jne	0f                               	| [...]
-	rts                                    		| [$0706: ret  z] [...]
+	rts                                    		| [$0706: ret  z] [...] [freq=low, count=31%]
 0:
 * else ...
-	move.b	(a1),d0                         	| [$0707: ld   a,(de)] rocket "attribute"
-	move.b	d0,d1                           	| [$0708: ld   b,a]
+	move.b	(a1),d0                         	| [$0707: ld   a,(de)] rocket "attribute" [freq=low, count=14%]
+	move.b	d0,d1                           	| [$0708: ld   b,a] [freq=low, count=14%]
 
 * if horizontal orientation, dY = A' ... dY is variable ...
-	and.b	#0x07,d0                         	| [$0709: and  #0x07] I thought it was only bits 1:2 ?
-	exg		d0,d7                              	| [$070B: ex   af,af']
+	and.b	#0x07,d0                         	| [$0709: and  #0x07] I thought it was only bits 1:2 ? [freq=low, count=14%]
+	exg		d0,d7                              	| [$070B: ex   af,af'] [freq=low, count=14%]
 
 * ... and dX == A ... maximum displacement in X
-	move.b	#6,d0                           	| [$070C: ld   a,#6]
+	move.b	#6,d0                           	| [$070C: ld   a,#6] [freq=low, count=14%]
 
 * if ( vertical orientation ) ...
-	btst.b	#7,d1                           	| [$070E: bit  7,b] from l_1F71, bit set if vertical orientation
-	jeq	l_0713                             	    | [$0710: jr   z,l_0713]
+	btst.b	#7,d1                           	| [$070E: bit  7,b] from l_1F71, bit set if vertical orientation [freq=low, count=14%]
+	jeq	l_0713                             	    | [$0710: jr   z,l_0713] [freq=low, count=14%]
 
 * ... swap, i.e. dY = A' = 6 ... dY is maximum, and dX = A ... variable
-	exg		d0,d7                              	| [$0712: ex   af,af']
+	exg		d0,d7                              	| [$0712: ex   af,af'] [freq=low, count=14%]
 
 l_0713:
 * if ( ! flipY ) then  dX = ~A
-	btst.b	#6,d1                           	| [$0713: $0713: bit  6,b] flipY: inverted...
-	jeq	l_0719                             		| [$0715: $0715: jr   z,l_0719]
-	neg.b	d0                               	| [$0717: $0717: neg] .. NOT flipY...negate X offset (non-flipped sprite is leftfacing)
+	btst.b	#6,d1                           	| [$0713: $0713: bit  6,b] flipY: inverted... [freq=low, count=14%]
+	jeq	l_0719                             		| [$0715: $0715: jr   z,l_0719] [freq=low, count=14%]
+	neg.b	d0                               	| [$0717: $0717: neg] .. NOT flipY...negate X offset (non-flipped sprite is leftfacing) [freq=low, count=14%]
 l_0719:
 * add new dX
-	add.b	(a0),d0                          	| [$0719: add  a,(hl)] dX is 0 unless the ship is spinning/captured
-	move.b	d0,(a0)                         	| [$071A: ld   (hl),a]
+	add.b	(a0),d0                          	| [$0719: add  a,(hl)] dX is 0 unless the ship is spinning/captured [freq=low, count=14%]
+	move.b	d0,(a0)                         	| [$071A: ld   (hl),a] [freq=low, count=14%]
 
 * if (mrw_sprite.posn[hl].b0 >= 240) ... one test for X limits ($F0) or < 0 ($FF)
-	cmp.b	#0xF0,d0                         	| [$071B: cp   #0xF0]
-	jcc	l_0763_disable_rocket              		| [$071D: jr   nc,l_0763_disable_rocket]
+	cmp.b	#0xF0,d0                         	| [$071B: cp   #0xF0] [freq=low, count=14%]
+	jcc	l_0763_disable_rocket              		| [$071D: jr   nc,l_0763_disable_rocket] [freq=low, count=14%]
 
 * rocket.sX passed to hitd_det_rckt_076a
-	move.b	d0,ixl								| [$071F: ld   ixl,a]
+	move.b	d0,ixl								| [$071F: ld   ixl,a] [freq=low, count=14%]
 
 
 * NOW onto sY...............
 
-	addq.w	#1,a0                           	| [$0721: inc  l] offset[1] ... sprite_posn.sy
+	addq.w	#1,a0                           	| [$0721: inc  l] offset[1] ... sprite_posn.sy [freq=low, count=14%]
 * get the stashed dY
-	exg	d0,d7                              		| [$0722: ex   af,af']
+	exg	d0,d7                              		| [$0722: ex   af,af'] [freq=low, count=14%]
 * if ( ! flipX ) then  dY = -dY
-	btst.b	#5,d1                           	| [$0723: bit  5,b] inverted flipX
-	jeq	l_0729                             		| [$0725: jr   z,l_0729]
-	neg.b	d0                               	| [$0727: neg] negate dY if NOT flipX (2's comp)
+	btst.b	#5,d1                           	| [$0723: bit  5,b] inverted flipX [freq=low, count=14%]
+	jeq	l_0729                             		| [$0725: jr   z,l_0729] [freq=low, count=14%]
+	neg.b	d0                               	| [$0727: neg] negate dY if NOT flipX (2's comp) [freq=low, count=14%]
 l_0729:
-	move.b	d0,d2                           	| [$0729: ld   c,a] stash the dY
+	move.b	d0,d2                           	| [$0729: ld   c,a] stash the dY [freq=low, count=14%]
 
 * add new dY to .sY<7:0>
-	add.b	(a0),d0                          	| [$072A: add  a,(hl)]
-	move.b	d0,(a0)                         	| [$072B: ld   (hl),a] sprite.posn[hl].b1
+	add.b	(a0),d0                          	| [$072A: add  a,(hl)] [freq=low, count=14%]
+	move.b	d0,(a0)                         	| [$072B: ld   (hl),a] sprite.posn[hl].b1 [freq=low, count=14%]
 
 * determines the sign, toggle position.sy:8 on overflow/carry. simple idea, complicated explanation.
-	roxr.b	#1,d0                           	| [$072C: rra] Cy from the addition rotated into b7
-	eor.b	d2,d0                            	| [$072D: xor  c] sign bit of addend/subtrahend
+	roxr.b	#1,d0                           	| [$072C: rra] Cy from the addition rotated into b7 [freq=low, count=14%]
+	eor.b	d2,d0                            	| [$072D: xor  c] sign bit of addend/subtrahend [freq=low, count=14%]
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$072E: ld   h,#>o_ds_sprite_ctrl_9B00] sy.bit-8 (SPR[n].CTRL.b1:0)
+	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$072E: ld   h,#>o_ds_sprite_ctrl_9B00] sy.bit-8 (SPR[n].CTRL.b1:0) [freq=low, count=14%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	rol.b	#1,d0                            	| [$0730: rlca]
-	jcc	l_0738                             		| [$0731: jr   nc,l_0738]
+	rol.b	#1,d0                            	| [$0730: rlca] [freq=low, count=14%]
+	jcc	l_0738                             		| [$0731: jr   nc,l_0738] [freq=low, count=14%]
 * compliment sy:8  (handles both overflow and underflow situation)
 	move.b	(a0),d7
-	ror.b	#1,d7                          		| [$0733: rrc  (hl)]
+	ror.b	#1,d7                          		| [$0733: rrc  (hl)] [freq=low, count=00%]
 	SET_X_FROM_C								| ror doesn't set X only C
-	INVERT_XC_FLAGS                      		| [$0735: ccf]
-	roxl.b	#1,d7                         		| [$0736: rl   (hl)]
+	INVERT_XC_FLAGS                      		| [$0735: ccf] [freq=low, count=00%]
+	roxl.b	#1,d7                         		| [$0736: rl   (hl)] [freq=low, count=00%]
     move.b	d7,(a0)
 
 * rocket.sy<8:1>, passed to hitd_det_rckt_076a in IXH
 l_0738:
-	move.b	(a0),d2                         	| [$0738: ld   c,(hl)] rocket.sy<8>
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$0739: ld   h,#>o_ds_sprite_posn_9300]
+	move.b	(a0),d2                         	| [$0738: ld   c,(hl)] rocket.sy<8> [freq=low, count=14%]
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$0739: ld   h,#>o_ds_sprite_posn_9300] [freq=low, count=14%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$073B: ld   a,(hl)] rocket.sy<7:0>
-	ror.b	#1,d2                            	| [$073C: rrc  c] rotate bit-8 into Cy
+	move.b	(a0),d0                         	| [$073B: ld   a,(hl)] rocket.sy<7:0> [freq=low, count=14%]
+	ror.b	#1,d2                            	| [$073C: rrc  c] rotate bit-8 into Cy [freq=low, count=14%]
 	SET_X_FROM_C
-	roxr.b	#1,d0                           	| [$073E: rra] rotate bit-8 from Cy into A
-	move.b	d0,ixh								| [$073F: ld   ixh,a]                                 ; stash sy<8:1> for hit-detection parameter
+	roxr.b	#1,d0                           	| [$073E: rra] rotate bit-8 from Cy into A [freq=low, count=14%]
+	move.b	d0,ixh								| [$073F: ld   ixh,a]                                 ; stash sy<8:1> for hit-detection parameter [freq=low, count=14%]
 
 * if ( rocket.sY < 40 || rocket.sY >= 312 ) then _disable_rocket
-	cmp.b	#20,d0                           	| [$0741: cp   #20] 0x14  0x28 >> 1
-	jcs	l_0760_disable_rocket_wposn        		| [$0743: jr   c,l_0760_disable_rocket_wposn] L is offset to sY, so first L--
-	cmp.b	#156,d0                          	| [$0745: cp   #156] 0x9C   0x138 >> 1
-	jcc	l_0760_disable_rocket_wposn        		| [$0747: jr   nc,l_0760_disable_rocket_wposn] L is offset to sY, so first L--
+	cmp.b	#20,d0                           	| [$0741: cp   #20] 0x14  0x28 >> 1 [freq=low, count=14%]
+	jcs	l_0760_disable_rocket_wposn        		| [$0743: jr   c,l_0760_disable_rocket_wposn] L is offset to sY, so first L-- [freq=low, count=14%]
+	cmp.b	#156,d0                          	| [$0745: cp   #156] 0x9C   0x138 >> 1 [freq=low, count=14%]
+	jcc	l_0760_disable_rocket_wposn        		| [$0747: jr   nc,l_0760_disable_rocket_wposn] L is offset to sY, so first L-- [freq=low, count=14%]
 
 * index of rocket object/sprite passed through to hitd_dspchr_07c1 (odd, i.e. b1)
-	move.b	d6,d4                           	| [$0749: ld   e,l]
+	move.b	d6,d4                           	| [$0749: ld   e,l] [freq=low, count=14%]
 
 * if ( task_active ) then ... else _call_hit_detection_all
-	move.b	o_ds_cpu0_task_actv_9000+0x1D(a6),d0      | [$074A: ld   a,(o_ds_cpu0_task_actv_9000 + 0x1D)] cpu0:f_2000 (capturing boss destroyed, rescued ship spinning)
+	move.b	o_ds_cpu0_task_actv_9000+0x1D(a6),d0      | [$074A: ld   a,(o_ds_cpu0_task_actv_9000 + 0x1D)] cpu0:f_2000 (capturing boss destroyed, rescued ship spinning) [freq=low, count=14%]
 												| [$074D: and  a]
-	jeq	l_0757_call_hit_detection_all      		| [$074E: jr   z,l_0757_call_hit_detection_all]
+	jeq	l_0757_call_hit_detection_all      		| [$074E: jr   z,l_0757_call_hit_detection_all] [freq=low, count=14%]
 
 * else
 * ...the capturing boss is destroyed and the rescued ship is up there spinning,
@@ -1071,28 +1071,28 @@ l_0738:
 
 l_0757_call_hit_detection_all:
 * reset HL and count to check $30 objects
-	lea	o_ds_sprite_posn_9300(a6),a0         			| [$0757: ld   hl,#o_ds_sprite_posn_9300 + 0x00]
-	move.b	#0x30,d1                        	| [$075A: ld   b,#0x30]
+	lea	o_ds_sprite_posn_9300(a6),a0         			| [$0757: ld   hl,#o_ds_sprite_posn_9300 + 0x00] [freq=low, count=14%]
+	move.b	#0x30,d1                        	| [$075A: ld   b,#0x30] [freq=low, count=14%]
 
 l_075C_call_hit_detection:
-	jbra	hitd_det_rckt_076a                  | [$075C: call hitd_det_rckt_076a]
+	jbra	hitd_det_rckt_076a                  | [$075C: call hitd_det_rckt_076a] [freq=low, count=14%]
 	                                    		| [$075F: ret]
 
 * terminate out of bounds rockets
 l_0760_disable_rocket_wposn:
-	subq.w	#1,a0                           	| [$0760: dec  l] .b0 (sX)
+	subq.w	#1,a0                           	| [$0760: dec  l] .b0 (sX) [freq=low, count=00%]
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$0761: ld   h,#>o_ds_sprite_posn_9300] x
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$0761: ld   h,#>o_ds_sprite_posn_9300] x [freq=low, count=00%]
 	add.w	d6,a0
 
 * when testing X limits, &sprite_posn[0] already in H so skip loading it
 l_0763_disable_rocket:
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
-	clr.b	(a0)                             	| [$0763: ld   (hl),#0] x
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$0765: ld   h,#>o_ds_sprite_ctrl_9B00]
+	clr.b	(a0)                             	| [$0763: ld   (hl),#0] x [freq=low, count=00%]
+	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$0765: ld   h,#>o_ds_sprite_ctrl_9B00] [freq=low, count=00%]
 	add.w	d6,a0
-	clr.b	(a0)                             	| [$0767: ld   (hl),#0] attribute bits
-	rts                                    	    | [$0769: ret]
+	clr.b	(a0)                             	| [$0767: ld   (hl),#0] attribute bits [freq=low, count=00%]
+	rts                                    	    | [$0769: ret] [freq=low, count=00%]
 
 *=============================================================================
 * hitd_det_rckt_076a()
@@ -1120,56 +1120,56 @@ l_076A_while_object:
 * obj_collsn_notif[L].b0 ... $81 = hit notification already in progress
 
 * if (0x80 != ( obj_status[L].state & _obj_collsn_notif[L] ))
-	lea	o_b_obj_collsn_notif_9200(a6),a0     			| [$076A: ld   h,#>o_b_obj_collsn_notif_9200] is hit notification already in progress
+	lea	o_b_obj_collsn_notif_9200(a6),a0     			| [$076A: ld   h,#>o_b_obj_collsn_notif_9200] is hit notification already in progress [freq=medium, count=40%]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$076C: ld   a,(hl)]
-	lea	o_object_states_8800(a6),a0                      			| [$076D: ld   h,#>o_object_states_8800]
+	move.b	(a0),d0                         	| [$076C: ld   a,(hl)] [freq=medium, count=40%]
+	lea	o_object_states_8800(a6),a0                      			| [$076D: ld   h,#>o_object_states_8800] [freq=medium, count=40%]
 	add.w	d6,a0
-	or.b	(a0),d0                           	| [$076F: or   (hl)]
-	rol.b	#1,d0                            	| [$0770: rlca]
-	jcs	l_07B4_next_object                 		| [$0771: jr   c,l_07B4_next_object]
+	or.b	(a0),d0                           	| [$076F: or   (hl)] [freq=medium, count=40%]
+	rol.b	#1,d0                            	| [$0770: rlca] [freq=medium, count=40%]
+	jcs	l_07B4_next_object                 		| [$0771: jr   c,l_07B4_next_object] [freq=medium, count=40%]
 
 * if EXPLODING or SCORE_BITM then next object
-	move.b	(a0),d0                         	| [$0773: ld   a,(hl)]
-	move.b	d0,d2                           	| [$0774: ld   c,a]
-	and.b	#0xFE,d0                         	| [$0775: and  #0xFE] tests for SCORE_BITM (5) also
-	cmp.b	#4,d0                            	| [$0777: cp   #4] disposition EXPLODING
-	jeq	l_07B4_next_object                 		| [$0779: jr   z,l_07B4_next_object]
+	move.b	(a0),d0                         	| [$0773: ld   a,(hl)] [freq=medium, count=37%]
+	move.b	d0,d2                           	| [$0774: ld   c,a] [freq=medium, count=37%]
+	and.b	#0xFE,d0                         	| [$0775: and  #0xFE] tests for SCORE_BITM (5) also [freq=medium, count=37%]
+	cmp.b	#4,d0                            	| [$0777: cp   #4] disposition EXPLODING [freq=medium, count=37%]
+	jeq	l_07B4_next_object                 		| [$0779: jr   z,l_07B4_next_object] [freq=medium, count=37%]
 
 * test dX and dY for within +/- 3 pixels, using the addition
 * offset with "Cy" so only 1 test needed for (d>-3 && d<+3 )
 
 * check Y coordinate ... sY<8:1> in A
-	addq.b	#1,d6                           	| [$077B: inc  l] [a0 coherence]
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$077C: ld   h,#>o_ds_sprite_ctrl_9B00] sprite.sy<8>
+	addq.b	#1,d6                           	| [$077B: inc  l] [a0 coherence] [freq=medium, count=37%]
+	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$077C: ld   h,#>o_ds_sprite_ctrl_9B00] sprite.sy<8> [freq=medium, count=37%]
 	and.w	#0xFF,d6
-	move.b	(a0,d6.w),d3                         	| [$077E: ld   d,(hl)]
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$077F: ld   h,#>o_ds_sprite_posn_9300] sprite.sy<7:0>
+	move.b	(a0,d6.w),d3                         	| [$077E: ld   d,(hl)] [freq=medium, count=37%]
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$077F: ld   h,#>o_ds_sprite_posn_9300] sprite.sy<7:0> [freq=medium, count=37%]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$0781: ld   a,(hl)]
-	ror.b	#1,d3                            	| [$0782: rrc  d]
+	move.b	(a0),d0                         	| [$0781: ld   a,(hl)] [freq=medium, count=37%]
+	ror.b	#1,d3                            	| [$0782: rrc  d] [freq=medium, count=37%]
 	SET_X_FROM_C
-	roxr.b	#1,d0                           	| [$0784: rra]
-	subq.w	#1,a0                           	| [$0785: dec  l]
-	subq.w	#1,d6                           	| [$0785: dec  l] [a0 coherence]
-	sub.b	ixh,d0                           	| [$0786: sub  ixh] sprite.sy<1:8> -= rocket.sy<1:8>
-	subq.b	#3,d0                           	| [$0788: sub  #3] tolerance for hit-check (divided by 2 to account for scaling)
-	addq.b	#6,d0                           	| [$078A: add  a,#6]
-	jcc	l_07B4_next_object                 		| [$078C: jr   nc,l_07B4_next_object]
+	roxr.b	#1,d0                           	| [$0784: rra] [freq=medium, count=37%]
+	subq.w	#1,a0                           	| [$0785: dec  l] [freq=medium, count=37%]
+	subq.w	#1,d6                           	| [$0785: dec  l] [a0 coherence] [freq=medium, count=37%]
+	sub.b	ixh,d0                           	| [$0786: sub  ixh] sprite.sy<1:8> -= rocket.sy<1:8> [freq=medium, count=37%]
+												| [$0788: sub  #3] tolerance for hit-check (divided by 2 to account for scaling) [freq=medium, count=37%]
+	addq.b	#6-3,d0                           	| [$078A: add  a,#6] [freq=medium, count=37%]
+	jcc	l_07B4_next_object                 		| [$078C: jr   nc,l_07B4_next_object] [freq=medium, count=37%]
 * check X coordinate
-	move.b	d2,d0                           	| [$078E: ld   a,c] reload object status e.g. 8800[L]
-	subq.b	#1,d0                           	| [$078F: dec  a]
-	and.b	#0xFE,d0                         	| [$0790: and  #0xFE]
-	exg		d0,d7                              	| [$0792: ex   af,af'] object status to hitd_dspchr_07c1
+	move.b	d2,d0                           	| [$078E: ld   a,c] reload object status e.g. 8800[L] [freq=low, count=07%]
+	subq.b	#1,d0                           	| [$078F: dec  a] [freq=low, count=07%]
+	and.b	#0xFE,d0                         	| [$0790: and  #0xFE] [freq=low, count=07%]
+	exg		d0,d7                              	| [$0792: ex   af,af'] object status to hitd_dspchr_07c1 [freq=low, count=07%]
 	                                    		| [$0793: ld   a,(o_ds_plyr_actv_9820 +_b_2ship)]	
-	move.b	(a0),d0                         	| [$0797: ld   a,(hl)] sprite.sX
-	sub.b	ixl,d0                           	| [$079A: sub  ixl] sprite.sX -= rocket.sX
-	tst.b	o_ds_plyr_actv_9820+_b_2ship(a6)				| [$0796: and  a] flags from this value, but d0 loaded with sX
-	jne	l_07A4                             		| [$0798: jr   nz,l_07A4] and  a
-	subq.b	#6,d0                           	| [$079C: sub  #6]
-	add.b	#11,d0                           	| [$079E: add  a,#11]
-	jcs	hitd_dspchr_07c1_rckt_07b9              | [$07A0: jr   c,hitd_dspchr_07c1_rckt_07b9]
-	jra	l_07B4_next_object                 		| [$07A2: jr   l_07B4_next_object]
+	move.b	(a0),d0                         	| [$0797: ld   a,(hl)] sprite.sX [freq=low, count=07%]
+	sub.b	ixl,d0                           	| [$079A: sub  ixl] sprite.sX -= rocket.sX [freq=low, count=07%]
+	tst.b	o_ds_plyr_actv_9820+_b_2ship(a6)				| [$0796: and  a] flags from this value, but d0 loaded with sX [freq=low, count=07%]
+	jne	l_07A4                             		| [$0798: jr   nz,l_07A4] and  a [freq=low, count=07%]
+	                           	| [$079C: sub  #6] [freq=low, count=07%]
+	add.b	#11-6,d0                           	| [$079E: add  a,#11] [freq=low, count=07%]
+	jcs	hitd_dspchr_07c1_rckt_07b9              | [$07A0: jr   c,hitd_dspchr_07c1_rckt_07b9] [freq=low, count=07%]
+	jra	l_07B4_next_object                 		| [$07A2: jr   l_07B4_next_object] [freq=low, count=07%]
 l_07A4:
 	                                         	| [$07A4: sub  ixl] sprite.sX -= rocket.sX (done above)
 	sub.b	#20,d0                           	| [$07A6: sub  #20]
@@ -1181,10 +1181,10 @@ l_07A4:
 	jcs	hitd_dspchr_07c1_rckt_07b9              | [$07B2: jr   c,hitd_dspchr_07c1_rckt_07b9]
 
 l_07B4_next_object:
-	addq.b	#2,d6                           	| [$07B4: inc  l] * 2
+	addq.b	#2,d6                           	| [$07B4: inc  l] * 2 [freq=medium, count=39%]
 	                           	| [...]
-	dbf	d1,l_076A_while_object                		| [$07B6: djnz l_076A_while_object]
-	rts                                    		| [$07B8: ret]
+	dbf	d1,l_076A_while_object                		| [$07B6: djnz l_076A_while_object] [freq=medium, count=39%]
+	rts                                    		| [$07B8: ret] [freq=low, count=14%]
 
 *=============================================================================
 * hitd_dspchr_07c1()
@@ -1203,9 +1203,9 @@ l_07B4_next_object:
 *-----------------------------------------------------------------------------
 hitd_dspchr_07c1_rckt_07b9:
 												| [$07B9: ld   a,l] stash L, use HL for 16-bits math
-	MOVE_TO_REG	o_ds_plyr_actv_9820+_w_hit_ct(a6),d5   	| [$07BA: ld   hl,(o_ds_plyr_actv_9820 +_w_hit_ct)]
-	addq.w	#1,d5                           	| [$07BD: inc  hl]
-	MOVE_TO_VAR	d5,o_ds_plyr_actv_9820+_w_hit_ct(a6)       | [$07BE: ld   (o_ds_plyr_actv_9820 +_w_hit_ct),hl]
+	MOVE_TO_REG	o_ds_plyr_actv_9820+_w_hit_ct(a6),d5   	| [$07BA: ld   hl,(o_ds_plyr_actv_9820 +_w_hit_ct)] [freq=low, count=00%]
+	addq.w	#1,d5                           	| [$07BD: inc  hl] [freq=low, count=00%]
+	MOVE_TO_VAR	d5,o_ds_plyr_actv_9820+_w_hit_ct(a6)       | [$07BE: ld   (o_ds_plyr_actv_9820 +_w_hit_ct),hl] [freq=low, count=00%]
 												| [$07C1: ld   l,a] restore L
 
 * hitd_dspchr_07c1
@@ -1228,12 +1228,12 @@ hitd_dspchr_07c1_rckt_07b9:
 *  D6: properly set ...
 *-----------------------------------------------------------------------------
 hitd_dspchr_07c1:
-	lea	o_ds_sprite_posn_9300(a6),a1              	| [$07C1: ld   d,#>o_ds_sprite_posn_9300] _sprite_posn[E].b0 = 0 ... sX
+	lea	o_ds_sprite_posn_9300(a6),a1              	| [$07C1: ld   d,#>o_ds_sprite_posn_9300] _sprite_posn[E].b0 = 0 ... sX [freq=low, count=00%]
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	clr.b	d0                               	| [$07C4: xor  a]
-	move.b	d0,(a1)                         	| [$07C5: ld   (de),a]
-	lea	o_ds_sprite_ctrl_9B00(a6),a1              	| [$07C6: ld   d,#>o_ds_sprite_ctrl_9B00] _sprite_ctrl[E].b0 = 0 ... attributes
+	clr.b	d0                               	| [$07C4: xor  a] [freq=low, count=00%]
+	move.b	d0,(a1)                         	| [$07C5: ld   (de),a] [freq=low, count=00%]
+	lea	o_ds_sprite_ctrl_9B00(a6),a1              	| [$07C6: ld   d,#>o_ds_sprite_ctrl_9B00] _sprite_ctrl[E].b0 = 0 ... attributes [freq=low, count=00%]
 	add.w	d4,a1
 	move.b	d0,(a1)                         	| [ld   (de),a]
 	addq.b	#1,d6                           	| [inc  l] [a0 coherence]
@@ -1291,7 +1291,7 @@ l_07F5:
 	and.b	#0x03,d0                         	| [and  #0x03]
 
 l_07F8_:
-	lea	o_b_9AA0+0x01(a6),a0                 			| [$07F8: ld   hl,#o_b_9AA0 + 0x01] o_b_9AA0[1 + A] = 1 ... sound-fx count/enable registers
+	lea	o_b_9AA0+0x01(a6),a0                 			| [$07F8: ld   hl,#o_b_9AA0 + 0x01] o_b_9AA0[1 + A] = 1 ... sound-fx count/enable registers [freq=low, count=00%]
 	and.w	#0xFF,d0
 	jbsr	osd_sound_start		| MOTH_KILLED_SND, BEE_KILLED_SND, BOSS_KILLED_SND, ....
 	*jbsr	add_d0_to_a0_0010                   | [rst  0x10] HL += A
@@ -1332,31 +1332,31 @@ l_0815_bomb_hit:
 * Handle flying bug collision (bullet or ship). Not stationary bugs.
 l_hdl_flyng_bug_081e:
 	COMPUTE_LSB_A0_D6	o_ds_sprite_code_8B00
-	lea	o_object_states_8800(a6),a0                      			| [$081E: ld   h,#>o_object_states_8800]
+	lea	o_object_states_8800(a6),a0                      			| [$081E: ld   h,#>o_object_states_8800] [freq=low, count=00%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 
-	movem.l	a0/d6,-(sp)                        	| [$0820: push hl]
-	exg		d0,d7                              	| [$0821: ex   af,af'] re-stash parameter
-	addq.w	#1,a0                           	| [$0822: inc  l]
-	addq.b	#1,d6                           	| [$0822: inc  l]  [a0 coherence]
-	move.b	(a0),d0                         	| [$0823: ld   a,(hl)] sprt_mctl_objs[L].mctl_idx
-	lea	o_ds_bug_motion_que_9100(a6),a0           	| [$0824: ld   h,#>o_ds_bug_motion_que_9100] bug_motion_que[A].b13 = 0 (release this slot)
+	movem.l	a0/d6,-(sp)                        	| [$0820: push hl] [freq=low, count=00%]
+	exg		d0,d7                              	| [$0821: ex   af,af'] re-stash parameter [freq=low, count=00%]
+	addq.w	#1,a0                           	| [$0822: inc  l] [freq=low, count=00%]
+	addq.b	#1,d6                           	| [$0822: inc  l]  [a0 coherence] [freq=low, count=00%]
+	move.b	(a0),d0                         	| [$0823: ld   a,(hl)] sprt_mctl_objs[L].mctl_idx [freq=low, count=00%]
+	lea	o_ds_bug_motion_que_9100(a6),a0           	| [$0824: ld   h,#>o_ds_bug_motion_que_9100] bug_motion_que[A].b13 = 0 (release this slot) [freq=low, count=00%]
 	and.w	#0xFF,d6
-	add.b	#0x13,d0                         	| [$0826: add  a,#0x13]
-	move.b	d0,d6                           	| [$0828: ld   l,a]
+	add.b	#0x13,d0                         	| [$0826: add  a,#0x13] [freq=low, count=00%]
+	move.b	d0,d6                           	| [$0828: ld   l,a] [freq=low, count=00%]
 	add.w	d6,a0
-	clr.b	(a0)                             	| [$0829: ld   (hl),#0]
-	lea	o_b_bug_flyng_hits_p_round_9288(a6),a0    			| [$082B: ld   hl,#o_b_bug_flyng_hits_p_round_9288] +=1
-	addq.b	#1,(a0)                         	| [$082E: inc  (hl)]
+	clr.b	(a0)                             	| [$0829: ld   (hl),#0] [freq=low, count=00%]
+	lea	o_b_bug_flyng_hits_p_round_9288(a6),a0    			| [$082B: ld   hl,#o_b_bug_flyng_hits_p_round_9288] +=1 [freq=low, count=00%]
+	addq.b	#1,(a0)                         	| [$082E: inc  (hl)] [freq=low, count=00%]
 
 * bug_flying_hit_cnt is probably only meaningful in challenge rounds. In other
 * rounds it is simply intiialized to 0 at start of round.
-	lea	o_w_bug_flying_hit_cnt_92a8(a6),a0     		| [$082F: ld   hl,#o_w_bug_flying_hit_cnt_92a8] hit_cnt -= 1 ... reset 8 each challenge_wave
-	subq.b	#1,(a0)                         	| [$0832: dec  (hl)]
-	movem.l	(sp)+,a0/d6                        	| [$0833: pop  hl] &sprt_mctl_objs[L].mctl_idx
+	lea	o_w_bug_flying_hit_cnt_92a8(a6),a0     		| [$082F: ld   hl,#o_w_bug_flying_hit_cnt_92a8] hit_cnt -= 1 ... reset 8 each challenge_wave [freq=low, count=00%]
+	subq.b	#1,(a0)                         	| [$0832: dec  (hl)] [freq=low, count=00%]
+	movem.l	(sp)+,a0/d6                        	| [$0833: pop  hl] &sprt_mctl_objs[L].mctl_idx [freq=low, count=00%]
 
-	jne	l_0849                             		| [$0849: jr   nz,l_0849]
+	jne	l_0849                             		| [$0849: jr   nz,l_0849] [freq=low, count=00%]
 
 * award bonus points for destroying complete formation of 8 on challenge stage
 	lea	o_b_obj_collsn_notif_9200(a6),a0     			| [$0836: ld   h,#>o_b_obj_collsn_notif_9200] = o_b_9280[4 + 1]
@@ -1375,26 +1375,26 @@ l_0849:
 * handle special cases of flying bugs, then jp   l_07DF
 
 * if (hit == captured ship)   (captured ship shot/destroyed)
-	move.b	d2,d0                           	| [$0849: ld   a,c] .... sprite.cclr.b1
-	cmp.b	#7,d0                            	| [$084A: cp   #7] color map 7 ... red captured ship
-	jne	l_0852                             		| [$084C: jr   nz,l_0852]
+	move.b	d2,d0                           	| [$0849: ld   a,c] .... sprite.cclr.b1 [freq=low, count=00%]
+	cmp.b	#7,d0                            	| [$084A: cp   #7] color map 7 ... red captured ship [freq=low, count=00%]
+	jne	l_0852                             		| [$084C: jr   nz,l_0852] [freq=low, count=00%]
 	move.b	#0xB8,d3                        	| [$084E: ld   d,#0xB8]
 	jra	l_08B0_set_bonus_sprite_code       		| [$0850: jr   l_08B0_set_bonus_sprite_code]
 
 * else if ( hit bonus-bee or clone bonus-bee )
 l_0852:
-	move.b	o_ds_plyr_actv_9820+_b_bbee_obj(a6),d0     	| [$0852: ld   a,(o_ds_plyr_actv_9820 +_b_bbee_obj)] get object of parent bonus-bee
-	cmp.b	d6,d0                            	| [$0855: cp   l]
-	jeq	l_08B6                             		| [$0856: jp   z,l_08B6]
-	move.b	d6,d0                           	| [$0859: ld   a,l] check if this one is one of the clones ("transients" i.e.... $38 etc.)
-	and.b	#0x38,d0                         	| [$085A: and  #0x38]
-	cmp.b	#0x38,d0                         	| [$085C: cp   #0x38]
-	jeq	l_08B6                             		| [$085E: jp   z,l_08B6]
+	move.b	o_ds_plyr_actv_9820+_b_bbee_obj(a6),d0     	| [$0852: ld   a,(o_ds_plyr_actv_9820 +_b_bbee_obj)] get object of parent bonus-bee [freq=low, count=00%]
+	cmp.b	d6,d0                            	| [$0855: cp   l] [freq=low, count=00%]
+	jeq	l_08B6                             		| [$0856: jp   z,l_08B6] [freq=low, count=00%]
+	move.b	d6,d0                           	| [$0859: ld   a,l] check if this one is one of the clones ("transients" i.e.... $38 etc.) [freq=low, count=00%]
+	and.b	#0x38,d0                         	| [$085A: and  #0x38] [freq=low, count=00%]
+	cmp.b	#0x38,d0                         	| [$085C: cp   #0x38] [freq=low, count=00%]
+	jeq	l_08B6                             		| [$085E: jp   z,l_08B6] [freq=low, count=00%]
 
 * else if ! blue-boss ... l_07DB
-	move.b	d2,d0                           	| [$0861: ld   a,c] .... sprite.cclr.b1
-	cmp.b	#0x01,d0                         	| [$0862: cp   #0x01] color map 1 ... blue boss hit once
-	jne	l_07DB                             		| [$0864: jp   nz,l_07DB]
+	move.b	d2,d0                           	| [$0861: ld   a,c] .... sprite.cclr.b1 [freq=low, count=00%]
+	cmp.b	#0x01,d0                         	| [$0862: cp   #0x01] color map 1 ... blue boss hit once [freq=low, count=00%]
+	jne	l_07DB                             		| [$0864: jp   nz,l_07DB] [freq=low, count=00%]
 
 * ... else ... handle blue boss
 * check for captured-fighter
@@ -1488,13 +1488,13 @@ l_08B6:
 	jra	l_08AA                             		| [jp   l_08AA]
 
 l_08CA_hit_green_boss:
-	addq.b	#1,d0                           	| [$08CA: inc  a]
-	move.b	d0,(a0)                         	| [$08CB: ld   (hl),a]
-	move.b	d0,o_b_9AA0+0x04(a6)                  	| [$08CC: ld   (o_b_9AA0 + 0x04),a] sound-fx count/enable registers, hit_green_boss
+	addq.b	#1,d0                           	| [$08CA: inc  a] [freq=low, count=00%]
+	move.b	d0,(a0)                         	| [$08CB: ld   (hl),a] [freq=low, count=00%]
+	move.b	d0,o_b_9AA0+0x04(a6)                  	| [$08CC: ld   (o_b_9AA0 + 0x04),a] sound-fx count/enable registers, hit_green_boss [freq=low, count=00%]
 	move.w	#GREEN_BOSS_HIT_SND,d0
 	jbsr	osd_sound_start
-	subq.w	#1,a0                           	| [$08CF: dec  l]
-	jra	l_07B4_next_object                 		| [$08D0: jp   l_07B4_next_object]
+	subq.w	#1,a0                           	| [$08CF: dec  l] [freq=low, count=00%]
+	jra	l_07B4_next_object                 		| [$08D0: jp   l_07B4_next_object] [freq=low, count=00%]
 
 
 *=============================================================================
@@ -1511,14 +1511,14 @@ l_08CA_hit_green_boss:
 
 
 f_bug_motion_runner_08d3:
-	lea	o_ds_bug_motion_que_9100(a6),a2           	| [$08D3: ld   ix,#o_ds_bug_motion_que_9100]
-	moveq	#0x0C,d0                        	| [$08D7: ld   a,#0x0C]
-	move.b	d0,o_b_bug_que_idx_9289(a6)               | [$08D9: ld   (o_b_bug_que_idx_9289),a] 12 ... nbr of queue structures
-	lea	o_b_bugs_flying_cnt_9286(a6),a0           	    	| [$08DC: ld   hl,#o_b_bugs_flying_cnt_9286] capture the (previous) count and zero the current count
-	move.b	(a0),d0                         	| [$08DF: ld   a,(hl)]
-	clr.b	(a0)+                             	| [$08E0: ld   (hl),#0]
+	lea	o_ds_bug_motion_que_9100(a6),a2           	| [$08D3: ld   ix,#o_ds_bug_motion_que_9100] [freq=low, count=15%]
+	moveq	#0x0C,d0                        	| [$08D7: ld   a,#0x0C] [freq=low, count=15%]
+	move.b	d0,o_b_bug_que_idx_9289(a6)               | [$08D9: ld   (o_b_bug_que_idx_9289),a] 12 ... nbr of queue structures [freq=low, count=15%]
+	lea	o_b_bugs_flying_cnt_9286(a6),a0           	    	| [$08DC: ld   hl,#o_b_bugs_flying_cnt_9286] capture the (previous) count and zero the current count [freq=low, count=15%]
+	move.b	(a0),d0                         	| [$08DF: ld   a,(hl)] [freq=low, count=15%]
+	clr.b	(a0)+                             	| [$08E0: ld   (hl),#0] [freq=low, count=15%]
 	                           	                | [$08E2: inc  hl] b_bugs_flying_nbr
-	move.b	d0,(a0)                         	| [$08E3: ld   (hl),a] = bugs_flying_cnt
+	move.b	d0,(a0)                         	| [$08E3: ld   (hl),a] = bugs_flying_cnt [freq=low, count=15%]
 
 
 * traverse the object-motion queue
@@ -1526,42 +1526,42 @@ f_bug_motion_runner_08d3:
 * bpset 8E8:sub,IX!=$9100,{PC=$DFB;g}
 
 for__pool_idx_08E4:
-	btst.b	#0,(mq_state_13,a2)                 | [$08E4: bit  0,0x13(ix)] check for activated state
-	jeq	next__pool_idx_0dfb                     | [$08E8: jp   z,next__pool_idx_0dfb]
+	btst.b	#0,(mq_state_13,a2)                 | [$08E4: bit  0,0x13(ix)] check for activated state [freq=high, count=84%]
+	jeq	next__pool_idx_0dfb                     | [$08E8: jp   z,next__pool_idx_0dfb] [freq=high, count=84%]
 	.ifne	OPT_ONLY_ONE_BUG_PER_WAVE
 	cmp.l	#o_ds_bug_motion_que_9100(a6),a2
 	jne		next__pool_idx_0dfb
 	.endif
 	
-	addq.b	#1,o_b_bugs_flying_cnt_9286(a6)           			| [$08EB: ld   hl,#o_b_bugs_flying_cnt_9286] +=1
+	addq.b	#1,o_b_bugs_flying_cnt_9286(a6)           			| [$08EB: ld   hl,#o_b_bugs_flying_cnt_9286] +=1 [freq=medium, count=47%]
 													| [$08EE: inc  (hl)]
 	moveq	#0,d6
-	move.b	(mq_object_id_10,a2),d6             | [$08EF: ld   l,0x10(ix)] object identifier...8800[L]
-	lea	o_object_states_8800(a6),a0                      			| [$08F2: ld   h,#>o_object_states_8800]
+	move.b	(mq_object_id_10,a2),d6             | [$08EF: ld   l,0x10(ix)] object identifier...8800[L] [freq=medium, count=47%]
+	lea	o_object_states_8800(a6),a0                      			| [$08F2: ld   h,#>o_object_states_8800] [freq=medium, count=47%]
 	add.w	d6,a0
 
 * 9 is diving, 7 is spawning, 3 (and 6) bomb?, 4 non-flying capturing boss
 * if (!(A == 3 || A == 7|| A == 9)) ...
-	move.b	(a0),d0                         	| [$08F4: ld   a,(hl)]
-	cmp.b	#3,d0                            	| [$08F5: cp   #3] status 3 is what?
-	jeq	mctl_fltpn_dspchr                  		| [$08F7: jr   z,mctl_fltpn_dspchr]
-	cmp.b	#9,d0                            	| [$08F9: cp   #9] if 8800[L]==9 ... flying into formation or diving out.
-	jeq	mctl_fltpn_dspchr                  		| [$08FB: jr   z,mctl_fltpn_dspchr]
-	cmp.b	#7,d0                            	| [$08FD: cp   #7] if 8800[L]==7 ... spawning (new stage)
+	move.b	(a0),d0                         	| [$08F4: ld   a,(hl)] [freq=medium, count=47%]
+	cmp.b	#3,d0                            	| [$08F5: cp   #3] status 3 is what? [freq=medium, count=47%]
+	jeq	mctl_fltpn_dspchr                  		| [$08F7: jr   z,mctl_fltpn_dspchr] [freq=medium, count=47%]
+	cmp.b	#9,d0                            	| [$08F9: cp   #9] if 8800[L]==9 ... flying into formation or diving out. [freq=low, count=26%]
+	jeq	mctl_fltpn_dspchr                  		| [$08FB: jr   z,mctl_fltpn_dspchr] [freq=low, count=26%]
+	cmp.b	#7,d0                            	| [$08FD: cp   #7] if 8800[L]==7 ... spawning (new stage) [freq=low, count=00%]
 * ... then ...
 * status==4 ... shot a non-flying capturing boss (captured ship will soon go rogue and launch out)
 * HL==8830, *HL==04, 8831==40
-	jne	case_make_object_inactive_0e49     		| [$08FF: jp   nz,case_make_object_inactive_0e49] sets object state to $80
+	jne	case_make_object_inactive_0e49     		| [$08FF: jp   nz,case_make_object_inactive_0e49] sets object state to $80 [freq=low, count=00%]
 
 
 mctl_fltpn_dspchr:
 * load a new flight segment if this one timed out, otherwise go directly to flite path handler and continue with same data-set
-	subq.b	#1,(mq_timeout_0d,a2)               | [$0902: dec  0x0D(ix)] check for expiration of this data-set
-	jne	l_0C05_flite_pth_cont              		| [$0905: jp   nz,l_0C05_flite_pth_cont]
+	subq.b	#1,(mq_timeout_0d,a2)               | [$0902: dec  0x0D(ix)] check for expiration of this data-set [freq=medium, count=47%]
+	jne	l_0C05_flite_pth_cont              		| [$0905: jp   nz,l_0C05_flite_pth_cont] [freq=medium, count=47%]
 
 * flight-path vector has expired... setup HL as pointer to next data token
-	move.w	(mq_fp_lsb_08,a2),d5                | [$0908: ld   l,0x08(ix)] even address we can use move.w
-	rol.w	#8,d5								| [$090B: ld   h,0x09(ix)] little endian
+	move.w	(mq_fp_lsb_08,a2),d5                | [$0908: ld   l,0x08(ix)] even address we can use move.w [freq=low, count=02%]
+	rol.w	#8,d5								| [$090B: ld   h,0x09(ix)] little endian [freq=low, count=02%]
 	.ifndef		RELEASE
 	cmp.w	#0x1000,d5
 	bcs.b	0f
@@ -1587,32 +1587,32 @@ mctl_fltpn_dspchr:
 	add.w	d5,a0						| jotd: real pointer from sub-cpu ROM address
 * this label allows reading the next token after doing state-selection
 j_090E_flite_path_init:
-	move.b	(a0),d0                         	| [$090E: ld   a,(hl)] data_set[n + 0]
+	move.b	(a0),d0                         	| [$090E: ld   a,(hl)] data_set[n + 0] [freq=low, count=02%]
 
 * get next token and check if ordinary data or state-selection
 * if (token < 0xEF) ... then skip processing of jp-table
-	cmp.b	#0xEF,d0                         	| [$090F: cp   #0xEF]
-	jcs	l_flite_pth_load_0BDC              		| [$0911: jp   c,l_flite_pth_load_0BDC] if token < $ef, continue to flight-path handler
+	cmp.b	#0xEF,d0                         	| [$090F: cp   #0xEF] [freq=low, count=02%]
+	jcs	l_flite_pth_load_0BDC              		| [$0911: jp   c,l_flite_pth_load_0BDC] if token < $ef, continue to flight-path handler [freq=low, count=02%]
 
 * else ...
 *  complimented token indexes into jp-tbl for selection of next state
 
 * the current data pointer could be copied from HL into 92FA,92FB or loaded directly from ix($08)ix($09) by handler
 *
-	exg		a0,d7                        		| [$0914: push hl] ptr to data table
-	not.b	d0                               	| [$0915: cpl]
+	exg		a0,d7                        		| [$0914: push hl] ptr to data table [freq=low, count=00%]
+	not.b	d0                               	| [$0915: cpl] [freq=low, count=00%]
 	CHECK_D0W_UPPER_BOUND	0x11
-	lea	d_0920_jp_tbl,a0               			| [$0916: ld   hl,#d_0920_jp_tbl]
+	lea	d_0920_jp_tbl,a0               			| [$0916: ld   hl,#d_0920_jp_tbl] [freq=low, count=00%]
 	and.w	#0xFF,d0
 	add.w	d0,d0
 	add.w	d0,d0
 												| [$0919: rst  0x08] HL += 2A
-	move.l	(a0,d0.w),-(sp)         					| [$091A: ld   a,(hl)]
+	move.l	(a0,d0.w),-(sp)         					| [$091A: ld   a,(hl)] [freq=low, count=00%]
 												| [$091B: inc  hl]
 												| [$091C: ld   h,(hl)]
 												| [$091D: ld   l,a]
-	move.l	d7,a0       						| [$091E: ex   (sp),hl] restore HL and goto stacked address in one-fell-swoop.. sneaky!
-	rts                                    		| [$091F: ret]
+	move.l	d7,a0       						| [$091E: ex   (sp),hl] restore HL and goto stacked address in one-fell-swoop.. sneaky! [freq=low, count=00%]
+	rts                                    		| [$091F: ret] [freq=low, count=00%]
 
 d_0920_jp_tbl:
 	.long case_make_object_inactive_0e49
@@ -1673,11 +1673,11 @@ l_0963:
 * diving attacks stop and bugs go home
 case_0968:  | 0x0E
 	moveq	#0,d4
-	move.b	(mq_object_id_10,a2),d4             | [$0968: ld   e,0x10(ix)] home_posn_rc[ obj_id ]
-	lea	sprt_fmtn_hpos,a1              	        | [$096B: ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
-	move.b	(a1,d4.w),d4                         	| [$096D: ld   a,(de)] row position index
+	move.b	(mq_object_id_10,a2),d4             | [$0968: ld   e,0x10(ix)] home_posn_rc[ obj_id ] [freq=low, count=00%]
+	lea	sprt_fmtn_hpos,a1              	        | [$096B: ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ] [freq=low, count=00%]
+	move.b	(a1,d4.w),d4                         	| [$096D: ld   a,(de)] row position index [freq=low, count=00%]
 											| [$096E: ld   e,a]
-	lea	o_ds_hpos_loc_orig_9900(a6),a1            	| [$096F: ld   d,#>o_ds_hpos_loc_orig_9900] b1: copy of origin data
+	lea	o_ds_hpos_loc_orig_9900(a6),a1            	| [$096F: ld   d,#>o_ds_hpos_loc_orig_9900] b1: copy of origin data [freq=low, count=00%]
 												| [inc  e]
 	move.b	(1,a1,d4.w),d0                         	| [ld   a,(de)] copy of origin data
 	add.b	#0x20,d0                         	| [add  a,#0x20]
@@ -1792,10 +1792,10 @@ l_09FA_bonusbee_creat_fail:
 * formation.
 case_0A01:  | 0x0C
 * stash 2 copies of hl
-	move.l	a0,-(sp)                        	| [$0A01: push hl] ptr to data table
-	exg	a1,a0                              	    | [$0A02: ex   de,hl]
-	move.b	o_b_flip_screen_9215(a6),d0           	| [$0A03: ld   a,(o_b_flip_screen_9215)]
-	move.b	d0,d2                           	| [$0A06: ld   c,a]
+	move.l	a0,-(sp)                        	| [$0A01: push hl] ptr to data table [freq=low, count=00%]
+	exg	a1,a0                              	    | [$0A02: ex   de,hl] [freq=low, count=00%]
+	move.b	o_b_flip_screen_9215(a6),d0           	| [$0A03: ld   a,(o_b_flip_screen_9215)] [freq=low, count=00%]
+	move.b	d0,d2                           	| [$0A06: ld   c,a] [freq=low, count=00%]
 
 * setup horizontal limits for targetting
 	move.b	o_ds_sprite_posn_9300+0x62(a6),d0         | [ld   a,(o_ds_sprite_posn_9300 + 0x62)] ship_1_position
@@ -1825,47 +1825,47 @@ l_0A1E:
 
 l_0A2C_:
 * test if offset'ed result still out of range negative (overflow if addition to negative delta is greater than 0)
-	add.b	#0x30>>1,d0                       	| [$0A2C: add  a,#0x30>>1] offset to positive range for selection of index
-	jpl	l_0A32                             	    | [$0A2E: jp   p,l_0A32]
+	add.b	#0x30>>1,d0                       	| [$0A2C: add  a,#0x30>>1] offset to positive range for selection of index [freq=low, count=00%]
+	jpl	l_0A32                             	    | [$0A2E: jp   p,l_0A32] [freq=low, count=00%]
 	clr.b	d0                               	| [$0A31: xor  a] result still negative (S is set )
 l_0A32:
-	cmp.b	#0x30,d0                         	| [$0A32: cp   #0x30]
-	jcs	l_0A38                             	    | [$0A34: jr   c,l_0A38]
+	cmp.b	#0x30,d0                         	| [$0A32: cp   #0x30] [freq=low, count=00%]
+	jcs	l_0A38                             	    | [$0A34: jr   c,l_0A38] [freq=low, count=00%]
 	move.b	#0x2F,d0                        	| [$0A36: ld   a,#0x2F] set upper limit
 l_0A38:
-	move.b	d0,d5                           	| [$0A38: ld   h,a]
-	move.b	#6,d0                           	| [$0A39: ld   a,#6]
-	jbsr	c_divide_d5d6_by_d0_0EAA            | [$0A3B: call c_divide_d5d6_by_d0_0EAA] HL = HL / A
-	move.b	d5,d0                           	| [$0A3E: ld   a,h]
-	addq.b	#1,d0                           	| [$0A3F: inc  a]
-	exg	a1,a0                              	    | [$0A40: ex   de,hl] restore hl
-	jbsr	add_d0_to_a0_0010                   | [$0A41: rst  0x10] HL += A
-	move.b	(a0),d0                         	| [$0A42: ld   a,(hl)]
-	move.b	d0,(mq_timeout_0d,a2)                    	| [$0A43: ld   0x0D(ix),a]
-	move.l	(sp)+,a0                        	| [$0A46: pop  hl] restore hl again
-	move.b	#9,d0                           	| [$0A47: ld   a,#9]
-	jbsr	add_d0_to_a0_0010                   | [$0A49: rst  0x10] HL += A
+	move.b	d0,d5                           	| [$0A38: ld   h,a] [freq=low, count=00%]
+	move.b	#6,d0                           	| [$0A39: ld   a,#6] [freq=low, count=00%]
+	jbsr	c_divide_d5d6_by_d0_0EAA            | [$0A3B: call c_divide_d5d6_by_d0_0EAA] HL = HL / A [freq=low, count=00%]
+	move.b	d5,d0                           	| [$0A3E: ld   a,h] [freq=low, count=00%]
+	addq.b	#1,d0                           	| [$0A3F: inc  a] [freq=low, count=00%]
+	exg	a1,a0                              	    | [$0A40: ex   de,hl] restore hl [freq=low, count=00%]
+	jbsr	add_d0_to_a0_0010                   | [$0A41: rst  0x10] HL += A [freq=low, count=00%]
+	move.b	(a0),d0                         	| [$0A42: ld   a,(hl)] [freq=low, count=00%]
+	move.b	d0,(mq_timeout_0d,a2)                    	| [$0A43: ld   0x0D(ix),a] [freq=low, count=00%]
+	move.l	(sp)+,a0                        	| [$0A46: pop  hl] restore hl again [freq=low, count=00%]
+	move.b	#9,d0                           	| [$0A47: ld   a,#9] [freq=low, count=00%]
+	jbsr	add_d0_to_a0_0010                   | [$0A49: rst  0x10] HL += A [freq=low, count=00%]
 * don't actually need to load from l and h here ;)
 	CONVERT_SUBROM_A0_TO_D5D6
-	move.b	d6,(mq_fp_lsb_08,a2)                    	| [$0A4A: ld   0x08(ix),l] pointer.b0
-	move.b	d5,(mq_fp_msb_09,a2)                    	| [$0A4D: ld   0x09(ix),h] pointer.b1
-	jra	l_flite_pth_skip_load_0BFF         	    | [$0A50: jp   l_flite_pth_skip_load_0BFF] save pointer and goto _flite_pth_cont
+	move.b	d6,(mq_fp_lsb_08,a2)                    	| [$0A4A: ld   0x08(ix),l] pointer.b0 [freq=low, count=00%]
+	move.b	d5,(mq_fp_msb_09,a2)                    	| [$0A4D: ld   0x09(ix),h] pointer.b1 [freq=low, count=00%]
+	jra	l_flite_pth_skip_load_0BFF         	    | [$0A50: jp   l_flite_pth_skip_load_0BFF] save pointer and goto _flite_pth_cont [freq=low, count=00%]
 
 * capturing boss starts dive
 case_capturing_boss_starts_dive_0A53:  | 0x0B
-	move.l	a0,-(sp)                        	| [$0A53: push hl]
-	move.b	o_b_flip_screen_9215(a6),d0           	| [$0A54: ld   a,(o_b_flip_screen_9215)]
-	move.b	d0,d2                           	| [$0A57: ld   c,a]
-	move.b	o_ds_sprite_posn_9300+0x62(a6),d0         | [$0A58: ld   a,(o_ds_sprite_posn_9300 + 0x62)] ship_1_position
-	addq.b	#3,d0                           	| [$0A5B: add  a,#3]
-	and.b	#0xF8,d0                         	| [$0A5D: and  #0xF8]
-	addq.b	#1,d0                           	| [$0A5F: inc  a]
-	cmp.b	#82>>1,d0		                    | [$0A60: cp   #82 >> 1]                              | 0x29
-	jcc	l_0A66                             	    | [$0A62: jr   nc,l_0A66]
+	move.l	a0,-(sp)                        	| [$0A53: push hl] [freq=low, count=00%]
+	move.b	o_b_flip_screen_9215(a6),d0           	| [$0A54: ld   a,(o_b_flip_screen_9215)] [freq=low, count=00%]
+	move.b	d0,d2                           	| [$0A57: ld   c,a] [freq=low, count=00%]
+	move.b	o_ds_sprite_posn_9300+0x62(a6),d0         | [$0A58: ld   a,(o_ds_sprite_posn_9300 + 0x62)] ship_1_position [freq=low, count=00%]
+	addq.b	#3,d0                           	| [$0A5B: add  a,#3] [freq=low, count=00%]
+	and.b	#0xF8,d0                         	| [$0A5D: and  #0xF8] [freq=low, count=00%]
+	addq.b	#1,d0                           	| [$0A5F: inc  a] [freq=low, count=00%]
+	cmp.b	#82>>1,d0		                    | [$0A60: cp   #82 >> 1]                              | 0x29 [freq=low, count=00%]
+	jcc	l_0A66                             	    | [$0A62: jr   nc,l_0A66] [freq=low, count=00%]
 	move.b	#0x29,d0                        	| [$0A64: ld   a,#0x29]
 l_0A66:
-	cmp.b	#404>>1,d0			                | [$0A66: cp   #404 >> 1]  0xCA
-	jcs	l_0A6C                             	    | [$0A68: jr   c,l_0A6C]
+	cmp.b	#404>>1,d0			                | [$0A66: cp   #404 >> 1]  0xCA [freq=low, count=00%]
+	jcs	l_0A6C                             	    | [$0A68: jr   c,l_0A6C] [freq=low, count=00%]
 	move.b	#402>>1,d0                      	| [$0A6A: ld   a,#402 >> 1] $C9
 l_0A6C:
 *	btst.b	#0,d2                           	| [$0A6C: bit  0,c] check flip screen
@@ -1873,54 +1873,54 @@ l_0A6C:
 *	add.b	#13,d0                           	| [$0A70: add  a,#13] flipped
 *	not.b	d0                               	| [$0A72: cpl]
 *l_0A73:
-	move.b	d0,o_ds5_captr_status_928a+0x00(a6)   	| [$0A73: ld   (o_ds5_captr_status_928a + 0x00),a]
-	lsr.b	#1,d0                            	| [$0A76: srl  a]
-	move.b	d0,d4                           	| [$0A78: ld   e,a]
-	move.b	#0x48,d3                        	| [$0A79: ld   d,#0x48]
-	move.b	(mq_y_01,a2),d5                    	| [$0A7B: ld   h,0x01(ix)]
-	move.b	(mq_x_03,a2),d6                    	| [$0A7E: ld   l,0x03(ix)]
-	jbsr	compute_rotation_angle_0e5b         | [$0A81: call compute_rotation_angle_0e5b] HL = compute_rotation_angle_0e5b(DE, H, L) ... determine rotation angle
-	lsr.b	#1,d5                            	| [$0A84: srl  h]
-	roxr.b	#1,d6                           	| [$0A86: rr   l]
-	move.b	d6,(mq_angle_lsb_04,a2)             | [$0A88: ld   0x04(ix),l]
-	move.b	d5,(mq_angle_msb_05,a2)             | [$0A8B: ld   0x05(ix),h]
+	move.b	d0,o_ds5_captr_status_928a+0x00(a6)   	| [$0A73: ld   (o_ds5_captr_status_928a + 0x00),a] [freq=low, count=00%]
+	lsr.b	#1,d0                            	| [$0A76: srl  a] [freq=low, count=00%]
+	move.b	d0,d4                           	| [$0A78: ld   e,a] [freq=low, count=00%]
+	move.b	#0x48,d3                        	| [$0A79: ld   d,#0x48] [freq=low, count=00%]
+	move.b	(mq_y_01,a2),d5                    	| [$0A7B: ld   h,0x01(ix)] [freq=low, count=00%]
+	move.b	(mq_x_03,a2),d6                    	| [$0A7E: ld   l,0x03(ix)] [freq=low, count=00%]
+	jbsr	compute_rotation_angle_0e5b         | [$0A81: call compute_rotation_angle_0e5b] HL = compute_rotation_angle_0e5b(DE, H, L) ... determine rotation angle [freq=low, count=00%]
+	lsr.b	#1,d5                            	| [$0A84: srl  h] [freq=low, count=00%]
+	roxr.b	#1,d6                           	| [$0A86: rr   l] [freq=low, count=00%]
+	move.b	d6,(mq_angle_lsb_04,a2)             | [$0A88: ld   0x04(ix),l] [freq=low, count=00%]
+	move.b	d5,(mq_angle_msb_05,a2)             | [$0A8B: ld   0x05(ix),h] [freq=low, count=00%]
 												| [$0A8E: xor  a]
-	clr.b	o_ds5_captr_status_928a+0x01(a6)   	| [$0A8F: ld   (o_ds5_captr_status_928a + 0x01),a] 0
+	clr.b	o_ds5_captr_status_928a+0x01(a6)   	| [$0A8F: ld   (o_ds5_captr_status_928a + 0x01),a] 0 [freq=low, count=00%]
 												| [$0A92: inc  a]
-	move.b	#1,o_ds_cpu0_task_actv_9000+0x19(a6)      | [$0A93: ld   (o_ds_cpu0_task_actv_9000 + 0x19),a] 1: f_21CB ... boss diving to capture position
-	COMPUTE_LSB_A2_D0	o_ds_bug_motion_que_9100  | [$0A96: ld   a,ixl]
-	move.b	d0,o_ds_plyr_actv_9820+_b_cboss_slot(a6)   	| [$0A98: ld   (o_ds_plyr_actv_9820 +_b_cboss_slot),a] ixl ... offset of slot used by capture boss, referenced by cpu0:f_21CB
-	move.l	(sp)+,a0                        	| [$0A9B: pop  hl] ptr to data table
-	addq.w	#1,a0                           	| [$0A9C: inc  hl]
-	jra	j_090E_flite_path_init             	    | [$0A9D: jp   j_090E_flite_path_init]
+	move.b	#1,o_ds_cpu0_task_actv_9000+0x19(a6)      | [$0A93: ld   (o_ds_cpu0_task_actv_9000 + 0x19),a] 1: f_21CB ... boss diving to capture position [freq=low, count=00%]
+	COMPUTE_LSB_A2_D0	o_ds_bug_motion_que_9100  | [$0A96: ld   a,ixl] [freq=low, count=00%]
+	move.b	d0,o_ds_plyr_actv_9820+_b_cboss_slot(a6)   	| [$0A98: ld   (o_ds_plyr_actv_9820 +_b_cboss_slot),a] ixl ... offset of slot used by capture boss, referenced by cpu0:f_21CB [freq=low, count=00%]
+	move.l	(sp)+,a0                        	| [$0A9B: pop  hl] ptr to data table [freq=low, count=00%]
+	addq.w	#1,a0                           	| [$0A9C: inc  hl] [freq=low, count=00%]
+	jra	j_090E_flite_path_init             	    | [$0A9D: jp   j_090E_flite_path_init] [freq=low, count=00%]
 
 * attack wave element hits turning point and heads to home
 case_heads_to_home_0aa0:  | 0x04
-	move.l	a0,-(sp)                        	| [$0AA0: $0AA0: push hl] ptr to data table
+	move.l	a0,-(sp)                        	| [$0AA0: $0AA0: push hl] ptr to data table [freq=low, count=00%]
 	moveq	#0,d6
-	move.b	(mq_object_id_10,a2),d6             | [$0AA1: $0AA1: ld   l,0x10(ix)] update object disposition ... i.e. 8800[L]
-	lea	o_object_states_8800(a6),a0                      	        | [$0AA4: $0AA4: ld   h,#>o_object_states_8800]
-	move.b	#9,(a0,d6.w)                         	| [$0AA6: ld   (hl),#9] disposition = 9: diving/homing (currently 3)
-	lea	sprt_fmtn_hpos,a0              	        | [$0AA8: ld   h,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ]
+	move.b	(mq_object_id_10,a2),d6             | [$0AA1: $0AA1: ld   l,0x10(ix)] update object disposition ... i.e. 8800[L] [freq=low, count=00%]
+	lea	o_object_states_8800(a6),a0                      	        | [$0AA4: $0AA4: ld   h,#>o_object_states_8800] [freq=low, count=00%]
+	move.b	#9,(a0,d6.w)                         	| [$0AA6: ld   (hl),#9] disposition = 9: diving/homing (currently 3) [freq=low, count=00%]
+	lea	sprt_fmtn_hpos,a0              	        | [$0AA8: ld   h,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) ] [freq=low, count=00%]
 	add.w	d6,a0
-	move.b	(a0)+,d2                         	| [$0AAA: ld   c,(hl)] row index
+	move.b	(a0)+,d2                         	| [$0AAA: ld   c,(hl)] row index [freq=low, count=00%]
 	                           	                | [$0AAB: inc  l]
-	move.b	(a0),d6                         	| [$0AAC: ld   l,(hl)] column index
-	lea	o_ds_hpos_loc_orig_9900(a6),a0               	| [$0AAD: ld   h,#>o_ds_hpos_loc_orig_9900]
+	move.b	(a0),d6                         	| [$0AAC: ld   l,(hl)] column index [freq=low, count=00%]
+	lea	o_ds_hpos_loc_orig_9900(a6),a0               	| [$0AAD: ld   h,#>o_ds_hpos_loc_orig_9900] [freq=low, count=00%]
 	add.w	d6,a0
-	move.b	(a0)+,d1                         	| [$0AAF: ld   b,(hl)] x offset
+	move.b	(a0)+,d1                         	| [$0AAF: ld   b,(hl)] x offset [freq=low, count=00%]
 	                           	                | [$0AB0: inc  l]
-	move.b	(a0),d4                         	| [$0AB1: ld   e,(hl)] x coordinate (o_ds_hpos_loc_orig_9900)
-	move.b	d2,d6                           	| [$0AB2: ld   l,c] row position index
-	lea	o_ds_hpos_loc_orig_9900(a6),a0               	| [$0AB3: ld   h,#>o_ds_hpos_loc_orig_9900]
+	move.b	(a0),d4                         	| [$0AB1: ld   e,(hl)] x coordinate (o_ds_hpos_loc_orig_9900) [freq=low, count=00%]
+	move.b	d2,d6                           	| [$0AB2: ld   l,c] row position index [freq=low, count=00%]
+	lea	o_ds_hpos_loc_orig_9900(a6),a0               	| [$0AB3: ld   h,#>o_ds_hpos_loc_orig_9900] [freq=low, count=00%]
 	add.w	d6,a0
-	move.b	(a0)+,d2                         	| [$0AB3: ld   c,(hl)] y offset
-	addq.b	#1,d6              	                | [$0AB4: inc  l] (not really useful)
-	move.b	(a0),d3                         	| [$0AB5: ld   d,(hl)] y coordinate (o_ds_hpos_loc_orig_9900)
-	lsr.b	#1,d4                            	| [$0AB6: srl  e] x coordinate
-	movem.w	d3/d4,-(sp)                    		| [$0AB8: push de] y coord, x coord >> 1
-	move.b	d1,(mq_x_offset_11,a2)              | [$0AB9: ld   0x11(ix),b] step x coord (x offset)
-	move.b	d2,(mq_y_offset_12,a2)              | [$0ABC: ld   0x12(ix),c] step y coord (y offset)
+	move.b	(a0)+,d2                         	| [$0AB3: ld   c,(hl)] y offset [freq=low, count=00%]
+	addq.b	#1,d6              	                | [$0AB4: inc  l] (not really useful) [freq=low, count=00%]
+	move.b	(a0),d3                         	| [$0AB5: ld   d,(hl)] y coordinate (o_ds_hpos_loc_orig_9900) [freq=low, count=00%]
+	lsr.b	#1,d4                            	| [$0AB6: srl  e] x coordinate [freq=low, count=00%]
+	movem.w	d3/d4,-(sp)                    		| [$0AB8: push de] y coord, x coord >> 1 [freq=low, count=00%]
+	move.b	d1,(mq_x_offset_11,a2)              | [$0AB9: ld   0x11(ix),b] step x coord (x offset) [freq=low, count=00%]
+	move.b	d2,(mq_y_offset_12,a2)              | [$0ABC: ld   0x12(ix),c] step y coord (y offset) [freq=low, count=00%]
 *	move.b	o_b_flip_screen_9215(a6),d0           	| [$0ABF: ld   a,(o_b_flip_screen_9215)]
 *	                               	            | [$0AC2: and  a]
 *	jeq	l_0ACD                             	    | [$0AC3: jr   z,l_0ACD]
@@ -1933,51 +1933,51 @@ case_heads_to_home_0aa0:  | 0x04
 *	move.b	d0,d2                           	| [$0ACC: ld   c,a]
 *l_0ACD:
 * add y-offset to .b00/.b01 (sra/rr -> 9.7 fixed-point scaling)
-	move.b	(mq_fine_y_00,a2),d6                | [$0ACD: ld   l,0x00(ix)] .b00
-	move.b	(mq_y_01,a2),d5                    	| [$0AD0: ld   h,0x01(ix)] .b01 ... sY<8:1>
-	move.b	d2,d3                           	| [$0AD3: ld   d,c] step y coord, y offset
-	clr.b	d4                               	| [$0AD4: ld   e,#0]
-	asr.b	#1,d3                            	| [$0AD6: sra  d]
-	roxr.b	#1,d4                           	| [$0AD8: rr   e]
+	move.b	(mq_fine_y_00,a2),d6                | [$0ACD: ld   l,0x00(ix)] .b00 [freq=low, count=00%]
+	move.b	(mq_y_01,a2),d5                    	| [$0AD0: ld   h,0x01(ix)] .b01 ... sY<8:1> [freq=low, count=00%]
+	move.b	d2,d3                           	| [$0AD3: ld   d,c] step y coord, y offset [freq=low, count=00%]
+	clr.b	d4                               	| [$0AD4: ld   e,#0] [freq=low, count=00%]
+	asr.b	#1,d3                            	| [$0AD6: sra  d] [freq=low, count=00%]
+	roxr.b	#1,d4                           	| [$0AD8: rr   e] [freq=low, count=00%]
 	move.w	d3,-(a7)
 	LOAD_D3_16_FROM_D3D4
 	LOAD_D5_16_FROM_D5D6
-	add.w	d3,d5                            	| [$0ADA: add  hl,de]
+	add.w	d3,d5                            	| [$0ADA: add  hl,de] [freq=low, count=00%]
 	move.w	(a7)+,d3
 	
 	* store 16 bit in struct
 	LOAD_D5D6_FROM_D5_16
-	move.b	d6,(mq_fine_y_00,a2)                | [$0ADB: ld   0x00(ix),l] .b00
-	move.b	d5,(mq_y_01,a2)                    	| [$0ADE: ld   0x01(ix),h] .b01
-	move.b	d5,d4                           	| [$0AE1: ld   e,h] y, .b01 (bits<1:8> of integer portion)
+	move.b	d6,(mq_fine_y_00,a2)                | [$0ADB: ld   0x00(ix),l] .b00 [freq=low, count=00%]
+	move.b	d5,(mq_y_01,a2)                    	| [$0ADE: ld   0x01(ix),h] .b01 [freq=low, count=00%]
+	move.b	d5,d4                           	| [$0AE1: ld   e,h] y, .b01 (bits<1:8> of integer portion) [freq=low, count=00%]
 
 * add x-offset to .b02/.b03 (sra/rr -> 9.7 fixed-point scaling)
-	move.b	(mq_fine_x_02,a2),d6                | [$0AE2: ld   l,0x02(ix)] .b00
-	move.b	(mq_x_03,a2),d5                    	| [$0AE5: ld   h,0x03(ix)] .b01
-	clr.b	d2                               	| [$0AE8: ld   c,#0]
+	move.b	(mq_fine_x_02,a2),d6                | [$0AE2: ld   l,0x02(ix)] .b00 [freq=low, count=00%]
+	move.b	(mq_x_03,a2),d5                    	| [$0AE5: ld   h,0x03(ix)] .b01 [freq=low, count=00%]
+	clr.b	d2                               	| [$0AE8: ld   c,#0] [freq=low, count=00%]
 	LOAD_D1_16_FROM_D1D2
-	asr.w	#1,d1                            	| [$0AEA: sra  b] step x coord, x offset
+	asr.w	#1,d1                            	| [$0AEA: sra  b] step x coord, x offset [freq=low, count=00%]
 												| [$0AEC: rr   c] 0 or 0x80
 	LOAD_D5_16_FROM_D5D6
-	sub.w	d1,d5                            	| [$0AEE: sbc  hl,bc] should be sub
+	sub.w	d1,d5                            	| [$0AEE: sbc  hl,bc] should be sub [freq=low, count=00%]
 	LOAD_D5D6_FROM_D5_16
-	move.b	d6,(mq_fine_x_02,a2)                | [$0AF0: ld   0x02(ix),l] .b00
-	move.b	d5,(mq_x_03,a2)                    	| [$0AF3: ld   0x03(ix),h] .b01
-	move.b	d5,d6                           	| [$0AF6: ld   l,h] x, .b01 (bits<8:1> of integer portion)
-	move.b	d4,d5                           	| [$0AF7: ld   h,e] y, .b01 (bits<8:1> of integer portion)
-	move.b	d3,d2                           	| [$0AF8: ld   c,d] C is not used?
-	movem.w	(sp)+,d3/d4                    		| [$0AF9: pop  de] abs row pix coord & abs col pix coord >> 1
-	jbsr	compute_rotation_angle_0e5b         | [$0AFA: call compute_rotation_angle_0e5b] HL = mctl_rotn_hp(DE, H, L)
-	lsr.b	#1,d5                            	| [$0AFD: srl  h]
-	roxr.b	#1,d6                           	| [$0AFF: rr   l]
-	move.b	d6,(mq_angle_lsb_04,a2)          	| [$0B01: ld   0x04(ix),l] TODO sometimes values differ slightly from original for D6
-	move.b	d5,(mq_angle_msb_05,a2)          	| [$0B04: ld   0x05(ix),h]
-	move.b	d3,(mq_home_position_y_06,a2)    	| [$0B07: ld   0x06(ix),d] origin home position y (bits 15:8) ... from hpos_loc_orig.x
-	move.b	d4,(mq_home_position_x_07,a2)       | [$0B0A: ld   0x07(ix),e] origin home position x (bits 15:8) ... from hpos_loc_orig.y
-	bset.b	#6,(mq_state_13,a2)                 | [$0B0D: set  6,0x13(ix)] if set, flite path handler checks for home
-	move.l	(sp)+,a0                        	| [$0B11: pop  hl] ptr to data table
-	addq.w	#1,a0                           	| [$0B12: inc  hl]
-	jra	j_090E_flite_path_init             		| [$0B13: jp   j_090E_flite_path_init]
+	move.b	d6,(mq_fine_x_02,a2)                | [$0AF0: ld   0x02(ix),l] .b00 [freq=low, count=00%]
+	move.b	d5,(mq_x_03,a2)                    	| [$0AF3: ld   0x03(ix),h] .b01 [freq=low, count=00%]
+	move.b	d5,d6                           	| [$0AF6: ld   l,h] x, .b01 (bits<8:1> of integer portion) [freq=low, count=00%]
+	move.b	d4,d5                           	| [$0AF7: ld   h,e] y, .b01 (bits<8:1> of integer portion) [freq=low, count=00%]
+	move.b	d3,d2                           	| [$0AF8: ld   c,d] C is not used? [freq=low, count=00%]
+	movem.w	(sp)+,d3/d4                    		| [$0AF9: pop  de] abs row pix coord & abs col pix coord >> 1 [freq=low, count=00%]
+	jbsr	compute_rotation_angle_0e5b         | [$0AFA: call compute_rotation_angle_0e5b] HL = mctl_rotn_hp(DE, H, L) [freq=low, count=00%]
+	lsr.b	#1,d5                            	| [$0AFD: srl  h] [freq=low, count=00%]
+	roxr.b	#1,d6                           	| [$0AFF: rr   l] [freq=low, count=00%]
+	move.b	d6,(mq_angle_lsb_04,a2)          	| [$0B01: ld   0x04(ix),l] TODO sometimes values differ slightly from original for D6 [freq=low, count=00%]
+	move.b	d5,(mq_angle_msb_05,a2)          	| [$0B04: ld   0x05(ix),h] [freq=low, count=00%]
+	move.b	d3,(mq_home_position_y_06,a2)    	| [$0B07: ld   0x06(ix),d] origin home position y (bits 15:8) ... from hpos_loc_orig.x [freq=low, count=00%]
+	move.b	d4,(mq_home_position_x_07,a2)       | [$0B0A: ld   0x07(ix),e] origin home position x (bits 15:8) ... from hpos_loc_orig.y [freq=low, count=00%]
+	bset.b	#6,(mq_state_13,a2)                 | [$0B0D: set  6,0x13(ix)] if set, flite path handler checks for home [freq=low, count=00%]
+	move.l	(sp)+,a0                        	| [$0B11: pop  hl] ptr to data table [freq=low, count=00%]
+	addq.w	#1,a0                           	| [$0B12: inc  hl] [freq=low, count=00%]
+	jra	j_090E_flite_path_init             		| [$0B13: jp   j_090E_flite_path_init] [freq=low, count=00%]
 
 * attack elements that break formation to attack ship (level 3+)
 case_0B16:  | 0x01
@@ -2021,54 +2021,54 @@ l_0B30:
 case_0B46: | 0x02
 l_0B46:
 * ld new data ptr into de and ex into hl ... resultant de not used
-	addq.w	#1,a0                           	| [$0B46: inc  hl] ptr to data table
-	move.b	(a0)+,d4                         	| [$0B47: ld   e,(hl)]
+	addq.w	#1,a0                           	| [$0B46: inc  hl] ptr to data table [freq=low, count=00%]
+	move.b	(a0)+,d4                         	| [$0B47: ld   e,(hl)] [freq=low, count=00%]
 	                           	                | [$0B48: inc  hl]
-	move.b	(a0),d3                         	| [$0B49: ld   d,(hl)]
+	move.b	(a0),d3                         	| [$0B49: ld   d,(hl)] [freq=low, count=00%]
 	CONVERT_D3D4_TO_SUBROM_A1
-	exg	a1,a0                              	    | [$0B4A: ex   de,hl] new pointer to HL
-	jra	j_090E_flite_path_init             	    | [$0B4B: jp   j_090E_flite_path_init]
+	exg	a1,a0                              	    | [$0B4A: ex   de,hl] new pointer to HL [freq=low, count=00%]
+	jra	j_090E_flite_path_init             	    | [$0B4B: jp   j_090E_flite_path_init] [freq=low, count=00%]
 
 * bee dive and starting loopback, or boss left position and starting dive down
 case_0B4E:  | 0x03
-	addq.w	#1,a0                           	| [$0B4E: inc  hl] ptr to data table
-	move.b	(a0)+,d4                         	| [$0B4F: ld   e,(hl)]
+	addq.w	#1,a0                           	| [$0B4E: inc  hl] ptr to data table [freq=low, count=00%]
+	move.b	(a0)+,d4                         	| [$0B4F: ld   e,(hl)] [freq=low, count=00%]
 	                                         	| [$0B50: inc  hl]
-	move.b	d4,(mq_home_position_y_06,a2)       | [$0B51: ld   0x06(ix),e] origin home position y (bits 15:8)
-	clr.b	(mq_home_position_x_07,a2)          | [$0B54: ld   0x07(ix),#0] origin home position x (bits 15:8)
-	bset.b	#5,(mq_state_13,a2)                 | [$0B58: set  5,0x13(ix)] bee or boss dive
+	move.b	d4,(mq_home_position_y_06,a2)       | [$0B51: ld   0x06(ix),e] origin home position y (bits 15:8) [freq=low, count=00%]
+	clr.b	(mq_home_position_x_07,a2)          | [$0B54: ld   0x07(ix),#0] origin home position x (bits 15:8) [freq=low, count=00%]
+	bset.b	#5,(mq_state_13,a2)                 | [$0B58: set  5,0x13(ix)] bee or boss dive [freq=low, count=00%]
 	CONVERT_SUBROM_A0_TO_D5D6
-	jra	l_flite_pth_skip_load_0BFF         	    | [$0B5C: jp   l_flite_pth_skip_load_0BFF] save pointer and goto _flite_pth_cont
+	jra	l_flite_pth_skip_load_0BFF         	    | [$0B5C: jp   l_flite_pth_skip_load_0BFF] save pointer and goto _flite_pth_cont [freq=low, count=00%]
 
 * red alien flew through bottom of screen to top, heading for home
 * yellow alien flew under bottom of screen and now turns for home
 case_0B5F:  | 0x06
-	move.b	o_b_flip_screen_9215(a6),d0           	| [$0B5F: ld   a,(o_b_flip_screen_9215)]
-	move.b	d0,d2                           	| [$0B62: ld   c,a]
+	move.b	o_b_flip_screen_9215(a6),d0           	| [$0B5F: ld   a,(o_b_flip_screen_9215)] [freq=low, count=00%]
+	move.b	d0,d2                           	| [$0B62: ld   c,a] [freq=low, count=00%]
 
-	move.b	(mq_object_id_10,a2),d4                    	| [$0B63: ld   e,0x10(ix)] home_posn_rc[ obj_id + 1 ]
-	addq.b	#1,d4                           	| [$0B66: inc  e]
-	lea	sprt_fmtn_hpos,a1              	        | [$0B67: ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) + 1 ] ... column position index
+	move.b	(mq_object_id_10,a2),d4                    	| [$0B63: ld   e,0x10(ix)] home_posn_rc[ obj_id + 1 ] [freq=low, count=00%]
+	addq.b	#1,d4                           	| [$0B66: inc  e] [freq=low, count=00%]
+	lea	sprt_fmtn_hpos,a1              	        | [$0B67: ld   d,#>sprt_fmtn_hpos] home_posn_rc[ ix($10) + 1 ] ... column position index [freq=low, count=00%]
 	and.w	#0xFF,d4
-	move.b	(a1,d4.w),d0                         	| [$0B69: ld   a,(de)]
-	move.b	d0,d4                           	| [$0B6A: ld   e,a]
-	lea	o_ds_hpos_spcoords_9800(a6),a1            	| [$0B6B: ld   d,#>o_ds_hpos_spcoords_9800] col pix coordinate, lsb only
+	move.b	(a1,d4.w),d0                         	| [$0B69: ld   a,(de)] [freq=low, count=00%]
+	move.b	d0,d4                           	| [$0B6A: ld   e,a] [freq=low, count=00%]
+	lea	o_ds_hpos_spcoords_9800(a6),a1            	| [$0B6B: ld   d,#>o_ds_hpos_spcoords_9800] col pix coordinate, lsb only [freq=low, count=00%]
 
-	move.b	(a1,d4.w),d0                         	| [$0B6D: ld   a,(de)]
-	btst.b	#0,d2                           	| [$0B6E: bit  0,c] check if flip-screen
-	jeq	l_0B76                             	    | [$0B70: jr   z,l_0B76]
+	move.b	(a1,d4.w),d0                         	| [$0B6D: ld   a,(de)] [freq=low, count=00%]
+	btst.b	#0,d2                           	| [$0B6E: bit  0,c] check if flip-screen [freq=low, count=00%]
+	jeq	l_0B76                             	    | [$0B70: jr   z,l_0B76] [freq=low, count=00%]
 	add.b	#0x0E,d0                         	| [$0B72: add  a,#0x0E]
 	neg.b	d0                               	| [$0B74: neg]
 l_0B76:
-	lsr.b	#1,d0                            	| [$0B76: srl  a]
-	move.b	d0,(mq_x_03,a2)                    	| [$0B78: ld   0x03(ix),a] .cx.pair.b1
-	move.b	o_b_92A0+0x0A(a6),d0                  	| [$0B7B: ld   a,(o_b_92A0 + 0x0A)] if continuous bombing flag is set, trigger dive attack sound o_b_9AA0[0x13]
+	lsr.b	#1,d0                            	| [$0B76: srl  a] [freq=low, count=00%]
+	move.b	d0,(mq_x_03,a2)                    	| [$0B78: ld   0x03(ix),a] .cx.pair.b1 [freq=low, count=00%]
+	move.b	o_b_92A0+0x0A(a6),d0                  	| [$0B7B: ld   a,(o_b_92A0 + 0x0A)] if continuous bombing flag is set, trigger dive attack sound o_b_9AA0[0x13] [freq=low, count=00%]
 												| [$0B7E: and  a]
-	jeq	l_0B8B                             		| [$0B7F: jp   z,l_0B8B] inc hl and finalize
-	move.b	d0,o_b_9AA0+0x13(a6)                  	| [$0B82: ld   (o_b_9AA0 + 0x13),a] ~0 ... sound-fx count/enable registers, bug dive attack sound
+	jeq	l_0B8B                             		| [$0B7F: jp   z,l_0B8B] inc hl and finalize [freq=low, count=00%]
+	move.b	d0,o_b_9AA0+0x13(a6)                  	| [$0B82: ld   (o_b_9AA0 + 0x13),a] ~0 ... sound-fx count/enable registers, bug dive attack sound [freq=low, count=00%]
 	move.w	#ATTACK_SND,d0
 	jbsr	osd_sound_start
-	jra	l_0B8B                             		| [$0B85: jr   l_0B8B] inc hl and finalize
+	jra	l_0B8B                             		| [$0B85: jr   l_0B8B] inc hl and finalize [freq=low, count=00%]
 
 * red alien flew through bottom of screen to top, heading for home
 * yellow alien flew under bottom of screen and now turns for home
@@ -2078,55 +2078,55 @@ l_0B8B:
 	addq.w	#1,a0                           	| [inc  hl] data pointer
 	CONVERT_SUBROM_A0_TO_D5D6
 l_0B8C:
-	move.b	d6,(mq_fp_lsb_08,a2)                    	| [$0B8C: ld   0x08(ix),l] .b00
-	move.b	d5,(mq_fp_msb_09,a2)                    	| [$0B8F: ld   0x09(ix),h] .b01
-	addq.b	#1,(mq_timeout_0d,a2)                    	| [$0B92: inc  0x0D(ix)]
-	jra	next__pool_idx_0dfb                     | [$0B95: jp   next__pool_idx_0dfb]
+	move.b	d6,(mq_fp_lsb_08,a2)                    	| [$0B8C: ld   0x08(ix),l] .b00 [freq=low, count=00%]
+	move.b	d5,(mq_fp_msb_09,a2)                    	| [$0B8F: ld   0x09(ix),h] .b01 [freq=low, count=00%]
+	addq.b	#1,(mq_timeout_0d,a2)                    	| [$0B92: inc  0x0D(ix)] [freq=low, count=00%]
+	jra	next__pool_idx_0dfb                     | [$0B95: jp   next__pool_idx_0dfb] [freq=low, count=00%]
 
 * in an attack convoy ... changing direction
 case_0B98:  | 0x08
 * if (0x38 != (0x38 & o_ds_bug_motion_que_9100(a6)[o_b_bug_que_idx_9289].b10))  hl += 3 ...
-	move.b	(mq_object_id_10,a2),d0                    	| [$0B98: ld   a,0x10(ix)] offset of object ...8800[L]
-	and.b	#0x38,d0                         	| [$0B9B: and  #0x38]
-	cmp.b	#0x38,d0                         	| [$0B9D: cp   #0x38] "transient"? ($38, $3A, $3C, $3E)
+	move.b	(mq_object_id_10,a2),d0                    	| [$0B98: ld   a,0x10(ix)] offset of object ...8800[L] [freq=low, count=00%]
+	and.b	#0x38,d0                         	| [$0B9B: and  #0x38] [freq=low, count=00%]
+	cmp.b	#0x38,d0                         	| [$0B9D: cp   #0x38] "transient"? ($38, $3A, $3C, $3E) [freq=low, count=00%]
 
 * from case_0BD1 ... if (1 == cont_bmb_flag && 0 == task_actv[0x1D]) then ... HL += 3
 l_0B9F:
-	jeq	l_0B46                             		| [$0B9F: jp   z,l_0B46] load next ptr ... _flite_path_init
+	jeq	l_0B46                             		| [$0B9F: jp   z,l_0B46] load next ptr ... _flite_path_init [freq=low, count=00%]
 * ptr to data table inc 3x ... (2 incs to skip address in table e.g. $0024?)
-	addq.w	#3,a0                           	| [$0BA2: inc  hl] * 3
-	jra	j_090E_flite_path_init             		| [$0BA5: jp   j_090E_flite_path_init]
+	addq.w	#3,a0                           	| [$0BA2: inc  hl] * 3 [freq=low, count=00%]
+	jra	j_090E_flite_path_init             		| [$0BA5: jp   j_090E_flite_path_init] [freq=low, count=00%]
 
 * one red moth left in "free flight mode"
 case_0BA8:  | 0x09
-	addq.w	#1,a0                           	| [$0BA8: inc  hl] ptr to data table
-	move.b	(a0),d0                         	| [$0BA9: ld   a,(hl)]
-	btst.b	#7,(mq_state_13,a2)                    	| [$0BAA: bit  7,0x13(ix)]
-	jeq	l_0BB4                             		| [$0BAE: jr   z,l_0BB4]
+	addq.w	#1,a0                           	| [$0BA8: inc  hl] ptr to data table [freq=low, count=00%]
+	move.b	(a0),d0                         	| [$0BA9: ld   a,(hl)] [freq=low, count=00%]
+	btst.b	#7,(mq_state_13,a2)                    	| [$0BAA: bit  7,0x13(ix)] [freq=low, count=00%]
+	jeq	l_0BB4                             		| [$0BAE: jr   z,l_0BB4] [freq=low, count=00%]
 	add.b	#0x80,d0                         	| [$0BB0: add  a,#0x80]
 	neg.b	d0                               	| [$0BB2: neg]
 l_0BB4:
-	clr.b	d2                               	| [$0BB4: ld   c,#0] stage 4 ...
-	asl.b	#1,d0                            	| [$0BB6: sla  a]
-	roxl.b	#1,d2                           	| [$0BB8: rl   c]
-	asl.b	#1,d0                            	| [$0BBA: sla  a]
-	roxl.b	#1,d2                           	| [$0BBC: rl   c]
-	move.b	d0,(mq_angle_lsb_04,a2)            	| [$0BBE: ld   0x04(ix),a]
-	move.b	d2,(mq_angle_msb_05,a2)            	| [$0BC1: ld   0x05(ix),c]
-	move.b	#0x1E,(mq_drop_bomb_counter_0e,a2) 	| [$0BC4: ld   0x0E(ix),#0x1E] bomb drop counter
-	move.b	o_b_92C0+0x08(a6),d0                  	| [$0BC8: ld   a,(o_b_92C0 + 0x08)] bomb drop enable flags
-	move.b	d0,(mq_drop_bomb_enable_0f,a2)   	| [$0BCB: ld   0x0F(ix),a] o_b_92C0[$08] ... bomb drop enable flags
-	jra	l_0B8B                             		| [$0BCE: jp   l_0B8B] inc hl and finalize
+	clr.b	d2                               	| [$0BB4: ld   c,#0] stage 4 ... [freq=low, count=00%]
+	asl.b	#1,d0                            	| [$0BB6: sla  a] [freq=low, count=00%]
+	roxl.b	#1,d2                           	| [$0BB8: rl   c] [freq=low, count=00%]
+	asl.b	#1,d0                            	| [$0BBA: sla  a] [freq=low, count=00%]
+	roxl.b	#1,d2                           	| [$0BBC: rl   c] [freq=low, count=00%]
+	move.b	d0,(mq_angle_lsb_04,a2)            	| [$0BBE: ld   0x04(ix),a] [freq=low, count=00%]
+	move.b	d2,(mq_angle_msb_05,a2)            	| [$0BC1: ld   0x05(ix),c] [freq=low, count=00%]
+	move.b	#0x1E,(mq_drop_bomb_counter_0e,a2) 	| [$0BC4: ld   0x0E(ix),#0x1E] bomb drop counter [freq=low, count=00%]
+	move.b	o_b_92C0+0x08(a6),d0                  	| [$0BC8: ld   a,(o_b_92C0 + 0x08)] bomb drop enable flags [freq=low, count=00%]
+	move.b	d0,(mq_drop_bomb_enable_0f,a2)   	| [$0BCB: ld   0x0F(ix),a] o_b_92C0[$08] ... bomb drop enable flags [freq=low, count=00%]
+	jra	l_0B8B                             		| [$0BCE: jp   l_0B8B] inc hl and finalize [freq=low, count=00%]
 
 * homing, red transit to top, yellow from off-screen at bottom or skip if in continuous mode
 case_0BD1:  | 0x05
 * if (1 == cont_bmb_flag && 0 == task_actv[0x1D]) then pD += 3 else pD = *(pHL)
-	move.b	o_b_92A0+0x0A(a6),d0                  	| [$0BD1: ld   a,(o_b_92A0 + 0x0A)] continuous bombing flag, test for reload data pointer
-	move.b	d0,d2                           	| [$0BD4: ld   c,a]
-	move.b	o_ds_cpu0_task_actv_9000+0x1D(a6),d0      | [$0BD5: ld   a,(o_ds_cpu0_task_actv_9000 + 0x1D)] f_2000 (destroyed boss that captured ship) test for reload data pointer
-	subq.b	#1,d0                           	| [$0BD8: dec  a]
-	and.b	d2,d0                            	| [$0BD9: and  c]
-	jra	l_0B9F                             		| [$0BDA: jr   l_0B9F] load next ptr or skip
+	move.b	o_b_92A0+0x0A(a6),d0                  	| [$0BD1: ld   a,(o_b_92A0 + 0x0A)] continuous bombing flag, test for reload data pointer [freq=low, count=00%]
+	move.b	d0,d2                           	| [$0BD4: ld   c,a] [freq=low, count=00%]
+	move.b	o_ds_cpu0_task_actv_9000+0x1D(a6),d0      | [$0BD5: ld   a,(o_ds_cpu0_task_actv_9000 + 0x1D)] f_2000 (destroyed boss that captured ship) test for reload data pointer [freq=low, count=00%]
+	subq.b	#1,d0                           	| [$0BD8: dec  a] [freq=low, count=00%]
+	and.b	d2,d0                            	| [$0BD9: and  c] [freq=low, count=00%]
+	jra	l_0B9F                             		| [$0BDA: jr   l_0B9F] load next ptr or skip [freq=low, count=00%]
 
 
 * Continue in the same state, but a new data set needs to be
@@ -2136,72 +2136,72 @@ l_flite_pth_load_0BDC:
 * HL == ds_flying_queue[loop_cnt].pdat
 * A == *ds_flying_queue[loop_cnt].pdat
 * A < $EF (current token)
-	move.b	d0,d2                           	| [$0BDC: ld   c,a] data[ n + 0 ]
-	and.b	#0x0F,d0                         	| [$0BDD: and  #0x0F]
-	move.b	d0,(mq_unknown_0A,a2)                    	| [$0BDF: ld   0x0A(ix),a] lo-nibble
-	move.b	d2,d0                           	| [$0BE2: ld   a,c]
-	rol.b	#4,d0                            	| [$0BE3: rlca] * 4
-	and.b	#0x0F,d0                         	| [$0BE7: and  #0x0F]
-	addq.w	#1,a0                           	| [$0BE9: inc  hl]
-	move.b	d0,(mq_unknown_0B,a2)                    	| [$0BEA: ld   0x0B(ix),a] hi-nibble (right shifted into bits<0:3>
-	move.b	(a0)+,d0                         	| [$0BED: ld   a,(hl)] data[ n + 1 ] ... to (ix)0x0C
+	move.b	d0,d2                           	| [$0BDC: ld   c,a] data[ n + 0 ] [freq=low, count=01%]
+	and.b	#0x0F,d0                         	| [$0BDD: and  #0x0F] [freq=low, count=01%]
+	move.b	d0,(mq_unknown_0A,a2)                    	| [$0BDF: ld   0x0A(ix),a] lo-nibble [freq=low, count=01%]
+	move.b	d2,d0                           	| [$0BE2: ld   a,c] [freq=low, count=01%]
+	rol.b	#4,d0                            	| [$0BE3: rlca] * 4 [freq=low, count=01%]
+	and.b	#0x0F,d0                         	| [$0BE7: and  #0x0F] [freq=low, count=01%]
+	addq.w	#1,a0                           	| [$0BE9: inc  hl] [freq=low, count=01%]
+	move.b	d0,(mq_unknown_0B,a2)                    	| [$0BEA: ld   0x0B(ix),a] hi-nibble (right shifted into bits<0:3> [freq=low, count=01%]
+	move.b	(a0)+,d0                         	| [$0BED: ld   a,(hl)] data[ n + 1 ] ... to (ix)0x0C [freq=low, count=01%]
 												| [$0BEE: inc  hl]
-	btst.b	#7,(mq_state_13,a2)                 | [$0BEF: bit  7,0x13(ix)] if set then negate data to (ix)0x0C
-	jeq	l_0BF7                             		| [$0BF3: jr   z,l_0BF7]
-	neg.b	d0                               	| [$0BF5: neg]
+	btst.b	#7,(mq_state_13,a2)                 | [$0BEF: bit  7,0x13(ix)] if set then negate data to (ix)0x0C [freq=low, count=01%]
+	jeq	l_0BF7                             		| [$0BF3: jr   z,l_0BF7] [freq=low, count=01%]
+	neg.b	d0                               	| [$0BF5: neg] [freq=low, count=00%]
 l_0BF7:
-	move.b	d0,(mq_angle_increment_0C,a2)               | [$0BF7: ld   0x0C(ix),a]
-	move.b	(a0)+,d0                         	| [$0BFA: ld   a,(hl)] data[ n + 2 ] ... to (ix)0x0D
+	move.b	d0,(mq_angle_increment_0C,a2)               | [$0BF7: ld   0x0C(ix),a] [freq=low, count=01%]
+	move.b	(a0)+,d0                         	| [$0BFA: ld   a,(hl)] data[ n + 2 ] ... to (ix)0x0D [freq=low, count=01%]
 												| [$0BFB: inc  hl]
-	move.b	d0,(mq_timeout_0d,a2)               | [$0BFC: ld   0x0D(ix),a] expiration counter from data[ n + 2 ]
+	move.b	d0,(mq_timeout_0d,a2)               | [$0BFC: ld   0x0D(ix),a] expiration counter from data[ n + 2 ] [freq=low, count=01%]
 	CONVERT_SUBROM_A0_TO_D5D6
 	
 l_flite_pth_skip_load_0BFF:
 	* update flight path pointers. They are initialized in maincpu at 0x10A1
-	move.b	d6,(mq_fp_lsb_08,a2)                    	| [$0BFF: ld   0x08(ix),l] update pointer.b0
-	move.b	d5,(mq_fp_msb_09,a2)                    	| [$0C02: ld   0x09(ix),h] update pointer.b1
+	move.b	d6,(mq_fp_lsb_08,a2)                    	| [$0BFF: ld   0x08(ix),l] update pointer.b0 [freq=low, count=01%]
+	move.b	d5,(mq_fp_msb_09,a2)                    	| [$0C02: ld   0x09(ix),h] update pointer.b1 [freq=low, count=01%]
 
 * process this time-step of flite path, continue processing on this data-set
 * check home positions
 l_0C05_flite_pth_cont:
-	btst.b	#6,(mq_state_13,a2)                    | [$0C05: bit  6,0x13(ix)] if set, check if home
-	jeq	l_0C2D_flite_pth_step              	| [$0C09: jr   z,l_0C2D_flite_pth_step]
+	btst.b	#6,(mq_state_13,a2)                    | [$0C05: bit  6,0x13(ix)] if set, check if home [freq=medium, count=46%]
+	jeq	l_0C2D_flite_pth_step              	| [$0C09: jr   z,l_0C2D_flite_pth_step] [freq=medium, count=46%]
 * transitions to the next segment of the flight pattern
 * if (    (b01==b06 || (b01-b06)==1|| (b06-b01)==1)
 *      && (b03==b07 || (b03-b07)==1|| (b07-b03)==1) ) ...
-	move.b	(mq_y_01,a2),d0                       | [$0C0B: ld   a,0x01(ix)]
-	sub.b	(mq_home_position_y_06,a2),d0         | [$0C0E: sub  0x06(ix)] (ix)0x01 - (ix)0x06
-	jeq	l_0C1B                                   	| [$0C11: jr   z,l_0C1B]
-	jpl	l_0C18                                   	| [$0C13: jp   p,l_0C18] check overflow
-	neg.b	d0                                    | [$0C16: neg] negate if overflow (gets absolute value)
+	move.b	(mq_y_01,a2),d0                       | [$0C0B: ld   a,0x01(ix)] [freq=low, count=08%]
+	sub.b	(mq_home_position_y_06,a2),d0         | [$0C0E: sub  0x06(ix)] (ix)0x01 - (ix)0x06 [freq=low, count=08%]
+	jeq	l_0C1B                                   	| [$0C11: jr   z,l_0C1B] [freq=low, count=08%]
+	jpl	l_0C18                                   	| [$0C13: jp   p,l_0C18] check overflow [freq=low, count=08%]
+	neg.b	d0                                    | [$0C16: neg] negate if overflow (gets absolute value) [freq=low, count=07%]
 l_0C18:                                          
-	subq.b	#1,d0                                 | [$0C18: dec  a]
-	jne	l_0C2D_flite_pth_step                    	| [$0C19: jr   nz,l_0C2D_flite_pth_step]
+	subq.b	#1,d0                                 | [$0C18: dec  a] [freq=low, count=08%]
+	jne	l_0C2D_flite_pth_step                    	| [$0C19: jr   nz,l_0C2D_flite_pth_step] [freq=low, count=08%]
 l_0C1B:                                          
-	move.b	(mq_x_03,a2),d0                       | [$0C1B: ld   a,0x03(ix)] detection of homespot... (ix)0x03-(ix)0x07 == 0
-	sub.b	(mq_home_position_x_07,a2),d0         | [$0C1E: sub  0x07(ix)] detection of homespot... (ix)0x03-(ix)0x07 == 0
-	jeq	l_0E08_imhome                            	| [$0C21: jp   z,l_0E08_imhome]
-	jpl	l_0C29                                   	| [$0C24: jp   p,l_0C29] check overflow
-	neg.b	d0                                    | [$0C27: neg] negate if overflow (gets absolute value)
+	move.b	(mq_x_03,a2),d0                       | [$0C1B: ld   a,0x03(ix)] detection of homespot... (ix)0x03-(ix)0x07 == 0 [freq=low, count=00%]
+	sub.b	(mq_home_position_x_07,a2),d0         | [$0C1E: sub  0x07(ix)] detection of homespot... (ix)0x03-(ix)0x07 == 0 [freq=low, count=00%]
+	jeq	l_0E08_imhome                            	| [$0C21: jp   z,l_0E08_imhome] [freq=low, count=00%]
+	jpl	l_0C29                                   	| [$0C24: jp   p,l_0C29] check overflow [freq=low, count=00%]
+	neg.b	d0                                    | [$0C27: neg] negate if overflow (gets absolute value) [freq=low, count=00%]
 l_0C29:                                          
-	subq.b	#1,d0                                 | [$0C29: dec  a]
-	jeq	l_0E08_imhome                            	| [$0C2A: jp   z,l_0E08_imhome]
+	subq.b	#1,d0                                 | [$0C29: dec  a] [freq=low, count=00%]
+	jeq	l_0E08_imhome                            	| [$0C2A: jp   z,l_0E08_imhome] [freq=low, count=00%]
 
 
 l_0C2D_flite_pth_step:
 * if ( b13 & 0x20 && ( b01 == b06 || (b01 - b06) == 1|| (b06 - b01) == 1 ) ...
-	btst.b	#5,(mq_state_13,a2)                  | [$0C2D: bit  5,0x13(ix)] check if bee or boss dive
-	jeq	l_0C46                             	     | [$0C31: jr   z,l_0C46]
-	move.b	(mq_y_01,a2),d0                      | [$0C33: ld   a,0x01(ix)] 0C33 boss: launched out of position, bee movement, 0x01(ix) counting down
-	sub.b	(mq_home_position_y_06,a2),d0        | [$0C36: sub  0x06(ix)] origin home position y (bits 15:8)
-	jeq	l_0C3E                             	     | [$0C39: jr   z,l_0C3E]
-	addq.b	#1,d0                                | [$0C3B: inc  a]
-	jne	l_0C46                             	     | [$0C3C: jr   nz,l_0C46]
+	btst.b	#5,(mq_state_13,a2)                  | [$0C2D: bit  5,0x13(ix)] check if bee or boss dive [freq=medium, count=46%]
+	jeq	l_0C46                             	     | [$0C31: jr   z,l_0C46] [freq=medium, count=46%]
+	move.b	(mq_y_01,a2),d0                      | [$0C33: ld   a,0x01(ix)] 0C33 boss: launched out of position, bee movement, 0x01(ix) counting down [freq=low, count=00%]
+	sub.b	(mq_home_position_y_06,a2),d0        | [$0C36: sub  0x06(ix)] origin home position y (bits 15:8) [freq=low, count=00%]
+	jeq	l_0C3E                             	     | [$0C39: jr   z,l_0C3E] [freq=low, count=00%]
+	addq.b	#1,d0                                | [$0C3B: inc  a] [freq=low, count=00%]
+	jne	l_0C46                             	     | [$0C3C: jr   nz,l_0C46] [freq=low, count=00%]
 * ... then ...
 l_0C3E:
 * set it up to expire on next step
-	move.b	#1,(mq_timeout_0d,a2)               | [$0C3E: ld   0x0D(ix),#1] bee dived down and begins loop around, boss reached position to start beam
-	bclr.b	#5,(mq_state_13,a2)                 | [$0C42: res  5,0x13(ix)] (ix)0x0D == 1
+	move.b	#1,(mq_timeout_0d,a2)               | [$0C3E: ld   0x0D(ix),#1] bee dived down and begins loop around, boss reached position to start beam [freq=low, count=00%]
+	bclr.b	#5,(mq_state_13,a2)                 | [$0C42: res  5,0x13(ix)] (ix)0x0D == 1 [freq=low, count=00%]
 
 * advance the rotation angle. Step-size in .b0C and 10-bit angle in .b04+.b05
 *               90          - angle in degrees
@@ -2212,101 +2212,101 @@ l_0C3E:
 
 * load DE with local copy of rotation value and go ahead and update pool slot
 l_0C46:
-	move.b	(mq_angle_increment_0C,a2),d1       | [$0C46: ld   b,0x0C(ix)] add to (ix)0x04
-	move.b	(mq_angle_lsb_04,a2),d0             | [$0C49: ld   a,0x04(ix)]
-	move.b	d0,d4                           	| [$0C4C: ld   e,a] need this later ...
-	add.b	d1,d0                            	| [$0C4D: add  a,b] need this below for rra ...
-	move.b	d0,(mq_angle_lsb_04,a2)             | [$0C4E: ld   0x04(ix),a] .b04 += .b0C
-	move.b	(mq_angle_msb_05,a2),d3             | [$0C51: ld   d,0x05(ix)] need this later ...
+	move.b	(mq_angle_increment_0C,a2),d1       | [$0C46: ld   b,0x0C(ix)] add to (ix)0x04 [freq=medium, count=46%]
+	move.b	(mq_angle_lsb_04,a2),d0             | [$0C49: ld   a,0x04(ix)] [freq=medium, count=46%]
+	move.b	d0,d4                           	| [$0C4C: ld   e,a] need this later ... [freq=medium, count=46%]
+	add.b	d1,d0                            	| [$0C4D: add  a,b] need this below for rra ... [freq=medium, count=46%]
+	move.b	d0,(mq_angle_lsb_04,a2)             | [$0C4E: ld   0x04(ix),a] .b04 += .b0C [freq=medium, count=46%]
+	move.b	(mq_angle_msb_05,a2),d3             | [$0C51: ld   d,0x05(ix)] need this later ... [freq=medium, count=46%]
 * sign of subtrahend determines signedness of carry
-	move.b	#1,d6                           	| [$0C54: ld   l,#1]
-	btst.b	#7,d1                           	| [$0C56: bit  7,b] (ix)0x0C
-	jeq	l_0C5C                             	    | [$0C58: jr   z,l_0C5C]
-	st.b	d6                          	    | [$0C5A: ld   l,#-1]
+	move.b	#1,d6                           	| [$0C54: ld   l,#1] [freq=medium, count=46%]
+	btst.b	#7,d1                           	| [$0C56: bit  7,b] (ix)0x0C [freq=medium, count=46%]
+	jeq	l_0C5C                             	    | [$0C58: jr   z,l_0C5C] [freq=medium, count=46%]
+	st.b	d6                          	    | [$0C5A: ld   l,#-1] [freq=low, count=13%]
 l_0C5C:
 * check for overflow out of LSB from addition (subtraction) result, sneaky ... xor sets S flag if bit-7 is toggled hi
-	roxr.b	#1,d0                           	| [$0C5C: rra]
-	eor.b	d1,d0                            	| [$0C5D: xor  b] b from (ix)0x0C
-	jpl	l_0C63                             		| [$0C5F: jp   p,l_0C63]
-	move.b	d3,d0                           	| [$0C5E: ld   a,d] from (ix)0x05
-	add.b	d6,d0                            	| [$0C62: add  a,l]
+	roxr.b	#1,d0                           	| [$0C5C: rra] [freq=medium, count=46%]
+	eor.b	d1,d0                            	| [$0C5D: xor  b] b from (ix)0x0C [freq=medium, count=46%]
+	jpl	l_0C63                             		| [$0C5F: jp   p,l_0C63] [freq=medium, count=46%]
+	move.b	d3,d0                           	| [$0C5E: ld   a,d] from (ix)0x05 [freq=medium, count=46%]
+	add.b	d6,d0                            	| [$0C62: add  a,l] [freq=low, count=01%]
 	jra		0f
 l_0C63:
-	move.b	d3,d0                           	| [$0C5E: ld   a,d] from (ix)0x05
+	move.b	d3,d0                           	| [$0C5E: ld   a,d] from (ix)0x05 [freq=medium, count=46%]
 0:
-	move.b	d0,(mq_angle_msb_05,a2)             | [$0C63: ld   0x05(ix),a] bits <8:9>
+	move.b	d0,(mq_angle_msb_05,a2)             | [$0C63: ld   0x05(ix),a] bits <8:9> [freq=medium, count=46%]
 
 * determine_sprite_code
-	move.b	d4,d0                           	| [$0C66: ld   a,e] from previous (ix)0x04
-	move.b	d3,d2                           	| [$0C67: ld   c,d] from previous (ix)0x05 ... need this later ...
-	btst.b	#0,d2                           	| [$0C68: bit  0,c]
-	jeq	l_0C6D                             	    | [$0C6A: jr   z,l_0C6D]
-	not.b	d0                               	| [$0C6C: cpl] invert bits 7:0 in quadrant 1 and 3 ...
+	move.b	d4,d0                           	| [$0C66: ld   a,e] from previous (ix)0x04 [freq=medium, count=46%]
+	move.b	d3,d2                           	| [$0C67: ld   c,d] from previous (ix)0x05 ... need this later ... [freq=medium, count=46%]
+	btst.b	#0,d2                           	| [$0C68: bit  0,c] [freq=medium, count=46%]
+	jeq	l_0C6D                             	    | [$0C6A: jr   z,l_0C6D] [freq=medium, count=46%]
+	not.b	d0                               	| [$0C6C: cpl] invert bits 7:0 in quadrant 1 and 3 ... [freq=low, count=24%]
 l_0C6D:
 * ... select vertical tile if within 15 degrees of 90 or 270
-	add.b	#21,d0                           	| [$0C6D: add  a,#21] 1024 / ( 6 * 4 ) == 42
-	jcc	l_0C75                             		| [$0C6F: jr   nc,l_0C75]
-	move.b	#6,d1                           	| [$0C71: ld   b,#6] vertical orientation, wings open (7 is wings closed)
-	jra	l_0C81                             		| [$0C73: jr   l_0C81]
+	add.b	#21,d0                           	| [$0C6D: add  a,#21] 1024 / ( 6 * 4 ) == 42 [freq=medium, count=46%]
+	jcc	l_0C75                             		| [$0C6F: jr   nc,l_0C75] [freq=medium, count=46%]
+	move.b	#6,d1                           	| [$0C71: ld   b,#6] vertical orientation, wings open (7 is wings closed) [freq=low, count=09%]
+	jra	l_0C81                             		| [$0C73: jr   l_0C81] [freq=low, count=09%]
 l_0C75:
 * divide by 42 ...42 counts per step of rotation (with 24 steps in the circle, 1 step is 15 degrees)
 * Here's the math: A * ( 1/2 + 1/4 ) * ( 1/32 )
-	lsr.b	#1,d0                            	| [$0C75: srl  a]
-	move.b	d0,d1                           	| [$0C77: ld   b,a]
-	lsr.b	#1,d1                            	| [$0C78: srl  b]
-	add.b	d1,d0                            	| [$0C7A: add  a,b]
-	rol.b	#3,d0                            	| [$0C7B: rlca] rlca * 3 ... 1/32 * 3
-	and.b	#0x07,d0                         	| [$0C7E: and  #0x07]
-	move.b	d0,d1                           	| [$0C80: ld   b,a]
+	lsr.b	#1,d0                            	| [$0C75: srl  a] [freq=medium, count=37%]
+	move.b	d0,d1                           	| [$0C77: ld   b,a] [freq=medium, count=37%]
+	lsr.b	#1,d1                            	| [$0C78: srl  b] [freq=medium, count=37%]
+	add.b	d1,d0                            	| [$0C7A: add  a,b] [freq=medium, count=37%]
+	rol.b	#3,d0                            	| [$0C7B: rlca] rlca * 3 ... 1/32 * 3 [freq=medium, count=37%]
+	and.b	#0x07,d0                         	| [$0C7E: and  #0x07] [freq=medium, count=37%]
+	move.b	d0,d1                           	| [$0C80: ld   b,a] [freq=medium, count=37%]
 
 l_0C81:
-	lea	o_ds_sprite_code_8B00(a6),a0              	| [$0C81: ld   h,#>o_ds_sprite_code_8B00]
+	lea	o_ds_sprite_code_8B00(a6),a0              	| [$0C81: ld   h,#>o_ds_sprite_code_8B00] [freq=medium, count=46%]
 	moveq	#0,d6
-	move.b	(mq_object_id_10,a2),d6                    	| [$0C83: ld   l,0x10(ix)] mrw_sprite[L].cclr.b0
+	move.b	(mq_object_id_10,a2),d6                    	| [$0C83: ld   l,0x10(ix)] mrw_sprite[L].cclr.b0 [freq=medium, count=46%]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$0C86: ld   a,(hl)]
-	and.b	#0xF8,d0                         	| [$0C87: and  #0xF8] base sprite code (multiple of 8)
-	or.b	d1,d0                             	| [$0C89: or   b]
-	move.b	d0,(a0)                         	| [$0C8A: ld   (hl),a]
+	move.b	(a0),d0                         	| [$0C86: ld   a,(hl)] [freq=medium, count=46%]
+	and.b	#0xF8,d0                         	| [$0C87: and  #0xF8] base sprite code (multiple of 8) [freq=medium, count=46%]
+	or.b	d1,d0                             	| [$0C89: or   b] [freq=medium, count=46%]
+	move.b	d0,(a0)                         	| [$0C8A: ld   (hl),a] [freq=medium, count=46%]
 
 * determine_sprite_ctrl( C )
 * 0: flipx - flip about the X axis, i.e. "up/down"
 * 1: flipy - flip about the Y axis, i.e. "left/right"
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$0C8B: ld   h,#>o_ds_sprite_ctrl_9B00]
+	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$0C8B: ld   h,#>o_ds_sprite_ctrl_9B00] [freq=medium, count=46%]
 	add.w	d6,a0
-	move.b	d2,d0                           	| [$0C8D: ld   a,c] d saved from (ix)0x05 above
-	ror.b	#1,d2                            	| [$0C8E: rrc  c]
-	eor.b	d2,d0                            	| [$0C90: xor  c] bit0 xor with bit1 ...
-	addq.b	#1,d0                           	| [$0C91: inc  a] ... add 1 ... now have bit1
-	ror.b	#1,d2                            	| [$0C92: rrc  c] bit <1> ...
+	move.b	d2,d0                           	| [$0C8D: ld   a,c] d saved from (ix)0x05 above [freq=medium, count=46%]
+	ror.b	#1,d2                            	| [$0C8E: rrc  c] [freq=medium, count=46%]
+	eor.b	d2,d0                            	| [$0C90: xor  c] bit0 xor with bit1 ... [freq=medium, count=46%]
+	addq.b	#1,d0                           	| [$0C91: inc  a] ... add 1 ... now have bit1 [freq=medium, count=46%]
+	ror.b	#1,d2                            	| [$0C92: rrc  c] bit <1> ... [freq=medium, count=46%]
 	SET_X_FROM_C
-	roxl.b	#1,d0                           	| [$0C94: rla] ... into <0>
-	and.b	#0x03,d0                         	| [$0C95: and  #0x03] <0> flip up/down  <1> flip l/r, double-x/double-y bits not used
-	move.b	d0,(a0)                         	| [$0C97: ld   (hl),a] mrw_sprite[L].ctrl.b0 = A & 0x03
+	roxl.b	#1,d0                           	| [$0C94: rla] ... into <0> [freq=medium, count=46%]
+	and.b	#0x03,d0                         	| [$0C95: and  #0x03] <0> flip up/down  <1> flip l/r, double-x/double-y bits not used [freq=medium, count=46%]
+	move.b	d0,(a0)                         	| [$0C97: ld   (hl),a] mrw_sprite[L].ctrl.b0 = A & 0x03 [freq=medium, count=46%]
 
 * choose x or y displacement vector to apply on this update
 	
-	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$0C98: ld   a,(o_ds3_frame_cts_92A0 + 0)]
-	and.b	#0x01,d0                         	| [$0C9B: and  #0x01]
-	jeq	l_0CA4                             		| [$0C9D: jr   z,l_0CA4]
-	move.b	(mq_unknown_0A,a2),d0                    	| [$0C9F: ld   a,0x0A(ix)]
-	jra	l_0CA7                             		| [$0CA2: jr   l_0CA7]
+	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$0C98: ld   a,(o_ds3_frame_cts_92A0 + 0)] [freq=medium, count=46%]
+	and.b	#0x01,d0                         	| [$0C9B: and  #0x01] [freq=medium, count=46%]
+	jeq	l_0CA4                             		| [$0C9D: jr   z,l_0CA4] [freq=medium, count=46%]
+	move.b	(mq_unknown_0A,a2),d0                    	| [$0C9F: ld   a,0x0A(ix)] [freq=low, count=23%]
+	jra	l_0CA7                             		| [$0CA2: jr   l_0CA7] [freq=low, count=23%]
 l_0CA4:
-	move.b	(mq_unknown_0B,a2),d0                    	| [$0CA4: ld   a,0x0B(ix)]
+	move.b	(mq_unknown_0B,a2),d0                    	| [$0CA4: ld   a,0x0B(ix)] [freq=low, count=23%]
 
 l_0CA7:
-	tst.b	d0                                	| [$0CA7: and  a] if zero, start of tractor beam and we can skip this crap
-	jeq	l_flite_pth_posn_set_0D03          		| [$0CA8: jp   z,l_flite_pth_posn_set_0D03] 2 "parameters": HL, and E (e saved from (ix)0x04)
+	tst.b	d0                                	| [$0CA7: and  a] if zero, start of tractor beam and we can skip this crap [freq=medium, count=46%]
+	jeq	l_flite_pth_posn_set_0D03          		| [$0CA8: jp   z,l_flite_pth_posn_set_0D03] 2 "parameters": HL, and E (e saved from (ix)0x04) [freq=medium, count=46%]
 
 * compute increment and update selected coordinate
 
-	move.l	a0,-(sp)                        	| [$0CAB: push hl] &mrw_sprite[L].ctrl.b0
-	move.l	a2,a0                        		| [$0CAC: push ix]
+	move.l	a0,-(sp)                        	| [$0CAB: push hl] &mrw_sprite[L].ctrl.b0 [freq=medium, count=44%]
+	move.l	a2,a0                        		| [$0CAC: push ix] [freq=medium, count=44%]
 												| [$0CAE: pop  hl] &bug_motion_que[n].b00
-	move.b	d0,d1                           	| [$0CAF: ld   b,a] (ix)0x0A or (ix)0x0B
-	move.b	d3,d0                           	| [$0CB0: ld   a,d] saved from (ix)0x05  ( from C46 )
-	and.b	#0x03,d0                         	| [$0CB1: and  #0x03]
-	move.b	d0,d3                           	| [$0CB3: ld   d,a]
+	move.b	d0,d1                           	| [$0CAF: ld   b,a] (ix)0x0A or (ix)0x0B [freq=medium, count=44%]
+	move.b	d3,d0                           	| [$0CB0: ld   a,d] saved from (ix)0x05  ( from C46 ) [freq=medium, count=44%]
+	and.b	#0x03,d0                         	| [$0CB1: and  #0x03] [freq=medium, count=44%]
+	move.b	d0,d3                           	| [$0CB3: ld   d,a] [freq=medium, count=44%]
 
 *         90          - angle in degrees
 *       1                               	| 0        - quadrant derived from 10-bit angle
@@ -2315,14 +2315,14 @@ l_0CA7:
 *         270
 * xor bit-7 with bit-8 ... test for orientation near 0 or 180
 * i.e. < xx80 in quadrant 0 & 2, and >= xx80 in quadrant 1 & 3
-	rol.b	#1,d4                            	| [$0CB4: rlc  e] e saved from (ix)0x04   ( from C46 )
+	rol.b	#1,d4                            	| [$0CB4: rlc  e] e saved from (ix)0x04   ( from C46 ) [freq=medium, count=44%]
 	SET_X_FROM_C
-	roxl.b	#1,d3                           	| [$0CB6: rl   d]
-	movem.w	d3/d4,-(sp)                    		| [$0CB8: push de] adjusted rotation angle, restores to HL below .....
-	eor.b	d3,d0                            	| [$0CB9: xor  d]
-	ror.b	#1,d0                            	| [$0CBA: rrca] xor result in A<0>
-	jcs	l_0CBF                             		| [$0CBB: jr   c,l_0CBF] check for Cy shifted into bit7 from rrca
-	addq.w	#2,a0                           	| [$0CBD: inc  l] * 2
+	roxl.b	#1,d3                           	| [$0CB6: rl   d] [freq=medium, count=44%]
+	movem.w	d3/d4,-(sp)                    		| [$0CB8: push de] adjusted rotation angle, restores to HL below ..... [freq=medium, count=44%]
+	eor.b	d3,d0                            	| [$0CB9: xor  d] [freq=medium, count=44%]
+	ror.b	#1,d0                            	| [$0CBA: rrca] xor result in A<0> [freq=medium, count=44%]
+	jcs	l_0CBF                             		| [$0CBB: jr   c,l_0CBF] check for Cy shifted into bit7 from rrca [freq=medium, count=44%]
+	addq.w	#2,a0                           	| [$0CBD: inc  l] * 2 [freq=low, count=17%]
 
 l_0CBF:
 * .b04+.b05 is angle in 10-bits. bits<9:7> together give the quadrant and fraction of 90
@@ -2331,53 +2331,53 @@ l_0CBF:
 * 1 0  0 - 4   Remembering they have been <<1, it means the lowest bit was
 * 1 0  1 - 5   .b04<7> (degree 0-89) and the upper 2 bits were .b05<1:0> (quadrant)
 * 1 1  0 - 6   Taking the quadrant and angle together, the range is 135-304 degrees.
-	addq.b	#1,d3                           	| [$0CBF: inc  d]
-	move.b	d1,d0                           	| [$0CC0: ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix)
-	btst.b	#2,d3                           	| [$0CC2: bit  2,d]
-	jeq	l_0CC7                             		| [$0CC3: jr   z,l_0CC7]
-	neg.b	d0                               	| [$0CC5: neg] negate primary component for 135-305 degrees
+	addq.b	#1,d3                           	| [$0CBF: inc  d] [freq=medium, count=44%]
+	move.b	d1,d0                           	| [$0CC0: ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix) [freq=medium, count=44%]
+	btst.b	#2,d3                           	| [$0CC2: bit  2,d] [freq=medium, count=44%]
+	jeq	l_0CC7                             		| [$0CC3: jr   z,l_0CC7] [freq=medium, count=44%]
+	neg.b	d0                               	| [$0CC5: neg] negate primary component for 135-305 degrees [freq=low, count=25%]
 l_0CC7:
 * A is actually bits<15:7> of addend (.b00/.b02 in fixed point, 9.7)
-	move.b	d0,d2                           	| [$0CC7: ld   c,a] from 0x0A(ix) or 0x0B(ix)
-	asr.b	#1,d2                            	| [$0CC8: sra  c] sign extend, "bit-8" into Cy
-	jcc	l_0CD0                             		| [$0CCA: jr   nc,l_0CD0]
-	move.b	(mq_fine_y_00,a0),d0                         	| [$0CCC: ld   a,(hl)] b00 or b02, depends on "jr   c,l_0CBF"
-	add.b	#0x80,d0                         	| [$0CCD: add  a,#0x80] add carry-out from sra
-	move.b	d0,(mq_fine_y_00,a0)                         	| [$0CCF: ld   (hl),a]
+	move.b	d0,d2                           	| [$0CC7: ld   c,a] from 0x0A(ix) or 0x0B(ix) [freq=medium, count=44%]
+	asr.b	#1,d2                            	| [$0CC8: sra  c] sign extend, "bit-8" into Cy [freq=medium, count=44%]
+	jcc	l_0CD0                             		| [$0CCA: jr   nc,l_0CD0] [freq=medium, count=44%]
+	move.b	(mq_fine_y_00,a0),d0                         	| [$0CCC: ld   a,(hl)] b00 or b02, depends on "jr   c,l_0CBF" [freq=low, count=22%]
+	add.b	#0x80,d0                         	| [$0CCD: add  a,#0x80] add carry-out from sra [freq=low, count=22%]
+	move.b	d0,(mq_fine_y_00,a0)                         	| [$0CCF: ld   (hl),a] [freq=low, count=22%]
 l_0CD0:                         	
 												| [$0CD0: inc  l]
-	move.b	(mq_y_01,a0),d0                     | [$0CD1: ld   a,(hl)] b01 or b03, depends on "jr   c,l_0CBF"
-	addx.b	d2,d0								| [$0CD2: adc  a,c]                                   ; add with carry-out from addition into lsb
-	move.b	d0,(mq_y_01,a0)                     | [$0CD3: ld   (hl),a]
+	move.b	(mq_y_01,a0),d0                     | [$0CD1: ld   a,(hl)] b01 or b03, depends on "jr   c,l_0CBF" [freq=medium, count=44%]
+	addx.b	d2,d0								| [$0CD2: adc  a,c]                                   ; add with carry-out from addition into lsb [freq=medium, count=44%]
+	move.b	d0,(mq_y_01,a0)                     | [$0CD3: ld   (hl),a] [freq=medium, count=44%]
 
 
 * stash the pointer to .b0/.b2 in DE (previous DE into HL but no longer used)
 												| [$0CD4: dec  l]
 	COMPUTE_LSB_A0_D6	o_ds_bug_motion_que_9100 	| extract lsb from a0
-	exg	a1,a0                              		| [$0CD5: ex   de,hl] save a0 in a1
-	exg		d5,d3								| [$0CD5: ex   de,hl] useful?
-	exg		d6,d4								| [$0CD5: ex   de,hl]
+	exg	a1,a0                              		| [$0CD5: ex   de,hl] save a0 in a1 [freq=medium, count=44%]
+	exg		d5,d3								| [$0CD5: ex   de,hl] useful? [freq=medium, count=44%]
+	exg		d6,d4								| [$0CD5: ex   de,hl] [freq=medium, count=44%]
 	and.w	#0xFF,d4
 	sub.w	d4,a1								| remove D4 offset from A1
 												| [$0CD6: ld   a,e]
-	eor.b	#0x02,d4                         	| [$0CD7: xor  #0x02] toggle x/y pointer, .b00 or .b02
+	eor.b	#0x02,d4                         	| [$0CD7: xor  #0x02] toggle x/y pointer, .b00 or .b02 [freq=medium, count=44%]
 												| [$0CD9: ld   e,a]
 	* we just changed DE lsb, so A1 must be updated to reflect the change!
 	add.w	d4,a1
 	
 * test L<0> (pushed/popped from left-shifted DE above .. but this would be .b04<7> before left-shift?)
-	movem.w	(sp)+,d5/d6                        	| [$0CDA: pop  hl] ..... adjusted rotation angle from push DE above
-	lsr.b	#1,d6                            	| [$0CDB: srl  l] revert to unshifted, but did not retain bit-7
-	jcc	l_0CE3                             	    | [$0CDD: jr   nc,l_0CE3] bit<0> into Cy (which was actually bit<7>
+	movem.w	(sp)+,d5/d6                        	| [$0CDA: pop  hl] ..... adjusted rotation angle from push DE above [freq=medium, count=44%]
+	lsr.b	#1,d6                            	| [$0CDB: srl  l] revert to unshifted, but did not retain bit-7 [freq=medium, count=44%]
+	jcc	l_0CE3                             	    | [$0CDD: jr   nc,l_0CE3] bit<0> into Cy (which was actually bit<7> [freq=medium, count=44%]
 												| [$0CDF: ld   a,l]
-	eor.b	#0x7F,d6                         	| [$0CE0: xor  #0x7F] compliment bits<6:0>
+	eor.b	#0x7F,d6                         	| [$0CE0: xor  #0x7F] compliment bits<6:0> [freq=low, count=20%]
 												| [$0CE2: ld   l,a]
 l_0CE3:
-	move.b	d1,d0                           	| [$0CE3: ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix)
-	move.b	d5,d1                           	| [$0CE4: ld   b,h] msb of adjusted angle
+	move.b	d1,d0                           	| [$0CE3: ld   a,b] ... restore A: 0x0A(ix) or 0x0B(ix) [freq=medium, count=44%]
+	move.b	d5,d1                           	| [$0CE4: ld   b,h] msb of adjusted angle [freq=medium, count=44%]
 	clr.b	d5
-	and.w	#0xFF,d6                            | [$0CE5: ld   h,#0]
-	and.w	#0xFF,D0                            | [$0CE7: call mul_16_0E97] HL = L * A	
+	and.w	#0xFF,d6                            | [$0CE5: ld   h,#0] [freq=medium, count=44%]
+	and.w	#0xFF,D0                            | [$0CE7: call mul_16_0E97] HL = L * A [freq=medium, count=44%]
 	mulu	d0,d6
 	moveq	#0,d0			| not really useful, simulates what original mul routine does
 *             . 90          - angle in degrees
@@ -2396,32 +2396,32 @@ l_0CE3:
 *       1  1   1  -> 101 -> 100  x  .
 
 
-	move.b	d1,d0                           | [$0CEA: ld   a,b] msb of adjusted angle
-	eor.b	#0x02,d0                        | [$0CEB: xor  #0x02]
-	subq.b	#1,d0                           | [$0CED: dec  a]
-	btst.b	#2,d0                           | [$0CEE: bit  2,a]
-	jeq	l_0CFA                             	| [$0CF0: jr   z,l_0CFA]
+	move.b	d1,d0                           | [$0CEA: ld   a,b] msb of adjusted angle [freq=medium, count=44%]
+	eor.b	#0x02,d0                        | [$0CEB: xor  #0x02] [freq=medium, count=44%]
+	subq.b	#1,d0                           | [$0CED: dec  a] [freq=medium, count=44%]
+	btst.b	#2,d0                           | [$0CEE: bit  2,a] [freq=medium, count=44%]
+	jeq	l_0CFA                             	| [$0CF0: jr   z,l_0CFA] [freq=medium, count=44%]
 											| [$0CF2: ld   b,h]
 											| [$0CF3: ld   c,l]
 											| [$0CF4: ld   hl,#0x0000] 0
 											| [$0CF7: and  a] clear carry
-	neg.w	d6                            	| [$0CF8: sbc  hl,bc] negate BC ... can't use "neg" since it is 16-bit
+	neg.w	d6                            	| [$0CF8: sbc  hl,bc] negate BC ... can't use "neg" since it is 16-bit [freq=low, count=21%]
 l_0CFA:
 	move.w	d6,d5
 	LOAD_D5D6_FROM_D5_16
-	exg	a1,a0                              	| [$0CFA: ex   de,hl] reload the pointer from DE (saved at 0CD5)
+	exg	a1,a0                              	| [$0CFA: ex   de,hl] reload the pointer from DE (saved at 0CD5) [freq=medium, count=44%]
 * *HL += *DE	
-	exg	d3,d5								| [$0CFA: ex   de,hl]
-	exg	d4,d6								| [$0CFA: ex   de,hl]
-	move.b	d4,d0                           | [$0CFB: ld   a,e] lsb of mul result
-	addq.b	#1,d6							| [$0CFE: inc  l] not really useful, done before...
-	add.b	(a0),d0                         | [$0CFC: add  a,(hl)]
-	move.b	d0,(a0)+                        | [$0CFD: ld   (hl),a]  .b00 or .b02 (fine X or fine Y)
-	move.b	d3,d0                           | [$0CFF: ld   a,d] msb of mul result
+	exg	d3,d5								| [$0CFA: ex   de,hl] [freq=medium, count=44%]
+	exg	d4,d6								| [$0CFA: ex   de,hl] [freq=medium, count=44%]
+	move.b	d4,d0                           | [$0CFB: ld   a,e] lsb of mul result [freq=medium, count=44%]
+	add.b	d0,(a0)+                         | [$0CFC: add  a,(hl)] [freq=medium, count=44%]
+											| [$0CFD: ld   (hl),a]  .b00 or .b02 (fine X or fine Y) [freq=medium, count=44%]
+											| [$0CFE: inc  l] not really useful, done before... [freq=medium, count=44%]
+	move.b	d3,d0                           | [$0CFF: ld   a,d] msb of mul result [freq=medium, count=44%]
 	move.b	(a0),d7
-	addx.b	d7,d0							| [$0D00: adc  a,(hl)] .b01 or .b03 (X or Y)
-	move.b	d0,(a0)                         | [$0D01: ld   (hl),a]
-	move.l	(sp)+,a0                        | [$0D02: pop  hl] &mrw_sprite.ctrl[L].b1
+	addx.b	d7,d0							| [$0D00: adc  a,(hl)] .b01 or .b03 (X or Y) [freq=medium, count=44%]
+	move.b	d0,(a0)                         | [$0D01: ld   (hl),a] [freq=medium, count=44%]
+	move.l	(sp)+,a0                        | [$0D02: pop  hl] &mrw_sprite.ctrl[L].b1 [freq=medium, count=44%]
 
 * almost done ... update the sprite x/y positions
 l_flite_pth_posn_set_0D03:
@@ -2431,90 +2431,90 @@ l_flite_pth_posn_set_0D03:
 * extract x-coord and adjust for homing if needed
 * fixed point 9.7 in .b02.b03 - left shift integer portion into A ... carry in to <0> from .b02<7>
 	COMPUTE_LSB_A0_D6 o_ds_sprite_ctrl_9B00
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$0D07: ld   h,#>o_ds_sprite_posn_9300]
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$0D07: ld   h,#>o_ds_sprite_posn_9300] [freq=medium, count=46%]
 	add.w	d6,a0
-	move.b	(mq_x_03,a2),d3                    	| [$0D09: ld   d,0x03(ix)] bits<1:6> of x pixel ... could load directly to A
+	move.b	(mq_x_03,a2),d3                    	| [$0D09: ld   d,0x03(ix)] bits<1:6> of x pixel ... could load directly to A [freq=medium, count=46%]
 * set Cy from .b02<7>
-	move.b	#0x7F,d0                        	| [$0D0C: ld   a,#0x7F]
-	cmp.b	(mq_fine_x_02,a2),d0                | [$0D0E: cp   0x02(ix)]
+	move.b	#0x7F,d0                        	| [$0D0C: ld   a,#0x7F] [freq=medium, count=46%]
+	cmp.b	(mq_fine_x_02,a2),d0                | [$0D0E: cp   0x02(ix)] [freq=medium, count=46%]
 	SET_X_FROM_C
-	move.b	d3,d0                           	| [$0D11: ld   a,d] (ix)0x03
-	roxl.b	#1,d0                           	| [$0D12: rla] rotate Cy into A<0> (.b02<7>)
+	move.b	d3,d0                           	| [$0D11: ld   a,d] (ix)0x03 [freq=medium, count=46%]
+	roxl.b	#1,d0                           	| [$0D12: rla] rotate Cy into A<0> (.b02<7>) [freq=medium, count=46%]
 												| [$0D13: bit  0,c] test flip screen
 												| [$0D15: jr   z,l_0D1A]
 												| [$0D17: add  a,#0x0D] flipped
 												| [$0D19: cpl]					
-	btst.b	#6,(mq_state_13,a2)                 | [$0D1A: bit  6,0x13(ix)] if !z, add  a,(ix)0x11 ... relative offset
-	jeq	l_0D23                             	    | [$0D1E: jr   z,l_0D23]
+	btst.b	#6,(mq_state_13,a2)                 | [$0D1A: bit  6,0x13(ix)] if !z, add  a,(ix)0x11 ... relative offset [freq=medium, count=46%]
+	jeq	l_0D23                             	    | [$0D1E: jr   z,l_0D23] [freq=medium, count=46%]
 	* arrives here when aliens are on a "heading home" path
-	add.b	(mq_x_offset_11,a2),d0              | [$0D20: add  a,0x11(ix)] heading home (add x-offset ... already bits<7:0>)
+	add.b	(mq_x_offset_11,a2),d0              | [$0D20: add  a,0x11(ix)] heading home (add x-offset ... already bits<7:0>) [freq=low, count=08%]
 l_0D23:
-	move.b	d0,(a0)+                         	| [$0D23: ld   (hl),a] &sprite[n].posn.x
+	move.b	d0,(a0)+                         	| [$0D23: ld   (hl),a] &sprite[n].posn.x [freq=medium, count=46%]
 * extract y-coord and adjust for homing if needed
-	addq.b	#1,d6								| [$0D24: inc  l] sprite[n].posn.sy<0:7> [a0 coherence]
-	move.b	(mq_y_01,a2),d1                    	| [$0D25: ld   b,0x01(ix)]
+	addq.b	#1,d6								| [$0D24: inc  l] sprite[n].posn.sy<0:7> [a0 coherence] [freq=medium, count=46%]
+	move.b	(mq_y_01,a2),d1                    	| [$0D25: ld   b,0x01(ix)] [freq=medium, count=46%]
 * set Cy from .b00<7>
-	move.b	#0x7F,d0                        	| [$0D28: ld   a,#0x7F]
-	cmp.b	(mq_fine_y_00,a2),d0                | [$0D2A: cp   0x00(ix)]
+	move.b	#0x7F,d0                        	| [$0D28: ld   a,#0x7F] [freq=medium, count=46%]
+	cmp.b	(mq_fine_y_00,a2),d0                | [$0D2A: cp   0x00(ix)] [freq=medium, count=46%]
 	SET_X_FROM_C
-	roxl.b	#1,d4                           	| [$0D2D: rl   e] rotate Cy into E<0>
-	move.b	d1,d0                           	| [$0D2F: ld   a,b] (ix)0x01
+	roxl.b	#1,d4                           	| [$0D2D: rl   e] rotate Cy into E<0> [freq=medium, count=46%]
+	move.b	d1,d0                           	| [$0D2F: ld   a,b] (ix)0x01 [freq=medium, count=46%]
 												| [$0D30: bit  0,c] test flip screen
 												| [$0D32: jr   nz,l_0D38]
-	subq.b	#1,d4                           	| [$0D37: dec  e] compliment bit-0 of 9-bit integer portion (done before add)
-	add.b	#0x4F,d0          					| [$0D34: add  a,#(<(-0x0160 - 0x02))>>1] not flipped ... lsb of result, right-shift 1
-	not.b	d0                               	| [$0D36: cpl]
+	subq.b	#1,d4                           	| [$0D37: dec  e] compliment bit-0 of 9-bit integer portion (done before add) [freq=medium, count=46%]
+	add.b	#0x4F,d0          					| [$0D34: add  a,#(<(-0x0160 - 0x02))>>1] not flipped ... lsb of result, right-shift 1 [freq=medium, count=46%]
+	not.b	d0                               	| [$0D36: cpl] [freq=medium, count=46%]
 *l_0D38:
 * E<0> <- Cy <- 7 6 5 4 3 2 1 0 <- Cy <- E<0>
-	roxr.b	#1,d4                           	| [$0D38: rr   e] bit-0 of 9-bit integer portion into Cy
-	roxl.b	#1,d0                           	| [$0D3A: rla] Cy (bit0) into lsb, bit8 into Cy
-	roxl.b	#1,d4                           	| [$0D3B: rl   e] bit8 from Cy into E<0> (bit8 of sprite_y)
-	btst.b	#6,(mq_state_13,a2)                 | [$0D3D: bit  6,0x13(ix)] if !z, add  a,(ix)0x12
-	jeq	l_0D50                             		| [$0D41: jr   z,l_0D50]
+	roxr.b	#1,d4                           	| [$0D38: rr   e] bit-0 of 9-bit integer portion into Cy [freq=medium, count=46%]
+	roxl.b	#1,d0                           	| [$0D3A: rla] Cy (bit0) into lsb, bit8 into Cy [freq=medium, count=46%]
+	roxl.b	#1,d4                           	| [$0D3B: rl   e] bit8 from Cy into E<0> (bit8 of sprite_y) [freq=medium, count=46%]
+	btst.b	#6,(mq_state_13,a2)                 | [$0D3D: bit  6,0x13(ix)] if !z, add  a,(ix)0x12 [freq=medium, count=46%]
+	jeq	l_0D50                             		| [$0D41: jr   z,l_0D50] [freq=medium, count=46%]
 * r16.word += mctl_mpool[mpidx].b12
-	add.b	(mq_y_offset_12,a2),d0              | [$0D43: add  a,0x12(ix)] heading home (step y coord)
-	move.b	d0,d3                           	| [$0D46: ld   d,a] stash bits<7:0> of sum
-	roxr.b	#1,d0                           	| [$0D47: rra] somehow the rest of this propogates bit9 of the sum into E<0>
+	add.b	(mq_y_offset_12,a2),d0              | [$0D43: add  a,0x12(ix)] heading home (step y coord) [freq=low, count=08%]
+	move.b	d0,d3                           	| [$0D46: ld   d,a] stash bits<7:0> of sum [freq=low, count=08%]
+	roxr.b	#1,d0                           	| [$0D47: rra] somehow the rest of this propogates bit9 of the sum into E<0> [freq=low, count=08%]
 	move.b	(mq_y_offset_12,a2),d7
-	eor.b	d7,d0                            	| [$0D48: xor  0x12(ix)]
-	rol.b	#1,d0                            	| [$0D4B: rlca]
+	eor.b	d7,d0                            	| [$0D48: xor  0x12(ix)] [freq=low, count=08%]
+	rol.b	#1,d0                            	| [$0D4B: rlca] [freq=low, count=08%]
 	scs		d7
-	move.b	d3,d0                           	| [$0D4C: ld   a,d]
+	move.b	d3,d0                           	| [$0D4C: ld   a,d] [freq=low, count=08%]
 	tst.b	d7
-	jeq		l_0D50                             	| [$0D4D: jr   nc,l_0D50]
+	jeq		l_0D50                             	| [$0D4D: jr   nc,l_0D50] [freq=low, count=08%]
 	addq.b	#1,d4                           	| [$0D4F: inc  e]
 l_0D50:   
-	move.b	d0,(a0)                         	| [$0D50: ld   (hl),a] sprite[n].posn.sy<7:0>
+	move.b	d0,(a0)                         	| [$0D50: ld   (hl),a] sprite[n].posn.sy<7:0> [freq=medium, count=46%]
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$0D51: ld   h,#>o_ds_sprite_ctrl_9B00] sprite[n].posn.sy<8>
+	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$0D51: ld   h,#>o_ds_sprite_ctrl_9B00] sprite[n].posn.sy<8> [freq=medium, count=46%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	move.b	(a0),d7
-	ror.b	#1,d7                          		| [$0D53: rrc  (hl)]
-	ror.b	#1,d4                         		| [$0D55: rrc  e]
+	ror.b	#1,d7                          		| [$0D53: rrc  (hl)] [freq=medium, count=46%]
+	ror.b	#1,d4                         		| [$0D55: rrc  e] [freq=medium, count=46%]
 	SET_X_FROM_C
-	roxl.b	#1,d7                         		| [$0D57: rl   (hl)] sprite[n].posn.sy<8>
+	roxl.b	#1,d7                         		| [$0D57: rl   (hl)] sprite[n].posn.sy<8> [freq=medium, count=46%]
     move.b	d7,(a0)
 
 * Once the timer in $0E is reached, then check conditions to enable bomb drop.
 * If bomb is disabled for any reason, the timer is restarted.
-	subq.b	#1,(mq_drop_bomb_counter_0e,a2)   	| [$0D59: dec  0x0E(ix)] countdown to enable a bomb
-	jne	next__pool_idx_0dfb                     | [$0D5C: jp   nz,next__pool_idx_0dfb]
+	subq.b	#1,(mq_drop_bomb_counter_0e,a2)   	| [$0D59: dec  0x0E(ix)] countdown to enable a bomb [freq=medium, count=46%]
+	jne	next__pool_idx_0dfb                     | [$0D5C: jp   nz,next__pool_idx_0dfb] [freq=medium, count=46%]
 	move.b	(mq_drop_bomb_enable_0f,a2),d0
-	lsr.b	#1,d0                     			| [$0D5F: srl  0x0F(ix)] these bits enable bombing
+	lsr.b	#1,d0                     			| [$0D5F: srl  0x0F(ix)] these bits enable bombing [freq=low, count=01%]
 	scs		d7
 	move.b	d0,(mq_drop_bomb_enable_0f,a2)
 	tst.b	d7
-	jeq		l_0DF5_next_superloop_and_reload_0E	| [$0D63: jp   nc,l_0DF5_next_superloop_and_reload_0E]
-	move.b	(mq_y_01,a2),d0                    	| [$0D66:ld   a,0x01(ix)] if .cy.pair.b1 > $4C
-	cmp.b	#152>>1,d0							| [$0D69:cp   #152>>1]
-	jcs	l_0DF5_next_superloop_and_reload_0E		| [$0D6B:jp   c,l_0DF5_next_superloop_and_reload_0E]
-	move.b	o_ds_cpu0_task_actv_9000+0x15(a6),d0      | [$0D6E:ld   a,(o_ds_cpu0_task_actv_9000 + 0x15)] f_1F04 ...fire button input
+	jeq		l_0DF5_next_superloop_and_reload_0E	| [$0D63: jp   nc,l_0DF5_next_superloop_and_reload_0E] [freq=low, count=01%]
+	move.b	(mq_y_01,a2),d0                    	| [$0D66:ld   a,0x01(ix)] if .cy.pair.b1 > $4C [freq=low, count=00%]
+	cmp.b	#152>>1,d0							| [$0D69:cp   #152>>1] [freq=low, count=00%]
+	jcs	l_0DF5_next_superloop_and_reload_0E		| [$0D6B:jp   c,l_0DF5_next_superloop_and_reload_0E] [freq=low, count=00%]
+	move.b	o_ds_cpu0_task_actv_9000+0x15(a6),d0      | [$0D6E:ld   a,(o_ds_cpu0_task_actv_9000 + 0x15)] f_1F04 ...fire button input [freq=low, count=00%]
 												| [$0D71:and  a]
-	jeq	l_0DF5_next_superloop_and_reload_0E		| [$0D72:jp   z,l_0DF5_next_superloop_and_reload_0E]
-	move.b	o_ds4_game_tmrs_92ac+1(a6),d0             | [$0D75:ld   a,(o_ds4_game_tmrs_92ac + 1)]
+	jeq	l_0DF5_next_superloop_and_reload_0E		| [$0D72:jp   z,l_0DF5_next_superloop_and_reload_0E] [freq=low, count=00%]
+	move.b	o_ds4_game_tmrs_92ac+1(a6),d0             | [$0D75:ld   a,(o_ds4_game_tmrs_92ac + 1)] [freq=low, count=00%]
 												| [$0D78:and  a]
-	jne	l_0DF5_next_superloop_and_reload_0E		| [$0D79:jp   nz,l_0DF5_next_superloop_and_reload_0E]
+	jne	l_0DF5_next_superloop_and_reload_0E		| [$0D79:jp   nz,l_0DF5_next_superloop_and_reload_0E] [freq=low, count=00%]
 
 * check for available bomb ... bombs are rendered inactive at l_0815
 	move.l	a0,a1                          		| [ex   de,hl] &sprite.ctrl[bmbr].b1 to DE ...
@@ -2615,58 +2615,58 @@ l_0DE0:
 l_0DE2:
 	move.b	d0,d1                           	| [ld   b,a]
 
-	move.w	(sp)+,d0                        	| [$0DE3: pop  af] Cy from (fighter.x - bomber.x)
+	move.w	(sp)+,d0                        	| [$0DE3: pop  af] Cy from (fighter.x - bomber.x) [freq=low, count=00%]
 	CLEAR_XC_FLAGS
 	tst.b	d7
 	jeq	0f
 	SET_XC_FLAGS
 0:
-	roxr.b	#1,d1                           	| [$0DE4: rr   b]
+	roxr.b	#1,d1                           	| [$0DE4: rr   b] [freq=low, count=00%]
  	move.w	(sp)+,d6                        	| [$0DE6: pop  hl] sprt_mctl_objs[bomb]
-	move.b	d6,d0                           	| [$0DE7: ld   a,l]
-	addq	#8,d0                            	| [$0DE8: add  a,#8] IDX_BOMB will be index 0 thanks to and $0F
-	and.w	#0x0F,d0                         	| [$0DEA: and  #0x0F]
-	lea	o_b_92B0(a6),a0                 	            | [$0DEC: ld   hl,#o_b_92B0 + 0x00] bomb x-coordinate structure ( 8 * 2 )
-	add.w	d0,a0                            	| [$0DEF: add  a,l]
+	move.b	d6,d0                           	| [$0DE7: ld   a,l] [freq=low, count=00%]
+	addq	#8,d0                            	| [$0DE8: add  a,#8] IDX_BOMB will be index 0 thanks to and $0F [freq=low, count=00%]
+	and.w	#0x0F,d0                         	| [$0DEA: and  #0x0F] [freq=low, count=00%]
+	lea	o_b_92B0(a6),a0                 	            | [$0DEC: ld   hl,#o_b_92B0 + 0x00] bomb x-coordinate structure ( 8 * 2 ) [freq=low, count=00%]
+	add.w	d0,a0                            	| [$0DEF: add  a,l] [freq=low, count=00%]
 	                           	                | [$0DF0: ld   l,a]
-	move.b	d1,(a0)+                         	| [$0DF1: ld   (hl),b]
+	move.b	d1,(a0)+                         	| [$0DF1: ld   (hl),b] [freq=low, count=00%]
 	                           	                | [$0DF2: inc  hl]
-	clr.b	(a0)                             	| [$0DF3: ld   (hl),#0]
+	clr.b	(a0)                             	| [$0DF3: ld   (hl),#0] [freq=low, count=00%]
 
 l_0DF5_next_superloop_and_reload_0E:
-	move.b	o_b_92E2(a6),(0x0E,a2)              | [$0DF5: ld   a,(o_b_92E2 + 0x00)] to $0E(ix) e.g. A==14 (set for each round ... bomb drop counter)
+	move.b	o_b_92E2(a6),(0x0E,a2)              | [$0DF5: ld   a,(o_b_92E2 + 0x00)] to $0E(ix) e.g. A==14 (set for each round ... bomb drop counter) [freq=low, count=01%]
 												| [$0DF8: ld   0x0E(ix),a] o_b_92E2[0] ... bomb drop counter
 
 next__pool_idx_0dfb:
-	lea	o_b_bug_que_idx_9289(a6),a0               	| [$0DFB: ld   hl,#o_b_bug_que_idx_9289] -= 1 ... counts backwards
-	subq.b	#1,(a0)                         	| [$0DFE: dec  (hl)]
+	lea	o_b_bug_que_idx_9289(a6),a0               	| [$0DFB: ld   hl,#o_b_bug_que_idx_9289] -= 1 ... counts backwards [freq=high, count=71%]
+	subq.b	#1,(a0)                         	| [$0DFE: dec  (hl)] [freq=high, count=71%]
 	jne		0f                               	| [...]
-	rts                                    		| [$0DFF: ret  z] [...]
+	rts                                    		| [$0DFF: ret  z] [...] [freq=high, count=71%]
 0:
 * mctl_pool_idx += 1
 	                      	| [$0E00: ld   de,#0x0014] size of object-movement structure 20
-	add.w	#0x14,a2                            	| [$0E03: add  ix,de]
-	jra	for__pool_idx_08E4                      | [$0E05: jp   for__pool_idx_08E4]
+	add.w	#0x14,a2                            	| [$0E03: add  ix,de] [freq=high, count=71%]
+	jra	for__pool_idx_08E4                      | [$0E05: jp   for__pool_idx_08E4] [freq=high, count=71%]
 
 * creature gets to home-spot
 l_0E08_imhome:
 	                                         	| [$0E08: xor  a]
-	bclr.b	#0,(mq_state_13,a2)                 | [$0E09: res  0,0x13(ix)] mark the flying structure as inactive
-	clr.b	(mq_fine_y_00,a2)        	        | [$0E0D: ld   0x00(ix),a] 0
-	clr.b	(mq_fine_x_02,a2)                   | [$0E10: ld   0x02(ix),a] 0
-	lea	o_object_states_8800(a6),a0                   | [$0E13: ld   h,#>o_object_states_8800]
+	bclr.b	#0,(mq_state_13,a2)                 | [$0E09: res  0,0x13(ix)] mark the flying structure as inactive [freq=low, count=00%]
+	clr.b	(mq_fine_y_00,a2)        	        | [$0E0D: ld   0x00(ix),a] 0 [freq=low, count=00%]
+	clr.b	(mq_fine_x_02,a2)                   | [$0E10: ld   0x02(ix),a] 0 [freq=low, count=00%]
+	lea	o_object_states_8800(a6),a0                   | [$0E13: ld   h,#>o_object_states_8800] [freq=low, count=00%]
 	moveq	#0,d6
-	move.b	(mq_object_id_10,a2),d6             | [$0E15: ld   l,0x10(ix)] offset of object ...8800[L]
-	move.b	#ST_ROTATING_BACK_TO_COLLECTIVE,(a0,d6.w)   | [$0E18: ld   (hl),#2] disposition = 02: rotating back into position in the collective
-	lea	o_ds_sprite_code_8B00(a6),a0              	| [$0E1A: ld   h,#>o_ds_sprite_code_8B00]
+	move.b	(mq_object_id_10,a2),d6             | [$0E15: ld   l,0x10(ix)] offset of object ...8800[L] [freq=low, count=00%]
+	move.b	#ST_ROTATING_BACK_TO_COLLECTIVE,(a0,d6.w)   | [$0E18: ld   (hl),#2] disposition = 02: rotating back into position in the collective [freq=low, count=00%]
+	lea	o_ds_sprite_code_8B00(a6),a0              	| [$0E1A: ld   h,#>o_ds_sprite_code_8B00] [freq=low, count=00%]
 	add.w	d6,a0
 												| [$0E1C: inc  l]
-	move.b	(1,a0),d0                         	| [$0E1D: ld   a,(hl)] sprite color code
+	move.b	(1,a0),d0                         	| [$0E1D: ld   a,(hl)] sprite color code [freq=low, count=00%]
 												| [$0E1E: dec  l]
-	addq.b	#1,d0                           	| [$0E1F: inc  a]
-	and.b	#0x07,d0                         	| [$0E20: and  #0x07]
-	cmp.b	#5,d0                            	| [$0E22: cp   #5]
-	jcs	l_0E3A                             	    | [$0E24: jr   c,l_0E3A]
+	addq.b	#1,d0                           	| [$0E1F: inc  a] [freq=low, count=00%]
+	and.b	#0x07,d0                         	| [$0E20: and  #0x07] [freq=low, count=00%]
+	cmp.b	#5,d0                            	| [$0E22: cp   #5] [freq=low, count=00%]
+	jcs	l_0E3A                             	    | [$0E24: jr   c,l_0E3A] [freq=low, count=00%]
 
 * A > 5 ... remaining bonus-bee returns to collective
 	move.b	o_ds_plyr_actv_9820+_b_bbee_clr_a(a6),d0   	| [$0E26: ld   a,(o_ds_plyr_actv_9820 +_b_bbee_clr_a)]
@@ -2684,15 +2684,15 @@ l_0E08_imhome:
 
 l_0E3A:
 * these could be off by one if not already equal
-	move.b	(mq_home_position_y_06,a2),(mq_y_01,a2)       | [$0E3A: ld   a,0x06(ix)] ->(ix)0x01 ... origin home position y (bits 15:8)
+	move.b	(mq_home_position_y_06,a2),(mq_y_01,a2)       | [$0E3A: ld   a,0x06(ix)] ->(ix)0x01 ... origin home position y (bits 15:8) [freq=low, count=00%]
 	                  	| [$0E3D: ld   0x01(ix),a] (ix)0x06
-	move.b	(mq_home_position_x_07,a2),(mq_x_03,a2)       | [$0E40: ld   a,0x07(ix)] ->(ix)0x03
+	move.b	(mq_home_position_x_07,a2),(mq_x_03,a2)       | [$0E40: ld   a,0x07(ix)] ->(ix)0x03 [freq=low, count=00%]
                    	| [$0E43: ld   0x03(ix),a] (ix)0x07
 
 	COMPUTE_LSB_A0_D6 o_ds_sprite_code_8B00
 	lea		o_ds_sprite_ctrl_9B00(a6),a0
 	add.w	d6,a0
-	jra	l_flite_pth_posn_set_0D03          	    | [$0E46: jp   l_flite_pth_posn_set_0D03]
+	jra	l_flite_pth_posn_set_0D03          	    | [$0E46: jp   l_flite_pth_posn_set_0D03] [freq=low, count=00%]
 
 * training mode, make previous diving boss disabled
 * a bonus bee (e.g. 883A) flying off screen. Sprite-Code 5B (scorpion), color 05, object status==9
@@ -2724,65 +2724,65 @@ case_make_object_inactive_0e49: | 0x0
 *  D1-D4
 *-----------------------------------------------------------------------------
 compute_rotation_angle_0e5b:
-	movem.w	d1-d4,-(sp)                    	    | [$0E5B: push bc]
+	movem.w	d1-d4,-(sp)                    	    | [$0E5B: push bc] [freq=low, count=00%]
 	                                      	    | [$0E5C: push de]
 * dx
-	move.b	d4,d0                           	| [$0E5D: ld   a,e]
-	clr.b	d1                               	| [$0E5E: ld   b,#0]
-	sub.b	d6,d0                            	| [$0E5F: sub  l]
-	jcc	l_0E67                             	    | [$0E61: jr   nc,l_0E67]
-	bset.b	#0,d1                           	| [$0E63: set  0,b]
-	neg.b	d0                               	| [$0E65: neg]
+	move.b	d4,d0                           	| [$0E5D: ld   a,e] [freq=low, count=00%]
+	clr.b	d1                               	| [$0E5E: ld   b,#0] [freq=low, count=00%]
+	sub.b	d6,d0                            	| [$0E5F: sub  l] [freq=low, count=00%]
+	jcc	l_0E67                             	    | [$0E61: jr   nc,l_0E67] [freq=low, count=00%]
+	bset.b	#0,d1                           	| [$0E63: set  0,b] [freq=low, count=00%]
+	neg.b	d0                               	| [$0E65: neg] [freq=low, count=00%]
 l_0E67:
-	move.b	d0,d2                           	| [$0E67: ld   c,a]
+	move.b	d0,d2                           	| [$0E67: ld   c,a] [freq=low, count=00%]
 
 * dy
-	move.b	d3,d0                           	| [$0E68: ld   a,d]
-	sub.b	d5,d0                            	| [$0E69: sub  h]
-	jcc	l_0E76                             	    | [$0E6A: jr   nc,l_0E76]
-	move.b	d0,d3                           	| [$0E6C: ld   d,a]
-	move.b	d1,d0                           	| [$0E6D: ld   a,b] 1 if carried
-	eor.b	#0x01,d0                         	| [$0E6E: xor  #0x01]
-	or.b	#0x02,d0                          	| [$0E70: or   #0x02]
-	move.b	d0,d1                           	| [$0E72: ld   b,a]
-	move.b	d3,d0                           	| [$0E73: ld   a,d]
-	neg.b	d0                               	| [$0E74: neg]
+	move.b	d3,d0                           	| [$0E68: ld   a,d] [freq=low, count=00%]
+	sub.b	d5,d0                            	| [$0E69: sub  h] [freq=low, count=00%]
+	jcc	l_0E76                             	    | [$0E6A: jr   nc,l_0E76] [freq=low, count=00%]
+	move.b	d0,d3                           	| [$0E6C: ld   d,a] [freq=low, count=00%]
+	move.b	d1,d0                           	| [$0E6D: ld   a,b] 1 if carried [freq=low, count=00%]
+	eor.b	#0x01,d0                         	| [$0E6E: xor  #0x01] [freq=low, count=00%]
+	or.b	#0x02,d0                          	| [$0E70: or   #0x02] [freq=low, count=00%]
+	move.b	d0,d1                           	| [$0E72: ld   b,a] [freq=low, count=00%]
+	move.b	d3,d0                           	| [$0E73: ld   a,d] [freq=low, count=00%]
+	neg.b	d0                               	| [$0E74: neg] [freq=low, count=00%]
 
 l_0E76:
-	cmp.b	d2,d0                            	| [$0E76: cp   c]
+	cmp.b	d2,d0                            	| [$0E76: cp   c] [freq=low, count=00%]
 	SET_X_FROM_C
 	scs		d7				| save C
-	move.w	d0,-(sp)                        	| [$0E77: push af]
-	roxl.b	#1,d0                           	| [$0E78: rla]
-	eor.b	d1,d0                            	| [$0E79: xor  b]
-	roxr.b	#1,d0                           	| [$0E7A: rra]
-	INVERT_XC_FLAGS                            	| [$0E7B: ccf] complement Cy
-	roxl.b	#1,d1                           	| [$0E7C: rl   b]
-	move.w	(sp)+,d0                        	| [$0E7E: pop  af]
+	move.w	d0,-(sp)                        	| [$0E77: push af] [freq=low, count=00%]
+	roxl.b	#1,d0                           	| [$0E78: rla] [freq=low, count=00%]
+	eor.b	d1,d0                            	| [$0E79: xor  b] [freq=low, count=00%]
+	roxr.b	#1,d0                           	| [$0E7A: rra] [freq=low, count=00%]
+	INVERT_XC_FLAGS                            	| [$0E7B: ccf] complement Cy [freq=low, count=00%]
+	roxl.b	#1,d1                           	| [$0E7C: rl   b] [freq=low, count=00%]
+	move.w	(sp)+,d0                        	| [$0E7E: pop  af] [freq=low, count=00%]
 	tst.b	d7				| test preserved C
-	jeq	l_0E84                             	    | [$0E7F: jr   nc,l_0E84]
-	move.b	d2,d3                           	| [$0E81: ld   d,c]
-	move.b	d0,d2                           	| [$0E82: ld   c,a]
-	move.b	d3,d0                           	| [$0E83: ld   a,d]
+	jeq	l_0E84                             	    | [$0E7F: jr   nc,l_0E84] [freq=low, count=00%]
+	move.b	d2,d3                           	| [$0E81: ld   d,c] [freq=low, count=00%]
+	move.b	d0,d2                           	| [$0E82: ld   c,a] [freq=low, count=00%]
+	move.b	d3,d0                           	| [$0E83: ld   a,d] [freq=low, count=00%]
 l_0E84:
-	move.b	d2,d5                           	| [$0E84: ld   h,c]
-	clr.b	d6                               	| [$0E85: ld   l,#0]
+	move.b	d2,d5                           	| [$0E84: ld   h,c] [freq=low, count=00%]
+	clr.b	d6                               	| [$0E85: ld   l,#0] [freq=low, count=00%]
 
 * HL = HL / A
-	jbsr	c_divide_d5d6_by_d0_0EAA            | [$0E87: call c_divide_d5d6_by_d0_0EAA] HL = HL / A
-	move.b	d5,d0                           	| [$0E8A: ld   a,h]
-	eor.b	d1,d0                            	| [$0E8B: xor  b]
-	and.b	#0x01,d0                         	| [$0E8C: and  #0x01]
-	jeq	l_0E93                             	    | [$0E8E: jr   z,l_0E93]
+	jbsr	c_divide_d5d6_by_d0_0EAA            | [$0E87: call c_divide_d5d6_by_d0_0EAA] HL = HL / A [freq=low, count=00%]
+	move.b	d5,d0                           	| [$0E8A: ld   a,h] [freq=low, count=00%]
+	eor.b	d1,d0                            	| [$0E8B: xor  b] [freq=low, count=00%]
+	and.b	#0x01,d0                         	| [$0E8C: and  #0x01] [freq=low, count=00%]
+	jeq	l_0E93                             	    | [$0E8E: jr   z,l_0E93] [freq=low, count=00%]
 	                                         	| [$0E90: ld   a,l]
-	not.b	d6                               	| [$0E91: cpl]
+	not.b	d6                               	| [$0E91: cpl] [freq=low, count=00%]
 	                                            | [$0E92: ld   l,a]
 
 l_0E93:
-	move.b	d1,d5                           	| [$0E93: ld   h,b]
+	move.b	d1,d5                           	| [$0E93: ld   h,b] [freq=low, count=00%]
 												| [$0E94: pop  de]
-	movem.w	(sp)+,d1-d4                      	| [$0E95: pop  bc]
-	rts                                      	| [$0E96: ret]
+	movem.w	(sp)+,d1-d4                      	| [$0E95: pop  bc] [freq=low, count=00%]
+	rts                                      	| [$0E96: ret] [freq=low, count=00%]
 
 *=============================================================================
 * mul_16_0E97()
@@ -2821,7 +2821,7 @@ c_divide_d5d6_by_d0_0EAA:
 	and.w	#0xFF,d0
 	divu	d0,d5							| completely replaced by divu!
 	LOAD_D5D6_FROM_D5_16
-	rts                                    	| [$0EBC: ret]
+	rts                                    	| [$0EBC: ret] [freq=low, count=00%]
 	
 
 

@@ -1133,71 +1133,71 @@ gctl_supv_score_0728:
 *  if ( activ_plyr_state.plyr_1or2 == plyr1 )
 	                            	            | [$072B: and  a]
 *    tmp = $f9
-	move.b	#0xF9,d0                        	| [$072C: ld   a,#0xF9] offset to 10's place from _tile_ram + 0x0300 (plyr 1)
-	tst.b	o_ds_plyr_actv_9820+_b_plyr_nbr(a6)     	    | [$0728: ld   a,(o_ds_plyr_actv_9820(a6) +_b_plyr_nbr)] 0==plyr1, 1==plyr2
-	jeq	l_0732                             	    | [$072E: jr   z,l_0732]
+	move.b	#0xF9,d0                        	| [$072C: ld   a,#0xF9] offset to 10's place from _tile_ram + 0x0300 (plyr 1) [freq=medium, count=35%]
+	tst.b	o_ds_plyr_actv_9820+_b_plyr_nbr(a6)     	    | [$0728: ld   a,(o_ds_plyr_actv_9820(a6) +_b_plyr_nbr)] 0==plyr1, 1==plyr2 [freq=medium, count=35%]
+	jeq	l_0732                             	    | [$072E: jr   z,l_0732] [freq=medium, count=35%]
 *  else tmp = $E4
 	move.b	#0xE4,d0                        	| [$0730: ld   a,#0xE4] offset to 10's place from _tile_ram + 0x0300 (plyr 2)
 l_0732:
-	move.b	d0,ixl							    | [$0732: ld   ixl,a]   parameter to c_scoreman_incr_add_07d8 (tile ram offset)
-	move.b	#0x10,d1                        	| [$0734: ld   b,#0x10] sizeof scoreman_inc_lut[]
-	lea	o_ds_bug_collsn_hit_mult_9290(a6),a0 	| [$0736: ld   hl,#o_ds_bug_collsn_hit_mult_9290(a6) + 0x00] 9290
+	move.b	d0,ixl							    | [$0732: ld   ixl,a]   parameter to c_scoreman_incr_add_07d8 (tile ram offset) [freq=medium, count=35%]
+	move.b	#0x10,d1                        	| [$0734: ld   b,#0x10] sizeof scoreman_inc_lut[] [freq=medium, count=35%]
+	lea	o_ds_bug_collsn_hit_mult_9290(a6),a0 	| [$0736: ld   hl,#o_ds_bug_collsn_hit_mult_9290(a6) + 0x00] 9290 [freq=medium, count=35%]
 l_0739_while_B:
-	exg	a1,a0                              	    | [$0739: ex   de,hl] DE := &bug_collsn[hl]
-	lea	d_scoreman_inc_lut-1,a0        	        | [$073A: ld   hl,#d_scoreman_inc_lut - 1] effective start index is $10 - 1
+	exg	a1,a0                              	    | [$0739: ex   de,hl] DE := &bug_collsn[hl] [freq=high, count=74%]
+	lea	d_scoreman_inc_lut-1,a0        	        | [$073A: ld   hl,#d_scoreman_inc_lut - 1] effective start index is $10 - 1 [freq=high, count=74%]
 	moveq	#0,d0
-	move.b	d1,d0                           	| [$073D: ld   a,b]
-	add.w	d0,a0                   			| [$073E: rst  0x10] HL += A
-	move.b	(a0),d2                         	| [$073F: ld   c,(hl)] scoreman_inc_lut[B-1]
+	move.b	d1,d0                           	| [$073D: ld   a,b] [freq=high, count=74%]
+	add.w	d0,a0                   			| [$073E: rst  0x10] HL += A [freq=high, count=74%]
+	move.b	(a0),d2                         	| [$073F: ld   c,(hl)] scoreman_inc_lut[B-1] [freq=high, count=74%]
 * bug_collsn[hl] * scoreman_inc_lut[B-1]
 l_0740:
-	exg	a1,a0                              	    | [$0740: ex   de,hl]
-	tst.b	(a0)	                        	| [$0741: ld   a,(hl)] bug_collsn[hl]
+	exg	a1,a0                              	    | [$0740: ex   de,hl] [freq=high, count=74%]
+	tst.b	(a0)	                        	| [$0741: ld   a,(hl)] bug_collsn[hl] [freq=high, count=74%]
 	                               	            | [$0742: and  a]
-	jeq	l_0762                             	    | [$0743: jr   z,l_0762] while ( 0 != bug_collsn[HL] )
-	subq.b	#1,(a0)                         	| [$0745: dec  (hl)] bug_collsn[HL] decrement accumulated hit count
-	exg	a1,a0                              	    | [$0746: ex   de,hl] DE := &bug_collsn[0x00]
+	jeq	l_0762                             	    | [$0743: jr   z,l_0762] while ( 0 != bug_collsn[HL] ) [freq=high, count=74%]
+	subq.b	#1,(a0)                         	| [$0745: dec  (hl)] bug_collsn[HL] decrement accumulated hit count [freq=low, count=00%]
+	exg	a1,a0                              	    | [$0746: ex   de,hl] DE := &bug_collsn[0x00] [freq=low, count=00%]
 
-	lea		0x8300,a0        	                | [$0747: ld   h,#>(0x8000 + 0x0300)] tile rows 32-35:  $83C0 - 83FF	
-	READ_IXL_INTO_D0                            | [$0749: ld   a,ixl] offset to 10's place in tile ram
-	add.w	d0,a0                           	| [$074B: ld   l,a]
-	move.b	d2,d0                           	| [$074C: ld   a,c] scoreman_inc_lut[B-1]
-	and.b	#0x0F,d0                         	| [$074D: and  #0x0F]
-	jbsr	c_scoreman_incr_add_07d8            | [$074F: call c_scoreman_incr_add_07d8] add to 10's
+	lea		0x8300,a0        	                | [$0747: ld   h,#>(0x8000 + 0x0300)] tile rows 32-35:  $83C0 - 83FF [freq=low, count=00%]
+	READ_IXL_INTO_D0                            | [$0749: ld   a,ixl] offset to 10's place in tile ram [freq=low, count=00%]
+	add.w	d0,a0                           	| [$074B: ld   l,a] [freq=low, count=00%]
+	move.b	d2,d0                           	| [$074C: ld   a,c] scoreman_inc_lut[B-1] [freq=low, count=00%]
+	and.b	#0x0F,d0                         	| [$074D: and  #0x0F] [freq=low, count=00%]
+	jbsr	c_scoreman_incr_add_07d8            | [$074F: call c_scoreman_incr_add_07d8] add to 10's [freq=low, count=00%]
 	lea		0x8300,a0
-	READ_IXL_INTO_D0                            | [$0752: ld   a,ixl] increment offset to 10's place in tile ram
-	addq.b	#1,d0                           	| [$0754: inc  a]
-	add.w	d0,a0                           	| [$0755: ld   l,a]
-	move.b	d2,d0                           	| [$0756: ld   a,c] scoreman_inc_lut[B-1]
-	rol.b	#4,d0                            	| [$0757: rlca] upper nibble of "score increment" * 4
-	and.b	#0x0F,d0                         	| [$075B: and  #0x0F]
-	jbsr	c_scoreman_incr_add_07d8            | [$075D: call c_scoreman_incr_add_07d8] add to 100's
-	jra	l_0740                             	    | [$0760: jr   l_0740]
+	READ_IXL_INTO_D0                            | [$0752: ld   a,ixl] increment offset to 10's place in tile ram [freq=low, count=00%]
+	addq.b	#1,d0                           	| [$0754: inc  a] [freq=low, count=00%]
+	add.w	d0,a0                           	| [$0755: ld   l,a] [freq=low, count=00%]
+	move.b	d2,d0                           	| [$0756: ld   a,c] scoreman_inc_lut[B-1] [freq=low, count=00%]
+	rol.b	#4,d0                            	| [$0757: rlca] upper nibble of "score increment" * 4 [freq=low, count=00%]
+	and.b	#0x0F,d0                         	| [$075B: and  #0x0F] [freq=low, count=00%]
+	jbsr	c_scoreman_incr_add_07d8            | [$075D: call c_scoreman_incr_add_07d8] add to 100's [freq=low, count=00%]
+	jra	l_0740                             	    | [$0760: jr   l_0740] [freq=low, count=00%]
 
 l_0762:
-	addq.w	#1,a0                           	| [$0762: inc  l] index of bug_collsn[]
+	addq.w	#1,a0                           	| [$0762: inc  l] index of bug_collsn[] [freq=high, count=74%]
 	subq.b	#1,d1                           	| [...]
-	jne	l_0739_while_B                     	    | [$0763: djnz l_0739_while_B]
-	READ_IXL_INTO_D0                            | [$0765: ld   a,ixl]
-	addq.b	#4,d0                           	| [$0767: add  a,#4]						
-	lea	0x0300,a1        	                    | [$076A: ld   d,#>(0x8000 + 0x0300)]
-	lea	(a1,0xE0+0x12),a0      	                | [$0769: ld   hl,#0x8000 + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2)
-	add.w	d0,a1					            | [$076D: ld   e,a]
-	moveq	#6-1,d1                           	| [$076F: ld   b,#6]
+	jne	l_0739_while_B                     	    | [$0763: djnz l_0739_while_B] [freq=high, count=74%]
+	READ_IXL_INTO_D0                            | [$0765: ld   a,ixl] [freq=medium, count=35%]
+	addq.b	#4,d0                           	| [$0767: add  a,#4] [freq=medium, count=35%]
+	lea	0x0300,a1        	                    | [$076A: ld   d,#>(0x8000 + 0x0300)] [freq=medium, count=35%]
+	lea	(a1,0xE0+0x12),a0      	                | [$0769: ld   hl,#0x8000 + 0x03E0 + 0x12] 100000's digit of HIGH SCORE (83ED-83F2) [freq=medium, count=35%]
+	add.w	d0,a1					            | [$076D: ld   e,a] [freq=medium, count=35%]
+	moveq	#6-1,d1                           	| [$076F: ld   b,#6] [freq=medium, count=35%]
 l_0771:
-	move.b	(o_bg_videoram_8000,a1.W,a6),d0     | [$0771: ld   a,(de)]
-	sub.b	(o_bg_videoram_8000,a0.W,a6),d0     | [$0772: sub  (hl)]
-	add.b	#9,d0                            	| [$0773: add  a,#9]
-	cmp.b	#0xE5,d0                         	| [$0775: cp   #0xE5]
-	jcc	l_0788                             	    | [$0777: jr   nc,l_0788]
-	sub.b	#0x0A,d0                         	| [$0779: sub  #0x0A]
-	cmp.b	#9,d0                            	| [$077B: cp   #9]
-	jcs	l_0788                             	    | [$077D: jr   c,l_0788]
-	addq.b	#1,d0                           	| [$077F: inc  a]
-	jne	l_078E                             	    | [$0780: jr   nz,l_078E]
-	subq.w	#1,a0                           	| [$0782: dec  l]
-	subq.w	#1,a1                           	| [$0783: dec  e]
-	dbf	d1,l_0771                          	    | [$0784: djnz l_0771]
+	move.b	(o_bg_videoram_8000,a1.W,a6),d0     | [$0771: ld   a,(de)] [freq=high, count=71%]
+	sub.b	(o_bg_videoram_8000,a0.W,a6),d0     | [$0772: sub  (hl)] [freq=high, count=71%]
+	add.b	#9,d0                            	| [$0773: add  a,#9] [freq=high, count=71%]
+	cmp.b	#0xE5,d0                         	| [$0775: cp   #0xE5] [freq=high, count=71%]
+	jcc	l_0788                             	    | [$0777: jr   nc,l_0788] [freq=high, count=71%]
+	sub.b	#0x0A,d0                         	| [$0779: sub  #0x0A] [freq=high, count=71%]
+	cmp.b	#9,d0                            	| [$077B: cp   #9] [freq=high, count=71%]
+	jcs	l_0788                             	    | [$077D: jr   c,l_0788] [freq=high, count=71%]
+	addq.b	#1,d0                           	| [$077F: inc  a] [freq=high, count=71%]
+	jne	l_078E                             	    | [$0780: jr   nz,l_078E] [freq=high, count=71%]
+	subq.w	#1,a0                           	| [$0782: dec  l] [freq=medium, count=35%]
+	subq.w	#1,a1                           	| [$0783: dec  e] [freq=medium, count=35%]
+	dbf	d1,l_0771                          	    | [$0784: djnz l_0771] [freq=medium, count=35%]
 * else ... break
 	jra	l_078E                             	    | [$0786: jr   l_078E]
                 				
@@ -1213,35 +1213,35 @@ l_0788:
 	dbf	d1,0b                               	    | [$078C: djnz l_0788]
 
 l_078E:
-	READ_IXL_INTO_D0                    | [$078E: ld   a,ixl]
-	addq.b	#4,d0                           	| [$0790: add  a,#4]
+	READ_IXL_INTO_D0                    | [$078E: ld   a,ixl] [freq=medium, count=35%]
+	addq.b	#4,d0                           	| [$0790: add  a,#4] [freq=medium, count=35%]
 	* replace a0 lower nibble
 	move.w	a0,d6
-	move.b	d0,d6                           	| [$0792: ld   l,a] 
+	move.b	d0,d6                           	| [$0792: ld   l,a] [freq=medium, count=35%]
 	move.w	d6,a0
 	
-	move.b	(o_bg_videoram_8000,a0.W,a6),d0     | [$0793: ld   a,(hl)]
-	cmp.b	#0x24,d0                         	| [$0794: cp   #0x24]
-	jne	l_0799                             	    | [$0796: jr   nz,l_0799]
-	clr.b	d0                               	| [$0798: xor  a]
+	move.b	(o_bg_videoram_8000,a0.W,a6),d0     | [$0793: ld   a,(hl)] [freq=medium, count=35%]
+	cmp.b	#0x24,d0                         	| [$0794: cp   #0x24] [freq=medium, count=35%]
+	jne	l_0799                             	    | [$0796: jr   nz,l_0799] [freq=medium, count=35%]
+	clr.b	d0                               	| [$0798: xor  a] [freq=medium, count=35%]
 l_0799:
-	and.b	#0x3F,d0                         	| [$0799: and  #0x3F]
-	rol.b	#1,d0                            	| [$079B: rlca]
-	move.b	d0,d2                           	| [$079C: ld   c,a]
-	rol.b	#2,d0                            	| [$079D: rlca] * 2
-	add.b	d2,d0                            	| [$079F: add  a,c]
-	move.b	d0,d2                           	| [$07A0: ld   c,a]
-	subq.w	#1,a0                           	| [$07A1: dec  l]
-	move.b	(o_bg_videoram_8000,a0.W,a6),d0     | [$07A2: ld   a,(hl)]
-	cmp.b	#0x24,d0                         	| [$07A3: cp   #0x24]
-	jne	l_07A8                             	    | [$07A5: jr   nz,l_07A8]
-	clr.b	d0                               	| [$07A7: xor  a]
+	and.b	#0x3F,d0                         	| [$0799: and  #0x3F] [freq=medium, count=35%]
+	rol.b	#1,d0                            	| [$079B: rlca] [freq=medium, count=35%]
+	move.b	d0,d2                           	| [$079C: ld   c,a] [freq=medium, count=35%]
+	rol.b	#2,d0                            	| [$079D: rlca] * 2 [freq=medium, count=35%]
+	add.b	d2,d0                            	| [$079F: add  a,c] [freq=medium, count=35%]
+	move.b	d0,d2                           	| [$07A0: ld   c,a] [freq=medium, count=35%]
+	subq.w	#1,a0                           	| [$07A1: dec  l] [freq=medium, count=35%]
+	move.b	(o_bg_videoram_8000,a0.W,a6),d0     | [$07A2: ld   a,(hl)] [freq=medium, count=35%]
+	cmp.b	#0x24,d0                         	| [$07A3: cp   #0x24] [freq=medium, count=35%]
+	jne	l_07A8                             	    | [$07A5: jr   nz,l_07A8] [freq=medium, count=35%]
+	clr.b	d0                               	| [$07A7: xor  a] [freq=medium, count=35%]
 l_07A8:
-	add.b	d2,d0                            	| [$07A8: add  a,c]
-	lea	o_ds_plyr_actv_9820+_b_mcfg_bonus(a6),a0  	        | [$07A9: ld   hl,#o_ds_plyr_actv_9820(a6) +_b_mcfg_bonus] &actv_plyr_state[0x1E] ... load at game start from $9980
-	cmp.b	(a0),d0                          	| [$07AC: cp   (hl)]
+	add.b	d2,d0                            	| [$07A8: add  a,c] [freq=medium, count=35%]
+	lea	o_ds_plyr_actv_9820+_b_mcfg_bonus(a6),a0  	        | [$07A9: ld   hl,#o_ds_plyr_actv_9820(a6) +_b_mcfg_bonus] &actv_plyr_state[0x1E] ... load at game start from $9980 [freq=medium, count=35%]
+	cmp.b	(a0),d0                          	| [$07AC: cp   (hl)] [freq=medium, count=35%]
 	beq.b	0f                               	| [...]
-	rts                                    	    | [$07AD: ret  nz] [...]
+	rts                                    	    | [$07AD: ret  nz] [...] [freq=medium, count=35%]
 0:
 	move.b	o_w_mchn_cfg_bonus_9980+0x01(a6),d0       | [$07AE: ld   a,(o_w_mchn_cfg_bonus_9980(a6) + 0x01)] looks like a bonus may be awarded.
 	move.b	d0,d1                           	| [$07B1: ld   b,a]
@@ -1295,51 +1295,51 @@ l_07BD:
 *  HL
 *-----------------------------------------------------------------------------
 c_scoreman_incr_add_07d8:
-	tst.b	d0                               	| [$07D8: and  a]
+	tst.b	d0                               	| [$07D8: and  a] [freq=low, count=00%]
 	bne.b	0f                               	| [...]
-	rts                                    	    | [$07D9: ret  z] [...]
+	rts                                    	    | [$07D9: ret  z] [...] [freq=low, count=00%]
 0:
 	exg		a0,d7
 	move.b	d0,d1
 	bclr	#15,d7
 	move.b	(o_bg_videoram_8000,a6,d7.W),d0
-	add.b	d1,d0                           	| [$07DA: add  a,(hl)] a += _tile_ram[hl]
-	cmp.b	#0x24,d0                         	| [$07DB: cp   #0x24] $23=='Z', $24==' '
-	jcs	l_07E1                             	    | [$07DD: jr   c,l_07E1]
+	add.b	d1,d0                           	| [$07DA: add  a,(hl)] a += _tile_ram[hl] [freq=low, count=00%]
+	cmp.b	#0x24,d0                         	| [$07DB: cp   #0x24] $23=='Z', $24==' ' [freq=low, count=00%]
+	jcs	l_07E1                             	    | [$07DD: jr   c,l_07E1] [freq=low, count=00%]
 	sub.b	#0x24,d0                         	| [$07DF: sub  #0x24] when is jr not taken?
 
 l_07E1:
-	cmp.b	#0x0A,d0                         	| [$07E1: cp   #0x0A] $0A='A'
-	jcc	l_07E7                             	    | [$07E3: jr   nc,l_07E7]
+	cmp.b	#0x0A,d0                         	| [$07E1: cp   #0x0A] $0A='A' [freq=low, count=00%]
+	jcc	l_07E7                             	    | [$07E3: jr   nc,l_07E7] [freq=low, count=00%]
 	bset	#15,d7
-	jbsr	osd_w_videoram                      | [$07E5: ld   (hl),a]
+	jbsr	osd_w_videoram                      | [$07E5: ld   (hl),a] [freq=low, count=00%]
 	exg		a0,d7
-	rts                                    	    | [$07E6: ret]
+	rts                                    	    | [$07E6: ret] [freq=low, count=00%]
 
 l_07E7:
-	sub.b	#0x0A,d0                         	| [$07E7: sub  #0x0A]
+	sub.b	#0x0A,d0                         	| [$07E7: sub  #0x0A] [freq=low, count=00%]
 
 l_07E9_while_1:
 	bset	#15,d7
-	jbsr	osd_w_videoram                     	| [$07E9: ld   (hl),a] 0x8000[hl] = a
-	addq.w	#1,d7              	                | [$07EA: inc  l]
+	jbsr	osd_w_videoram                     	| [$07E9: ld   (hl),a] 0x8000[hl] = a [freq=low, count=00%]
+	addq.w	#1,d7              	                | [$07EA: inc  l] [freq=low, count=00%]
 	bclr	#15,d7
-	move.b	(o_bg_videoram_8000,a6,d7.W),d0    	| [$07EB: ld   a,(hl)] a = 0x8000[hl + 1]
-	cmp.b	#0x24,d0                         	| [$07EC: cp   #0x24] $24==' '
-	jne	l_07F1                             	    | [$07EE: jr   nz,l_07F1]
-	clr.b	d0                               	| [$07F0: xor  a]
+	move.b	(o_bg_videoram_8000,a6,d7.W),d0    	| [$07EB: ld   a,(hl)] a = 0x8000[hl + 1] [freq=low, count=00%]
+	cmp.b	#0x24,d0                         	| [$07EC: cp   #0x24] $24==' ' [freq=low, count=00%]
+	jne	l_07F1                             	    | [$07EE: jr   nz,l_07F1] [freq=low, count=00%]
+	clr.b	d0                               	| [$07F0: xor  a] [freq=low, count=00%]
 l_07F1:
-	cmp.b	#0x09,d0                         	| [$07F1: cp   #0x09]
-	jeq	l_07F8_while                       	    | [$07F3: jr   z,l_07F8_while]
-	addq.b	#1,d0                           	| [$07F5: inc  a]
+	cmp.b	#0x09,d0                         	| [$07F1: cp   #0x09] [freq=low, count=00%]
+	jeq	l_07F8_while                       	    | [$07F3: jr   z,l_07F8_while] [freq=low, count=00%]
+	addq.b	#1,d0                           	| [$07F5: inc  a] [freq=low, count=00%]
 	bset	#15,d7
-	jbsr	osd_w_videoram                      | [$07F6: ld   (hl),a] 0x8000[hl] = a
+	jbsr	osd_w_videoram                      | [$07F6: ld   (hl),a] 0x8000[hl] = a [freq=low, count=00%]
 	exg		a0,d7                                   
-	rts                                    	    | [$07F7: ret] end call 07d8
+	rts                                    	    | [$07F7: ret] end call 07d8 [freq=low, count=00%]
 
 l_07F8_while:
-	clr.b	d0                               	| [$07F8: xor  a]
-	jra	l_07E9_while_1                     	    | [$07F9: jr   l_07E9_while_1]
+	clr.b	d0                               	| [$07F8: xor  a] [freq=low, count=00%]
+	jra	l_07E9_while_1                     	    | [$07F9: jr   l_07E9_while_1] [freq=low, count=00%]
 
 *=============================================================================
 * Base-factors of points awarded for enemy hits, applied to multiples
@@ -1416,39 +1416,39 @@ f_rts_0827:
 *  ...
 *-----------------------------------------------------------------------------
 f_update_sprites_0828:
-	moveq	#1,d0                           	| [$0828: ld   a,#1]
-	move.b	d0,o_b_CPU1_in_progress_92d6(a6)          | [$082A: ld   (o_b_CPU1_in_progress_92d6(a6)),a] 1
+	moveq	#1,d0                           	| [$0828: ld   a,#1] [freq=low, count=02%]
+	move.b	d0,o_b_CPU1_in_progress_92d6(a6)          | [$082A: ld   (o_b_CPU1_in_progress_92d6(a6)),a] 1 [freq=low, count=02%]
 	
 	* update all sprite registers at the same time
 	* (it was done in cooperation with the other cpu)
 		
-	lea	o_mrw_sprite_code_8B00(a6),a0             	| [$082D: ld   hl,#o_mrw_sprite_code_8B00(a6)]
-	lea	o_sfr_sprite_code_8B80(a6),a1             	| [$0830: ld   de,#o_sfr_sprite_code_8B80(a6)]
-	move.w	#0x8-1,d1                        	| [$0833: ld   bc,#0x0040] 64
+	lea	o_mrw_sprite_code_8B00(a6),a0             	| [$082D: ld   hl,#o_mrw_sprite_code_8B00(a6)] [freq=low, count=02%]
+	lea	o_sfr_sprite_code_8B80(a6),a1             	| [$0830: ld   de,#o_sfr_sprite_code_8B80(a6)] [freq=low, count=02%]
+	move.w	#0x8-1,d1                        	| [$0833: ld   bc,#0x0040] 64 [freq=low, count=02%]
 0:
-	move.l	(a0)+,(a1)+							| [$0836: ldir]
-	move.l	(a0)+,(a1)+							| [$0836: ldir]
-	move.l	(a0)+,(a1)+							| [$0836: ldir]
-	move.l	(a0)+,(a1)+							| [$0836: ldir]
+	move.l	(a0)+,(a1)+							| [$0836: ldir] [freq=low, count=04%]
+	move.l	(a0)+,(a1)+							| [$0836: ldir] [freq=low, count=04%]
+	move.l	(a0)+,(a1)+							| [$0836: ldir] [freq=low, count=04%]
+	move.l	(a0)+,(a1)+							| [$0836: ldir] [freq=low, count=04%]
 	dbf		d1,0b
 	
-	lea	o_mrw_sprite_posn_9300(a6),a0             	| [$0838: ld   hl,#o_mrw_sprite_posn_9300(a6)]
-	lea	o_sfr_sprite_posn_9380(a6),a1             	| [$083B: ld   de,#o_sfr_sprite_posn_9380(a6)]
-	move.w	#0x8-1,d1                        	| [$083E: ld   c,#0x40]
+	lea	o_mrw_sprite_posn_9300(a6),a0             	| [$0838: ld   hl,#o_mrw_sprite_posn_9300(a6)] [freq=low, count=02%]
+	lea	o_sfr_sprite_posn_9380(a6),a1             	| [$083B: ld   de,#o_sfr_sprite_posn_9380(a6)] [freq=low, count=02%]
+	move.w	#0x8-1,d1                        	| [$083E: ld   c,#0x40] [freq=low, count=02%]
 0:
-	move.l	(a0)+,(a1)+           	| [$0840: ldir]
-	move.l	(a0)+,(a1)+           	| [$0840: ldir]
-	move.l	(a0)+,(a1)+           	| [$0840: ldir]
-	move.l	(a0)+,(a1)+           	| [$0840: ldir]
+	move.l	(a0)+,(a1)+           	| [$0840: ldir] [freq=low, count=04%]
+	move.l	(a0)+,(a1)+           	| [$0840: ldir] [freq=low, count=04%]
+	move.l	(a0)+,(a1)+           	| [$0840: ldir] [freq=low, count=04%]
+	move.l	(a0)+,(a1)+           	| [$0840: ldir] [freq=low, count=04%]
 	dbf		d1,0b
-	lea	o_mrw_sprite_ctrl_9B00(a6),a0             	| [$0842: ld   hl,#o_mrw_sprite_ctrl_9B00(a6)]
-	lea	o_sfr_sprite_ctrl_9B80(a6),a1             	| [$0845: ld   de,#o_sfr_sprite_ctrl_9B80(a6)]
-	move.w	#0x8-1,d1                        	| [$0848: ld   c,#0x40]
+	lea	o_mrw_sprite_ctrl_9B00(a6),a0             	| [$0842: ld   hl,#o_mrw_sprite_ctrl_9B00(a6)] [freq=low, count=02%]
+	lea	o_sfr_sprite_ctrl_9B80(a6),a1             	| [$0845: ld   de,#o_sfr_sprite_ctrl_9B80(a6)] [freq=low, count=02%]
+	move.w	#0x8-1,d1                        	| [$0848: ld   c,#0x40] [freq=low, count=02%]
 0:
-	move.l	(a0)+,(a1)+                              	| [$084A: ldir]
-	move.l	(a0)+,(a1)+                              	| [$084A: ldir]
-	move.l	(a0)+,(a1)+                              	| [$084A: ldir]
-	move.l	(a0)+,(a1)+                              	| [$084A: ldir]
+	move.l	(a0)+,(a1)+                              	| [$084A: ldir] [freq=low, count=04%]
+	move.l	(a0)+,(a1)+                              	| [$084A: ldir] [freq=low, count=04%]
+	move.l	(a0)+,(a1)+                              	| [$084A: ldir] [freq=low, count=04%]
+	move.l	(a0)+,(a1)+                              	| [$084A: ldir] [freq=low, count=04%]
 	dbf		d1,0b
 
 	* host side uses the o_sfr_sprite_code_8B80(a6) address directly, no need to
@@ -1487,28 +1487,28 @@ l_0850:
 *  ...
 *-----------------------------------------------------------------------------
 f_misc_gameplay_events_0857:
-	move.b	o_ds4_game_tmrs_92ac+2(a6),d1             | [$0857: ld   a,(o_ds4_game_tmrs_92ac(a6) + 2)]
+	move.b	o_ds4_game_tmrs_92ac+2(a6),d1             | [$0857: ld   a,(o_ds4_game_tmrs_92ac(a6) + 2)] [freq=low, count=02%]
 												| [$085A: ld   b,a] parameter to c_08AD
-	cmp.b	#0x3C,d1                         	| [$085B: cp   #0x3C]
-	jcc	l_0865                             	    | [$085D: jr   nc,l_0865]
+	cmp.b	#0x3C,d1                         	| [$085B: cp   #0x3C] [freq=low, count=02%]
+	jcc	l_0865                             	    | [$085D: jr   nc,l_0865] [freq=low, count=02%]
 * increases allowable max_bombers after a time
 	move.b	o_ds_new_stage_parms_99c0+0x05(a6),o_ds_new_stage_parms_99c0+0x04(a6)     | [$085F: ld   a,(o_ds_new_stage_parms_99c0(a6) + 0x05)]
 	     | [$0862: ld   (o_ds_new_stage_parms_99c0(a6) + 0x04),a] new_stage_parms[4] = new_stage_parms[5] ... max bombers
 
 * set bomb drop enable flags
 l_0865:
-	move.b	o_b_bugs_actv_nbr_92a7(a6),d2              	| [$0865: ld   a,(o_b_bugs_actv_nbr_92a7(a6))]
+	move.b	o_b_bugs_actv_nbr_92a7(a6),d2              	| [$0865: ld   a,(o_b_bugs_actv_nbr_92a7(a6))] [freq=low, count=02%]
 	                           	| [$0868: ld   c,a] parameter to c_08BE
-	move.b	o_ds_new_stage_parms_99c0+0x00(a6),d0     | [$0869: ld   a,(o_ds_new_stage_parms_99c0(a6) + 0x00)] set bomb drop enable flags
-	lea	d_0909+0*4,a0                  	        | [$086C: ld   hl,#d_0909 + 0 * 4]
-	jbsr	c_08BE                            	| [$086F: call c_08BE] A==new_stage_parms[0], HL==d_0909, C==num_bugs_on_scrn
-	move.b	d0,o_b_92C0+0x08(a6)                  	| [$0872: ld   (o_b_92C0(a6) + 0x08),a] = c_08BE() ... bomb drop enable flags
+	move.b	o_ds_new_stage_parms_99c0+0x00(a6),d0     | [$0869: ld   a,(o_ds_new_stage_parms_99c0(a6) + 0x00)] set bomb drop enable flags [freq=low, count=02%]
+	lea	d_0909+0*4,a0                  	        | [$086C: ld   hl,#d_0909 + 0 * 4] [freq=low, count=02%]
+	jbsr	c_08BE                            	| [$086F: call c_08BE] A==new_stage_parms[0], HL==d_0909, C==num_bugs_on_scrn [freq=low, count=02%]
+	move.b	d0,o_b_92C0+0x08(a6)                  	| [$0872: ld   (o_b_92C0(a6) + 0x08),a] = c_08BE() ... bomb drop enable flags [freq=low, count=02%]
 
 * flag indicates number of flying aliens is less than new_stage_parm[7]
 * if flag is set by sub-CPU tasking kernel ...
-	tst.b	o_b_92A0+0x0A(a6)                  	| [$0875: ld   a,(o_b_92A0(a6) + 0x0A)] continuous bombing when flag set
+	tst.b	o_b_92A0+0x0A(a6)                  	| [$0875: ld   a,(o_b_92A0(a6) + 0x0A)] continuous bombing when flag set [freq=low, count=02%]
 	                               	            | [$0878: and  a]
-	jeq	l_0888                             	    | [$0879: jr   z,l_0888]
+	jeq	l_0888                             	    | [$0879: jr   z,l_0888] [freq=low, count=02%]
 
 * then ... set default start values for bomber launch timers in continuous bombing state
 * this will also happen momentarily at start of round until bugs_actv_nbr exceeds o_ds_new_stage_parms_99c0(a6)[0x07]
@@ -1523,19 +1523,19 @@ l_0865:
 
 l_0888:
 * ... else after bugs_actv_nbr exceeds parameter_7 until continous bombing begins
-	move.b	o_ds_new_stage_parms_99c0+0x01(a6),d0     | [$0888: ld   a,(o_ds_new_stage_parms_99c0(a6) + 0x01)]
-	lea	d_0909+8*4,a0                  	        | [$088B: ld   hl,#d_0909 + 8 * 4] offset the data pointer
-	jbsr	c_08BE                            	| [$088E: call c_08BE] A==new_stage_parms[1], HL==d_0929, C==num_bugs_on_scrn
-	move.b	d0,o_b_92C0+0x04(a6)                  	| [$0891: ld   (o_b_92C0(a6) + 0x04),a] c_08BE() ... boss alien default bomber timer
-	move.b	o_ds_new_stage_parms_99c0+0x02(a6),d0     | [$0894: ld   a,(o_ds_new_stage_parms_99c0(a6) + 0x02)]
-	lea	d_08CD,a0                      	        | [$0897: ld   hl,#d_08CD]
-	jbsr	c_08AD                            	| [$089A: call c_08AD] A==new_stage_parms[2], HL==d_08CD
-	move.b	d0,o_b_92C0+0x05(a6)                  	| [$089D: ld   (o_b_92C0(a6) + 0x05),a] c_08AD() ... red alien default bomber timer
-	move.b	o_ds_new_stage_parms_99c0+0x03(a6),d0     | [$08A0: ld   a,(o_ds_new_stage_parms_99c0(a6) + 0x03)]
-	lea	d_08EB,a0                      	        | [$08A3: ld   hl,#d_08EB]
-	jbsr	c_08AD                            	| [$08A6: call c_08AD] A==new_stage_parms[3], HL==d_08EB
-	move.b	d0,o_b_92C0+0x06(a6)                  	| [$08A9: ld   (o_b_92C0(a6) + 0x06),a] c_08AD() ... yellow alien default bomber timer
-	rts                                    	    | [$08AC: ret]
+	move.b	o_ds_new_stage_parms_99c0+0x01(a6),d0     | [$0888: ld   a,(o_ds_new_stage_parms_99c0(a6) + 0x01)] [freq=low, count=02%]
+	lea	d_0909+8*4,a0                  	        | [$088B: ld   hl,#d_0909 + 8 * 4] offset the data pointer [freq=low, count=02%]
+	jbsr	c_08BE                            	| [$088E: call c_08BE] A==new_stage_parms[1], HL==d_0929, C==num_bugs_on_scrn [freq=low, count=02%]
+	move.b	d0,o_b_92C0+0x04(a6)                  	| [$0891: ld   (o_b_92C0(a6) + 0x04),a] c_08BE() ... boss alien default bomber timer [freq=low, count=02%]
+	move.b	o_ds_new_stage_parms_99c0+0x02(a6),d0     | [$0894: ld   a,(o_ds_new_stage_parms_99c0(a6) + 0x02)] [freq=low, count=02%]
+	lea	d_08CD,a0                      	        | [$0897: ld   hl,#d_08CD] [freq=low, count=02%]
+	jbsr	c_08AD                            	| [$089A: call c_08AD] A==new_stage_parms[2], HL==d_08CD [freq=low, count=02%]
+	move.b	d0,o_b_92C0+0x05(a6)                  	| [$089D: ld   (o_b_92C0(a6) + 0x05),a] c_08AD() ... red alien default bomber timer [freq=low, count=02%]
+	move.b	o_ds_new_stage_parms_99c0+0x03(a6),d0     | [$08A0: ld   a,(o_ds_new_stage_parms_99c0(a6) + 0x03)] [freq=low, count=02%]
+	lea	d_08EB,a0                      	        | [$08A3: ld   hl,#d_08EB] [freq=low, count=02%]
+	jbsr	c_08AD                            	| [$08A6: call c_08AD] A==new_stage_parms[3], HL==d_08EB [freq=low, count=02%]
+	move.b	d0,o_b_92C0+0x06(a6)                  	| [$08A9: ld   (o_b_92C0(a6) + 0x06),a] c_08AD() ... yellow alien default bomber timer [freq=low, count=02%]
+	rts                                    	    | [$08AC: ret] [freq=low, count=02%]
 
 *=============================================================================
 * c_08AD()
@@ -1720,24 +1720,24 @@ c_093C:
 *-----------------------------------------------------------------------------
 draw_3_characters_095f:
 	exg		a1,d7
-	move.w	d0,-(sp)                    | [$095F: push bc]
-	and.b	#0x01,d0                    | [$0960: and  #0x01]
-	jeq	l_0967                          | [$0962: jr   z,l_0967]
-	lea	str_0974,a0                    	| [$0964: ld   hl,#str_0974] wipe
+	move.w	d0,-(sp)                    | [$095F: push bc] [freq=low, count=02%]
+	and.b	#0x01,d0                    | [$0960: and  #0x01] [freq=low, count=02%]
+	jeq	l_0967                          | [$0962: jr   z,l_0967] [freq=low, count=02%]
+	lea	str_0974,a0                    	| [$0964: ld   hl,#str_0974] wipe [freq=low, count=01%]
 l_0967:
 						                | [$0967: ld   bc,#0x0003] 3
-	move.b	(a0)+,d0					| [$096A: ldir]
+	move.b	(a0)+,d0					| [$096A: ldir] [freq=low, count=04%]
 	jbsr	osd_w_videoram
 	addq.w	#1,d7
-	move.b	(a0)+,d0					| [$096A: ldir]
+	move.b	(a0)+,d0					| [$096A: ldir] [freq=low, count=04%]
 	jbsr	osd_w_videoram
 	addq.w	#1,d7
-	move.b	(a0)+,d0					| [$096A: ldir]
+	move.b	(a0)+,d0					| [$096A: ldir] [freq=low, count=04%]
 	jbsr	osd_w_videoram
 	addq.w	#1,d7
-	move.w	(sp)+,d0                    | [$096C: pop  bc]
+	move.w	(sp)+,d0                    | [$096C: pop  bc] [freq=low, count=02%]
 	exg		a1,d7
-	rts                                 | [$096D: ret]
+	rts                                 | [$096D: ret] [freq=low, count=02%]
 
 *=============================================================================
 str_1UP:
@@ -1788,33 +1788,33 @@ str_0974:
 *-----------------------------------------------------------------------------
 f_credit_game_state_management_0977:
 * if ( io_input[0] == $bb )
-	move.b	o_ds3_io_input_99b5(a6),d0       	        | [$0977: ld   a,(o_ds3_io_input_99b5(a6) + 0x00)] check for bb ... Service Switch On indication in credit mode
-	cmp.b	#0xBB,d0                         	| [$097A: cp   #0xBB]
-	jeq	jp_RAM_test                        	    | [$097C: jp   z,jp_RAM_test]
+	move.b	o_ds3_io_input_99b5(a6),d0       	        | [$0977: ld   a,(o_ds3_io_input_99b5(a6) + 0x00)] check for bb ... Service Switch On indication in credit mode [freq=low, count=02%]
+	cmp.b	#0xBB,d0                         	| [$097A: cp   #0xBB] [freq=low, count=02%]
+	jeq	jp_RAM_test                        	    | [$097C: jp   z,jp_RAM_test] [freq=low, count=02%]
 
 * if ( game_state != IN_GAME_MODE )  // goto update freeplay_or_credit
-	move.b	o_b8_game_state_9201(a6),d0           	| [$097F: ld   a,(o_b8_game_state_9201(a6))] if ( IN_GAME )
-	cmp.b	#3,d0                            	| [$0982: cp   #3] game_state==IN_GAME
-	jne	l_099F_update_freeplay_or_credit   	    | [$0984: jr   nz,l_099F_update_freeplay_or_credit]
+	move.b	o_b8_game_state_9201(a6),d0           	| [$097F: ld   a,(o_b8_game_state_9201(a6))] if ( IN_GAME ) [freq=low, count=02%]
+	cmp.b	#3,d0                            	| [$0982: cp   #3] game_state==IN_GAME [freq=low, count=02%]
+	jne	l_099F_update_freeplay_or_credit   	    | [$0984: jr   nz,l_099F_update_freeplay_or_credit] [freq=low, count=02%]
 
 * else // update timer
-	lea	o_b32_gametime_secs_bcd_99e6+3(a6),a0	        | [$0986: ld   hl,#o_b32_gametime_secs_bcd_99e6(a6) + 3] least-sig. digit increments 1/60th of second
-	move.b	(a0),d0                         	| [$0989: ld   a,(hl)]
-	moveq	#1,d7                           	| [$098A: add  a,#1]
+	lea	o_b32_gametime_secs_bcd_99e6+3(a6),a0	        | [$0986: ld   hl,#o_b32_gametime_secs_bcd_99e6(a6) + 3] least-sig. digit increments 1/60th of second [freq=low, count=02%]
+	move.b	(a0),d0                         	| [$0989: ld   a,(hl)] [freq=low, count=02%]
+	moveq	#1,d7                           	| [$098A: add  a,#1] [freq=low, count=02%]
 	CLEAR_XC_FLAGS
 	abcd	d7,d0								| add+daa
        * if ( ct == $60 ) ct=0
-	cmp.b	#0x60,d0                         	| [$098D: cp   #0x60] if A==60, Cy is not set...
-	jne	l_0992_update_counter              	    | [$098F: jr   nz,l_0992_update_counter]
-	clr.b	d0                               	| [$0991: xor  a]
+	cmp.b	#0x60,d0                         	| [$098D: cp   #0x60] if A==60, Cy is not set... [freq=low, count=02%]
+	jne	l_0992_update_counter              	    | [$098F: jr   nz,l_0992_update_counter] [freq=low, count=02%]
+	clr.b	d0                               	| [$0991: xor  a] [freq=low, count=00%]
 
       * update 4 bytes of the timer (BCD count 0 - 99.99.99.60)
 l_0992_update_counter:
-	move.w	#3,d1                           	| [$0992: ld   b,#4]
-	INVERT_XC_FLAGS                        	    | [$0994: ccf] ... compliment Cy (provides Cy into 1's place if A==60...
+	move.w	#3,d1                           	| [$0992: ld   b,#4] [freq=low, count=02%]
+	INVERT_XC_FLAGS                        	    | [$0994: ccf] ... compliment Cy (provides Cy into 1's place if A==60... [freq=low, count=02%]
 	moveq	#0,d7
 l_0995:
-	move.b	d0,(a0)                         	| [$0995: ld   (hl),a] Update 60'ths digit.
+	move.b	d0,(a0)                         	| [$0995: ld   (hl),a] Update 60'ths digit. [freq=low, count=04%]
 	                           	                | [$0996: dec  l]
  	move.b	-(a0),d0                         	| [$0997: ld   a,(hl)] note, last iteration, reads from 99e5, but then exits the loop.
 	abcd	d7,d0						        | adc  a,#0 + daa ...carry into 1's, 10's, or 100's place.
@@ -1881,15 +1881,15 @@ l_09D9_puts_freeplay:
 l_09E1_update_game_state:
 
 * if ( game_state == GAME_ENDED ) return
-	move.b	o_b8_game_state_9201(a6),d0           | [$09E1: ld   a,(o_b8_game_state_9201(a6))] if Game Ended
+	move.b	o_b8_game_state_9201(a6),d0           | [$09E1: ld   a,(o_b8_game_state_9201(a6))] if Game Ended [freq=low, count=02%]
 	                               	        | [$09E4: and  a]
 	bne.b	0f                              | [...]
-	rts                                    	| [$09E5: ret  z] 0==GAME_ENDED [...]
+	rts                                    	| [$09E5: ret  z] 0==GAME_ENDED [...] [freq=low, count=02%]
 0:
 
 * else if ( game_state == ATTRACT_MODE && io_input[credit_count] > 0 )
-	subq.b	#1,d0                           | [$09E6: dec  a] ATTRACT_MODE - 1 ==0
-	jne	l_09FF_check_credits_used          	| [$09E7: jr   nz,l_09FF_check_credits_used] if (!ATTRACT_MODE)
+	subq.b	#1,d0                           | [$09E6: dec  a] ATTRACT_MODE - 1 ==0 [freq=low, count=02%]
+	jne	l_09FF_check_credits_used          	| [$09E7: jr   nz,l_09FF_check_credits_used] if (!ATTRACT_MODE) [freq=low, count=02%]
 	move.b	o_ds3_io_input_99b5(a6),d0       | [$09E9: ld   a,(o_ds3_io_input_99b5(a6) + 0x00)] io_input[credit_count]
 	                               	        | [$09EC: and  a]
 	jeq	l_09FF_check_credits_used          	| [$09ED: jr   z,l_09FF_check_credits_used] if io_credit_count == 0
@@ -1914,14 +1914,14 @@ l_09FF_check_credits_used:
 
 * A = credits_counted - io_input[credit_count]  ... credits_used
 * if ( A == 0 )  return
-	move.b	o_ds3_io_input_99b5(a6),d0            	| [$09FF: ld   a,(o_ds3_io_input_99b5(a6) + 0x00)] io_input[credit_count] ... in BCD!
-	move.b	d0,d2                           	| [$0A02: ld   c,a]
-	move.b	o_b8_credit_cnt_99b8(a6),d0           	| [$0A03: ld   a,(o_b8_credit_cnt_99b8(a6))] BCD
-	move.b	d0,d1                           	| [$0A06: ld   b,a] stash the previous credit count
+	move.b	o_ds3_io_input_99b5(a6),d0            	| [$09FF: ld   a,(o_ds3_io_input_99b5(a6) + 0x00)] io_input[credit_count] ... in BCD! [freq=low, count=02%]
+	move.b	d0,d2                           	| [$0A02: ld   c,a] [freq=low, count=02%]
+	move.b	o_b8_credit_cnt_99b8(a6),d0           	| [$0A03: ld   a,(o_b8_credit_cnt_99b8(a6))] BCD [freq=low, count=02%]
+	move.b	d0,d1                           	| [$0A06: ld   b,a] stash the previous credit count [freq=low, count=02%]
 	CLEAR_XC_FLAGS
-	sbcd	d2,d0                            	| [$0A07: sub  c] (see daa below)
+	sbcd	d2,d0                            	| [$0A07: sub  c] (see daa below) [freq=low, count=02%]
 	bne.b	0f                               	| [...]
-	rts                                    		| [$0A08: ret  z] return if no change of game state [...]
+	rts                                    		| [$0A08: ret  z] return if no change of game state [...] [freq=low, count=02%]
 0:
 
 * else  if (io_input[credit_count] > credit_cnt)  goto _update_credit_ct ...
@@ -2459,14 +2459,14 @@ c_divmod:
 *-----------------------------------------------------------------------------
 c_1079:
 	COMPUTE_LSB_A0_D6	o_object_states_8800
-	move.b	d6,d0                           	| [$1079: ld   a,l]
-	and.b	#0x80,d0                         	| [$107A: and  #0x80] if set then negate rotation angle to (ix)0x0C
-	addq.b	#1,d0                           	| [$107C: inc  a] set bit-0, .b13<0> makes object slot active
-	exg		d0,d7                              	| [$107D: ex   af,af']
-	bclr.b	#7,d6                           	| [$107E: res  7,l]
+	move.b	d6,d0                           	| [$1079: ld   a,l] [freq=low, count=00%]
+	and.b	#0x80,d0                         	| [$107A: and  #0x80] if set then negate rotation angle to (ix)0x0C [freq=low, count=00%]
+	addq.b	#1,d0                           	| [$107C: inc  a] set bit-0, .b13<0> makes object slot active [freq=low, count=00%]
+	exg		d0,d7                              	| [$107D: ex   af,af'] [freq=low, count=00%]
+	bclr.b	#7,d6                           	| [$107E: res  7,l] [freq=low, count=00%]
 	lea		o_object_states_8800(a6),a0
 	add.w	d6,a0
-	jra	setup_motion_for_attackers_108a         | [$1080: jp   setup_motion_for_attackers_108a]
+	jra	setup_motion_for_attackers_108a         | [$1080: jp   setup_motion_for_attackers_108a] [freq=low, count=00%]
 
 *=============================================================================
 * c_diving_movement_1083()
@@ -2480,11 +2480,11 @@ c_1079:
 *-----------------------------------------------------------------------------
 c_diving_movement_1083:
 * set A:bit-7 if L:bit-1 != 0 ... creature originating on right side
-	move.b	d6,d0                           	| [$1083: ld   a,l]
-	ror.b	#2,d0                            	| [$1084: rrca] * 2
-	and.b	#0x80,d0                         	| [$1086: and  #0x80] if set then negate rotation angle to (ix)0x0C
-	addq.b	#1,d0                            	| [$1088: inc  a] set bit-0, .b13<0> makes object slot active
-	exg		d0,d7                              	| [$1089: ex   af,af'] stash d0
+	move.b	d6,d0                           	| [$1083: ld   a,l] [freq=low, count=00%]
+	ror.b	#2,d0                            	| [$1084: rrca] * 2 [freq=low, count=00%]
+	and.b	#0x80,d0                         	| [$1086: and  #0x80] if set then negate rotation angle to (ix)0x0C [freq=low, count=00%]
+	addq.b	#1,d0                            	| [$1088: inc  a] set bit-0, .b13<0> makes object slot active [freq=low, count=00%]
+	exg		d0,d7                              	| [$1089: ex   af,af'] stash d0 [freq=low, count=00%]
 
 *=============================================================================
 * setup_motion_for_attackers_108a()
@@ -2500,7 +2500,7 @@ c_diving_movement_1083:
 *
 *-----------------------------------------------------------------------------
 setup_motion_for_attackers_108a:
-	movem.w	d3/d4,-(sp)                    	    | [$108a: push de]
+	movem.w	d3/d4,-(sp)                    	    | [$108a: push de] [freq=low, count=00%]
 
 * find an available data structure or quit
 	move.w	#0x0014,d3                      	| [ld   de,#0x0014] size of 1 data structure 20
@@ -2516,50 +2516,50 @@ l_1094:
 	rts                                      	| [ret]
 
 l_10A0_got_one:
-	movem.w	(sp)+,d3/d4                    	    | [$10A0: pop  de] pointer to table
+	movem.w	(sp)+,d3/d4                    	    | [$10A0: pop  de] pointer to table [freq=low, count=00%]
 	LOAD_D3D4_FROM_D3_16
-	move.b	d4,(mq_fp_lsb_08,a2)                | [$10A1: ld   0x08(ix),e] data pointer lsb
-	move.b	d3,(mq_fp_msb_09,a2)                | [$10A4: ld   0x09(ix),d] data pointer msb
-	move.b	#1,(mq_timeout_0d,a2)               | [$10A7: ld   0x0D(ix),#1] expiration counter
-	clr.b	(mq_angle_lsb_04,a2)                | [$10AB: ld   0x04(ix),#<0x0100] msb, 0x0100 (90 degrees)
-	move.b	#0x01,(mq_angle_msb_05,a2)          | [$10AF: ld   0x05(ix),#>0x0100] lsb
-	move.b	d6,d2                           	| [$10B3: ld   c,l] stash index to obj_status[], sprite etc.
-	move.b	d2,(mq_object_id_10,a2)            	| [$10B4: ld   0x10(ix),c] index of object, sprite etc.
-	exg		d0,d7                              	| [$10B7: ex   af,af'] unstash d0
-	move.b	d0,d3                           	| [$10B8: ld   d,a] function parameter from A' to 0x13(ix)
-	move.b	#9,(a0)+                         	| [$10B9: ld   (hl),#9] obj_status[l].state ... disposition = diving attack
-	COMPUTE_LSB_A2_D0	o_ds_bug_motion_que_9100  | [$10BB: ld   a,ixl]
+	move.b	d4,(mq_fp_lsb_08,a2)                | [$10A1: ld   0x08(ix),e] data pointer lsb [freq=low, count=00%]
+	move.b	d3,(mq_fp_msb_09,a2)                | [$10A4: ld   0x09(ix),d] data pointer msb [freq=low, count=00%]
+	move.b	#1,(mq_timeout_0d,a2)               | [$10A7: ld   0x0D(ix),#1] expiration counter [freq=low, count=00%]
+	clr.b	(mq_angle_lsb_04,a2)                | [$10AB: ld   0x04(ix),#<0x0100] msb, 0x0100 (90 degrees) [freq=low, count=00%]
+	move.b	#0x01,(mq_angle_msb_05,a2)          | [$10AF: ld   0x05(ix),#>0x0100] lsb [freq=low, count=00%]
+	move.b	d6,d2                           	| [$10B3: ld   c,l] stash index to obj_status[], sprite etc. [freq=low, count=00%]
+	move.b	d2,(mq_object_id_10,a2)            	| [$10B4: ld   0x10(ix),c] index of object, sprite etc. [freq=low, count=00%]
+	exg		d0,d7                              	| [$10B7: ex   af,af'] unstash d0 [freq=low, count=00%]
+	move.b	d0,d3                           	| [$10B8: ld   d,a] function parameter from A' to 0x13(ix) [freq=low, count=00%]
+	move.b	#9,(a0)+                         	| [$10B9: ld   (hl),#9] obj_status[l].state ... disposition = diving attack [freq=low, count=00%]
+	COMPUTE_LSB_A2_D0	o_ds_bug_motion_que_9100  | [$10BB: ld   a,ixl] [freq=low, count=00%]
 	*addq.b	#1,d6								| [$10BD: inc  l] [a0 coherence]
-	move.b	d0,(a0)                         	| [$10BE: ld   (hl),a] obj_status[L].idx ... index into flying que
-	move.b	o_b_flip_screen_9215(a6),d0           	| [$10BF: ld   a,(o_b_flip_screen_9215(a6))]
-	move.b	d0,d4                           	| [$10C2: ld   e,a]
+	move.b	d0,(a0)                         	| [$10BE: ld   (hl),a] obj_status[L].idx ... index into flying que [freq=low, count=00%]
+	move.b	o_b_flip_screen_9215(a6),d0           	| [$10BF: ld   a,(o_b_flip_screen_9215(a6))] [freq=low, count=00%]
+	move.b	d0,d4                           	| [$10C2: ld   e,a] [freq=low, count=00%]
 
 * insert sprite Y coord into pool structure
-	move.b	d2,d6                           	| [$10C3: ld   l,c] restore index to obj_status[], sprite etc. (dec l just as good, no?)
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$10C4: ld   h,#>o_ds_sprite_posn_9300(a6)]
+	move.b	d2,d6                           	| [$10C3: ld   l,c] restore index to obj_status[], sprite etc. (dec l just as good, no?) [freq=low, count=00%]
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$10C4: ld   h,#>o_ds_sprite_posn_9300(a6)] [freq=low, count=00%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0)+,d2                         	| [$10C6: ld   c,(hl)] sprite_x
-	addq.b	#1,d6								| [$10C7: inc  l] [a0 coherence]
-	move.b	(a0),d1                         	| [$10C8: ld   b,(hl)] sprite_y<7:0>
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$10C9: ld   h,#>o_ds_sprite_ctrl_9B00(a6)]
+	move.b	(a0)+,d2                         	| [$10C6: ld   c,(hl)] sprite_x [freq=low, count=00%]
+	addq.b	#1,d6								| [$10C7: inc  l] [a0 coherence] [freq=low, count=00%]
+	move.b	(a0),d1                         	| [$10C8: ld   b,(hl)] sprite_y<7:0> [freq=low, count=00%]
+	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$10C9: ld   h,#>o_ds_sprite_ctrl_9B00(a6)] [freq=low, count=00%]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$10CB: ld   a,(hl)] sprite_y<8>
-	ror.b	#1,d0                            	| [$10CC: rrca] sY<8> into Cy
+	move.b	(a0),d0                         	| [$10CB: ld   a,(hl)] sprite_y<8> [freq=low, count=00%]
+	ror.b	#1,d0                            	| [$10CC: rrca] sY<8> into Cy [freq=low, count=00%]
 	SET_X_FROM_C
-	roxr.b	#1,d1                           	| [$10CD: rr   b] sY<8> from Cy to b<7> and sY<0> to Cy
-	btst.b	#0,d4                           	| [$10CF: bit  0,e] test flipped screen
-	jne	l_10DC                             		| [$10D1: jr   nz,l_10DC]
+	roxr.b	#1,d1                           	| [$10CD: rr   b] sY<8> from Cy to b<7> and sY<0> to Cy [freq=low, count=00%]
+	btst.b	#0,d4                           	| [$10CF: bit  0,e] test flipped screen [freq=low, count=00%]
+	jne	l_10DC                             		| [$10D1: jr   nz,l_10DC] [freq=low, count=00%]
 * not flipped screen
 * 160 - sprite_y + 1 ... backwards math since sY<8:1> already loaded in B, and this is only for flipped screen
-	scs	d7                              		| [$10D3: ex   af,af'] stash Cy ... sY<:0>
-	move.b	d1,d0                           	| [$10D4: ld   a,b]
-	add.b	#0x50,d0                 			| [$10D5: add  a,#<(-0x0160 >> 1)] adjust addend for scale factor 2
-	neg.b	d0                               	| [$10D7: neg]
-	move.b	d0,d1                           	| [$10D9: ld   b,a]
-	tst.b	d7                              	| [$10DA: ex   af,af'] un-stash Cy
+	scs	d7                              		| [$10D3: ex   af,af'] stash Cy ... sY<:0> [freq=low, count=00%]
+	move.b	d1,d0                           	| [$10D4: ld   a,b] [freq=low, count=00%]
+	add.b	#0x50,d0                 			| [$10D5: add  a,#<(-0x0160 >> 1)] adjust addend for scale factor 2 [freq=low, count=00%]
+	neg.b	d0                               	| [$10D7: neg] [freq=low, count=00%]
+	move.b	d0,d1                           	| [$10D9: ld   b,a] [freq=low, count=00%]
+	tst.b	d7                              	| [$10DA: ex   af,af'] un-stash Cy [freq=low, count=00%]
 	* re-set X flag from d7 stashed value, then set opposite X flag
-	bne.b	0f							  		| [$10DB: ccf] sY<:0> = Cy ^ 1
+	bne.b	0f							  		| [$10DB: ccf] sY<:0> = Cy ^ 1 [freq=low, count=00%]
 	SET_XC_FLAGS
 	bra.b	2f
 0:
@@ -2568,36 +2568,36 @@ l_10A0_got_one:
 * insert sprite X coord into pool structure
 l_10DC:
 * rescale sY<8:0> to fixed-point 9.7
-	move.b	d1,(0x01,a2)                    	| [$10DC: ld   0x01(ix),b] sY<8:1> ... fixed point 9.7
+	move.b	d1,(0x01,a2)                    	| [$10DC: ld   0x01(ix),b] sY<8:1> ... fixed point 9.7 [freq=low, count=00%]
 * sY<:0> from Cy into A<7> ... fixed point 9.7 (LSB)
-	roxr.b	#1,d0                           	| [$10DF: rra]
-	and.b	#0x80,d0                         	| [$10E0: and  #0x80]
-	move.b	d0,(mq_fine_y_00,a2)                    			| [$10E2: ld   0x00(ix),a] sY<0> ... fixed point 9.7
-	move.b	d2,d0                           	| [$10E5: ld   a,c] sprite_x
-	btst.b	#0,d4                           	| [$10E6: bit  0,e] test flipped screen
-	jeq	l_10ED                             		| [$10E8: jr   z,l_10ED]
+	roxr.b	#1,d0                           	| [$10DF: rra] [freq=low, count=00%]
+	and.b	#0x80,d0                         	| [$10E0: and  #0x80] [freq=low, count=00%]
+	move.b	d0,(mq_fine_y_00,a2)                    			| [$10E2: ld   0x00(ix),a] sY<0> ... fixed point 9.7 [freq=low, count=00%]
+	move.b	d2,d0                           	| [$10E5: ld   a,c] sprite_x [freq=low, count=00%]
+	btst.b	#0,d4                           	| [$10E6: bit  0,e] test flipped screen [freq=low, count=00%]
+	jeq	l_10ED                             		| [$10E8: jr   z,l_10ED] [freq=low, count=00%]
 * flipped screen
 	add.b	#0x0D,d0                         	| [add  a,#0x0D] if flipped screen
 	not.b	d0                               	| [cpl]
 
 l_10ED:
-	lsr.b	#1,d0                            	| [$10ED: srl  a]
-	move.b	d0,(mq_x_03,a2)                    	| [$10EF: ld   0x03(ix),a] sX<8:1>
-	roxr.b	#1,d0                           	| [$10F2: rra] Cy into A<8:>
-	and.b	#0x80,d0                         	| [$10F3: and  #0x80]
-	move.b	d0,(mq_fine_x_02,a2)                | [$10F5: ld   0x02(ix),a] sX<:0> ... now scaled fixed point 9.7
-	move.b	d3,(mq_state_13,a2)                 | [$10F8: ld   0x13(ix),d] function argument (A') sets bit-0 and bit-7
-	move.b	#0x1E,(mq_drop_bomb_counter_0e,a2) 	| [$10FB: ld   0x0E(ix),#0x1E] bomb drop counter
+	lsr.b	#1,d0                            	| [$10ED: srl  a] [freq=low, count=00%]
+	move.b	d0,(mq_x_03,a2)                    	| [$10EF: ld   0x03(ix),a] sX<8:1> [freq=low, count=00%]
+	roxr.b	#1,d0                           	| [$10F2: rra] Cy into A<8:> [freq=low, count=00%]
+	and.b	#0x80,d0                         	| [$10F3: and  #0x80] [freq=low, count=00%]
+	move.b	d0,(mq_fine_x_02,a2)                | [$10F5: ld   0x02(ix),a] sX<:0> ... now scaled fixed point 9.7 [freq=low, count=00%]
+	move.b	d3,(mq_state_13,a2)                 | [$10F8: ld   0x13(ix),d] function argument (A') sets bit-0 and bit-7 [freq=low, count=00%]
+	move.b	#0x1E,(mq_drop_bomb_counter_0e,a2) 	| [$10FB: ld   0x0E(ix),#0x1E] bomb drop counter [freq=low, count=00%]
 
 * if (flying_bug_attck_condtn)  bug_motion_que[n].b0F = bomb_drop_enbl_flags
-	move.b	o_ds_glbls_9200+0x0B(a6),d0           	| [$10FF: ld   a,(o_ds_glbls_9200(a6) + 0x0B)] if ( !0 ), load  o_b_92C0(a6)[0x08] ... bomb drop enable flags
+	move.b	o_ds_glbls_9200+0x0B(a6),d0           	| [$10FF: ld   a,(o_ds_glbls_9200(a6) + 0x0B)] if ( !0 ), load  o_b_92C0(a6)[0x08] ... bomb drop enable flags [freq=low, count=00%]
 												| [$1102: and  a]
-	jeq	l_1108                             		| [$1103: jr   z,l_1108]
-	move.b	o_b_92C0+0x08(a6),d0                  	| [$1105: ld   a,(o_b_92C0(a6) + 0x08)] bomb drop enable flags
+	jeq	l_1108                             		| [$1103: jr   z,l_1108] [freq=low, count=00%]
+	move.b	o_b_92C0+0x08(a6),d0                  	| [$1105: ld   a,(o_b_92C0(a6) + 0x08)] bomb drop enable flags [freq=low, count=00%]
 * else bug_motion_que[n].b0F = 0                    
 l_1108:
-	move.b	d0,(mq_drop_bomb_enable_0f,a2)      | [$1108: ld   0x0F(ix),a] 0 or o_b_92C0(a6)[$08] ... bomb drop enable flags for this attacker
-	rts                                    		| [$110B: ret]
+	move.b	d0,(mq_drop_bomb_enable_0f,a2)      | [$1108: ld   0x0F(ix),a] 0 or o_b_92C0(a6)[$08] ... bomb drop enable flags for this attacker [freq=low, count=00%]
+	rts                                    		| [$110B: ret] [freq=low, count=00%]
 
 *=============================================================================
 * c_player_active_switch_110c()
@@ -4537,12 +4537,12 @@ l_1A6A_ship_in_position:
 f_clone_attack_manager_1A80:
 * check parameter for condition to enable the bonus-bee feature.
 * if ( num_bugs > num_bugs_for_bonus_bee ) then return
-	move.b	o_ds_new_stage_parms_99c0+0x0A(a6),d0     | [$1A80: ld   a,(o_ds_new_stage_parms_99c0(a6) + 0x0A)] bonus-bee when bug count reaches this
-	move.b	d0,d2                           	| [$1A83: ld   c,a]
-	move.b	o_b_bugs_actv_nbr_92a7(a6),d0              	| [$1A84: ld   a,(o_b_bugs_actv_nbr_92a7(a6))]
-	cmp.b	d2,d0                            	| [$1A87: cp   c]
+	move.b	o_ds_new_stage_parms_99c0+0x0A(a6),d0     | [$1A80: ld   a,(o_ds_new_stage_parms_99c0(a6) + 0x0A)] bonus-bee when bug count reaches this [freq=low, count=00%]
+	move.b	d0,d2                           	| [$1A83: ld   c,a] [freq=low, count=00%]
+	move.b	o_b_bugs_actv_nbr_92a7(a6),d0              	| [$1A84: ld   a,(o_b_bugs_actv_nbr_92a7(a6))] [freq=low, count=00%]
+	cmp.b	d2,d0                            	| [$1A87: cp   c] [freq=low, count=00%]
 	bcs.b	0f                               	| [...]
-	rts                                    	    | [$1A88: ret  nc] [...]
+	rts                                    	    | [$1A88: ret  nc] [...] [freq=low, count=00%]
 0:
 
 * if ( activated_one_already ) goto 1AD5
@@ -4747,107 +4747,107 @@ check_queue_boss_wing_1b75:
 	* structure of 3 items: state/timer + 16bit pointer on flight path
 	lea	o_bmbr_boss_pool_92ca(a6),a0              	| [ld   hl,#o_bmbr_boss_pool_92ca(a6)] check 4 groups of 3 bytes
 l_1B7A:
-	move.b	(a0),d0                         	| [$1B7A: ld   a,(hl)] .b0: valid object index if slot active, otherwise $FF
-	addq.b	#1,d0                           	| [$1B7B: inc  a] 0 if boss_wing_slots[n*4].b0 == $ff
-	jne	l_launch_boss_wing_mission_1b8b         | [$1B7C: jr   nz,l_launch_boss_wing_mission_1b8b] if slot active, go launch it
-	addq.w	#3,a0                           	| [$1B7E: inc  l]*3
+	move.b	(a0),d0                         	| [$1B7A: ld   a,(hl)] .b0: valid object index if slot active, otherwise $FF [freq=low, count=01%]
+	addq.b	#1,d0                           	| [$1B7B: inc  a] 0 if boss_wing_slots[n*4].b0 == $ff [freq=low, count=01%]
+	jne	l_launch_boss_wing_mission_1b8b         | [$1B7C: jr   nz,l_launch_boss_wing_mission_1b8b] if slot active, go launch it [freq=low, count=01%]
+	addq.w	#3,a0                           	| [$1B7E: inc  l]*3 [freq=low, count=01%]
 	subq.b	#1,d1                           	| [...]
-	jne	l_1B7A                             	    | [$1B81: djnz l_1B7A]
+	jne	l_1B7A                             	    | [$1B81: djnz l_1B7A] [freq=low, count=01%]
 
        * insert a 1/4 sec delay before trying next bomber
-	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$1B83: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)]
-	and.b	#0x0F,d0                         	| [$1B86: and  #0x0F]
-	jeq	check_bomber_for_ready_status_1ba8      | [$1B88: jr   z,check_bomber_for_ready_status_1ba8]
-	rts                                    	    | [$1B8A: ret]
+	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$1B83: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)] [freq=low, count=00%]
+	and.b	#0x0F,d0                         	| [$1B86: and  #0x0F] [freq=low, count=00%]
+	jeq	check_bomber_for_ready_status_1ba8      | [$1B88: jr   z,check_bomber_for_ready_status_1ba8] [freq=low, count=00%]
+	rts                                    	    | [$1B8A: ret] [freq=low, count=00%]
 
 * launching element of boss+wing mission
 * A == o_bmbr_boss_pool_92ca(a6)[L].obj_idx + 1
 l_launch_boss_wing_mission_1b8b:
-	st.b	(a0)                      			| [$1B8B: ld   (hl),#0xFF] o_bmbr_boss_pool_92ca(a6)[ n * 3 + 0 ] = $ff
-	subq.b	#1,d0                           	| [$1B8D: dec  a] undo increment of boss_wing_slots[n].idx
-	lea	o_object_states_8800(a6),a1                      			| [$1B8E: ld   d,#>o_object_states_8800(a6)]
+	st.b	(a0)                      			| [$1B8B: ld   (hl),#0xFF] o_bmbr_boss_pool_92ca(a6)[ n * 3 + 0 ] = $ff [freq=low, count=00%]
+	subq.b	#1,d0                           	| [$1B8D: dec  a] undo increment of boss_wing_slots[n].idx [freq=low, count=00%]
+	lea	o_object_states_8800(a6),a1                      			| [$1B8E: ld   d,#>o_object_states_8800(a6)] [freq=low, count=00%]
 	moveq	#0,d4
-	move.b	d0,d4                           	| [$1B90: ld   e,a] e.g. E=$30 (boss)   8834 (boss already has a captured ship)
-	and.w	#0x7F,d4							| [$1B91: res  7,e] bit-7 was used to indicate negated rotation angle to (ix)0x0C
+	move.b	d0,d4                           	| [$1B90: ld   e,a] e.g. E=$30 (boss)   8834 (boss already has a captured ship) [freq=low, count=00%]
+	and.w	#0x7F,d4							| [$1B91: res  7,e] bit-7 was used to indicate negated rotation angle to (ix)0x0C [freq=low, count=00%]
 	add.w	d4,a1
 
 * stash A ... object/index from boss_wing_slots[n] (with bit-7 possibly set for negating rotation angle)
-	exg		d0,d7                              	| [$1B93: ex   af,af']
+	exg		d0,d7                              	| [$1B93: ex   af,af'] [freq=low, count=00%]
 
 * if (STAND_BY != obj_status[E].state) return ... disposition resting/inactive
-	move.b	(a1),d0                         	| [$1B94: ld   a,(de)] 92CA[].b0
-	subq.b	#1,d0                           	| [$1B95: dec  a]
+	move.b	(a1),d0                         	| [$1B94: ld   a,(de)] 92CA[].b0 [freq=low, count=00%]
+	subq.b	#1,d0                           	| [$1B95: dec  a] [freq=low, count=00%]
 	beq.b	0f                               	| [...]
-	rts                                    	    | [$1B96: ret  nz] exit if not available (demo) [...]
+	rts                                    	    | [$1B96: ret  nz] exit if not available (demo) [...] [freq=low, count=00%]
 0:
 
 * pointer to object data
-	addq.w	#1,a0                           	| [$1B97: inc  l]
+	addq.w	#1,a0                           	| [$1B97: inc  l] [freq=low, count=00%]
 	* a0 points to 92CB or something, loads subcpu 16 bit ROM address in D3/D4
 	* it doesn't need to point on anything as this cpu doesn't access ROM
  	move.b	(a0)+,d4                         	| [$1B98: ld   e,(hl)] e.g. 92CA[].b1, lsb of pointer to data
 	                           	                | [$1B99: inc  l]
-	move.b	(a0),d3                         	| [$1B9A: ld   d,(hl)] e.g. 92CA[].b2, msb of pointer to data
+	move.b	(a0),d3                         	| [$1B9A: ld   d,(hl)] e.g. 92CA[].b2, msb of pointer to data [freq=low, count=00%]
 	LOAD_D3_16_FROM_D3D4
 	
 * reload A
-	exg	d0,d7                              	    | [$1B9B: ex   af,af']
+	exg	d0,d7                              	    | [$1B9B: ex   af,af'] [freq=low, count=00%]
  	move.b	d0,d6                           	| [$1B9C: ld   l,a] byte-0 of boss_wing_slots[n*3] ... object index/offset
-	lea	o_object_states_8800(a6),a0                      	        | [$1B9D: ld   h,#>o_object_states_8800(a6)] e.g. o_object_states_8800(a6)[$30]
+	lea	o_object_states_8800(a6),a0                      	        | [$1B9D: ld   h,#>o_object_states_8800(a6)] e.g. o_object_states_8800(a6)[$30] [freq=low, count=00%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	jbsr	c_1079                            	| [$1B9F: call c_1079] DE, HL, and bit-7 of HL for negation of rotation angle if set
+	jbsr	c_1079                            	| [$1B9F: call c_1079] DE, HL, and bit-7 of HL for negation of rotation angle if set [freq=low, count=00%]
 
 	move.w	#ATTACK_SND,d0
 	jbsr	osd_sound_start
-	moveq	#1,d0                           	| [$1BA2: ld   a,#1]
-	move.b	d0,o_b_9AA0+0x13(a6)                  	| [$1BA4: ld   (o_b_9AA0(a6) + 0x13),a] 1 ... sound-fx count/enable registers, bug dive attack sound
-	rts                                    		| [$1BA7: ret]
+	moveq	#1,d0                           	| [$1BA2: ld   a,#1] [freq=low, count=00%]
+	move.b	d0,o_b_9AA0+0x13(a6)                  	| [$1BA4: ld   (o_b_9AA0(a6) + 0x13),a] 1 ... sound-fx count/enable registers, bug dive attack sound [freq=low, count=00%]
+	rts                                    		| [$1BA7: ret] [freq=low, count=00%]
 
 check_bomber_for_ready_status_1ba8:
 * check each bomber type for ready status i.e. yellow, red, boss
-	lea	o_b_92C0(a6),a0                 				| [$1BA8: ld   hl,#o_b_92C0(a6) + 0x00] 3 bytes, 1 byte for each slot, enumerates selection of red, yellow, or boss
-	moveq	#3,d1                           	| [$1BAB: ld   b,#3]
+	lea	o_b_92C0(a6),a0                 				| [$1BA8: ld   hl,#o_b_92C0(a6) + 0x00] 3 bytes, 1 byte for each slot, enumerates selection of red, yellow, or boss [freq=low, count=00%]
+	moveq	#3,d1                           	| [$1BAB: ld   b,#3] [freq=low, count=00%]
 l_1BAD:
-	subq.b	#1,(a0)                         	| [$1BAD: dec  (hl)] check if this one timed out
-	jeq	alien_attacks_1BB4                      | [$1BAE: jr   z,alien_attacks_1BB4] b used below argument to "switch" to select type of alien launched?
-	addq.w	#1,a0                           	| [$1BB0: inc  l]
+	subq.b	#1,(a0)                         	| [$1BAD: dec  (hl)] check if this one timed out [freq=low, count=00%]
+	jeq	alien_attacks_1BB4                      | [$1BAE: jr   z,alien_attacks_1BB4] b used below argument to "switch" to select type of alien launched? [freq=low, count=00%]
+	addq.w	#1,a0                           	| [$1BB0: inc  l] [freq=low, count=00%]
 	subq.b	#1,d1                           	| [...]
-	jne	l_1BAD                             		| [$1BB1: djnz l_1BAD]
-	rts                                    		| [$1BB3: ret] none are ready
+	jne	l_1BAD                             		| [$1BB1: djnz l_1BAD] [freq=low, count=00%]
+	rts                                    		| [$1BB3: ret] none are ready [freq=low, count=00%]
 
 * called when boss formations or single boss is attacking in the demo
 alien_attacks_1BB4:
 * if (bugs_flying_nbr >= max_flying_bugs_this_rnd) then ...
-	move.b	o_ds_new_stage_parms_99c0+0x04(a6),d2     | [$1BB4: ld   a,(o_ds_new_stage_parms_99c0(a6) + 0x04)] max_bombers
+	move.b	o_ds_new_stage_parms_99c0+0x04(a6),d2     | [$1BB4: ld   a,(o_ds_new_stage_parms_99c0(a6) + 0x04)] max_bombers [freq=low, count=00%]
 	                                         	| [$1BB7: ld   c,a]
-	move.b	o_b_bugs_flying_nbr_9287(a6),d0           | [$1BB8: ld   a,(o_b_bugs_flying_nbr_9287(a6))]
-	cmp.b	d2,d0                            	| [$1BBB: cp   c]
-	jcs	l_1BC0                             		| [$1BBC: jr   c,l_1BC0]
+	move.b	o_b_bugs_flying_nbr_9287(a6),d0           | [$1BB8: ld   a,(o_b_bugs_flying_nbr_9287(a6))] [freq=low, count=00%]
+	cmp.b	d2,d0                            	| [$1BBB: cp   c] [freq=low, count=00%]
+	jcs	l_1BC0                             		| [$1BBC: jr   c,l_1BC0] [freq=low, count=00%]
 * maximum nbr of bugs already flying set slot-counter back to 1 since it can't be processed right now
-	addq.b	#1,(a0)                         	| [$1BBE: inc  (hl)]
-	rts                                    		| [$1BBF: ret]
+	addq.b	#1,(a0)                         	| [$1BBE: inc  (hl)] [freq=low, count=00%]
+	rts                                    		| [$1BBF: ret] [freq=low, count=00%]
 
 * else ... launch another bombing excursion
 l_1BC0:
 * b_92C0_0[n] =  b_92C0_0[n + 4] ... set next timeout for this bomber type
 												| [$1BC0: set  2,l] offset += 4
-	move.b	(4,a0),d0                         	| [$1BC2: ld   a,(hl)] $92C0[n+4]
+	move.b	(4,a0),d0                         	| [$1BC2: ld   a,(hl)] $92C0[n+4] [freq=low, count=00%]
 												| [$1BC3: res  2,l]
-	move.b	d0,(a0)                         	| [$1BC5: ld   (hl),a] reset counter for next bomber
+	move.b	d0,(a0)                         	| [$1BC5: ld   (hl),a] reset counter for next bomber [freq=low, count=00%]
 
-	move.b	d1,d0                           	| [$1BC6: ld   a,b] ... b from loop l_1bad above decremented from 3
-	subq.b	#1,d0                           	| [$1BC7: dec  a] offset for 0 based indexing of "switch"
+	move.b	d1,d0                           	| [$1BC6: ld   a,b] ... b from loop l_1bad above decremented from 3 [freq=low, count=00%]
+	subq.b	#1,d0                           	| [$1BC7: dec  a] offset for 0 based indexing of "switch" [freq=low, count=00%]
 
 * switch(A)
-	lea	d_1BD1,a0                      	        | [$1BC8: ld   hl,#d_1BD1]
+	lea	d_1BD1,a0                      	        | [$1BC8: ld   hl,#d_1BD1] [freq=low, count=00%]
 	CHECK_D0W_UPPER_BOUND	3
-	ADD_4_TIMES_D0_TO_A0           | [$1BCB: rst  0x08] HL += 2A
+	ADD_4_TIMES_D0_TO_A0           | [$1BCB: rst  0x08] HL += 2A [freq=low, count=00%]
 	                       	                    | [$1BCC: ld   a,(hl)]
 	                       	                    | [$1BCD: inc  hl]
 	                       	                    | [$1BCE: ld   h,(hl)]
-	move.l	(a0),a0                       	    | [$1BCF: ld   l,a]
-	jra	(a0)                               	    | [$1BD0: jp   (hl)]
+	move.l	(a0),a0                       	    | [$1BCF: ld   l,a] [freq=low, count=00%]
+	jra	(a0)                               	    | [$1BD0: jp   (hl)] [freq=low, count=00%]
 d_1BD1:
 * jp table in order of bomber launch timers
 	.long case_bmbr_yellow_1BD7
@@ -4856,21 +4856,21 @@ d_1BD1:
 
 * set bee launch params
 case_bmbr_yellow_1BD7:
-	move.b	#20,d1                          	| [$1BD7: ld   b,#20] number of yellow aliens
-	lea	o_object_states_8800+0x08(a6),a0                 	        | [$1BD9: ld   hl,#o_object_states_8800(a6) + 0x08] $08-$2E
-	move.w	#db_flv_atk_yllw_034F,d3            | [$1BDC: ld   de,#db_flv_atk_yllw]
+	move.b	#20,d1                          	| [$1BD7: ld   b,#20] number of yellow aliens [freq=low, count=00%]
+	lea	o_object_states_8800+0x08(a6),a0                 	        | [$1BD9: ld   hl,#o_object_states_8800(a6) + 0x08] $08-$2E [freq=low, count=00%]
+	move.w	#db_flv_atk_yllw_034F,d3            | [$1BDC: ld   de,#db_flv_atk_yllw] [freq=low, count=00%]
 
 * this section common to both bee and moth launcher, check for next one, skip if already active
 l_1BDF:
-	move.b	o_ds_plyr_actv_9820+_b_bbee_obj(a6),d0     	| [$1BDF: ld   a,(o_ds_plyr_actv_9820(a6) +_b_bbee_obj)] load bonus-bee parameter
-	move.b	d0,d2                           	| [$1BE2: ld   c,a] stash A
+	move.b	o_ds_plyr_actv_9820+_b_bbee_obj(a6),d0     	| [$1BDF: ld   a,(o_ds_plyr_actv_9820(a6) +_b_bbee_obj)] load bonus-bee parameter [freq=low, count=00%]
+	move.b	d0,d2                           	| [$1BE2: ld   c,a] stash A [freq=low, count=00%]
 l_1BE3_while:
 * if ( disposition == STAND_BY ) && ...
-	move.b	(a0),d0                         	| [$1BE3: ld   a,(hl)] obj_status[L].state
-	subq.b	#1,d0                           	| [$1BE4: dec  a]
-	jne	l_1BEB_next                        	    | [$1BE5: jr   nz,l_1BEB_next]
+	move.b	(a0),d0                         	| [$1BE3: ld   a,(hl)] obj_status[L].state [freq=low, count=00%]
+	subq.b	#1,d0                           	| [$1BE4: dec  a] [freq=low, count=00%]
+	jne	l_1BEB_next                        	    | [$1BE5: jr   nz,l_1BEB_next] [freq=low, count=00%]
 * ... ( L != bonus_bee_index ) then l_1BF0_found_one
-	move.b	d2,d0                           	| [$1BE7: ld   a,c] unstash A ... offset_to_bonus_bee
+	move.b	d2,d0                           	| [$1BE7: ld   a,c] unstash A ... offset_to_bonus_bee [freq=low, count=00%]
 	COMPUTE_LSB_A0_D6		o_object_states_8800		        | recompute offset from original a0
 	cmp.b	d6,d0                            	| [cp   l]
 	jne	l_1BF0_found_one                   	    | [jr   nz,l_1BF0_found_one]
@@ -4882,7 +4882,7 @@ l_1BEB_next:
 
 * bee or moth perform a diving attack
 l_1BF0_found_one:
-	move.b	d0,o_b_9AA0+0x13(a6)                  	| [$1BF0: ld   (o_b_9AA0(a6) + 0x13),a] from C, !0 ... sound-fx count/enable registers, bug dive attack sound
+	move.b	d0,o_b_9AA0+0x13(a6)                  	| [$1BF0: ld   (o_b_9AA0(a6) + 0x13),a] from C, !0 ... sound-fx count/enable registers, bug dive attack sound [freq=low, count=00%]
 	move.w	#ATTACK_SND,d0
 	jbsr	osd_sound_start
 	jbsr	c_diving_movement_1083              | [call c_diving_movement_1083] bomber setup, red or yellow alien
@@ -4890,22 +4890,22 @@ l_1BF0_found_one:
 
 * set red moth launch params
 case_bmbr_red_1BF7:
-	move.b	#16,d1                          	| [$1BF7: ld   b,#16] number of red aliens
-	lea	o_object_states_8800+0x40(a6),a0                 			| [$1BF9: ld   hl,#o_object_states_8800(a6) + 0x40] red moths $40-$5E
-	move.w	#db_flv_atk_red_03a9,d3             | [$1BFC: ld   de,#db_flv_atk_red]
-	jra	l_1BDF                             		| [$1BFF: jr   l_1BDF] common to red and yellow alien
+	move.b	#16,d1                          	| [$1BF7: ld   b,#16] number of red aliens [freq=low, count=00%]
+	lea	o_object_states_8800+0x40(a6),a0                 			| [$1BF9: ld   hl,#o_object_states_8800(a6) + 0x40] red moths $40-$5E [freq=low, count=00%]
+	move.w	#db_flv_atk_red_03a9,d3             | [$1BFC: ld   de,#db_flv_atk_red] [freq=low, count=00%]
+	jra	l_1BDF                             		| [$1BFF: jr   l_1BDF] common to red and yellow alien [freq=low, count=00%]
 
 * boss launcher... only enable capture-mode for every other one ( %2 )
 case_bmbr_boss_1C01:
 * if (boss is diving/capturing ) then goto 1C30
-	move.b	o_ds_plyr_actv_9820+_b_bmbr_boss_cflag(a6),d0	| [$1C01: ld   a,(o_ds_plyr_actv_9820(a6) +_b_bmbr_boss_cflag)] 1 if capture-mode is active / capture-mode selection suppressed
+	move.b	o_ds_plyr_actv_9820+_b_bmbr_boss_cflag(a6),d0	| [$1C01: ld   a,(o_ds_plyr_actv_9820(a6) +_b_bmbr_boss_cflag)] 1 if capture-mode is active / capture-mode selection suppressed [freq=low, count=00%]
 												| [$1C04: and  a]
-	jne	l_1C30                             		| [$1C05: jr   nz,l_1C30]
+	jne	l_1C30                             		| [$1C05: jr   nz,l_1C30] [freq=low, count=00%]
 * if ( plyr.cboss_enable_toggle % 2 ) then goto 1C30
-	lea	o_ds_plyr_actv_9820+_b_bmbr_boss_wingm(a6),a0		| [$1C07: ld   hl,#o_ds_plyr_actv_9820(a6) +_b_bmbr_boss_wingm] toggle bomber boss wingman-enable
-	addq.b	#1,(a0)                         	| [$1C0A: inc  (hl)]
-	btst.b	#0,(a0)                         	| [$1C0B: bit  0,(hl)]
-	jne	l_1C30                             		| [$1C0D: jr   nz,l_1C30]
+	lea	o_ds_plyr_actv_9820+_b_bmbr_boss_wingm(a6),a0		| [$1C07: ld   hl,#o_ds_plyr_actv_9820(a6) +_b_bmbr_boss_wingm] toggle bomber boss wingman-enable [freq=low, count=00%]
+	addq.b	#1,(a0)                         	| [$1C0A: inc  (hl)] [freq=low, count=00%]
+	btst.b	#0,(a0)                         	| [$1C0B: bit  0,(hl)] [freq=low, count=00%]
+	jne	l_1C30                             		| [$1C0D: jr   nz,l_1C30] [freq=low, count=00%]
 
 * capture-mode select: for each boss, first one that status==standby beomes capture-boss
 	move.b	#2,ixl		                        | [$1C0F: ld   ixl,2]
@@ -4939,17 +4939,17 @@ l_1C30:
 	move.w	#6-1,d1                 	| [ld   bc,#6 * 256 + 0] check 6 objects (B) and clear C None
 	move.w	#0,d2                 	| [ld   bc,#6 * 256 + 0] check 6 objects (B) and clear C None
 l_1C38_while:
-	move.b	(a0)+,d4                         	| [$1C38: ld   e,(hl)]
+	move.b	(a0)+,d4                         	| [$1C38: ld   e,(hl)] [freq=low, count=00%]
 												| [$1C39: inc  hl]
 	lea	o_object_states_8800(a6),a1                      			| [ld   d,#>o_object_states_8800(a6)]
 	add.w	d4,a1								| update address each time
 * if "special attacker" skip test object_status STAND_BY
-	move.b	o_ds_plyr_actv_9820+_b_bbee_obj(a6),d0     	| [$1C3A: ld   a,(o_ds_plyr_actv_9820(a6) +_b_bbee_obj)] check if wingman is already special-bomber
-	cmp.b	d4,d0                            	| [$1C3D: cp   e]
-	jeq	l_1C44                             		| [$1C3E: jr   z,l_1C44]
+	move.b	o_ds_plyr_actv_9820+_b_bbee_obj(a6),d0     	| [$1C3A: ld   a,(o_ds_plyr_actv_9820(a6) +_b_bbee_obj)] check if wingman is already special-bomber [freq=low, count=00%]
+	cmp.b	d4,d0                            	| [$1C3D: cp   e] [freq=low, count=00%]
+	jeq	l_1C44                             		| [$1C3E: jr   z,l_1C44] [freq=low, count=00%]
 * test if object_status = STAND_BY
-	move.b	(a1),d0                         	| [$1C40: ld   a,(de)]
-	subq.b	#2,d0                           	| [$1C41: dec  a + sub  $01] one byte opcode ... affects X
+	move.b	(a1),d0                         	| [$1C40: ld   a,(de)] [freq=low, count=00%]
+	subq.b	#2,d0                           	| [$1C41: dec  a + sub  $01] one byte opcode ... affects X [freq=low, count=00%]
 l_1C44:
 	roxl.b	#1,d2                           	| [rl   c] shifts in a bit from Cy if object status was 1 (00 - 01 = FF)
 	dbf		d1,l_1C38_while                       		| [djnz l_1C38_while]
@@ -4960,8 +4960,8 @@ l_1C44:
 
 * first pass: look for 2 adjoining escorts available occuring in 3 adjacent spaces
 l_1C4F_while:
-	move.b	d2,d0                           	| [$1C4F: ld   a,c]
-	and.b	#0x07,d0                         	| [$1C50: and  #0x07]
+	move.b	d2,d0                           	| [$1C4F: ld   a,c] [freq=low, count=00%]
+	and.b	#0x07,d0                         	| [$1C50: and  #0x07] [freq=low, count=00%]
 * if (a==3 || a==5|| a==6) ...
 	cmp.b	#4,d0                            	| [cp   #4] (a ! 4) ...
 	jeq	l_1C5B                             	    | [jr   z,l_1C5B]
@@ -5058,10 +5058,10 @@ l_1C94:
 
 j_1CA0:
 	COMPUTE_LSB_A1_D4	o_object_states_8800
-	move.w	#db_flv_0411,d5                 	| [$1CA0: ld   iy,#db_flv_0411]
-	move.b	o_ds_glbls_9200+0x0B(a6),d0           	| [$1CA4: ld   a,(o_ds_glbls_9200(a6) + 0x0B)] enemy enable, select data ptr boss launch: if (0), iy=$00F1, else iy=$0411
+	move.w	#db_flv_0411,d5                 	| [$1CA0: ld   iy,#db_flv_0411] [freq=low, count=00%]
+	move.b	o_ds_glbls_9200+0x0B(a6),d0           	| [$1CA4: ld   a,(o_ds_glbls_9200(a6) + 0x0B)] enemy enable, select data ptr boss launch: if (0), iy=$00F1, else iy=$0411 [freq=low, count=00%]
 	                               	            | [$1CA7: and  a]
-	jne	j_1CAE                             	    | [$1CA8: jr   nz,l_1CAE]
+	jne	j_1CAE                             	    | [$1CA8: jr   nz,l_1CAE] [freq=low, count=00%]
 	move.w	#db_flv_00f1,d5                 	| [$1CAA: ld   iy,#db_flv_00f1] training-mode
 
 
@@ -5077,15 +5077,15 @@ j_1CA0:
 j_1CAE:
 	
 * objects 32 & 36 are on right side (bit-1 set): set flag in bit-7 to indicate negative rotation
-	move.b	d4,d0                           	| [$1CAE: ld   a,e] object/index of bomber
-	ror.b	#2,d0                            	| [$1CAF: rrca] * 2
+	move.b	d4,d0                           	| [$1CAE: ld   a,e] object/index of bomber [freq=low, count=00%]
+	ror.b	#2,d0                            	| [$1CAF: rrca] * 2 [freq=low, count=00%]
 	SET_X_FROM_C
-	move.b	d4,d0                           	| [$1CB1: ld   a,e]
-	roxl.b	#1,d0                           	| [$1CB2: rla] Cy into bit-0
+	move.b	d4,d0                           	| [$1CB1: ld   a,e] [freq=low, count=00%]
+	roxl.b	#1,d0                           	| [$1CB2: rla] Cy into bit-0 [freq=low, count=00%]
  	ror.b	#1,d0                            	| [$1CB3: rrca] flag in Cy and in bit-7
-	scs	d7                              	    | [$1CB7: ex   af,af'] stash Cy for rotation flag
-	move.b	d0,o_bmbr_boss_pool_92ca+0(a6)            | [$1CB4: ld   (o_bmbr_boss_pool_92ca(a6) + 0),a] object/index of bomber boss
-	MOVE_TO_VAR	d5,o_bmbr_boss_pool_92ca+1(a6)		| [$1CB8: ld   (o_bmbr_boss_pool_92ca(a6) + 1),iy] flight vector of bomber boss
+	scs	d7                              	    | [$1CB7: ex   af,af'] stash Cy for rotation flag [freq=low, count=00%]
+	move.b	d0,o_bmbr_boss_pool_92ca+0(a6)            | [$1CB4: ld   (o_bmbr_boss_pool_92ca(a6) + 0),a] object/index of bomber boss [freq=low, count=00%]
+	MOVE_TO_VAR	d5,o_bmbr_boss_pool_92ca+1(a6)		| [$1CB8: ld   (o_bmbr_boss_pool_92ca(a6) + 1),iy] flight vector of bomber boss [freq=low, count=00%]
 	
 	addq.b	#1,d1                           	| [inc  b] `dec b` in c_1D03
 
@@ -5115,11 +5115,11 @@ j_1CAE:
 	
 * if (1 == ixl) ... setup 1 escort, else setup 2 escorts
 	
-	subq.b	#1,d0                           	| [$1CDA: dec  a]
-	jeq	l_1CE0                             		| [$1CDB: jr   z,l_1CE0]
-	jbsr	c_1D03                            	| [$1CDD: call c_1D03] DE==&boss_pool[1] ... boss dives with wingman
+	subq.b	#1,d0                           	| [$1CDA: dec  a] [freq=low, count=00%]
+	jeq	l_1CE0                             		| [$1CDB: jr   z,l_1CE0] [freq=low, count=00%]
+	jbsr	c_1D03                            	| [$1CDD: call c_1D03] DE==&boss_pool[1] ... boss dives with wingman [freq=low, count=00%]
 l_1CE0:
-	jbsr	c_1D03                            	| [$1CE0: call c_1D03] DE==&boss_pool[2] ... boss dives with wingman
+	jbsr	c_1D03                            	| [$1CE0: call c_1D03] DE==&boss_pool[2] ... boss dives with wingman [freq=low, count=00%]
 
 * if rogue fighter for this boss !STAND_BY then return
 l_1CE3:
@@ -5184,23 +5184,23 @@ d_1CFD:
 *  C: flags for escorts available
 *-----------------------------------------------------------------------------
 c_1D03:
-	ror.b	#1,d2                            	| [$1D03: rrc  c]
-	jcs	l_1D0D                             		| [$1D05: jr   c,l_1D0D]
+	ror.b	#1,d2                            	| [$1D03: rrc  c] [freq=low, count=00%]
+	jcs	l_1D0D                             		| [$1D05: jr   c,l_1D0D] [freq=low, count=00%]
 	subq.b	#1,d1                           	| [$1D07: dec  b] after boss docked home with ship
 	ror.b	#1,d2                            	| [$1D08: rrc  c]
 	jcs	l_1D0D                             		| [$1D0A: jr   c,l_1D0D]
 	subq.b	#1,d1                           	| [$1D0C: dec  b]
 l_1D0D:
 	moveq	#0,d0
-	move.b	d1,d0                           	| [$1D0D: ld   a,b]
-	subq.b	#1,d1                           	| [$1D0E: dec  b]
-	lea	d_1D2C_wingmen,a0              			| [$1D0F: ld   hl,#d_1D2C_wingmen]
-	add.w	d0,a0			                    | [$1D12: rst  0x10] HL += A
+	move.b	d1,d0                           	| [$1D0D: ld   a,b] [freq=low, count=00%]
+	subq.b	#1,d1                           	| [$1D0E: dec  b] [freq=low, count=00%]
+	lea	d_1D2C_wingmen,a0              			| [$1D0F: ld   hl,#d_1D2C_wingmen] [freq=low, count=00%]
+	add.w	d0,a0			                    | [$1D12: rst  0x10] HL += A [freq=low, count=00%]
 
 * setup parameters (IY, pointer to flight vector data, already loaded)
 												| [$1D13: ex   af,af'] unstash rotation flag
-	move.b	(a0),d0                         	| [$1D14: ld   a,(hl)] d_escorts[a] ... object/index
-	exg	a1,a0                              		| [$1D15: ex   de,hl] &boss_wing_slots[n] to HL
+	move.b	(a0),d0                         	| [$1D14: ld   a,(hl)] d_escorts[a] ... object/index [freq=low, count=00%]
+	exg	a1,a0                              		| [$1D15: ex   de,hl] &boss_wing_slots[n] to HL [freq=low, count=00%]
 	tst.b	d7                              	| [ex   af,af'] unstash rotation flag
 	beq.b	0f
 	SET_XC_FLAGS
@@ -5428,24 +5428,24 @@ l_1DBD:
 	rts                                    	| [ret]
 
 l_1DC1_make_him_dead:
-	bclr.b	#7,(a0)                         	| [$1DC1: res  7,(hl)] o_b_obj_collsn_notif_9200(a6)[n] for rckt_hit_hdlr
+	bclr.b	#7,(a0)                         	| [$1DC1: res  7,(hl)] o_b_obj_collsn_notif_9200(a6)[n] for rckt_hit_hdlr [freq=low, count=00%]
 	
 	* compute relative offset/index to apply to 88xx
 	COMPUTE_LSB_A0_D6	o_b_obj_collsn_notif_9200
-	lea	o_object_states_8800(a6),a0                      	        | [$1DC3: ld   h,#>o_object_states_8800(a6)] disposition = 4 (dying/exploding)
+	lea	o_object_states_8800(a6),a0                      	        | [$1DC3: ld   h,#>o_object_states_8800(a6)] disposition = 4 (dying/exploding) [freq=low, count=00%]
 	add.w	d6,a0
-	move.b	#4,(a0)+                         	| [$1DC5: ld   (hl),#4]
+	move.b	#4,(a0)+                         	| [$1DC5: ld   (hl),#4] [freq=low, count=00%]
 	addq	#1,d6		                        | d6 offset follows for later
 * use obj_status[].mctl_q_index for explosion counter (que object should already have been released at l_081E_hdl_flyng_bug
 	                           	                | [$1DC7: inc  l]
-	move.b	#0x40,(a0)                      	| [$1DC8: ld   (hl),#0x40] start value for the explosion (40...45)
+	move.b	#0x40,(a0)                      	| [$1DC8: ld   (hl),#0x40] start value for the explosion (40...45) [freq=low, count=00%]
 	
-	lea	o_ds_sprite_code_8B00(a6),a0              	| [$1DCA: ld   h,#>o_ds_sprite_code_8B00(a6)]
+	lea	o_ds_sprite_code_8B00(a6),a0              	| [$1DCA: ld   h,#>o_ds_sprite_code_8B00(a6)] [freq=low, count=00%]
 	add.w	d6,a0			                    | apply offset to sprite code too
-	move.b	#0x0A,(a0)                      	| [$1DCC: ld   (hl),#0x0A] update color for inactive/dead sprite
-	lea	o_b_obj_collsn_notif_9200(a6),a0     	        | [$1DCE: ld   h,#>o_b_obj_collsn_notif_9200(a6)] reload ptr
+	move.b	#0x0A,(a0)                      	| [$1DCC: ld   (hl),#0x0A] update color for inactive/dead sprite [freq=low, count=00%]
+	lea	o_b_obj_collsn_notif_9200(a6),a0     	        | [$1DCE: ld   h,#>o_b_obj_collsn_notif_9200(a6)] reload ptr [freq=low, count=00%]
 	add.w	d6,a0			                    | and there too
-	jra	l_1DBD                             	    | [$1DD0: jr   l_1DBD]
+	jra	l_1DBD                             	    | [$1DD0: jr   l_1DBD] [freq=low, count=00%]
 * end 1DB3
 
 *=============================================================================
@@ -5459,24 +5459,24 @@ l_1DC1_make_him_dead:
 *-----------------------------------------------------------------------------
 f_update_timers_1dd2:
 *  if ( frame_cts[2] & 0x01 ) return ... divides the 4 Hz timer by 2 ... why not just use frame_cts[1]
-	move.b	o_ds3_frame_cts_92A0+2(a6),d0         	| [$1DD2: ld   a,(o_ds3_frame_cts_92A0(a6) + 2)] [2]: 4 Hz timer
-	and.b	#0x01,d0                         	| [$1DD5: and  #0x01]
+	move.b	o_ds3_frame_cts_92A0+2(a6),d0         	| [$1DD2: ld   a,(o_ds3_frame_cts_92A0(a6) + 2)] [2]: 4 Hz timer [freq=low, count=02%]
+	and.b	#0x01,d0                         	| [$1DD5: and  #0x01] [freq=low, count=02%]
 	beq.b	0f                               	| [...]
-	rts                                    		| [$1DD7: ret  nz] [...]
+	rts                                    		| [$1DD7: ret  nz] [...] [freq=low, count=02%]
 0:
 
-	lea	o_ds4_game_tmrs_92ac(a6),a0             	| [$1DD8: ld   hl,#o_ds4_game_tmrs_92ac(a6) + 0] decrement each of the 4 game timers
-	move.w	#4-1,d1                           | [$1DDB: ld   b,#4]
+	lea	o_ds4_game_tmrs_92ac(a6),a0             	| [$1DD8: ld   hl,#o_ds4_game_tmrs_92ac(a6) + 0] decrement each of the 4 game timers [freq=low, count=00%]
+	move.w	#4-1,d1                           | [$1DDB: ld   b,#4] [freq=low, count=00%]
 *  for ( b = 0 | b < 4 | b++ ) {
 *    if ( game_tmrs[b] > 0 )   game_tmrs[b]--
 l_1DDD:
-	tst.b	(a0)+                         		| [$1DDD: ld   a,(hl)]
+	tst.b	(a0)+                         		| [$1DDD: ld   a,(hl)] [freq=low, count=00%]
 												| [$1DDE: and  a]
-	jeq	l_1DE2                             		| [$1DDF: jr   z,l_1DE2]
-	subq.b	#1,(-1,a0)                         	| [$1DE1: dec  (hl)]
+	jeq	l_1DE2                             		| [$1DDF: jr   z,l_1DE2] [freq=low, count=00%]
+	subq.b	#1,(-1,a0)                         	| [$1DE1: dec  (hl)] [freq=low, count=00%]
 l_1DE2:
 												| [$1DE2: inc  l]
-	dbf	d1,l_1DDD                             		| [$1DE3: djnz l_1DDD]
+	dbf	d1,l_1DDD                             		| [$1DE3: djnz l_1DDD] [freq=low, count=00%]
 *  }
 	rts                                    	| [ret]
 
@@ -5671,14 +5671,14 @@ d_1E64_bitmap_tables:
 f_bomb_position_updater_1ea4:
 * Determine y-increment: each frame alternates 2 or 3 pixels-per-frame
 * increment to provide the average Y velocity, and negated for inverted screen.
-	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$1EA4: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)]
-	and.b	#0x01,d0                         	| [$1EA7: and  #0x01]
-	addq.b	#2,d0                           	| [$1EA9: add  a,#2]
-	move.b	d0,d1                           	| [$1EAB: ld   b,a]
+	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$1EA4: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)] [freq=low, count=02%]
+	and.b	#0x01,d0                         	| [$1EA7: and  #0x01] [freq=low, count=02%]
+	addq.b	#2,d0                           	| [$1EA9: add  a,#2] [freq=low, count=02%]
+	move.b	d0,d1                           	| [$1EAB: ld   b,a] [freq=low, count=02%]
 	                               	            | [$1EAC: and  a]
-	move.b	d1,d0                           	| [$1EAF: ld   a,b]
-	tst.b	o_b_flip_screen_9215(a6)           	    | [$1EB0: ld   a,(o_b_flip_screen_9215(a6))]
-	jeq	l_1EB5                             	    | [$1EB1: jr   z,l_1EB5]
+	move.b	d1,d0                           	| [$1EAF: ld   a,b] [freq=low, count=02%]
+	tst.b	o_b_flip_screen_9215(a6)           	    | [$1EB0: ld   a,(o_b_flip_screen_9215(a6))] [freq=low, count=02%]
+	jeq	l_1EB5                             	    | [$1EB1: jr   z,l_1EB5] [freq=low, count=02%]
 	neg.b	d0                               	| [$1EB3: neg]
 
 l_1EB5:
@@ -5689,19 +5689,19 @@ l_1EB5:
 
 l_1EBF_while:
 * if sprite[bomb + n].code == $30 ...
-	lea	o_ds_sprite_code_8B00(a6),a0              	| [$1EBF: ld   h,#>o_ds_sprite_code_8B00(a6)]
+	lea	o_ds_sprite_code_8B00(a6),a0              	| [$1EBF: ld   h,#>o_ds_sprite_code_8B00(a6)] [freq=low, count=05%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$1EC1: ld   a,(hl)]
-	cmp.b	#0x30,d0                         	| [$1EC2: cp   #0x30] bomb sprite codes don't show up until some new-game inits are done
-	jne	l_1EFF                             	    | [$1EC4: jr   nz,l_1EFF]
+	move.b	(a0),d0                         	| [$1EC1: ld   a,(hl)] [freq=low, count=05%]
+	cmp.b	#0x30,d0                         	| [$1EC2: cp   #0x30] bomb sprite codes don't show up until some new-game inits are done [freq=low, count=05%]
+	jne	l_1EFF                             	    | [$1EC4: jr   nz,l_1EFF] [freq=low, count=05%]
 * ... sprite[bomb + n].posn.x != 0
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$1EC6: ld   h,#>o_ds_sprite_posn_9300(a6)]
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$1EC6: ld   h,#>o_ds_sprite_posn_9300(a6)] [freq=low, count=05%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$1EC8: ld   a,(hl)]
+	move.b	(a0),d0                         	| [$1EC8: ld   a,(hl)] [freq=low, count=05%]
 	                               	            | [$1EC9: and  a]
-	jeq	l_1EFF                             	    | [$1ECA: jr   z,l_1EFF]
+	jeq	l_1EFF                             	    | [$1ECA: jr   z,l_1EFF] [freq=low, count=05%]
 
 * Fun fixed point math: X rate in 92B0[ even ] has a scale factor of
 * 32-counts -> 1 pixel-per-frame. Each frame, the (unchanging) dividend
@@ -5815,34 +5815,34 @@ f_read_fire_button_1f04:
 *-----------------------------------------------------------------------------
 c_init_rocket_sprites_1F0F:
 * if ( 0 != sprite[ RCKT0 ].sX ) ...
-	lea	o_ds_sprite_posn_9300+0x64(a6),a0         	| [$1F0F: ld   hl,#o_ds_sprite_posn_9300(a6) + 0x64] ROCKET_0
-	lea	o_b_92A0+0x04(a6),a1                 			| [$1F12: ld   de,#o_b_92A0(a6) + 0x04] rockt_attribute[0]
+	lea	o_ds_sprite_posn_9300+0x64(a6),a0         	| [$1F0F: ld   hl,#o_ds_sprite_posn_9300(a6) + 0x64] ROCKET_0 [freq=low, count=00%]
+	lea	o_b_92A0+0x04(a6),a1                 			| [$1F12: ld   de,#o_b_92A0(a6) + 0x04] rockt_attribute[0] [freq=low, count=00%]
 	move.w	#0xA4,d4
-	clr.b	d0                               	| [$1F15: xor  a]
-	tst.b	(a0)                          		| [$1F16: cp   (hl)] if (0)
-	jeq	shot_slot_free_1f1e  		       		| [$1F17: jr   z,shot_slot_free_1f1e]
+	clr.b	d0                               	| [$1F15: xor  a] [freq=low, count=00%]
+	tst.b	(a0)                          		| [$1F16: cp   (hl)] if (0) [freq=low, count=00%]
+	jeq	shot_slot_free_1f1e  		       		| [$1F17: jr   z,shot_slot_free_1f1e] [freq=low, count=00%]
 
 * ... then ... if ( 0 != sprite[ RCKT1 ].sX )  return
-	lea		o_ds_sprite_posn_9300+0x66(a6),a0        	| [$1F19: ld   l,#<o_ds_sprite_posn_9300(a6) + 0x66] ROCKET_1
-	addq.w	#1,a1                           	| [$1F1B: inc  e] rockt_attribute[1]
-	addq.w	#1,d4                           	| [$1F1B: inc  e] [a1 coherence]
-	tst.b	(a0)                          		| [$1F1C: cp   (hl)] if (0 != sprite[RCKT1].sX)  ret
+	lea		o_ds_sprite_posn_9300+0x66(a6),a0        	| [$1F19: ld   l,#<o_ds_sprite_posn_9300(a6) + 0x66] ROCKET_1 [freq=low, count=00%]
+	addq.w	#1,a1                           	| [$1F1B: inc  e] rockt_attribute[1] [freq=low, count=00%]
+	addq.w	#1,d4                           	| [$1F1B: inc  e] [a1 coherence] [freq=low, count=00%]
+	tst.b	(a0)                          		| [$1F1C: cp   (hl)] if (0 != sprite[RCKT1].sX)  ret [freq=low, count=00%]
 	beq.b	0f                               	| [...]
-	rts                                    		| [$1F1D: ret  nz] [...]
+	rts                                    		| [$1F1D: ret  nz] [...] [freq=low, count=00%]
 0:
 
 shot_slot_free_1f1e:
 * save pointer to attribute, and stash 'offsetof( RCKT_X )' in E
-	move.w	d4,-(sp)                    		| [$1F1E: push de] &rockt_attribute[n].posn.b0
-	move.l	a1,-(sp)                        	| [$1F1E: push de] &rockt_attribute[n].posn.b0
+	move.w	d4,-(sp)                    		| [$1F1E: push de] &rockt_attribute[n].posn.b0 [freq=low, count=00%]
+	move.l	a1,-(sp)                        	| [$1F1E: push de] &rockt_attribute[n].posn.b0 [freq=low, count=00%]
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
-	exg	d6,d4                              		| [$1F1F: ex   de,hl]
-	lea	o_ds_sprite_ctrl_9B00+0x62+1(a6),a0       	| [$1F20: ld   hl,#o_ds_sprite_ctrl_9B00(a6) + 0x62 + 1] sprite.ctrl[FIGHTR].b1
-	lea	o_ds_sprite_ctrl_9B00(a6),a1              	| [$1F23: ld   d,h]
-	addq.b	#1,d4                           	| [$1F24: inc  e] sprite[RCKT_X].ctrl.b1 [a1 coherence]
+	exg	d6,d4                              		| [$1F1F: ex   de,hl] [freq=low, count=00%]
+	lea	o_ds_sprite_ctrl_9B00+0x62+1(a6),a0       	| [$1F20: ld   hl,#o_ds_sprite_ctrl_9B00(a6) + 0x62 + 1] sprite.ctrl[FIGHTR].b1 [freq=low, count=00%]
+	lea	o_ds_sprite_ctrl_9B00(a6),a1              	| [$1F23: ld   d,h] [freq=low, count=00%]
+	addq.b	#1,d4                           	| [$1F24: inc  e] sprite[RCKT_X].ctrl.b1 [a1 coherence] [freq=low, count=00%]
     	add.w	d4,a1	
-	btst.b	#2,(a0)                         	| [$1F25: bit  2,(hl)] sprite.ctrl[FIGHTR].b1<2> ... ?
-	jeq	l_1F2B                             		| [$1F27: jr   z,l_1F2B]
+	btst.b	#2,(a0)                         	| [$1F25: bit  2,(hl)] sprite.ctrl[FIGHTR].b1<2> ... ? [freq=low, count=00%]
+	jeq	l_1F2B                             		| [$1F27: jr   z,l_1F2B] [freq=low, count=00%]
 	move.l	(sp)+,a1                        	| [$1F29: pop  de]
 	move.w	(sp)+,d4                    		| [$1F29: pop  de]
 	rts                                    		| [$1F2A: ret]
@@ -5851,51 +5851,51 @@ shot_slot_free_1f1e:
 l_1F2B:
 
 * sprite.ctrl[RCKT+n].b1 = sprite.ctrl[SHIP].b1 ... ship.sY, bit-8
-	jbsr	ldd                               	| [$1F2B: ldd] e.g. *(9B65--) = *(9B63--)
+	jbsr	ldd                               	| [$1F2B: ldd] e.g. *(9B65--) = *(9B63--) [freq=low, count=00%]
 	subq.b	#1,d4								| [a1 coherence]
 	COMPUTE_LSB_A0_D6	o_ds_sprite_ctrl_9B00
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$1F2D: ld   h,#>o_ds_sprite_posn_9300(a6)]
-	lea		(a0,d4.w),a1                  | [$1F2F: ld   d,h] stash it
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$1F2D: ld   h,#>o_ds_sprite_posn_9300(a6)] [freq=low, count=00%]
+	lea		(a0,d4.w),a1                  | [$1F2F: ld   d,h] stash it [freq=low, count=00%]
 	add.w	d6,a0
 * sprite.posn[RCKT+n].b0 = sprite.posn[SPR_IDX_SHIP].b0  ... ship.sX
-	jbsr	ldi                               	| [$1F30: ldi] e.g. *(9B64++) = *(9B62++)
+	jbsr	ldi                               	| [$1F30: ldi] e.g. *(9B64++) = *(9B62++) [freq=low, count=00%]
 * sprite.posn[RCKT+n].b1 = sprite.posn[SPR_IDX_SHIP].b1  ... ship.sY, bit 0-7
-	jbsr	ldd                               	| [$1F32: ldd] e.g. *(9B65--) = *(9B63--)
+	jbsr	ldd                               	| [$1F32: ldd] e.g. *(9B65--) = *(9B63--) [freq=low, count=00%]
 	* after both ldi/ldd calls a1/d4/a0/d6 are as before calls
 
 * B = sprite.ctrl[SHIP].b0
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$1F34: ld   h,#>o_ds_sprite_ctrl_9B00(a6)]
+	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$1F34: ld   h,#>o_ds_sprite_ctrl_9B00(a6)] [freq=low, count=00%]
 	lea		(a0,d4.w),a1
 	and.w	#0xFF,d6
 	add.w	d6,a0
 	                  | [$1F36: ld   d,h]
-	move.b	(a0),d1                         	| [$1F37: ld   b,(hl)] sprite.ctrl[FGHTR].b0: normally 0 (not doubled or flipped)
+	move.b	(a0),d1                         	| [$1F37: ld   b,(hl)] sprite.ctrl[FGHTR].b0: normally 0 (not doubled or flipped) [freq=low, count=00%]
                                                   * stash in B ... see l_1F5E below
-	exg	a1,a0                              		| [$1F38: ex   de,hl] HL := sprite.ctrl[RCKT].b0
-	exg	d4,d6                              		| [$1F38: ex   de,hl] HL := sprite.ctrl[RCKT].b0
+	exg	a1,a0                              		| [$1F38: ex   de,hl] HL := sprite.ctrl[RCKT].b0 [freq=low, count=00%]
+	exg	d4,d6                              		| [$1F38: ex   de,hl] HL := sprite.ctrl[RCKT].b0 [freq=low, count=00%]
 	
 * sprite.ctrl[RCKT].b0.dblw = (two_ship << 3 )
-	move.b	o_ds_plyr_actv_9820+_b_2ship(a6),d0        	| [$1F39: ld   a,(o_ds_plyr_actv_9820(a6) +_b_2ship)] 9827
-	and.b	#0x01,d0                         	| [$1F3C: and  #0x01] make sure its only bit-0 I guess ?
-	rol.b	#3,d0                            	| [$1F3E: rlca] * 3
+	move.b	o_ds_plyr_actv_9820+_b_2ship(a6),d0        	| [$1F39: ld   a,(o_ds_plyr_actv_9820(a6) +_b_2ship)] 9827 [freq=low, count=00%]
+	and.b	#0x01,d0                         	| [$1F3C: and  #0x01] make sure its only bit-0 I guess ? [freq=low, count=00%]
+	rol.b	#3,d0                            	| [$1F3E: rlca] * 3 [freq=low, count=00%]
 
 * sprite.ctrl[SHIP].b0 ... typically 0, unless ship is spinning
-	or.b	d1,d0                             	| [$1F41: or   b] .ctrl[RCKT].b0|= .ctrl[SHIP].b0
-	move.b	d0,(a0)                         	| [$1F42: ld   (hl),a]
+	or.b	d1,d0                             	| [$1F41: or   b] .ctrl[RCKT].b0|= .ctrl[SHIP].b0 [freq=low, count=00%]
+	move.b	d0,(a0)                         	| [$1F42: ld   (hl),a] [freq=low, count=00%]
 
 * determine rocket sprite code based on ship sprite code, which ranges from 6 (upright orientation)
 * down to the 90 degree rotation. Rocket code can be 30, 31, or 33 (360, 315, or 90 degree).
 * rocket sprite 32 is also 360 or 0 degree but not used (unless its the 2nd rocket, which is done by sprite doubling).
-	lea	o_ds_sprite_code_8B00(a6),a1              	| [$1F43: ld   d,#>o_ds_sprite_code_8B00(a6)]
+	lea	o_ds_sprite_code_8B00(a6),a1              	| [$1F43: ld   d,#>o_ds_sprite_code_8B00(a6)] [freq=low, count=00%]
 	add.w	d4,a1
-	move.b	(a1),d0                         	| [$1F45: ld   a,(de)]
-	lea	o_ds_sprite_code_8B00(a6),a0                  | [$1F46: ld   h,d]
+	move.b	(a1),d0                         	| [$1F45: ld   a,(de)] [freq=low, count=00%]
+	lea	o_ds_sprite_code_8B00(a6),a0                  | [$1F46: ld   h,d] [freq=low, count=00%]
 	add.w	d6,a0
-	and.b	#0x07,d0                         	| [$1F47: and  #0x07] fighter sprite codes are $00...$07
-	move.b	#0x30,d2                        	| [$1F49: ld   c,#0x30] code $30 ... 360 degree default orientation
+	and.b	#0x07,d0                         	| [$1F47: and  #0x07] fighter sprite codes are $00...$07 [freq=low, count=00%]
+	move.b	#0x30,d2                        	| [$1F49: ld   c,#0x30] code $30 ... 360 degree default orientation [freq=low, count=00%]
 * if ( A >= 5 ) then  ... code = $30
-	cmp.b	#5,d0                            	| [$1F4B: cp   #5]
-	jcc	l_1F56_set_rocket_sprite_code      		| [$1F4D: jr   nc,l_1F56_set_rocket_sprite_code]
+	cmp.b	#5,d0                            	| [$1F4B: cp   #5] [freq=low, count=00%]
+	jcc	l_1F56_set_rocket_sprite_code      		| [$1F4D: jr   nc,l_1F56_set_rocket_sprite_code] [freq=low, count=00%]
 * else ( A >= 2 ) then .. code = $31
 	addq.b	#1,d2                           	| [$1F4F: inc  c] code $31 ... 45 degree rotation
 	cmp.b	#2,d0                            	| [$1F50: cp   #2]
@@ -5903,7 +5903,7 @@ l_1F2B:
 * else  ... code = $33
 	addq.b	#2,d2                           	| [$1F54: inc  c] code $32 is skipped (also 360) * 2
 l_1F56_set_rocket_sprite_code:
-	move.b	d2,(a0)                         	| [$1F56: ld   (hl),c]
+	move.b	d2,(a0)                         	| [$1F56: ld   (hl),c] [freq=low, count=00%]
 
 
 * Displacement in both X and Y axis must be computed in order to launch rockets
@@ -5961,16 +5961,16 @@ l_1F71:
 	lea	o_object_states_8800(a6),a0                      			| [1F74: $1F74: ld   h,#>o_object_states_8800(a6)] disposition = 6 ... active rocket object
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#6,(a0)                         	| [$1F76: ld   (hl),#6] L == offsetof(rocket)
+	move.b	#6,(a0)                         	| [$1F76: ld   (hl),#6] L == offsetof(rocket) [freq=low, count=00%]
 	                           	| [$1F78: ld   a,#1]
-	move.b	#1,o_b_9AA0+0x0F(a6)                  	| [$1F7A: ld   (o_b_9AA0(a6) + 0x0F),a] 1 ... sound-fx count/enable registers, shot-sound
+	move.b	#1,o_b_9AA0+0x0F(a6)                  	| [$1F7A: ld   (o_b_9AA0(a6) + 0x0F),a] 1 ... sound-fx count/enable registers, shot-sound [freq=low, count=00%]
 	move.w	#SHOT_SND,d0
 	jbsr	osd_sound_start
 	* count how many shots fired overall
-	MOVE_TO_REG	o_ds_plyr_actv_9820+_w_shot_ct(a6),d5  	| [$1F7D: ld   hl,(o_ds_plyr_actv_9820(a6) +_w_shot_ct)]
-	addq.w	#1,d5                           	| [$1F80: inc  hl]	just to count shots fired probably
-	MOVE_TO_VAR	d5,o_ds_plyr_actv_9820+_w_shot_ct(a6)      | [$1F81: ld   (o_ds_plyr_actv_9820(a6) +_w_shot_ct),hl] game shots fired count ++
-	rts                                    		| [$1F84: ret]
+	MOVE_TO_REG	o_ds_plyr_actv_9820+_w_shot_ct(a6),d5  	| [$1F7D: ld   hl,(o_ds_plyr_actv_9820(a6) +_w_shot_ct)] [freq=low, count=00%]
+	addq.w	#1,d5                           	| [$1F80: inc  hl]	just to count shots fired probably [freq=low, count=00%]
+	MOVE_TO_VAR	d5,o_ds_plyr_actv_9820+_w_shot_ct(a6)      | [$1F81: ld   (o_ds_plyr_actv_9820(a6) +_w_shot_ct),hl] game shots fired count ++ [freq=low, count=00%]
+	rts                                    		| [$1F84: ret] [freq=low, count=00%]
 * end 1F04
 
 *=============================================================================
@@ -6021,9 +6021,9 @@ f_controller_io_and_ship_movement_1f85:
 *-----------------------------------------------------------------------------
 c_skip_real_io_input_1F92:
 * if ( ( A & 0x0A ) == $0A ... inputs are active low, neither left or right active
-	and.b	#0x0A,d0                         	| [$1F92: and  #0x0A]
-	cmp.b	#0x0A,d0                         	| [$1F94: cp   #0x0A]
-	jeq	l_1FCF_no_input                    	    | [$1F96: jr   z,l_1FCF_no_input]
+	and.b	#0x0A,d0                         	| [$1F92: and  #0x0A] [freq=low, count=02%]
+	cmp.b	#0x0A,d0                         	| [$1F94: cp   #0x0A] [freq=low, count=02%]
+	jeq	l_1FCF_no_input                    	    | [$1F96: jr   z,l_1FCF_no_input] [freq=low, count=02%]
 
 * invert the input bits if screen flipped (swap L/R direction)
 	*lea	o_b_flip_screen_9215(a6),a0          	        | [$1F98: ld   hl,#o_b_flip_screen_9215(a6)]
@@ -6033,34 +6033,34 @@ c_skip_real_io_input_1F92:
 
 * set ship.dX (1 or 2)
 l_1FA1_set_ship_dx:
-	lea	o_b_92A0+0x03(a6),a0                 	        | [$1FA1: ld   hl,#o_b_92A0(a6) + 0x03] ship_dX_flag
-	move.b	d0,d1                           	| [$1FA4: ld   b,a] stash the control input bits
-	moveq	#1,d2                           	| [$1FA5: ld   c,#1] ship_dX = 1
+	lea	o_b_92A0+0x03(a6),a0                 	        | [$1FA1: ld   hl,#o_b_92A0(a6) + 0x03] ship_dX_flag [freq=low, count=00%]
+	move.b	d0,d1                           	| [$1FA4: ld   b,a] stash the control input bits [freq=low, count=00%]
+	moveq	#1,d2                           	| [$1FA5: ld   c,#1] ship_dX = 1 [freq=low, count=00%]
 * toggle ship_dX_flag
-	move.b	(a0),d0                         	| [$1FA7: ld   a,(hl)]
-	bchg	#0,d0                         	| [$1FA8: xor  #0x01]
-	move.b	d0,(a0)                         	| [$1FAA: ld   (hl),a] dX.flag ^= 1
+	move.b	(a0),d0                         	| [$1FA7: ld   a,(hl)] [freq=low, count=00%]
+	bchg	#0,d0                         	| [$1FA8: xor  #0x01] [freq=low, count=00%]
+	move.b	d0,(a0)                         	| [$1FAA: ld   (hl),a] dX.flag ^= 1 [freq=low, count=00%]
 * if (0 == ship_dX_flag) ship_dX++
-	jne	l_1FAE_handle_input_bits           	    | [$1FAB: jr   nz,l_1FAE_handle_input_bits]
-	addq.b	#1,d2                           	| [$1FAD: inc  c]
+	jne	l_1FAE_handle_input_bits           	    | [$1FAB: jr   nz,l_1FAE_handle_input_bits] [freq=low, count=00%]
+	addq.b	#1,d2                           	| [$1FAD: inc  c] [freq=low, count=00%]
 
 l_1FAE_handle_input_bits:
 * if ( ship.posn.x == 0 ) return
-	lea	o_ds_sprite_posn_9300+0x62(a6),a0         	| [$1FAE: ld   hl,#o_ds_sprite_posn_9300(a6) + 0x62] "main" ship (single) position
-	move.b	(a0),d0                         	| [$1FB1: ld   a,(hl)]
+	lea	o_ds_sprite_posn_9300+0x62(a6),a0         	| [$1FAE: ld   hl,#o_ds_sprite_posn_9300(a6) + 0x62] "main" ship (single) position [freq=low, count=00%]
+	move.b	(a0),d0                         	| [$1FB1: ld   a,(hl)] [freq=low, count=00%]
 	                               	            | [$1FB2: and  a]
 	bne.b	0f                               	| [...]
-	rts                                    	    | [$1FB3: ret  z] [...]
+	rts                                    	    | [$1FB3: ret  z] [...] [freq=low, count=00%]
 0:
 
 * if ( input.Right ) ...
-	btst.b	#1,d1                           	| [$1FB4: bit  1,b] if ( ! input bits.right ) ... inverted
-	jne	l_1FC7_test_llmt                   	    | [$1FB6: jr   nz,l_1FC7_test_llmt]
+	btst.b	#1,d1                           	| [$1FB4: bit  1,b] if ( ! input bits.right ) ... inverted [freq=low, count=00%]
+	jne	l_1FC7_test_llmt                   	    | [$1FB6: jr   nz,l_1FC7_test_llmt] [freq=low, count=00%]
 
 * if ( ship.posn.x > 0xD1) ... moving right: check right limit for double-ship
-	move.b	(a0),d0                         	| [$1FB8: ld   a,(hl)]
-	cmp.b	#0xD1,d0                         	| [$1FB9: cp   #0xD1] right limit, double-ship
-	jcs	l_1FC0_test_rlmt_single            	    | [$1FBB: jr   c,l_1FC0_test_rlmt_single]
+	move.b	(a0),d0                         	| [$1FB8: ld   a,(hl)] [freq=low, count=00%]
+	cmp.b	#0xD1,d0                         	| [$1FB9: cp   #0xD1] right limit, double-ship [freq=low, count=00%]
+	jcs	l_1FC0_test_rlmt_single            	    | [$1FBB: jr   c,l_1FC0_test_rlmt_single] [freq=low, count=00%]
 * else if ( double_ship ) return
 	btst.b	#0,d4                           	| [$1FBD: bit  0,e] if ( is_double_ship & 0x01 )
 	beq.b	0f                               	| [...]
@@ -6069,39 +6069,39 @@ l_1FAE_handle_input_bits:
 
 l_1FC0_test_rlmt_single:
 * if ( ship.posn.x >= 0xE1 ) return
-	cmp.b	#0xE1,d0                         	| [$1FC0: cp   #0xE1] right limit, single-ship
+	cmp.b	#0xE1,d0                         	| [$1FC0: cp   #0xE1] right limit, single-ship [freq=low, count=00%]
 	bcs.b	0f                               	| [...]
-	rts                                    	    | [$1FC2: ret  nc] [...]
+	rts                                    	    | [$1FC2: ret  nc] [...] [freq=low, count=00%]
 0:
 * add dX for right direction
-	add.b	d2,d0                            	| [$1FC3: add  a,c] fighter dX
-	move.b	d0,(a0)                         	| [$1FC4: ld   (hl),a]
-	jra	l_1FD4_update_two_ship             	    | [$1FC5: jr   l_1FD4_update_two_ship]
+	add.b	d2,d0                            	| [$1FC3: add  a,c] fighter dX [freq=low, count=00%]
+	move.b	d0,(a0)                         	| [$1FC4: ld   (hl),a] [freq=low, count=00%]
+	jra	l_1FD4_update_two_ship             	    | [$1FC5: jr   l_1FD4_update_two_ship] [freq=low, count=00%]
 
 * ... else ... test left limit
 l_1FC7_test_llmt:
 * if ( ship.posn.x < 0x12 ) return
-	move.b	(a0),d0                         	| [$1FC7: ld   a,(hl)]
-	cmp.b	#0x12,d0                         	| [$1FC8: cp   #0x12] left limit
+	move.b	(a0),d0                         	| [$1FC7: ld   a,(hl)] [freq=low, count=00%]
+	cmp.b	#0x12,d0                         	| [$1FC8: cp   #0x12] left limit [freq=low, count=00%]
 	bcc.b	0f                               	| [...]
-	rts                                    	    | [$1FCA: ret  c] [...]
+	rts                                    	    | [$1FCA: ret  c] [...] [freq=low, count=00%]
 0:
 * else
-	sub.b	d2,d0                            	| [$1FCB: sub  c] subtract dX
-	move.b	d0,(a0)                         	| [$1FCC: ld   (hl),a]
-	jra	l_1FD4_update_two_ship             	    | [$1FCD: jr   l_1FD4_update_two_ship]
+	sub.b	d2,d0                            	| [$1FCB: sub  c] subtract dX [freq=low, count=00%]
+	move.b	d0,(a0)                         	| [$1FCC: ld   (hl),a] [freq=low, count=00%]
+	jra	l_1FD4_update_two_ship             	    | [$1FCD: jr   l_1FD4_update_two_ship] [freq=low, count=00%]
 
 l_1FCF_no_input:
-	clr.b	d0                               	| [$1FCF: xor  a]
-	move.b	d0,o_b_92A0+0x03(a6)                  	| [$1FD0: ld   (o_b_92A0(a6) + 0x03),a] ship_dX_flag = 0
-	rts                                    	    | [$1FD3: ret]
+	clr.b	d0                               	| [$1FCF: xor  a] [freq=low, count=01%]
+	move.b	d0,o_b_92A0+0x03(a6)                  	| [$1FD0: ld   (o_b_92A0(a6) + 0x03),a] ship_dX_flag = 0 [freq=low, count=01%]
+	rts                                    	    | [$1FD3: ret] [freq=low, count=01%]
 
 
 l_1FD4_update_two_ship:
 * if ( ! two_ship_plyr )  return
-	btst.b	#0,d4                           	| [$1FD4: bit  0,e]
+	btst.b	#0,d4                           	| [$1FD4: bit  0,e] [freq=low, count=00%]
 	bne.b	0f                               	| [...]
-	rts                                    	    | [$1FD6: ret  z] [...]
+	rts                                    	    | [$1FD6: ret  z] [...] [freq=low, count=00%]
 0:
 * else ... ship2.posn.x = ship1.posn.x + $0F
 	add.b	#0x0F,d0                         	| [$1FD7: add  a,#0x0F] +single ship position
@@ -6970,7 +6970,7 @@ d_23A1:
 *  ...
 *-----------------------------------------------------------------------------
 f_update_objects_23dd:
-	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$23DD: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)]
+	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$23DD: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)] [freq=low, count=02%]
 
 * f_update_objects_23e0
 
@@ -6986,38 +6986,38 @@ f_update_objects_23dd:
 *-----------------------------------------------------------------------------
 f_update_objects_23e0:
 * check if even or odd frame
-	btst.b	#0,d0                           	| [$23E0: bit  0,a]
-	jeq	l_2596_even_frame                  		| [$23E2: jp   z,l_2596_even_frame]
+	btst.b	#0,d0                           	| [$23E0: bit  0,a] [freq=low, count=02%]
+	jeq	l_2596_even_frame                  		| [$23E2: jp   z,l_2596_even_frame] [freq=low, count=02%]
 
 * frame count bit-1 provides start index/offset of obj_status[], i.e. 0,4,8,etc.
 * on frame 1 and 2,6,10,etc. on frame 3
-	and.b	#0x02,d0                         	| [$23E5: and  #0x02]
+	and.b	#0x02,d0                         	| [$23E5: and  #0x02] [freq=low, count=01%]
 	moveq	#0,d4
-	move.b	d0,d4                           	| [$23E7: ld   e,a] E==0 if frame 1, E==2 if frame 3
-	move.b	o_b_bugs_actv_cnt_92a6(a6),d0              	| [$23E8: ld   a,(o_b_bugs_actv_cnt_92a6(a6))]
-	move.b	d0,ixl								| [$23EB: ld   ixl,a] use as "local" variable for object counter
-	move.b	#32,d1                          	| [$23ED: ld   b,#32] size of object set / 2
+	move.b	d0,d4                           	| [$23E7: ld   e,a] E==0 if frame 1, E==2 if frame 3 [freq=low, count=01%]
+	move.b	o_b_bugs_actv_cnt_92a6(a6),d0              	| [$23E8: ld   a,(o_b_bugs_actv_cnt_92a6(a6))] [freq=low, count=01%]
+	move.b	d0,ixl								| [$23EB: ld   ixl,a] use as "local" variable for object counter [freq=low, count=01%]
+	move.b	#32,d1                          	| [$23ED: ld   b,#32] size of object set / 2 [freq=low, count=01%]
 
 l_next_object_23EF:
-	lea	o_object_states_8800(a6),a1                   | [$23EF: ld   d,#>o_object_states_8800(a6)]
+	lea	o_object_states_8800(a6),a1                   | [$23EF: ld   d,#>o_object_states_8800(a6)] [freq=low, count=18%]
 	add.w	d4,a1
 	moveq	#0,d0
-	move.b	(a1),d0                             | [$23F1: ld   a,(de)]
+	move.b	(a1),d0                             | [$23F1: ld   a,(de)] [freq=low, count=18%]
 * test for $80 (inactive status)
 												| [$23F2: sla  a] test for bit-7
-	jmi	l_2416                             	    | [$23F4: jr   c,l_2416] DE+=4
+	jmi	l_2416                             	    | [$23F4: jr   c,l_2416] DE+=4 [freq=low, count=18%]
 
 	* active: there are active sprites on screen
 	
-	lea	d_23FF_jp_tbl,a0                        | [$23F6: $23F6: ld   hl,#d_23FF_jp_tbl]
+	lea	d_23FF_jp_tbl,a0                        | [$23F6: $23F6: ld   hl,#d_23FF_jp_tbl] [freq=low, count=17%]
 	and.w	#0xFF,d0                            
 	CHECK_D0W_UPPER_BOUND	10                  
-	asl.b	#2,d0				                | [$23F9: rst  0x10] HL += A
+	asl.b	#2,d0				                | [$23F9: rst  0x10] HL += A [freq=low, count=17%]
 	                        	                | [$23FA: ld   a,(hl)]
 	                       	                    | [$23FB: inc  hl]
 	                       	                    | [$23FC: ld   h,(hl)]
-	move.l	(a0,d0.w),a0                        | [$23FD: ld   l,a]
-	jra	(a0)                                    | [$23FE: jp   (hl)]
+	move.l	(a0,d0.w),a0                        | [$23FD: ld   l,a] [freq=low, count=17%]
+	jra	(a0)                                    | [$23FE: jp   (hl)] [freq=low, count=17%]
 
 * each case is entered with D4 set to current object index, A1 points to object (offset 0 = state)
 
@@ -7052,36 +7052,36 @@ l_2416:
 
 * 09: diving
 case_diving_attack_or_loop_2422:
-	move.b	d4,d6                           	| [$2422: ld   l,e]
-	lea	db_obj_home_posn_rc,a0         			| [$2423: ld   h,#>db_obj_home_posn_rc]
+	move.b	d4,d6                           	| [$2422: ld   l,e] [freq=low, count=01%]
+	lea	db_obj_home_posn_rc,a0         			| [$2423: ld   h,#>db_obj_home_posn_rc] [freq=low, count=01%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0)+,d2                         	| [$2425: ld   c,(hl)] row position index
+	move.b	(a0)+,d2                         	| [$2425: ld   c,(hl)] row position index [freq=low, count=01%]
 												| [$2426: inc  l]
-	move.b	(a0),d6                         	| [$2427: ld   l,(hl)] column position index
-	lea	o_ds_hpos_loc_offs_9900(a6),a0            	| [$2428: ld   h,#>o_ds_hpos_loc_offs_9900(a6)] .b0
+	move.b	(a0),d6                         	| [$2427: ld   l,(hl)] column position index [freq=low, count=01%]
+	lea	o_ds_hpos_loc_offs_9900(a6),a0            	| [$2428: ld   h,#>o_ds_hpos_loc_offs_9900(a6)] .b0 [freq=low, count=01%]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$242A: ld   a,(hl)] X coordinate offset
-	exg		d0,d7                              	| [$242B: ex   af,af']
+	move.b	(a0),d0                         	| [$242A: ld   a,(hl)] X coordinate offset [freq=low, count=01%]
+	exg		d0,d7                              	| [$242B: ex   af,af'] [freq=low, count=01%]
 	* jotd: code resets HL lsb
 	lea	o_ds_hpos_loc_offs_9900(a6),a0            	| [ld   h,#>o_ds_hpos_loc_offs_9900(a6)] .b0
-	move.b	d2,d6                           	| [$242C: ld   l,c] row position index
+	move.b	d2,d6                           	| [$242C: ld   l,c] row position index [freq=low, count=01%]
 	add.w	d6,a0
-	move.b	(a0),d2                         	| [$242D: ld   c,(hl)] Y coordinate offset
+	move.b	(a0),d2                         	| [$242D: ld   c,(hl)] Y coordinate offset [freq=low, count=01%]
 
 * get a pointer to corresponding element of bug_motion_que[] ... byte-offset (index) in 8800[n].b1
-	addq.w	#1,a1                           	| [$242E: inc  e]
+	addq.w	#1,a1                           	| [$242E: inc  e] [freq=low, count=01%]
 	addq.b	#1,d4								| [inc  e] [a1 coherence]
-	move.b	(a1),d0                         	| [$242F: ld   a,(de)]
-	add.b	#0x11,d0                         	| [$2430: add  a,#0x11]
-	move.b	d0,d6                           	| [$2432: ld   l,a]
-	lea	o_ds_bug_motion_que_9100(a6),a0           	| [$2433: ld   h,#>o_ds_bug_motion_que_9100(a6)]
+	move.b	(a1),d0                         	| [$242F: ld   a,(de)] [freq=low, count=01%]
+	add.b	#0x11,d0                         	| [$2430: add  a,#0x11] [freq=low, count=01%]
+	move.b	d0,d6                           	| [$2432: ld   l,a] [freq=low, count=01%]
+	lea	o_ds_bug_motion_que_9100(a6),a0           	| [$2433: ld   h,#>o_ds_bug_motion_que_9100(a6)] [freq=low, count=01%]
 	add.w	d6,a0
-	exg		d0,d7                              	| [$2435: ex   af,af']
-	move.b	d0,(a0)+                         	| [$2436: ld   (hl),a] X coordinate offset
-	addq.b	#1,d6								| [$2437: inc  l] 0x12(ix) [a0 coherence]
-	move.b	d2,(a0)                         	| [$2438: ld   (hl),c] y coordinate offset
-	jra	l_reset_index_and_continue_2413         | [$2439: jp   l_reset_index_and_continue_2413] reset index to .b0 and continue
+	exg		d0,d7                              	| [$2435: ex   af,af'] [freq=low, count=01%]
+	move.b	d0,(a0)+                         	| [$2436: ld   (hl),a] X coordinate offset [freq=low, count=01%]
+	addq.b	#1,d6								| [$2437: inc  l] 0x12(ix) [a0 coherence] [freq=low, count=01%]
+	move.b	d2,(a0)                         	| [$2438: ld   (hl),c] y coordinate offset [freq=low, count=01%]
+	jra	l_reset_index_and_continue_2413         | [$2439: jp   l_reset_index_and_continue_2413] reset index to .b0 and continue [freq=low, count=01%]
 
 * 08: destruction of the ship
 case_shot_captured_ship_243C:
@@ -7121,21 +7121,21 @@ l_2451:
 
 * 02: reached home and rotating into resting position
 case_rotating_into_collective_245F:
-	move.b	d4,d6                           	| [$245F: ld   l,e]
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$2461: ld   h,#>o_ds_sprite_ctrl_9B00(a6)]
+	move.b	d4,d6                           	| [$245F: ld   l,e] [freq=low, count=00%]
+	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$2461: ld   h,#>o_ds_sprite_ctrl_9B00(a6)] [freq=low, count=00%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$2462: ld   a,(hl)]
-	lea	o_ds_sprite_code_8B00(a6),a0              	| [$2465: ld   h,#>o_ds_sprite_code_8B00(a6)]
+	move.b	(a0),d0                         	| [$2462: ld   a,(hl)] [freq=low, count=00%]
+	lea	o_ds_sprite_code_8B00(a6),a0              	| [$2465: ld   h,#>o_ds_sprite_code_8B00(a6)] [freq=low, count=00%]
 	add.w	d6,a0
-	and.b	#0x01,d0                         	| [$2463: and  #0x01] test flip X
-	jne	l_2473                             	    | [$2467: jr   nz,l_2473]
-	move.b	(a0),d0                         	| [$2469: ld   a,(hl)]
-	and.b	#0x07,d0                         	| [$246A: and  #0x07]
-	cmp.b	#6,d0                            	| [$246C: cp   #6]
-	jeq	l_2483                             	    | [$246E: jr   z,l_2483]
-	addq.b	#1,(a0)                         	| [$2470: inc  (hl)]  6 -> 7
-	jra	l_249B                             	    | [$2471: jr   l_249B]
+	and.b	#0x01,d0                         	| [$2463: and  #0x01] test flip X [freq=low, count=00%]
+	jne	l_2473                             	    | [$2467: jr   nz,l_2473] [freq=low, count=00%]
+	move.b	(a0),d0                         	| [$2469: ld   a,(hl)] [freq=low, count=00%]
+	and.b	#0x07,d0                         	| [$246A: and  #0x07] [freq=low, count=00%]
+	cmp.b	#6,d0                            	| [$246C: cp   #6] [freq=low, count=00%]
+	jeq	l_2483                             	    | [$246E: jr   z,l_2483] [freq=low, count=00%]
+	addq.b	#1,(a0)                         	| [$2470: inc  (hl)]  6 -> 7 [freq=low, count=00%]
+	jra	l_249B                             	    | [$2471: jr   l_249B] [freq=low, count=00%]
 
 l_2473:
 	move.b	(a0),d0                         	| [$2473: ld   a,(hl)]
@@ -7154,133 +7154,133 @@ l_2480:
 	jra	l_249B                             	    | [$2481: jr   l_249B]
 
 l_2483:
-	moveq	#1,d0                           	| [$2483: ld   a,#1] disposition = 1: home
-	move.b	d0,(a1)                         	| [$2485: ld   (de),a]
-	jra	l_249B                             	    | [$2486: jr   l_249B]
+	moveq	#1,d0                           	| [$2483: ld   a,#1] disposition = 1: home [freq=low, count=00%]
+	move.b	d0,(a1)                         	| [$2485: ld   (de),a] [freq=low, count=00%]
+	jra	l_249B                             	    | [$2486: jr   l_249B] [freq=low, count=00%]
 
 * 01: assimilated into the collective
 case_assimilated_into_collective_2488:
-	lea	o_ds_sprite_code_8B00(a6),a0              	| [$2488: ld   h,#>o_ds_sprite_code_8B00(a6)]
-	move.b	d4,d6                           	| [$248A: ld   l,e]
+	lea	o_ds_sprite_code_8B00(a6),a0              	| [$2488: ld   h,#>o_ds_sprite_code_8B00(a6)] [freq=low, count=13%]
+	move.b	d4,d6                           	| [$248A: ld   l,e] [freq=low, count=13%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
 * alternate between tile code 6 and 7 every 1/2 sec: rotate bit-1 of 4 Hz timer into Cy
 * and then rl the Cy into bit-0 of sprite code
-	move.b	o_ds3_frame_cts_92A0+2(a6),d0         	| [$248B: ld   a,(o_ds3_frame_cts_92A0(a6) + 2)]
+	move.b	o_ds3_frame_cts_92A0+2(a6),d0         	| [$248B: ld   a,(o_ds3_frame_cts_92A0(a6) + 2)] [freq=low, count=13%]
 	move.b	(a0),d7
-	ror.b	#1,d7                          	    | [$248E: rrc  (hl)]
-	ror.b	#2,d0                               | [$2490: rrca] * 2
+	ror.b	#1,d7                          	    | [$248E: rrc  (hl)] [freq=low, count=13%]
+	ror.b	#2,d0                               | [$2490: rrca] * 2 [freq=low, count=13%]
 	SET_X_FROM_C
-	roxl.b	#1,d7                         	    | [$2492: rl   (hl)]
+	roxl.b	#1,d7                         	    | [$2492: rl   (hl)] [freq=low, count=13%]
 	move.b	d7,(a0)
-	move.b	o_ds_glbls_9200+0x0B(a6),d0           	| [$2494: ld   a,(o_ds_glbls_9200(a6) + 0x0B)] update stuff if enemy enable set
+	move.b	o_ds_glbls_9200+0x0B(a6),d0           	| [$2494: ld   a,(o_ds_glbls_9200(a6) + 0x0B)] update stuff if enemy enable set [freq=low, count=13%]
 	                               	            | [$2497: and  a]
-	jeq	l_2414_inc_active                  	    | [$2498: jp   z,l_2414_inc_active]
+	jeq	l_2414_inc_active                  	    | [$2498: jp   z,l_2414_inc_active] [freq=low, count=13%]
 
 l_249B:
-	lea	db_obj_home_posn_rc,a0         	        | [$249B: ld   h,#>db_obj_home_posn_rc]
+	lea	db_obj_home_posn_rc,a0         	        | [$249B: ld   h,#>db_obj_home_posn_rc] [freq=low, count=14%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0)+,d2                         	| [$249D: ld   c,(hl)] row position index
+	move.b	(a0)+,d2                         	| [$249D: ld   c,(hl)] row position index [freq=low, count=14%]
 	                           	                | [$249E: inc  l]
-	move.b	(a0),d6                         	| [$249F: ld   l,(hl)] column position index
-	lea	o_ds_hpos_spcoords_9800(a6),a0            	| [$24A0: ld   h,#>o_ds_hpos_spcoords_9800(a6)] L == offset to MSB
+	move.b	(a0),d6                         	| [$249F: ld   l,(hl)] column position index [freq=low, count=14%]
+	lea	o_ds_hpos_spcoords_9800(a6),a0            	| [$24A0: ld   h,#>o_ds_hpos_spcoords_9800(a6)] L == offset to MSB [freq=low, count=14%]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$24A2: ld   a,(hl)]
-	lea	o_ds_sprite_posn_9300(a6),a1              	| [$24A3: ld   d,#>o_ds_sprite_posn_9300(a6)]
+	move.b	(a0),d0                         	| [$24A2: ld   a,(hl)] [freq=low, count=14%]
+	lea	o_ds_sprite_posn_9300(a6),a1              	| [$24A3: ld   d,#>o_ds_sprite_posn_9300(a6)] [freq=low, count=14%]
 	and.w	#0xFF,d4
 	add.w	d4,a1
-	move.b	d0,(a1)+                         	| [$24A5: ld   (de),a] X pix coordinate
-	addq.b	#1,d4                           	| [$24A6: inc  e] [a1 coherence]
-	move.b	d2,d6                           	| [$24A7: ld   l,c] row position index
+	move.b	d0,(a1)+                         	| [$24A5: ld   (de),a] X pix coordinate [freq=low, count=14%]
+	addq.b	#1,d4                           	| [$24A6: inc  e] [a1 coherence] [freq=low, count=14%]
+	move.b	d2,d6                           	| [$24A7: ld   l,c] row position index [freq=low, count=14%]
 	lea	o_ds_hpos_spcoords_9800(a6),a0            	| offset to MSB again
 	add.w	d6,a0
-	move.b	(a0)+,d0                         	| [$24A8: ld   a,(hl)] (+inc l)
-	move.b	d0,(a1)                         	| [$24A9: ld   (de),a] Y pix coordinate
-	lea	o_ds_sprite_ctrl_9B00(a6),a1              	| [$24AA: ld   d,#>o_ds_sprite_ctrl_9B00(a6)] sprite.ctrl[n].sY (bit 8 into MSB)
+	move.b	(a0)+,d0                         	| [$24A8: ld   a,(hl)] (+inc l) [freq=low, count=14%]
+	move.b	d0,(a1)                         	| [$24A9: ld   (de),a] Y pix coordinate [freq=low, count=14%]
+	lea	o_ds_sprite_ctrl_9B00(a6),a1              	| [$24AA: ld   d,#>o_ds_sprite_ctrl_9B00(a6)] sprite.ctrl[n].sY (bit 8 into MSB) [freq=low, count=14%]
 	add.w	d4,a1
-	addq.b	#1,d6                           	| [$24AC: inc  l] [a0 coherence]
-	move.b	(a0),d0                         	| [$24AD: ld   a,(hl)]
-	move.b	d0,(a1)                         	| [$24AE: ld   (de),a]
-	jra	l_reset_index_and_continue_2413         | [$24AF: jp   l_reset_index_and_continue_2413] reset index to .b0 and continue
+	addq.b	#1,d6                           	| [$24AC: inc  l] [a0 coherence] [freq=low, count=14%]
+	move.b	(a0),d0                         	| [$24AD: ld   a,(hl)] [freq=low, count=14%]
+	move.b	d0,(a1)                         	| [$24AE: ld   (de),a] [freq=low, count=14%]
+	jra	l_reset_index_and_continue_2413         | [$24AF: jp   l_reset_index_and_continue_2413] reset index to .b0 and continue [freq=low, count=14%]
 
 * 04: rckt_hit_hdlr
 * here handles enemy explosion: called at each explosion stage
 case_nearly_fatally_shot_24B2:
-	move.b	d4,d6                           	| [$24B2: ld   l,e] will be used below!
-	addq.w	#1,a1                           	| [$24B3: inc  e] .b1
+	move.b	d4,d6                           	| [$24B2: ld   l,e] will be used below! [freq=low, count=00%]
+	addq.w	#1,a1                           	| [$24B3: inc  e] .b1 [freq=low, count=00%]
 	addq.b	#1,d4                           	| [inc  e] [a1 coherence]
-	move.b	(a1),d0                         	| [$24B4: ld   a,(de)] b8800_obj_status[ E ].obj_idx (explosion count, see f_update_enemy_status_1db3)
+	move.b	(a1),d0                         	| [$24B4: ld   a,(de)] b8800_obj_status[ E ].obj_idx (explosion count, see f_update_enemy_status_1db3) [freq=low, count=00%]
 * if count == 45 then finish
-	cmp.b	#0x45,d0                         	| [$24B5: cp   #0x45]
-	jeq	l_24E6_i_am_at_45                  	    | [$24B7: jr   z,l_24E6_i_am_at_45] set by f_update_enemy_status_1db3
-	addq.b	#1,d0                           	| [$24B9: inc  a]
-	move.b	d0,(a1)                         	| [$24BA: ld   (de),a] 8800[odd]++ ... (40 -> 41, 42, 43, 44, 45 ) explosion changing
-	subq.w	#1,a1                           	| [$24BB: dec  e]
+	cmp.b	#0x45,d0                         	| [$24B5: cp   #0x45] [freq=low, count=00%]
+	jeq	l_24E6_i_am_at_45                  	    | [$24B7: jr   z,l_24E6_i_am_at_45] set by f_update_enemy_status_1db3 [freq=low, count=00%]
+	addq.b	#1,d0                           	| [$24B9: inc  a] [freq=low, count=00%]
+	move.b	d0,(a1)                         	| [$24BA: ld   (de),a] 8800[odd]++ ... (40 -> 41, 42, 43, 44, 45 ) explosion changing [freq=low, count=00%]
+	subq.w	#1,a1                           	| [$24BB: dec  e] [freq=low, count=00%]
 	subq.b	#1,d4                           	| [dec  e] [a1 coherence]
 * if count == 44 then code = count + 3
-	cmp.b	#0x45,d0                         	| [$24BC: cp   #0x45]
-	jne	l_24C2                             	    | [$24BE: jr   nz,l_24C2]
-	addq.b	#3,d0                           	| [$24C0: add  a,#3] end of explosion
+	cmp.b	#0x45,d0                         	| [$24BC: cp   #0x45] [freq=low, count=00%]
+	jne	l_24C2                             	    | [$24BE: jr   nz,l_24C2] [freq=low, count=00%]
+	addq.b	#3,d0                           	| [$24C0: add  a,#3] end of explosion [freq=low, count=00%]
 l_24C2:
 * if count < 44 then code = count
-	cmp.b	#0x44,d0                         	| [$24C2: cp   #0x44]
-	jne	l_24E0                             	    | [$24C4: jr   nz,l_24E0]
+	cmp.b	#0x44,d0                         	| [$24C2: cp   #0x44] [freq=low, count=00%]
+	jne	l_24E0                             	    | [$24C4: jr   nz,l_24E0] [freq=low, count=00%]
 
 * sprite.posn[ L ].b0 -= 8
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$24C6: ld   h,#>o_ds_sprite_posn_9300(a6)] .b0
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$24C6: ld   h,#>o_ds_sprite_posn_9300(a6)] .b0 [freq=low, count=00%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	exg		d7,d0                              	| [$24C8: ex   af,af'] stash this till after the l_24DA
-	move.b	(a0),d0                         	| [$24C9: ld   a,(hl)]
-	sub.b	#8,d0                            	| [$24CA: sub  #8]
-	move.b	d0,(a0)+                         	| [$24CC: ld   (hl),a]
+	exg		d7,d0                              	| [$24C8: ex   af,af'] stash this till after the l_24DA [freq=low, count=00%]
+	move.b	(a0),d0                         	| [$24C9: ld   a,(hl)] [freq=low, count=00%]
+	sub.b	#8,d0                            	| [$24CA: sub  #8] [freq=low, count=00%]
+	move.b	d0,(a0)+                         	| [$24CC: ld   (hl),a] [freq=low, count=00%]
 	* no need to update D6     	                | [$24CD: inc  l] .b1
 												| [$24CE: ld   a,(hl)]
 * subtract only in bits<7:0> then flip b9 on Cy
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300		| pre-compute d6
-	sub.b	#8,(a0)                            	| [$24CF: sub  #8]
+	sub.b	#8,(a0)                            	| [$24CF: sub  #8] [freq=low, count=00%]
 	* no need to use register & we need C flag  | [$24D1: ld   (hl),a]
-	jcc	l_24DA                             		| [$24D2: jr   nc,l_24DA]
+	jcc	l_24DA                             		| [$24D2: jr   nc,l_24DA] [freq=low, count=00%]
 	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$24D4: ld   h,#>o_ds_sprite_ctrl_9B00(a6)] killed boss that had the ship in the demo (not in game?)
 	add.w	d6,a0
 	                         	| [$24D6: ld   a,(hl)]
 	bchg.b	#0,(a0)                         	| [$24D7: xor  #0x01]
 	                         	| [$24D9: ld   (hl),a]
 l_24DA:
-	subq.b	#1,d6                           	| [$24DA: dec  l] .b0 [a0 coherence]
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$24DB: ld   h,#>o_ds_sprite_ctrl_9B00(a6)]
+	subq.b	#1,d6                           	| [$24DA: dec  l] .b0 [a0 coherence] [freq=low, count=00%]
+	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$24DB: ld   h,#>o_ds_sprite_ctrl_9B00(a6)] [freq=low, count=00%]
 	add.w	d6,a0
-	move.b	#0x0C,(a0)                      	| [$24DD: ld   (hl),#0x0C]
-	exg		d7,d0                               | [$24DF: ex   af,af'] unstash A which is the count
+	move.b	#0x0C,(a0)                      	| [$24DD: ld   (hl),#0x0C] [freq=low, count=00%]
+	exg		d7,d0                               | [$24DF: ex   af,af'] unstash A which is the count [freq=low, count=00%]
 l_24E0:
-	lea	o_ds_sprite_code_8B00(a6),a0              	| [$24E0: ld   h,#>o_ds_sprite_code_8B00(a6)]
+	lea	o_ds_sprite_code_8B00(a6),a0              	| [$24E0: ld   h,#>o_ds_sprite_code_8B00(a6)] [freq=low, count=00%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	d0,(a0)                         	| [$24E2: ld   (hl),a]
-	jra	l_2416                             	    | [$24E3: jp   l_2416]
+	move.b	d0,(a0)                         	| [$24E2: ld   (hl),a] [freq=low, count=00%]
+	jra	l_2416                             	    | [$24E3: jp   l_2416] [freq=low, count=00%]
 
 l_24E6_i_am_at_45:
 	subq.b	#1,d4                           	| [dec  e] [a1 coherence]
-	subq.w	#1,a1                           	| [$24E6: dec  e] restore pointer to .b0
-	lea	o_b_obj_collsn_notif_9200(a6),a0     	        | [$24E7: ld   h,#>o_b_obj_collsn_notif_9200(a6)] 1?
+	subq.w	#1,a1                           	| [$24E6: dec  e] restore pointer to .b0 [freq=low, count=00%]
+	lea	o_b_obj_collsn_notif_9200(a6),a0     	        | [$24E7: ld   h,#>o_b_obj_collsn_notif_9200(a6)] 1? [freq=low, count=00%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$24E9: ld   a,(hl)] .b0 ... stash the code for l_24FD
+	move.b	(a0),d0                         	| [$24E9: ld   a,(hl)] .b0 ... stash the code for l_24FD [freq=low, count=00%]
 * if 1 ... (not special sprite code)
-	cmp.b	#0x01,d0                         	| [$24EA: cp   #0x01] hit-status register at 9200[i]==$01, unless it shows small score indicator
-	jne	l_24FD                             	    | [$24EC: jr   nz,l_24FD]
+	cmp.b	#0x01,d0                         	| [$24EA: cp   #0x01] hit-status register at 9200[i]==$01, unless it shows small score indicator [freq=low, count=00%]
+	jne	l_24FD                             	    | [$24EC: jr   nz,l_24FD] [freq=low, count=00%]
 * ... then ...
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$24EE: ld   h,#>o_ds_sprite_posn_9300(a6)]
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$24EE: ld   h,#>o_ds_sprite_posn_9300(a6)] [freq=low, count=00%]
 	add.w	d6,a0
-	clr.b	(a0)                             	| [$24F0: ld   (hl),#0]
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$24F2: ld   h,#>o_ds_sprite_ctrl_9B00(a6)]
+	clr.b	(a0)                             	| [$24F0: ld   (hl),#0] [freq=low, count=00%]
+	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$24F2: ld   h,#>o_ds_sprite_ctrl_9B00(a6)] [freq=low, count=00%]
 	add.w	d6,a0
-	clr.b	(a0)                             	| [$24F4: $24F4: ld   (hl),#0]
-	lea	o_object_states_8800(a6),a0                      	        | [$24F6: $24F6: ld   h,#>o_object_states_8800(a6)]
+	clr.b	(a0)                             	| [$24F4: $24F4: ld   (hl),#0] [freq=low, count=00%]
+	lea	o_object_states_8800(a6),a0                      	        | [$24F6: $24F6: ld   h,#>o_object_states_8800(a6)] [freq=low, count=00%]
 	add.w	d6,a0
-	move.b	#0x80,(a0)                      	| [$24F8: ld   (hl),#0x80] $80 is code for inactive sprite
-	jra	l_2416                             	    | [$24FA: jp   l_2416]
+	move.b	#0x80,(a0)                      	| [$24F8: ld   (hl),#0x80] $80 is code for inactive sprite [freq=low, count=00%]
+	jra	l_2416                             	    | [$24FA: jp   l_2416] [freq=low, count=00%]
 
 * Show the sprite with the small score text for shots that award bonus points:
 *  Boss .. $35 (400)  $37 (800)  $3A (1600)  ... see d_1CFD
@@ -7373,52 +7373,52 @@ case_show_score_2535:
 
 * 3 or 6: terminate cylons or bombs that have gone past the sides or bottom of screen
 case_state_progression_254D:
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$254D: ld   h,#>o_ds_sprite_posn_9300(a6)] read directly from SFRs (not buffer RAM)
-	move.b	d4,d6                           	| [$254F: ld   l,e] object offset
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$254D: ld   h,#>o_ds_sprite_posn_9300(a6)] read directly from SFRs (not buffer RAM) [freq=low, count=02%]
+	move.b	d4,d6                           	| [$254F: ld   l,e] object offset [freq=low, count=02%]
 	and.w	#0xFF,d6
-	bset.b	#7,d6                           	| [$2550: set  7,l] +=$80 ... set pointer to read directly from the SFR
+	bset.b	#7,d6                           	| [$2550: set  7,l] +=$80 ... set pointer to read directly from the SFR [freq=low, count=02%]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$2552: ld   a,(hl)]
-	cmp.b	#0xF4,d0                         	| [$2553: cp   #0xF4]
+	move.b	(a0),d0                         	| [$2552: ld   a,(hl)] [freq=low, count=02%]
+	cmp.b	#0xF4,d0                         	| [$2553: cp   #0xF4] [freq=low, count=02%]
 * if (posn.x > $F4) ... skip check Y
-	jcc	l_2571                             	    | [$2555: jr   nc,l_2571]
-	addq.w	#1,a0                           	| [$2557: inc  l]
+	jcc	l_2571                             	    | [$2555: jr   nc,l_2571] [freq=low, count=02%]
+	addq.w	#1,a0                           	| [$2557: inc  l] [freq=low, count=02%]
 	addq.b	#1,d6                           	| [inc  l] [a0 coherence]
-	move.b	(a0),d2                         	| [$2558: ld   c,(hl)] sprite_posn.y<0:7>
-	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$2559: ld   h,#>o_ds_sprite_ctrl_9B00(a6)]
+	move.b	(a0),d2                         	| [$2558: ld   c,(hl)] sprite_posn.y<0:7> [freq=low, count=02%]
+	lea	o_ds_sprite_ctrl_9B00(a6),a0              	| [$2559: ld   h,#>o_ds_sprite_ctrl_9B00(a6)] [freq=low, count=02%]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$255B: ld   a,(hl)] sprite_posn.y<8>
-	subq.w	#1,a0                           	| [$255C: dec  l]
+	move.b	(a0),d0                         	| [$255B: ld   a,(hl)] sprite_posn.y<8> [freq=low, count=02%]
+	subq.w	#1,a0                           	| [$255C: dec  l] [freq=low, count=02%]
 	subq.b	#1,d6                           	| [dec  l] [a0 coherence]
-	ror.b	#1,d0                            	| [$255D: rrca] sprite_posn.y<8> into Cy
+	ror.b	#1,d0                            	| [$255D: rrca] sprite_posn.y<8> into Cy [freq=low, count=02%]
 	SET_X_FROM_C
-	move.b	d2,d0                           	| [$255E: ld   a,c]
-	roxr.b	#1,d0                           	| [$255F: rra] sprite_posn.y<8:1> in A
-	cmp.b	#0x0B,d0			                | [$2560: cp   #22 >> 1]
-	jcs	l_2571                             	    | [$2562: jr   c,l_2571]
-	cmp.b	#0xA5,d0				            | [$2564: cp   #330 >> 1]
-	jcc	l_2571                             	    | [$2566: jr   nc,l_2571]
+	move.b	d2,d0                           	| [$255E: ld   a,c] [freq=low, count=02%]
+	roxr.b	#1,d0                           	| [$255F: rra] sprite_posn.y<8:1> in A [freq=low, count=02%]
+	cmp.b	#0x0B,d0			                | [$2560: cp   #22 >> 1] [freq=low, count=02%]
+	jcs	l_2571                             	    | [$2562: jr   c,l_2571] [freq=low, count=02%]
+	cmp.b	#0xA5,d0				            | [$2564: cp   #330 >> 1] [freq=low, count=02%]
+	jcc	l_2571                             	    | [$2566: jr   nc,l_2571] [freq=low, count=02%]
 
 * in range ... if not a bomb then go increment count
-	move.b	(a1),d0                         	| [$2568: ld   a,(de)] o_object_states_8800(a6)[e].obj_status
-	cmp.b	#6,d0                            	| [$2569: cp   #6]
-	jne	l_2414_inc_active                  	    | [$256B: jp   nz,l_2414_inc_active] if not a bomb
-	jra	l_2416                             	    | [$256E: jp   l_2416] it's a bomb
+	move.b	(a1),d0                         	| [$2568: ld   a,(de)] o_object_states_8800(a6)[e].obj_status [freq=low, count=02%]
+	cmp.b	#6,d0                            	| [$2569: cp   #6] [freq=low, count=02%]
+	jne	l_2414_inc_active                  	    | [$256B: jp   nz,l_2414_inc_active] if not a bomb [freq=low, count=02%]
+	jra	l_2416                             	    | [$256E: jp   l_2416] it's a bomb [freq=low, count=00%]
 
 l_2571:
-	bclr	#7,d6                 	            | [$2571: res  7,l]  subs 0x80 to l
-	move.b	(a1),d0                         	| [$2573: ld   a,(de)] state
-	cmp.b	#3,d0                            	| [$2574: cp   #3] check if flying bug object
-	jeq	l_2582_kill_bug_q_slot             	    | [$2576: jr   z,l_2582_kill_bug_q_slot] if bug object
+	bclr	#7,d6                 	            | [$2571: res  7,l]  subs 0x80 to l [freq=low, count=00%]
+	move.b	(a1),d0                         	| [$2573: ld   a,(de)] state [freq=low, count=00%]
+	cmp.b	#3,d0                            	| [$2574: cp   #3] check if flying bug object [freq=low, count=00%]
+	jeq	l_2582_kill_bug_q_slot             	    | [$2576: jr   z,l_2582_kill_bug_q_slot] if bug object [freq=low, count=00%]
 
 l_2578_mk_obj_inactive:
-	move.b	#0x80,d0                        	| [$2578: ld   a,#0x80]
-	move.b	d0,(a1)                         	| [$257A: ld   (de),a]
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$257B: ld   h,#>o_ds_sprite_posn_9300(a6)]
+	move.b	#0x80,d0                        	| [$2578: ld   a,#0x80] [freq=low, count=00%]
+	move.b	d0,(a1)                         	| [$257A: ld   (de),a] [freq=low, count=00%]
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$257B: ld   h,#>o_ds_sprite_posn_9300(a6)] [freq=low, count=00%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	clr.b	(a0)                             	| [$257D: ld   (hl),#0]
-	jra	l_2416                             	    | [$257F: jp   l_2416]
+	clr.b	(a0)                             	| [$257D: ld   (hl),#0] [freq=low, count=00%]
+	jra	l_2416                             	    | [$257F: jp   l_2416] [freq=low, count=00%]
 
 l_2582_kill_bug_q_slot:
 							                    | [$2582: inc  e]
@@ -7438,9 +7438,9 @@ l_2582_kill_bug_q_slot:
 
 * 07: once for each orc as he is spawning (new stage)
 case_spawning_orc_2590:
-	moveq	#3,d0                           	| [$2590: ld   a,#3]
-	move.b	d0,(a1)                         	| [$2592: ld   (de),a] disposition = 3 ... from 7 (spawning)
-	jra	l_2414_inc_active                  	    | [$2593: jp   l_2414_inc_active]
+	moveq	#3,d0                           	| [$2590: ld   a,#3] [freq=low, count=00%]
+	move.b	d0,(a1)                         	| [$2592: ld   (de),a] disposition = 3 ... from 7 (spawning) [freq=low, count=00%]
+	jra	l_2414_inc_active                  	    | [$2593: jp   l_2414_inc_active] [freq=low, count=00%]
 
 l_2596_even_frame:
 * if ( framect & 0x02 ) ...
@@ -7966,33 +7966,33 @@ f_insert_attackers_2916:
 
 * check for end of table
 * if ( 7f == current_token ) goto complete
-	move.l	o_ds_plyr_actv_9820+_p_atkwav_tbl(a6),a0	    | [$2916: ld   hl,(o_ds_plyr_actv_9820(a6) +_p_atkwav_tbl)] &o_ds_8920(a6)[n]
-	move.b	(a0),d0                         	| [$2919: ld   a,(hl)]
-	cmp.b	#0x7F,d0                         	| [$291A: cp   #0x7F]
-	jeq	l_2A29_attack_waves_complete       	    | [$291C: jp   z,l_2A29_attack_waves_complete]
+	move.l	o_ds_plyr_actv_9820+_p_atkwav_tbl(a6),a0	    | [$2916: ld   hl,(o_ds_plyr_actv_9820(a6) +_p_atkwav_tbl)] &o_ds_8920(a6)[n] [freq=low, count=01%]
+	move.b	(a0),d0                         	| [$2919: ld   a,(hl)] [freq=low, count=01%]
+	cmp.b	#0x7F,d0                         	| [$291A: cp   #0x7F] [freq=low, count=01%]
+	jeq	l_2A29_attack_waves_complete       	    | [$291C: jp   z,l_2A29_attack_waves_complete] [freq=low, count=01%]
 
 * check for start of table structure
 * if ( 7e == token ) then .... else .... goto _next_pair
-	cmp.b	#0x7E,d0                         	| [$291F: cp   #0x7E]
-	jne	l_2953_next_pair                   	    | [$2921: jr   nz,l_2953_next_pair]
+	cmp.b	#0x7E,d0                         	| [$291F: cp   #0x7E] [freq=low, count=01%]
+	jne	l_2953_next_pair                   	    | [$2921: jr   nz,l_2953_next_pair] [freq=low, count=01%]
 
 * if ( ! _attack_wave_enable ) return
-	move.b	o_ds_plyr_actv_9820+_b_atk_wv_enbl(a6),d0  	| [$2923: ld   a,(o_ds_plyr_actv_9820(a6) +_b_atk_wv_enbl)] 0 if restarting the stage (respawning player ship)
+	move.b	o_ds_plyr_actv_9820+_b_atk_wv_enbl(a6),d0  	| [$2923: ld   a,(o_ds_plyr_actv_9820(a6) +_b_atk_wv_enbl)] 0 if restarting the stage (respawning player ship) [freq=low, count=00%]
 	                               	            | [$2926: and  a]
 	bne.b	0f                               	| [...]
-	rts                                    	    | [$2927: ret  z] [...]
+	rts                                    	    | [$2927: ret  z] [...] [freq=low, count=00%]
 0:
 
 * if ( 0 != bugs_flying_nbr ) goto _set_tmr0
-	move.b	o_b_bugs_flying_nbr_9287(a6),d0           | [$2928: ld   a,(o_b_bugs_flying_nbr_9287(a6))]
+	move.b	o_b_bugs_flying_nbr_9287(a6),d0           | [$2928: ld   a,(o_b_bugs_flying_nbr_9287(a6))] [freq=low, count=00%]
                                                 | [$292B: and  a]
-	jne	l_294D_set_tmr0                    	    | [$292C: jr   nz,l_294D_set_tmr0]
+	jne	l_294D_set_tmr0                    	    | [$292C: jr   nz,l_294D_set_tmr0] [freq=low, count=00%]
 
 * if ( 0 == not_challenge_stg ) ...
-	move.b	o_ds_plyr_actv_9820+_b_not_chllg_stg(a6),d0	| [$292E: ld   a,(o_ds_plyr_actv_9820(a6) +_b_not_chllg_stg)] ==(stg_ctr+1)%4 ...i.e. 0 if challenge stage
+	move.b	o_ds_plyr_actv_9820+_b_not_chllg_stg(a6),d0	| [$292E: ld   a,(o_ds_plyr_actv_9820(a6) +_b_not_chllg_stg)] ==(stg_ctr+1)%4 ...i.e. 0 if challenge stage [freq=low, count=00%]
 								                | [$2931: ld   b,a] this does nothing |)
 	                                         	| [$2932: and  a]
-	jne	l_2944_attack_wave_start           	    | [$2933: jr   nz,l_2944_attack_wave_start]
+	jne	l_2944_attack_wave_start           	    | [$2933: jr   nz,l_2944_attack_wave_start] [freq=low, count=00%]
 * ...
 *  if ( 1 == game_tmrs[0] ) ..
 	move.b	o_ds4_game_tmrs_92ac+0(a6),d0             | [$2935: ld   a,(o_ds4_game_tmrs_92ac(a6) + 0)] if tmr==1 ( on stage 3 ..challenge stage)
@@ -8014,117 +8014,117 @@ l_2942_chk_tmr0:
 * Finally... sending out next wave of creatures. We are on start token 7E so do nothing on this time step.
 * this is called only when creatures arrive in the level, not when they attack from the existing swarm
 l_2944_attack_wave_start:
-	addq.w	#1,a0                           	| [$2944: inc  hl]
-	move.l	a0,o_ds_plyr_actv_9820+_p_atkwav_tbl(a6)   	| [$2945: ld   (o_ds_plyr_actv_9820(a6) +_p_atkwav_tbl),hl] +=1 (first element of byte-pair following the 7e)
-	lea	o_ds_plyr_actv_9820+_b_attkwv_ctr(a6),a0  	        | [$2948: ld   hl,#o_ds_plyr_actv_9820(a6) +_b_attkwv_ctr] +=1
-	addq.b	#1,(a0)                         	| [$294B: inc  (hl)]
-	rts                                    	    | [$294C: ret]
+	addq.w	#1,a0                           	| [$2944: inc  hl] [freq=low, count=00%]
+	move.l	a0,o_ds_plyr_actv_9820+_p_atkwav_tbl(a6)   	| [$2945: ld   (o_ds_plyr_actv_9820(a6) +_p_atkwav_tbl),hl] +=1 (first element of byte-pair following the 7e) [freq=low, count=00%]
+	lea	o_ds_plyr_actv_9820+_b_attkwv_ctr(a6),a0  	        | [$2948: ld   hl,#o_ds_plyr_actv_9820(a6) +_b_attkwv_ctr] +=1 [freq=low, count=00%]
+	addq.b	#1,(a0)                         	| [$294B: inc  (hl)] [freq=low, count=00%]
+	rts                                    	    | [$294C: ret] [freq=low, count=00%]
 
 l_294D_set_tmr0:
-	moveq	#2,d0                           	| [$294D: ld   a,#2]
-	move.b	d0,o_ds4_game_tmrs_92ac+0(a6)             | [$294F: ld   (o_ds4_game_tmrs_92ac(a6) + 0),a] 2
-	rts                                    	    | [$2952: ret]
+	moveq	#2,d0                           	| [$294D: ld   a,#2] [freq=low, count=00%]
+	move.b	d0,o_ds4_game_tmrs_92ac+0(a6)             | [$294F: ld   (o_ds4_game_tmrs_92ac(a6) + 0),a] 2 [freq=low, count=00%]
+	rts                                    	    | [$2952: ret] [freq=low, count=00%]
 * ....
 
 * finally, next token-pair !
 l_2953_next_pair:
-	move.b	d0,d2                           	| [$2953: ld   c,a] *.p_atkwav_tbl ... stash for later
+	move.b	d0,d2                           	| [$2953: ld   c,a] *.p_atkwav_tbl ... stash for later [freq=low, count=00%]
 * bit-7 is set if this toaster is a wing-man or a split waves, and therefore no delay,
 * otherwise it is clear for trailing formation i.e. delay before launching.
 * if ( 0 == *.p_atkwav_tbl & 0x80 ) ...
-	btst.b	#7,d0                           	| [$2954: bit  7,a]
-	jne	insert_bug_in_queue_295e                | [$2956: jr   nz,insert_bug_in_queue_295e]
+	btst.b	#7,d0                           	| [$2954: bit  7,a] [freq=low, count=00%]
+	jne	insert_bug_in_queue_295e                | [$2956: jr   nz,insert_bug_in_queue_295e] [freq=low, count=00%]
 * then ...
-	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$2958: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)]
-	and.b	#0x07,d0                         	| [$295B: and  #0x07]
+	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$2958: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)] [freq=low, count=00%]
+	and.b	#0x07,d0                         	| [$295B: and  #0x07] [freq=low, count=00%]
 	beq.b	0f                               	| [...]
-	rts                                    	    | [$295D:ret  nz] [...]
+	rts                                    	    | [$295D:ret  nz] [...] [freq=low, count=00%]
 0:
 
 * ready to stick another bug in the flying queue
 insert_bug_in_queue_295e:
 * make byte offset into lut at db_word_address_table_2a3c  (_finalize_object) ... also we're done with bit-7
-	asl.b	#1,d2                            	| [$295E: sla  c]
+	asl.b	#1,d2                            	| [$295E: sla  c] [freq=low, count=00%]
 
 * find a slot in the queue
-	move.b	#0x0C,d1                        	| [$2960: ld   b,#0x0C] number of structures in array
-	move.w	#0x0014,d3                      	| [$2962: ld   de,#0x0014] size of 1 data structure 20
-	lea	o_ds_bug_motion_que_9100(a6),a2           	| [$2965: ld   ix,#o_ds_bug_motion_que_9100(a6)]
+	move.b	#0x0C,d1                        	| [$2960: ld   b,#0x0C] number of structures in array [freq=low, count=00%]
+	move.w	#0x0014,d3                      	| [$2962: ld   de,#0x0014] size of 1 data structure 20 [freq=low, count=00%]
+	lea	o_ds_bug_motion_que_9100(a6),a2           	| [$2965: ld   ix,#o_ds_bug_motion_que_9100(a6)] [freq=low, count=00%]
 l_2969_while:
-	btst.b	#0,(0x13,a2)                    	| [$2969: bit  0,0x13(ix)]
-	jeq	l_2974_got_slot                    	    | [$296D: jr   z,l_2974_got_slot]
-	add.w	d3,a2                            	| [$296F: add  ix,de] advance pointer
+	btst.b	#0,(0x13,a2)                    	| [$2969: bit  0,0x13(ix)] [freq=low, count=00%]
+	jeq	l_2974_got_slot                    	    | [$296D: jr   z,l_2974_got_slot] [freq=low, count=00%]
+	add.w	d3,a2                            	| [$296F: add  ix,de] advance pointer [freq=low, count=00%]
 	subq.b	#1,d1                           	| [...]
-	jne	l_2969_while                       	    | [$2971: djnz l_2969_while]
+	jne	l_2969_while                       	    | [$2971: djnz l_2969_while] [freq=low, count=00%]
 	rts                                    	    | [$2973: ret] can't find a slot... bummer
 
 * each time is another bug of a new wave formation getting ready to appear
 l_2974_got_slot:
-	addq.w	#1,a0                           	| [$2974: inc  hl]
-	move.b	(a0),d0                         	| [$2975: ld   a,(hl)] atkwav_tbl[n].pair.h ... object ID/offset, e.g. 58
-	move.b	d0,d1                           	| [$2976: ld   b,a] stash it
+	addq.w	#1,a0                           	| [$2974: inc  hl] [freq=low, count=00%]
+	move.b	(a0),d0                         	| [$2975: ld   a,(hl)] atkwav_tbl[n].pair.h ... object ID/offset, e.g. 58 [freq=low, count=00%]
+	move.b	d0,d1                           	| [$2976: ld   b,a] stash it [freq=low, count=00%]
 
 * if object >= $78  &&  object < $80 ) ...
-	and.b	#0x78,d0                         	| [$2977: and  #0x78]
-	cmp.b	#0x78,d0                         	| [$2979: cp   #0x78]
-	jne	l_2980                             	    | [$297C: jr   nz,l_2980]
-	move.b	d1,d0                           	| [$297B: ld   a,b]
+	and.b	#0x78,d0                         	| [$2977: and  #0x78] [freq=low, count=00%]
+	cmp.b	#0x78,d0                         	| [$2979: cp   #0x78] [freq=low, count=00%]
+	jne	l_2980                             	    | [$297C: jr   nz,l_2980] [freq=low, count=00%]
+	move.b	d1,d0                           	| [$297B: ld   a,b] [freq=low, count=00%]
 * ...  then ...
 	bclr.b	#6,d0                           	| [$297E: res  6,a] what object is > $78?
 	bra.b	0f
 l_2980:
-	move.b	d1,d0                           	| [$297B: ld   a,b]
+	move.b	d1,d0                           	| [$297B: ld   a,b] [freq=low, count=00%]
 0:
-	move.b	d0,(0x10,a2)                    	| [$2980: ld   0x10(ix),a] object index
-	addq.w	#1,a0                           	| [$2983: inc  hl]
-	move.l	a0,o_ds_plyr_actv_9820+_p_atkwav_tbl(a6)   	| [$2984: ld   (o_ds_plyr_actv_9820(a6) +_p_atkwav_tbl),hl] advance to next token-pair e.g. HL:=8923
+	move.b	d0,(0x10,a2)                    	| [$2980: ld   0x10(ix),a] object index [freq=low, count=00%]
+	addq.w	#1,a0                           	| [$2983: inc  hl] [freq=low, count=00%]
+	move.l	a0,o_ds_plyr_actv_9820+_p_atkwav_tbl(a6)   	| [$2984: ld   (o_ds_plyr_actv_9820(a6) +_p_atkwav_tbl),hl] advance to next token-pair e.g. HL:=8923 [freq=low, count=00%]
 
-	lea	o_object_states_8800(a6),a0                      	        | [$2987: ld   h,#>o_object_states_8800(a6)]
-	move.b	d0,d6                           	| [$2989: ld   l,a]
+	lea	o_object_states_8800(a6),a0                      	        | [$2987: ld   h,#>o_object_states_8800(a6)] [freq=low, count=00%]
+	move.b	d0,d6                           	| [$2989: ld   l,a] [freq=low, count=00%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	#7,(a0)+                         	| [$298A: ld   (hl),#7] 8800[L].l ... disposition = "spawning" ... i.e. case_spawning_orc_2590
+	move.b	#7,(a0)+                         	| [$298A: ld   (hl),#7] 8800[L].l ... disposition = "spawning" ... i.e. case_spawning_orc_2590 [freq=low, count=00%]
 
 * store the slot index (offset) for this object
-	addq.w	#1,d6              	                | [$298C: inc  l]
+	addq.w	#1,d6              	                | [$298C: inc  l] [freq=low, count=00%]
 	* here this isn't ixl but a2-o_ds_bug_motion_que_9100(a6), for this
 	* we use a macro that we have, just swapping registers
 	exg		a1,a2
-	COMPUTE_LSB_A1_D4	o_ds_bug_motion_que_9100  | [$298D: ld   e,ixl]
+	COMPUTE_LSB_A1_D4	o_ds_bug_motion_que_9100  | [$298D: ld   e,ixl] [freq=low, count=00%]
 	exg		a1,a2            	    
-	move.b	d4,(a0)                         	| [$298F: ld   (hl),e] 8800[L].h ... offset of slot (n*$14)
-	lea	o_ds_sprite_posn_9300(a6),a0              	| [$2990: ld   h,#>o_ds_sprite_posn_9300(a6)]
+	move.b	d4,(a0)                         	| [$298F: ld   (hl),e] 8800[L].h ... offset of slot (n*$14) [freq=low, count=00%]
+	lea	o_ds_sprite_posn_9300(a6),a0              	| [$2990: ld   h,#>o_ds_sprite_posn_9300(a6)] [freq=low, count=00%]
 	add.w	d6,a0
 
 * if ( object >= $38 && object < $40 ) then goto _setup_transients
-	and.b	#0x38,d0                         	| [$2992: and  #0x38]
-	cmp.b	#0x38,d0                         	| [$2994: cp   #0x38]
-	jeq	l_29B3_setup_transients            	    | [$2996: jr   z,l_29B3_setup_transients]
+	and.b	#0x38,d0                         	| [$2992: and  #0x38] [freq=low, count=00%]
+	cmp.b	#0x38,d0                         	| [$2994: cp   #0x38] [freq=low, count=00%]
+	jeq	l_29B3_setup_transients            	    | [$2996: jr   z,l_29B3_setup_transients] [freq=low, count=00%]
 * else ...
 * Init routine c_2896 has populated the sprite code buffer such that each even
 * byte consists of the "primary" code (multiple of 8), AND'd with the color.
-	subq.w	#1,a0                           	| [$2998: dec  l] e.g. HL=9358
+	subq.w	#1,a0                           	| [$2998: dec  l] e.g. HL=9358 [freq=low, count=00%]
 	COMPUTE_LSB_A0_D6	o_ds_sprite_posn_9300
-	lea	o_ds_sprite_code_8B00(a6),a0              	| [$2999: ld   h,#>o_ds_sprite_code_8B00(a6)] sprite[L].code.b0 &= 0x78
+	lea	o_ds_sprite_code_8B00(a6),a0              	| [$2999: ld   h,#>o_ds_sprite_code_8B00(a6)] sprite[L].code.b0 &= 0x78 [freq=low, count=00%]
 	and.w	#0xFF,d6
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$299B: ld   a,(hl)]
-	move.b	d0,d3                           	| [$299C: ld   d,a] stash it
-	and.b	#0x78,d0                         	| [$299D: and  #0x78] base sprite code for this object (multiple of 8)
-	move.b	d0,(a0)+                         	| [$299F: ld   (hl),a] sprite[n].cclr.b0
+	move.b	(a0),d0                         	| [$299B: ld   a,(hl)] [freq=low, count=00%]
+	move.b	d0,d3                           	| [$299C: ld   d,a] stash it [freq=low, count=00%]
+	and.b	#0x78,d0                         	| [$299D: and  #0x78] base sprite code for this object (multiple of 8) [freq=low, count=00%]
+	move.b	d0,(a0)+                         	| [$299F: ld   (hl),a] sprite[n].cclr.b0 [freq=low, count=00%]
 	                           	                | [$29A0: inc  l] .b1
-	move.b	d3,d0                           	| [$29A1: ld   a,d]
-	and.b	#0x07,d0                         	| [$29A2: and  #0x07] color table in bits <0:2>
-	move.b	d0,(a0)                         	| [$29A6: ld   (hl),a] sprite[n].cclr.b1
-	btst.b	#7,d3                           	| [$29A4: bit  7,d]
+	move.b	d3,d0                           	| [$29A1: ld   a,d] [freq=low, count=00%]
+	and.b	#0x07,d0                         	| [$29A2: and  #0x07] color table in bits <0:2> [freq=low, count=00%]
+	move.b	d0,(a0)                         	| [$29A6: ld   (hl),a] sprite[n].cclr.b1 [freq=low, count=00%]
+	btst.b	#7,d3                           	| [$29A4: bit  7,d] [freq=low, count=00%]
 
 * if ( ! code_bit_7 )
-	jeq	l_29AE                             	    | [$29A9: jr   z,l_29AE]
+	jeq	l_29AE                             	    | [$29A9: jr   z,l_29AE] [freq=low, count=00%]
 * else
-	move.b	o_b_92E2+0x01(a6),d0                  	| [$29AB: ld   a,(o_b_92E2(a6) + 0x01)] to 0x0F(ix) ... _stg_dat[1] ... bomb drop enable flags
+	move.b	o_b_92E2+0x01(a6),d0                  	| [$29AB: ld   a,(o_b_92E2(a6) + 0x01)] to 0x0F(ix) ... _stg_dat[1] ... bomb drop enable flags [freq=low, count=00%]
 	bra.b	0f
 l_29AE:
-	clr.b	d0                               	| [$29A7: ld   a,#0]
+	clr.b	d0                               	| [$29A7: ld   a,#0] [freq=low, count=00%]
 0:
 	move.b	d0,(0x0F,a2)                    	| [ld   0x0F(ix),a] 0, or o_b_92E2(a6)[1] ... bomb drop enable flags
 	jra	l_29D1_finalize_object_setup       	    | [jr   l_29D1_finalize_object_setup]
@@ -8153,79 +8153,79 @@ l_29C7:
 	clr.b	(0x0F,a2)                        	| [$29CD: ld   0x0F(ix),#0] setup transients ... bomb drop enable flags
 
 l_29D1_finalize_object_setup:
-	move.b	d2,d3                           	| [$29D1: ld   d,c] first byte of token-pair, left-shifted 1 (byte-1 of _stg_dat triplet)
-	bclr.b	#7,d2                           	| [$29D2: res  7,c]
-	moveq	#8,d1                           	| [$29D4: ld   b,#8] critters that enter at the top
+	move.b	d2,d3                           	| [$29D1: ld   d,c] first byte of token-pair, left-shifted 1 (byte-1 of _stg_dat triplet) [freq=low, count=00%]
+	bclr.b	#7,d2                           	| [$29D2: res  7,c] [freq=low, count=00%]
+	moveq	#8,d1                           	| [$29D4: ld   b,#8] critters that enter at the top [freq=low, count=00%]
 * if ( C & 0x02 ) ...
-	btst.b	#1,d2                           	| [$29D6: bit  1,c]
-	jeq	l_29DC                             	    | [$29D8: jr   z,l_29DC]
+	btst.b	#1,d2                           	| [$29D6: bit  1,c] [freq=low, count=00%]
+	jeq	l_29DC                             	    | [$29D8: jr   z,l_29DC] [freq=low, count=00%]
 * then ...
-	move.b	#0x44,d1                        	| [$29DA: ld   b,#0x44] critters that enter on the sides
+	move.b	#0x44,d1                        	| [$29DA: ld   b,#0x44] critters that enter on the sides [freq=low, count=00%]
 l_29DC:
-	move.b	d1,(mq_drop_bomb_counter_0e,a2)  	| [$29DC: ld   0x0E(ix),b] $08 or $44 ... bomb drop counter
+	move.b	d1,(mq_drop_bomb_counter_0e,a2)  	| [$29DC: ld   0x0E(ix),b] $08 or $44 ... bomb drop counter [freq=low, count=00%]
 
 * ds_bug_move_queue[IX].b08 = db_word_address_table_2a3c[C] ... LSB of data pointer
-	and.w	#0xFF,d2                            | [$29DF: ld   b,#0]
-	lea	db_word_address_table_2a3c,a0                     	        | [$29E1: ld   hl,#db_word_address_table_2a3c]
-	add.w	d2,a0                            	| [$29E4: add  hl,bc] only C is significant
-	move.b	(1,a0),d0                         	| [$29E5: ld   a,(hl)] lsb! table is in the code, thus big endian
+	and.w	#0xFF,d2                            | [$29DF: ld   b,#0] [freq=low, count=00%]
+	lea	db_word_address_table_2a3c,a0                     	        | [$29E1: ld   hl,#db_word_address_table_2a3c] [freq=low, count=00%]
+	add.w	d2,a0                            	| [$29E4: add  hl,bc] only C is significant [freq=low, count=00%]
+	move.b	(1,a0),d0                         	| [$29E5: ld   a,(hl)] lsb! table is in the code, thus big endian [freq=low, count=00%]
 	                           	                | [$29E6: inc  hl] don't increase, we run big-endian!
-	move.b	d0,(mq_fp_lsb_08,a2)                | [$29E7: ld   0x08(ix),a] lo-byte of pointer e.g. cpu-sub1:001D
+	move.b	d0,(mq_fp_lsb_08,a2)                | [$29E7: ld   0x08(ix),a] lo-byte of pointer e.g. cpu-sub1:001D [freq=low, count=00%]
 
 * get upper nibble of word at db_word_address_table_2a3c[w] (bits 5:7 will be masked by 0x0E below)
 * rld (hl): Performs a 4-bit leftward rotation of the 12-bit number whose
 * 4 most significant bits are the 4 least significant bits of A
-	clr.b	d0                               	| [$29EA: xor  a]
+	clr.b	d0                               	| [$29EA: xor  a] [freq=low, count=00%]
 	* BUT (a0) points to ROM in the original game. We don't want to change
 	* the value, so we back it up and restore it afterwards
 	* (this could act as a pretty efficient protection against bootlegs!)
 	move.b	(a0),d1
-	jbsr	rld                               	| [$29EB: rld]
+	jbsr	rld                               	| [$29EB: rld] [freq=low, count=00%]
 	move.b	d1,(a0)
-	move.b	d0,d1                           	| [$29ED: ld   b,a]
+	move.b	d0,d1                           	| [$29ED: ld   b,a] [freq=low, count=00%]
 
 * ds_bug_move_queue[IX].b09  = db_word_address_table_2a3c[C + 1] & 0x1F ... MSB of data pointer
-	move.b	(a0),d0                         	| [$29EE: ld   a,(hl)] msb
-	and.b	#0x1F,d0                         	| [$29EF: and  #0x1F]
-	move.b	d0,(mq_fp_msb_09,a2)                | [$29F1: ld   0x09(ix),a] hi-byte of pointer e.g. cpu-sub1:001D
+	move.b	(a0),d0                         	| [$29EE: ld   a,(hl)] msb [freq=low, count=00%]
+	and.b	#0x1F,d0                         	| [$29EF: and  #0x1F] [freq=low, count=00%]
+	move.b	d0,(mq_fp_msb_09,a2)                | [$29F1: ld   0x09(ix),a] hi-byte of pointer e.g. cpu-sub1:001D [freq=low, count=00%]
 
 * ... get upper 4-bits of word at db_word_address_table_2a3c[w] which were rld'd into A: these
 * are $2 thru $A even, and this is multiplied by 3 by the expression A*2+A
-	move.b	d1,d0                           	| [$29F4: ld   a,b]
-	and.w	#0x0E,d0                         	| [$29F5: and  #0x0E] bits 5:7 of db_word_address_table_2a3c[].b1
-	move.b	d0,d1                           	| [$29F7: ld   b,a]
-	rol.b	#1,d0                            	| [$29F8: rlca]
-	add.b	d1,d0                            	| [$29F9: add  a,b]
-	lea	db_2A6C,a0                     	        | [$29FA: ld   hl,#db_2A6C]
-	add.w	d0,a0			                   | [$29FD: rst  0x10] HL += A
+	move.b	d1,d0                           	| [$29F4: ld   a,b] [freq=low, count=00%]
+	and.w	#0x0E,d0                         	| [$29F5: and  #0x0E] bits 5:7 of db_word_address_table_2a3c[].b1 [freq=low, count=00%]
+	move.b	d0,d1                           	| [$29F7: ld   b,a] [freq=low, count=00%]
+	rol.b	#1,d0                            	| [$29F8: rlca] [freq=low, count=00%]
+	add.b	d1,d0                            	| [$29F9: add  a,b] [freq=low, count=00%]
+	lea	db_2A6C,a0                     	        | [$29FA: ld   hl,#db_2A6C] [freq=low, count=00%]
+	add.w	d0,a0			                   | [$29FD: rst  0x10] HL += A [freq=low, count=00%]
 
 * D is b0 of byte-pair (left shifted 1, so in _stg_dat it is 0x40)
 * if ( D & 0x80 )
-	btst.b	#7,d3                           	| [$29FE: bit  7,d] 29FE
-	jeq	l_2A05                             	    | [$2A00: jr   z,l_2A05]
+	btst.b	#7,d3                           	| [$29FE: bit  7,d] 29FE [freq=low, count=00%]
+	jeq	l_2A05                             	    | [$2A00: jr   z,l_2A05] [freq=low, count=00%]
 * ... then ... HL += 3 ... selects the second set of 3 bytes
-	addq.w	#3,a0                           	| [$2A02: inc  hl] * 3
+	addq.w	#3,a0                           	| [$2A02: inc  hl] * 3 [freq=low, count=00%]
 
 l_2A05:
-	move.b	(a0)+,d0                         	| [$2A05: ld   a,(hl)]
+	move.b	(a0)+,d0                         	| [$2A05: ld   a,(hl)] [freq=low, count=00%]
 	                           	                | [$2A06: inc  hl]
-	move.b	d0,(mq_y_01,a2)                    	| [$2A07: ld   0x01(ix),a] db_2A6C[L].b0
-	move.b	(a0)+,d0                         	| [$2A0A: ld   a,(hl)]
+	move.b	d0,(mq_y_01,a2)                    	| [$2A07: ld   0x01(ix),a] db_2A6C[L].b0 [freq=low, count=00%]
+	move.b	(a0)+,d0                         	| [$2A0A: ld   a,(hl)] [freq=low, count=00%]
 	                           	                | [$2A0B: inc  hl]
-	move.b	d0,(mq_x_03,a2)                    	| [$2A0C: ld   0x03(ix),a] db_2A6C[L].b1
-	move.b	(a0)+,d0                         	| [$2A0F: ld   a,(hl)]
+	move.b	d0,(mq_x_03,a2)                    	| [$2A0C: ld   0x03(ix),a] db_2A6C[L].b1 [freq=low, count=00%]
+	move.b	(a0)+,d0                         	| [$2A0F: ld   a,(hl)] [freq=low, count=00%]
 	                           	                | [$2A10: inc  hl]
-	move.b	d0,(mq_angle_msb_05,a2)             | [$2A11: ld   0x05(ix),a] db_2A6C[L].b2
-	clr.b	d0                               	| [$2A14: xor  a]
-	move.b	d0,(mq_fine_y_00,a2)                | [$2A15: ld   0x00(ix),a] 0
-	move.b	d0,(mq_fine_x_02,a2)                | [$2A18: ld   0x02(ix),a] 0
-	move.b	d0,(mq_angle_lsb_04,a2)             | [$2A1B: ld   0x04(ix),a] 0
-	addq.b	#1,d0                           	| [$2A1E: inc  a]
-	move.b	d0,(mq_timeout_0d,a2)               | [$2A1F: ld   0x0D(ix),a] 1 ... expiration counter
-	or.b	d3,d0                             	| [$2A22: or   d] 1st byte of current byte-pair (left shifted 1, so in _stg_dat it is 0x40)
-	and.b	#0x81,d0                         	| [$2A23: and  #0x81] .b13<7> negates rotation angle
-	move.b	d0,(mq_state_13,a2)                 | [$2A25: ld   0x13(ix),a] A &= $81 ... .b13<0> makes object slot active
-	rts                                    	    | [$2A28: ret]
+	move.b	d0,(mq_angle_msb_05,a2)             | [$2A11: ld   0x05(ix),a] db_2A6C[L].b2 [freq=low, count=00%]
+	clr.b	d0                               	| [$2A14: xor  a] [freq=low, count=00%]
+	move.b	d0,(mq_fine_y_00,a2)                | [$2A15: ld   0x00(ix),a] 0 [freq=low, count=00%]
+	move.b	d0,(mq_fine_x_02,a2)                | [$2A18: ld   0x02(ix),a] 0 [freq=low, count=00%]
+	move.b	d0,(mq_angle_lsb_04,a2)             | [$2A1B: ld   0x04(ix),a] 0 [freq=low, count=00%]
+	addq.b	#1,d0                           	| [$2A1E: inc  a] [freq=low, count=00%]
+	move.b	d0,(mq_timeout_0d,a2)               | [$2A1F: ld   0x0D(ix),a] 1 ... expiration counter [freq=low, count=00%]
+	or.b	d3,d0                             	| [$2A22: or   d] 1st byte of current byte-pair (left shifted 1, so in _stg_dat it is 0x40) [freq=low, count=00%]
+	and.b	#0x81,d0                         	| [$2A23: and  #0x81] .b13<7> negates rotation angle [freq=low, count=00%]
+	move.b	d0,(mq_state_13,a2)                 | [$2A25: ld   0x13(ix),a] A &= $81 ... .b13<0> makes object slot active [freq=low, count=00%]
+	rts                                    	    | [$2A28: ret] [freq=low, count=00%]
 
 * all 8 of the last wave of bees are on screen now... waiting for them to get in position.
 * if (nbr_flying bugs > 0 ) return
@@ -8289,85 +8289,85 @@ db_2A6C:
 f_lateral_movement_at_round_start_2a90:
 
 *  if ( frame_cnt % 4 != 0 ) return
-	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$2A90: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)]
-	subq.b	#1,d0                           	| [$2A93: dec  a] why -1 ?
-	and.b	#0x03,d0                         	| [$2A94: and  #0x03]
+	move.b	o_ds3_frame_cts_92A0+0(a6),d0         	| [$2A90: ld   a,(o_ds3_frame_cts_92A0(a6) + 0)] [freq=low, count=01%]
+	subq.b	#1,d0                           	| [$2A93: dec  a] why -1 ? [freq=low, count=01%]
+	and.b	#0x03,d0                         	| [$2A94: and  #0x03] [freq=low, count=01%]
 	beq.b	0f                               	| [...]
-	rts                                    	    | [$2A96: ret  nz] [...]
+	rts                                    	    | [$2A96: ret  nz] [...] [freq=low, count=01%]
 0:
 
 * check for exit condition
 *  if  ! ( num_bugs != 0 ||  f_insert_attackers_2916_active )  then ...
-	move.b	o_b_bugs_actv_nbr_92a7(a6),d0              	| [$2A97: ld   a,(o_b_bugs_actv_nbr_92a7(a6))]
-	move.b	d0,d1                           	| [$2A9A: ld   b,a]
-	move.b	o_ds_cpu0_task_actv_9000+0x08(a6),d0      | [$2A9B: ld   a,(o_ds_cpu0_task_actv_9000(a6) + 0x08)] f_insert_attackers_2916 supervises attack waves
-	or.b	d1,d0                             	| [$2A9E: or   b]
-	jeq	l_2AE9_done                        	    | [$2A9F: jr   z,l_2AE9_done]
+	move.b	o_b_bugs_actv_nbr_92a7(a6),d0              	| [$2A97: ld   a,(o_b_bugs_actv_nbr_92a7(a6))] [freq=low, count=00%]
+	move.b	d0,d1                           	| [$2A9A: ld   b,a] [freq=low, count=00%]
+	move.b	o_ds_cpu0_task_actv_9000+0x08(a6),d0      | [$2A9B: ld   a,(o_ds_cpu0_task_actv_9000(a6) + 0x08)] f_insert_attackers_2916 supervises attack waves [freq=low, count=00%]
+	or.b	d1,d0                             	| [$2A9E: or   b] [freq=low, count=00%]
+	jeq	l_2AE9_done                        	    | [$2A9F: jr   z,l_2AE9_done] [freq=low, count=00%]
 
 * if ( 0 == nest_dir_lr ) then C = 1,  else C = -1
 	                               	            | [$2AA4: and  a]
-	moveq	#1,d2                           	| [$2AA5: ld   c,#1]
-	tst.b	o_ds_glbls_9200+0x0F(a6)           	    | [$2AA1: ld   a,(o_ds_glbls_9200(a6) + 0x0F)] nest direction... 1==left, 0==right
-	jeq	l_2AAB                             	    | [$2AA7: jr   z,l_2AAB]
-	subq.b	#2,d2                           	| [$2AA9: dec  c] * 2
+	moveq	#1,d2                           	| [$2AA5: ld   c,#1] [freq=low, count=00%]
+	tst.b	o_ds_glbls_9200+0x0F(a6)           	    | [$2AA1: ld   a,(o_ds_glbls_9200(a6) + 0x0F)] nest direction... 1==left, 0==right [freq=low, count=00%]
+	jeq	l_2AAB                             	    | [$2AA7: jr   z,l_2AAB] [freq=low, count=00%]
+	subq.b	#2,d2                           	| [$2AA9: dec  c] * 2 [freq=low, count=00%]
 
 * initialize index and loop counter, update the table
 l_2AAB:
-	clr.w	d6                               	| [$2AAB: ld   l,#0] index into table
-	move.b	#10,d1                          	| [$2AAD: ld   b,#10] nbr of column positions
+	clr.w	d6                               	| [$2AAB: ld   l,#0] index into table [freq=low, count=00%]
+	move.b	#10,d1                          	| [$2AAD: ld   b,#10] nbr of column positions [freq=low, count=00%]
 l_2AAF:
 * increment the relative position
-	lea	o_ds_hpos_loc_offs_9900(a6),a0            	| [$2AAF: ld   h,#>o_ds_hpos_loc_offs_9900(a6)] even-bytes, relative offset, all 0's, then all 1's, etc. etc.
+	lea	o_ds_hpos_loc_offs_9900(a6),a0            	| [$2AAF: ld   h,#>o_ds_hpos_loc_offs_9900(a6)] even-bytes, relative offset, all 0's, then all 1's, etc. etc. [freq=low, count=00%]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$2AB1: ld   a,(hl)]
-	add.b	d2,d0                            	| [$2AB2: add  a,c] +1 or -1
-	move.b	d0,(a0)                         	| [$2AB3: ld   (hl),a]
+	move.b	(a0),d0                         	| [$2AB1: ld   a,(hl)] [freq=low, count=00%]
+	add.b	d2,d0                            	| [$2AB2: add  a,c] +1 or -1 [freq=low, count=00%]
+	move.b	d0,(a0)                         	| [$2AB3: ld   (hl),a] [freq=low, count=00%]
 * increment sprite position LSB
-	lea	o_ds_hpos_spcoords_9800(a6),a0            	| [$2AB4: ld   h,#>o_ds_hpos_spcoords_9800(a6)]
+	lea	o_ds_hpos_spcoords_9800(a6),a0            	| [$2AB4: ld   h,#>o_ds_hpos_spcoords_9800(a6)] [freq=low, count=00%]
 	add.w	d6,a0
-	move.b	(a0),d0                         	| [$2AB6: ld   a,(hl)]
-	add.b	d2,d0                            	| [$2AB7: add  a,c]
-	move.b	d0,(a0)                         	| [$2AB8: ld   (hl),a]
+	move.b	(a0),d0                         	| [$2AB6: ld   a,(hl)] [freq=low, count=00%]
+	add.b	d2,d0                            	| [$2AB7: add  a,c] [freq=low, count=00%]
+	move.b	d0,(a0)                         	| [$2AB8: ld   (hl),a] [freq=low, count=00%]
 * HL+=2
-	addq.b	#2,d6                           	| [$2AB9: inc  l] * 2 [a0 coherence]
+	addq.b	#2,d6                           	| [$2AB9: inc  l] * 2 [a0 coherence] [freq=low, count=00%]
 	subq.b	#1,d1                           	| [...]
-	jne	l_2AAF                             	    | [$2ABB: djnz l_2AAF]
+	jne	l_2AAF                             	    | [$2ABB: djnz l_2AAF] [freq=low, count=00%]
 
 * if ( 0 == nestlr_inh || 0 != obj_pos_rel[0] )  ...
 	                               	            | [and  a]
-	move.b	o_ds_hpos_loc_offs_9900+0x00(a6),d0       | [$2AC1: ld   a,(o_ds_hpos_loc_offs_9900(a6) + 0x00)] check for 0 i.e. returned to center
-	tst.b	o_ds_plyr_actv_9820+_b_nestlr_inh(a6)   	    | [$2ABD: ld   a,(o_ds_plyr_actv_9820(a6) +_b_nestlr_inh)]
-	jeq	l_2AC9                             	    | [$2AC4: jr   z,l_2AC9]
-	tst.b	d0                               	| [$2AC6: and  a]
+	move.b	o_ds_hpos_loc_offs_9900+0x00(a6),d0       | [$2AC1: ld   a,(o_ds_hpos_loc_offs_9900(a6) + 0x00)] check for 0 i.e. returned to center [freq=low, count=00%]
+	tst.b	o_ds_plyr_actv_9820+_b_nestlr_inh(a6)   	    | [$2ABD: ld   a,(o_ds_plyr_actv_9820(a6) +_b_nestlr_inh)] [freq=low, count=00%]
+	jeq	l_2AC9                             	    | [$2AC4: jr   z,l_2AC9] [freq=low, count=00%]
+	tst.b	d0                               	| [$2AC6: and  a] [freq=low, count=00%]
 	jeq	l_2ADA_done                        	    | [jr   z,l_2ADA_done]
 l_2AC9:
 * ... then ...
 * if ( 32 == obj_pos_rel[0] )  then nest_dir_lr = 1
-	cmp.b	#32,d0                           	| [$2AC9: cp   #32]
-	jne	l_2AD3                             	    | [$2ACB: jr   nz,l_2AD3]
-	moveq	#1,d0                           	| [$2ACD: ld   a,#1]
-	move.b	d0,o_ds_glbls_9200+0x0F(a6)           	| [$2ACF: ld   (o_ds_glbls_9200(a6) + 0x0F),a] 1 ... nest direction... right limit reached
-	rts                                    	    | [$2AD2: ret]
+	cmp.b	#32,d0                           	| [$2AC9: cp   #32] [freq=low, count=00%]
+	jne	l_2AD3                             	    | [$2ACB: jr   nz,l_2AD3] [freq=low, count=00%]
+	moveq	#1,d0                           	| [$2ACD: ld   a,#1] [freq=low, count=00%]
+	move.b	d0,o_ds_glbls_9200+0x0F(a6)           	| [$2ACF: ld   (o_ds_glbls_9200(a6) + 0x0F),a] 1 ... nest direction... right limit reached [freq=low, count=00%]
+	rts                                    	    | [$2AD2: ret] [freq=low, count=00%]
 
 l_2AD3:
 * if ( -32 == obj_pos_rel[0] ) then nest_dir_lr = 0
-	sub.b	#0xE0,d0                         	| [$2AD3: sub  #0xE0] -$20
+	sub.b	#0xE0,d0                         	| [$2AD3: sub  #0xE0] -$20 [freq=low, count=00%]
 	beq.b	0f                               	| [...]
-	rts                                    	    | [$2AD5: ret  nz] [...]
+	rts                                    	    | [$2AD5: ret  nz] [...] [freq=low, count=00%]
 0:
-	move.b	d0,o_ds_glbls_9200+0x0F(a6)           	| [$2AD6: ld   (o_ds_glbls_9200(a6) + 0x0F),a] 0 ... nest direction... left limit reached
-	rts                                    	    | [$2AD9: ret]
+	move.b	d0,o_ds_glbls_9200+0x0F(a6)           	| [$2AD6: ld   (o_ds_glbls_9200(a6) + 0x0F),a] 0 ... nest direction... left limit reached [freq=low, count=00%]
+	rts                                    	    | [$2AD9: ret] [freq=low, count=00%]
 
 * the formation is complete... diving attacks shall commence
 l_2ADA_done:
-	clr.b	d0                               	| [$2ADA: xor  a]
-	move.b	d0,o_ds_glbls_9200+0x0F(a6)           	| [$2ADB: ld   (o_ds_glbls_9200(a6) + 0x0F),a] 0 ... nest direction
-	move.b	d0,o_ds_cpu0_task_actv_9000+0x0A(a6)      | [$2ADE: ld   (o_ds_cpu0_task_actv_9000(a6) + 0x0A),a] 0 ... disable this task (f_lateral_movement_at_round_start_2a90)
-	addq.b	#1,d0                           	| [$2AE1: inc  a]
-	move.b	d0,o_b_9AA0+0x00(a6)                  	| [$2AE2: ld   (o_b_9AA0(a6) + 0x00),a] 1 ... sound-fx count/enable register, pulsing formation sound effect
+	clr.b	d0                               	| [$2ADA: xor  a] [freq=low, count=00%]
+	move.b	d0,o_ds_glbls_9200+0x0F(a6)           	| [$2ADB: ld   (o_ds_glbls_9200(a6) + 0x0F),a] 0 ... nest direction [freq=low, count=00%]
+	move.b	d0,o_ds_cpu0_task_actv_9000+0x0A(a6)      | [$2ADE: ld   (o_ds_cpu0_task_actv_9000(a6) + 0x0A),a] 0 ... disable this task (f_lateral_movement_at_round_start_2a90) [freq=low, count=00%]
+	addq.b	#1,d0                           	| [$2AE1: inc  a] [freq=low, count=00%]
+	move.b	d0,o_b_9AA0+0x00(a6)                  	| [$2AE2: ld   (o_b_9AA0(a6) + 0x00),a] 1 ... sound-fx count/enable register, pulsing formation sound effect [freq=low, count=00%]
 	bsr		start_pulsing_sound_effect
-	move.b	d0,o_ds_cpu0_task_actv_9000+0x09(a6)      | [$2AE5: ld   (o_ds_cpu0_task_actv_9000(a6) + 0x09),a] 1 ... enable f_pulsating_swarm_movement_1de6 ... collective bug movement
-	rts                                    	    | [$2AE8: ret]
+	move.b	d0,o_ds_cpu0_task_actv_9000+0x09(a6)      | [$2AE5: ld   (o_ds_cpu0_task_actv_9000(a6) + 0x09),a] 1 ... enable f_pulsating_swarm_movement_1de6 ... collective bug movement [freq=low, count=00%]
+	rts                                    	    | [$2AE8: ret] [freq=low, count=00%]
 
 * last bug of challenge is gone or killed
 l_2AE9_done:
@@ -11136,7 +11136,7 @@ l_0259:
 	move.b	d0,d2                           	| [$00272: ld   c,a] A == 0 ... initialize index into Task Enable Table
 l_while_zero_0273:
 * while ( 0 == A = *(task_activ_tbl + C) )  C++   ... loop until non-zero: assumes we will find a valid entry in the table!
-	lea	o_ds_cpu0_task_actv_9000(a6),a0           	| [$0273: ld   hl,#o_ds_cpu0_task_actv_9000(a6)]
+	lea	o_ds_cpu0_task_actv_9000(a6),a0           	| [$0273: ld   hl,#o_ds_cpu0_task_actv_9000(a6)] [freq=medium, count=35%]
 	                           	| [ld   a,c]
 	add.w	d2,a0                            	| [add  a,l]
 	                           	| [ld   l,a]
