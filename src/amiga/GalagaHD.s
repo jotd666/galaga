@@ -56,7 +56,7 @@ _config
 	ENDC
 
 DECL_VERSION:MACRO
-	dc.b	"1.0"
+	dc.b	"1.1"
 	IFD BARFLY
 		dc.b	" "
 		INCBIN	"T:date"
@@ -95,6 +95,12 @@ start:
     ENDC
     lea progstart(pc),a0
     move.l  _expmem(pc),(a0)
+
+	* stack in fast memory, super important especially
+	* with interrupt-driven blits
+	move.l	_expmem(pc),a0
+	add.l	#EXPMEM-4,a0
+	move.l	a0,a7
 
 	lea	exe(pc),a0
 	move.l  progstart(pc),a1

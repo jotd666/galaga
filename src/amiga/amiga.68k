@@ -1013,6 +1013,7 @@ bottom_of_screen_interrupt:
 3:
 	.endif
 	st.b	render_request
+	jbsr	scroll_stars       | copper is past the last star row
 	clr.b	d0
 1:
 	move.b	d0,flip_flop
@@ -1097,7 +1098,6 @@ level1_interrupt:
 	tst.b	frame_state			| FS_FREE?
 	jne		3f					| back buffer still in use: retry next frame
 	clr.b	render_request
-	jbsr	scroll_stars
 	lea		ram_start_8000,a6
 	jbsr	render_frame
 3:
